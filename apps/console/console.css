@@ -317,6 +317,7 @@
   border: var(--line-width-thin) solid var(--color-line);
   border-radius: var(--radius-pill);
   background: var(--color-track);
+  transition: background-color var(--dur-fast) var(--ease-out);
 }
 
 .switch__thumb {
@@ -327,7 +328,15 @@
   height: calc(var(--space-6) - var(--line-width-thin) * 4);
   border-radius: 50%;
   background: var(--color-text-muted);
-  transition: transform var(--dur-fast) var(--ease-out);
+  transition: background-color var(--dur-fast) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .switch__thumb {
+    transition:
+      transform var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+  }
 }
 
 .switch[aria-checked='true'] .switch__track {
@@ -576,7 +585,12 @@
   height: 13px;
   pointer-events: none;
   transform: translateX(calc(var(--heat, 0) * 100%));
-  transition: transform var(--dur-slow) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .heat__rail {
+    transition: transform var(--dur-slow) var(--ease-out);
+  }
 }
 
 .heat__pointer {
@@ -610,7 +624,12 @@
   inset: 0;
   background: var(--heat-gradient);
   clip-path: inset(0 calc((1 - var(--heat, 0)) * 100%) 0 0);
-  transition: clip-path var(--dur-slow) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .heat__fill {
+    transition: clip-path var(--dur-slow) var(--ease-out);
+  }
 }
 
 .heat__mark {
@@ -664,7 +683,12 @@
   font-size: var(--text-xs);
   font-weight: var(--font-weight-strong);
   white-space: nowrap;
-  animation: conn-blink var(--dur-conn) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .conn-chip {
+    animation: conn-blink var(--dur-conn) var(--ease-out);
+  }
 }
 
 .conn-chip[data-state='unknown'] {
@@ -988,7 +1012,12 @@
   stroke: var(--ring-colour, var(--color-primary));
   stroke-width: 8;
   stroke-linecap: round;
-  transition: stroke-dashoffset var(--dur-ring-step) linear;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .now-ring__fill {
+    transition: stroke-dashoffset var(--dur-ring-step) linear;
+  }
 }
 
 .now-ring[data-state='suspense'] {
@@ -1051,12 +1080,16 @@
   opacity: 0.8;
 }
 
-.now-ring[data-anim~='ring-spin'] .now-ring__spin {
-  animation: ring-turn var(--dur-ring-spin) linear infinite;
+@media (prefers-reduced-motion: no-preference) {
+  .now-ring[data-anim~='ring-spin'] .now-ring__spin {
+    animation: ring-turn var(--dur-ring-spin) linear infinite;
+  }
 }
 
-.now-ring[data-anim~='ring-spin'] .now-ring__record {
-  animation: ring-turn var(--dur-ring-record) linear infinite;
+@media (prefers-reduced-motion: no-preference) {
+  .now-ring[data-anim~='ring-spin'] .now-ring__record {
+    animation: ring-turn var(--dur-ring-record) linear infinite;
+  }
 }
 
 @keyframes ring-turn {
@@ -1105,9 +1138,11 @@
   --ring-colour: var(--color-red);
 }
 
-.now-ring[data-anim~='ring-manual'] .now-ring__disc,
-.now-ring[data-anim~='ring-manual'] .now-ring__pulse {
-  animation: ring-breathe var(--dur-ring-breathe) ease-in-out infinite;
+@media (prefers-reduced-motion: no-preference) {
+  .now-ring[data-anim~='ring-manual'] .now-ring__disc,
+  .now-ring[data-anim~='ring-manual'] .now-ring__pulse {
+    animation: ring-breathe var(--dur-ring-breathe) ease-in-out infinite;
+  }
 }
 
 @keyframes ring-breathe {
@@ -1187,8 +1222,10 @@
   font-size: calc(var(--text-2xl) * 0.95);
 }
 
-.now-ring__value[data-tick] {
-  animation: ring-tick var(--dur-ring-tick) var(--ease-out);
+@media (prefers-reduced-motion: no-preference) {
+  .now-ring__value[data-tick] {
+    animation: ring-tick var(--dur-ring-tick) var(--ease-out);
+  }
 }
 
 @keyframes ring-tick {
@@ -1444,10 +1481,16 @@
   background: var(--color-tab-idle);
   color: var(--color-text-muted);
   font-size: var(--text-md);
-  transition:
-    height var(--dur-tab-switch) var(--ease-out),
-    margin-bottom var(--dur-tab-switch) var(--ease-out),
-    background-color var(--dur-tab-switch) var(--ease-out);
+  transition: background-color var(--dur-tab-switch) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .tabs__tab {
+    transition:
+      height var(--dur-tab-switch) var(--ease-out),
+      margin-bottom var(--dur-tab-switch) var(--ease-out),
+      background-color var(--dur-tab-switch) var(--ease-out);
+  }
 }
 
 .tabs__tab .icon {
@@ -1588,8 +1631,13 @@
   border-right: var(--line-width-thin) solid var(--color-line);
   background: var(--color-green);
   transform-origin: left;
-  animation: bar-grow var(--dur-reveal-bars) var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * var(--dur-reveal-stagger));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .miss-bars__fill {
+    animation: bar-grow var(--dur-reveal-bars) var(--ease-out) both;
+  }
 }
 
 .miss-bars__row[data-missing='1'] .miss-bars__fill {
@@ -1869,7 +1917,12 @@
   margin-left: 4px;
   vertical-align: -0.05em;
   background: var(--color-orange);
-  animation: caret-blink 1s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .search-box__number[data-state='typing']::after {
+    animation: caret-blink 1s steps(1) infinite;
+  }
 }
 
 @keyframes caret-blink {
@@ -2168,7 +2221,12 @@
 /* The upcoming songs get the wider side: their tags are long ("quina: falten 26") */
 .future__body {
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  animation: future-reveal var(--dur-reveal) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .future__body {
+    animation: future-reveal var(--dur-reveal) var(--ease-out);
+  }
 }
 
 @keyframes future-reveal {
@@ -2937,7 +2995,12 @@
   background: rgb(255 255 255 / 0.55);
   transform: scaleX(var(--progress, 0));
   transform-origin: left;
-  transition: transform var(--dur-drain) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .two-level__fill {
+    transition: transform var(--dur-drain) var(--ease-out);
+  }
 }
 
 .two-level[data-state='pressing'] .two-level__fill {
@@ -3048,8 +3111,10 @@
 }
 
 /* Playing: pressed (the shared aria-pressed look), and the stripes drift one period per loop */
-.throw-button[data-anim~='throw-on']::before {
-  animation: throw-stripes var(--dur-throw-stripes) linear infinite;
+@media (prefers-reduced-motion: no-preference) {
+  .throw-button[data-anim~='throw-on']::before {
+    animation: throw-stripes var(--dur-throw-stripes) linear infinite;
+  }
 }
 
 @keyframes throw-stripes {
@@ -3176,7 +3241,12 @@
   background: var(--action-bg);
   transform: scaleX(var(--at, 0));
   transform-origin: left;
-  transition: transform 250ms linear;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .throw-button__bar-fill::before {
+    transition: transform 250ms linear;
+  }
 }
 
 .throw-button__drop {
@@ -3199,12 +3269,6 @@
   letter-spacing: 0.08em;
   line-height: 1;
   text-transform: uppercase;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .throw-button__bar-fill::before {
-    transition: none;
-  }
 }
 
 .throw-button__strip {
@@ -3326,7 +3390,12 @@
   background: rgb(255 255 255 / 0.3);
   transform: scaleX(var(--progress, 0));
   transform-origin: left;
-  transition: transform var(--dur-drain) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .throw-button__fill {
+    transition: transform var(--dur-drain) var(--ease-out);
+  }
 }
 
 .throw-button__percent {
@@ -3338,8 +3407,10 @@
 }
 
 /* An open Suspens pulses on Aguanta's strip, faster towards its auto-release */
-.two-level[data-anim~='suspense-hold'] .two-level__fill {
-  animation: suspense-pulse calc(var(--dur-pulse-slow) - (var(--dur-pulse-slow) - var(--dur-pulse-fast)) * var(--suspense-progress, 0)) ease-in-out infinite;
+@media (prefers-reduced-motion: no-preference) {
+  .two-level[data-anim~='suspense-hold'] .two-level__fill {
+    animation: suspense-pulse calc(var(--dur-pulse-slow) - (var(--dur-pulse-slow) - var(--dur-pulse-fast)) * var(--suspense-progress, 0)) ease-in-out infinite;
+  }
 }
 
 /* Long press (hooks long-press-confirm, hold-hint) */
@@ -3370,7 +3441,12 @@
   opacity: 0.28;
   transform: scaleX(var(--progress, 0));
   transform-origin: left;
-  transition: transform var(--dur-drain) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .long-press__fill {
+    transition: transform var(--dur-drain) var(--ease-out);
+  }
 }
 
 .long-press[data-state='pressing'] .long-press__fill {
@@ -3783,7 +3859,12 @@
   border: 2px solid var(--color-line);
   border-radius: 50%;
   background: #ffffff;
-  transition: transform var(--dur-step-mark) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .check-board__thumb {
+    transition: transform var(--dur-step-mark) var(--ease-out);
+  }
 }
 
 .check-board__auto[aria-pressed='true'] .check-board__track {
@@ -3879,8 +3960,10 @@
   text-align: left;
 }
 
-.check-board__song[data-anim~='check-pace'] {
-  animation: check-next-in var(--dur-reveal) var(--ease-out);
+@media (prefers-reduced-motion: no-preference) {
+  .check-board__song[data-anim~='check-pace'] {
+    animation: check-next-in var(--dur-reveal) var(--ease-out);
+  }
 }
 
 @keyframes check-next-in {
@@ -4300,9 +4383,15 @@
   border-radius: 50%;
   background: #ffffff;
   color: var(--color-green);
-  transition:
-    background-color var(--dur-step-mark) var(--ease-out),
-    transform var(--dur-step-mark) var(--ease-out);
+  transition: background-color var(--dur-step-mark) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .check-cell__mark {
+    transition:
+      background-color var(--dur-step-mark) var(--ease-out),
+      transform var(--dur-step-mark) var(--ease-out);
+  }
 }
 
 .check-cell[data-mark='bad'] .check-cell__mark {
@@ -4621,8 +4710,10 @@
   width: min(36rem, calc(100vw - var(--space-4)));
 }
 
-.review-confirm[open] {
-  animation: review-confirm-in var(--dur-reveal) var(--ease-out);
+@media (prefers-reduced-motion: no-preference) {
+  .review-confirm[open] {
+    animation: review-confirm-in var(--dur-reveal) var(--ease-out);
+  }
 }
 
 @keyframes review-confirm-in {
@@ -4780,8 +4871,10 @@
   background: var(--color-surface-private);
 }
 
-.claim-chip[data-anim~='claim-chip-add'] {
-  animation: claim-chip-add 160ms var(--ease-bounce);
+@media (prefers-reduced-motion: no-preference) {
+  .claim-chip[data-anim~='claim-chip-add'] {
+    animation: claim-chip-add 160ms var(--ease-bounce);
+  }
 }
 
 @keyframes claim-chip-add {
@@ -4850,8 +4943,10 @@
   color: var(--color-red);
 }
 
-.claim-pad__display[data-anim~='claim-chip-refused'] {
-  animation: claim-chip-refused 240ms linear;
+@media (prefers-reduced-motion: no-preference) {
+  .claim-pad__display[data-anim~='claim-chip-refused'] {
+    animation: claim-chip-refused 240ms linear;
+  }
 }
 
 @keyframes claim-chip-refused {
@@ -4877,7 +4972,12 @@
   height: 0.9em;
   margin-left: 2px;
   background: var(--color-orange);
-  animation: claim-pad-caret 1s steps(1) infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .claim-pad__caret {
+    animation: claim-pad-caret 1s steps(1) infinite;
+  }
 }
 
 @keyframes claim-pad-caret {
@@ -5223,8 +5323,10 @@ kbd {
   gap: var(--space-1);
 }
 
-.dialog[data-anim~='menu-sheet'][open] {
-  animation: menu-sheet-in var(--dur-menu-sheet) var(--ease-out);
+@media (prefers-reduced-motion: no-preference) {
+  .dialog[data-anim~='menu-sheet'][open] {
+    animation: menu-sheet-in var(--dur-menu-sheet) var(--ease-out);
+  }
 }
 
 @keyframes menu-sheet-in {
@@ -5868,7 +5970,12 @@ kbd {
   color: var(--color-text-on-paper);
   box-shadow: var(--shadow-drop);
   pointer-events: auto;
-  animation: toast-in var(--dur-toast) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .toast {
+    animation: toast-in var(--dur-toast) var(--ease-out);
+  }
 }
 
 .toast[data-tone='error'] {
@@ -6172,7 +6279,12 @@ kbd {
     0 0 0 6px var(--color-gold),
     0 0 22px 6px color-mix(in srgb, var(--color-gold) 60%, transparent),
     0 5px 0 4px var(--color-line);
-  animation: standing-grow var(--dur-standing-last) var(--ease-bounce) both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .standing__last-card {
+    animation: standing-grow var(--dur-standing-last) var(--ease-bounce) both;
+  }
 }
 
 .standing__last-label {
@@ -6197,8 +6309,10 @@ kbd {
   min-width: 14rem;
 }
 
-.standing__claim {
-  animation: standing-slide-up var(--dur-standing-button) var(--ease-out) both;
+@media (prefers-reduced-motion: no-preference) {
+  .standing__claim {
+    animation: standing-slide-up var(--dur-standing-button) var(--ease-out) both;
+  }
 }
 
 @keyframes standing-grow {
@@ -6241,8 +6355,13 @@ kbd {
   border-radius: 4px 4px 0 0;
   background: var(--color-green);
   transform-origin: bottom;
-  animation: curve-grow var(--dur-reveal-bars) var(--ease-out) both;
   animation-delay: calc(var(--i, 0) * var(--dur-reveal-stagger));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .standing-curve__fill {
+    animation: curve-grow var(--dur-reveal-bars) var(--ease-out) both;
+  }
 }
 
 .standing-curve__bar:hover .standing-curve__fill {
@@ -6264,7 +6383,9 @@ kbd {
   color: var(--color-text-muted);
 }
 
-/* ---- reduced motion: the still fallbacks from ANIMATIONS.md ---------------------------------------------- */
+/* ---- reduced motion: the still fallbacks from ANIMATIONS.md that show something else ------------------------------
+   Moving and looping animations are declared only under `prefers-reduced-motion: no-preference`, next to their rule;
+   the colour and opacity fades run either way (D209). */
 @media (prefers-reduced-motion: reduce) {
   [data-anim~='press']:active:not(:disabled) {
     transform: none;
@@ -6285,7 +6406,7 @@ kbd {
     display: inline;
   }
 
-  /* throw-hold: the same percentage; throw-on: still stripes */
+  /* throw-hold: the same percentage */
   .throw-button[data-state='pressing'] .two-level__fill,
   .throw-button[data-state='pressing'] .throw-button__fill {
     display: none;
@@ -6296,10 +6417,6 @@ kbd {
     display: inline;
   }
 
-  .throw-button[data-anim~='throw-on']::before {
-    animation: none;
-  }
-
   .two-level[data-state='pressing'] .two-level__how {
     display: none;
   }
@@ -6308,68 +6425,12 @@ kbd {
   .long-press[data-state='confirmed'] .long-press__percent {
     display: inline;
   }
-
-  /* reveal and tab-switch: everything appears at once */
-  .two-level[data-anim~='suspense-hold'] .two-level__fill,
-  .conn-chip,
-  .toast,
-  .future__body,
-  .miss-bars__fill,
-  .search-box__number[data-state='typing']::after,
-  .standing-curve__fill,
-  .standing__last-card,
-  .standing__claim,
-  .tabs__content,
-  .check-board__go .big-button__row,
-  .check-board__go .big-button__note,
-  .check-board__song,
-  .review-panel,
-  .review-confirm[open],
-  .claim-chip,
-  .claim-pad__display,
-  .claim-pad__caret,
-  .search-box__number[data-state='typing']::after {
-    animation: none;
-  }
-
-  /* check-step, check-pace: the marks and the big button change at once */
-  .check-cell .cover,
-  .check-cell__mark,
-  .check-board__auto,
-  .check-board__thumb,
-  .check-board__go {
-    transition: none;
-  }
-
-  /* the ring by Ara sona: still; the colours, numbers and icons keep the information */
-  .now-ring__spin,
-  .now-ring__record,
-  .now-ring__disc,
-  .now-ring__pulse,
-  .now-ring__centre,
-  .now-ring__value[data-tick] {
-    animation: none !important;
-  }
-
-  .dialog[data-anim~='menu-sheet'][open],
-  .dialog[data-anim~='wii-dialog'][open],
-  .wii-badge,
-  [data-default] {
-    animation: none;
-  }
-
-  .tabs__tab,
-  .heat__fill,
-  .heat__rail,
-  .now-ring__fill {
-    transition: none;
-  }
 }
 
 /* ---- the Wii remote: the default action, the badges, the Comandament dialog ----------------------------- */
 
 /* The default action's control (logic/default-action.ts): a ring in A's orange (ANIMATIONS.md › default-move).
-   The ring fades in when the default moves to it; with reduced motion it just appears. */
+   The ring fades in when the default moves to it, with reduced motion too (a colour change, not a movement). */
 [data-default] {
   outline: 4px solid var(--default-ring);
   outline-offset: 3px;
@@ -6401,7 +6462,12 @@ kbd {
   letter-spacing: 0;
   -webkit-text-stroke: 0;
   text-shadow: none;
-  animation: wii-badge-in var(--dur-wii-badge) var(--ease-bounce) both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .wii-badge {
+    animation: wii-badge-in var(--dur-wii-badge) var(--ease-bounce) both;
+  }
 }
 
 .wii-badge[data-hold] {
@@ -6711,8 +6777,10 @@ kbd {
   font-size: var(--text-md);
 }
 
-.dialog[data-anim~='wii-dialog'][open] {
-  animation: wii-dialog-in var(--dur-wii-dialog) var(--ease-out);
+@media (prefers-reduced-motion: no-preference) {
+  .dialog[data-anim~='wii-dialog'][open] {
+    animation: wii-dialog-in var(--dur-wii-dialog) var(--ease-out);
+  }
 }
 
 @keyframes wii-dialog-in {
@@ -6795,8 +6863,10 @@ kbd {
 }
 
 @media (orientation: landscape) and (min-width: 48rem) {
-  .thumb-cluster[data-finale] {
-    transition: grid-template-rows var(--dur-finale-grow) var(--ease-out);
+  @media (prefers-reduced-motion: no-preference) {
+    .thumb-cluster[data-finale] {
+      transition: grid-template-rows var(--dur-finale-grow) var(--ease-out);
+    }
   }
 
   .thumb-cluster[data-finale='normal'] {
@@ -6876,7 +6946,12 @@ kbd {
   font-size: clamp(2.5rem, 5vw, 4.5rem);
   outline: 6px solid var(--action-celebrate);
   outline-offset: 4px;
-  animation: finale-win-in 300ms var(--ease-bounce);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .finale-cue {
+    animation: finale-win-in 300ms var(--ease-bounce);
+  }
 }
 
 .finale-cue .big-button__note {
@@ -6918,7 +6993,12 @@ kbd {
 .finale-pad__chip[data-fresh] {
   outline: 4px solid var(--color-gold);
   background: var(--color-gold-pale);
-  animation: claim-chip-add 160ms var(--ease-bounce);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .finale-pad__chip[data-fresh] {
+    animation: claim-chip-add 160ms var(--ease-bounce);
+  }
 }
 
 .finale-pad__number {
@@ -7201,7 +7281,12 @@ kbd {
   display: grid;
   place-items: center;
   color: var(--color-red);
-  animation: finale-cross-in 300ms var(--ease-bounce);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .finale-stage__cross {
+    animation: finale-cross-in 300ms var(--ease-bounce);
+  }
 }
 
 .finale-stage__cross .icon {
@@ -7263,8 +7348,10 @@ kbd {
 }
 
 /* finale-safe: the ninos jump twice */
-.finale-stage__figure[data-anim='finale-safe'] {
-  animation: finale-hop var(--dur-finale-safe) ease-in-out;
+@media (prefers-reduced-motion: no-preference) {
+  .finale-stage__figure[data-anim='finale-safe'] {
+    animation: finale-hop var(--dur-finale-safe) ease-in-out;
+  }
 }
 
 @keyframes finale-hop {
@@ -7291,7 +7378,12 @@ kbd {
   background: var(--finale-plate);
   outline: 5px solid var(--color-gold);
   box-shadow: 0 0 22px 6px rgb(255 197 49 / 0.45);
-  animation: finale-win-in 300ms var(--ease-bounce);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .finale-stage__spot[data-fate='winner'] {
+    animation: finale-win-in 300ms var(--ease-bounce);
+  }
 }
 
 .finale-stage__spot[data-fate='winner'] .finale-stage__figure {
@@ -7309,21 +7401,4 @@ kbd {
   gap: var(--space-5);
   border-bottom: 0;
   background: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .thumb-cluster[data-finale],
-  .nino {
-    transition: none;
-  }
-
-  .finale-button[data-size='large'],
-  .finale-cue,
-  .finale-pad__chip[data-fresh],
-  .finale-pad__card .private-strip,
-  .finale-stage__cross,
-  .finale-stage__figure[data-anim='finale-safe'],
-  .finale-stage__spot[data-fate='winner'] {
-    animation: none;
-  }
 }
