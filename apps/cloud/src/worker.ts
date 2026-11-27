@@ -85,6 +85,11 @@ export default {
         return json(await room.phonesNow());
       case 'notice':
       case 'sounds': {
+        if (request.method === 'GET') {
+          // What every phone has now, so Admin's form starts from it rather than from what this device last sent.
+          const { notice, soundsDefault } = await room.playerSettings();
+          return json(route.name === 'notice' ? { notice } : { soundsDefault });
+        }
         const body = await readBody(request, 4096);
         let parsed: Record<string, unknown> = {};
         try {

@@ -719,6 +719,12 @@ export class GameRoom extends DurableObject<RoomEnv> {
     return { phones: phones.length, cards: [...counts].sort((a, b) => a[0] - b[0]).map(([card, n]) => ({ card, phones: n })) };
   }
 
+  /** The banner and the sounds default as every phone has them (the public state). */
+  playerSettings(): { notice: string | null; soundsDefault: boolean } {
+    this.counted();
+    return { notice: this.room.feed.state.notice, soundsDefault: this.room.feed.state.soundsDefault };
+  }
+
   setNotice(notice: unknown): SettingSave {
     this.counted();
     if (notice !== null && (typeof notice !== 'string' || notice.trim().length > CLOUD.maxNoticeLength)) {

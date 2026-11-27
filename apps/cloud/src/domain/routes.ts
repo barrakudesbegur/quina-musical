@@ -43,10 +43,10 @@ export const ROUTES: Readonly<Record<string, Route>> = Object.freeze({
   '/api/resume': { name: 'resume', websocket: false, access: PEOPLE, methods: ['POST'] },
   /** Phones following the feed now, and the card numbers they follow (anonymous): Admin's "cards opened on phones". */
   '/api/phones': { name: 'phones', websocket: false, access: PEOPLE, methods: GET },
-  /** Admin's banner to every phone: `{ notice: string | null }`. */
-  '/api/notice': { name: 'notice', websocket: false, access: PEOPLE, methods: ['PUT'] },
-  /** The player app's default for interface sounds: `{ soundsDefault: boolean }` (a player's own choice wins). */
-  '/api/sounds': { name: 'sounds', websocket: false, access: PEOPLE, methods: ['PUT'] },
+  /** Admin's banner to every phone: `{ notice: string | null }`, sent (PUT) or read back as phones have it (GET). */
+  '/api/notice': { name: 'notice', websocket: false, access: PEOPLE, methods: ['GET', 'PUT'] },
+  /** The player app's default for interface sounds: `{ soundsDefault: boolean }` (a player's own choice wins); PUT or GET. */
+  '/api/sounds': { name: 'sounds', websocket: false, access: PEOPLE, methods: ['GET', 'PUT'] },
   '/api/export': { name: 'export', websocket: false, access: PEOPLE, methods: GET },
   /** Connections, messages and rows since the GameRoom last woke, today's usage against the free plan's daily limits, and the laptop link's lag (admins, the preflight, the load test). */
   // Counts only (no names, no Queue): the laptop's preflight reads today's usage against the free limits too.

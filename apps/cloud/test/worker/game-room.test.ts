@@ -687,6 +687,11 @@ describe("Admin and the phones", () => {
     expect((await send('/api/sounds', { soundsDefault: false })).status).toBe(200);
     expect((await b.view()).state.soundsDefault).toBe(false);
     expect((await send('/api/sounds', { soundsDefault: 'no' })).status).toBe(400);
+    // Admin reads them back as the phones have them (its form starts from these, not from its own last send).
+    expect((await send('/api/notice', { notice: 'Bar obert' })).status).toBe(200);
+    expect(await getJson('/api/notice')).toEqual({ notice: 'Bar obert' });
+    expect(await getJson('/api/sounds')).toEqual({ soundsDefault: false });
+    expect((await SELF.fetch('https://quina.example/api/notice')).status).toBe(403);
     expect((await SELF.fetch('https://quina.example/api/phones')).status).toBe(403);
     expect((await SELF.fetch('https://quina.example/api/notice', { method: 'PUT', body: '{"notice":"hack"}' })).status).toBe(403);
   });
