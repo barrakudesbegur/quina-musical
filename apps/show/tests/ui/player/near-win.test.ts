@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { cardMarks, type PlayerCard } from '../../../../../packages/rules/marks.ts';
-import { nearKeys, nearSongs } from '../../../../player/logic/near-win.ts';
+import { nearKeys, nearSongs, remainingSongs } from '../../../../player/logic/near-win.ts';
 
 const card: PlayerCard = { id: 123, type: 'normal', lines: [[2, 17, 41, 69], [11, 15, 31, 64], [3, 55, 66, 68]] };
 const open = { lineConfirmed: false, ended: false };
@@ -35,4 +35,13 @@ test('nothing is highlighted after the round, without marks, or for an unknown c
 
 test('the cue keys list every highlighted song per card, in card order', () => {
   assert.deepEqual(nearKeys([{ cardId: 123, near: new Set([69]) }, { cardId: 57, near: new Set([4, 9]) }]), ['123:69', '57:4', '57:9']);
+});
+
+test('the remaining-songs pill (#72) counts only where songs are counted', () => {
+  const m = cardMarks(card, [2, 17, 41]);
+  assert.equal(remainingSongs(card, m, open), 1);
+  assert.equal(remainingSongs(card, m, { lineConfirmed: true, ended: false }), 9);
+  assert.equal(remainingSongs(card, m, { ...open, ended: true }), null, 'not after the round');
+  assert.equal(remainingSongs(card, m, { ...open, kind: 'desgraciat' }), null, 'the Desgraciat round shows DEMPEUS / ASSEGUT instead');
+  assert.equal(remainingSongs(card, null, open), null, 'a card that does not play');
 });

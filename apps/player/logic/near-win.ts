@@ -3,7 +3,7 @@
 // that card's grid. Nothing is ever announced: a card that completes just shows its marks, and players claim
 // it themselves. Builds on cardMarks and nearWins from packages/rules/marks.ts. Pure. The Desgraciat round has no
 // Line or Quina to be near, so it highlights nothing.
-import { nearWins, type CardMarks, type PlayerCard } from '../../../packages/rules/marks.ts';
+import { nearWins, songsToGo, type CardMarks, type PlayerCard } from '../../../packages/rules/marks.ts';
 import type { RoundKind } from '../feed/public.ts';
 
 export interface NearRound {
@@ -25,4 +25,12 @@ export function nearSongs(card: PlayerCard | null, marks: CardMarks | null, roun
 /** Every highlighted song across the player's cards ("cardId:songId"), in card order: the near-win cue's input. */
 export function nearKeys(cards: readonly { cardId: number; near: ReadonlySet<number> }[]): string[] {
   return cards.flatMap(({ cardId, near }) => [...near].map((songId) => `${cardId}:${songId}`));
+}
+
+/** The remaining-songs pill's count (#72): the songs the card still needs for a Line, or the Quina once a Line is
+ * confirmed; null where songs aren't being counted (no round, a card that doesn't play, the Desgraciat round, after
+ * the round). */
+export function remainingSongs(card: PlayerCard | null, marks: CardMarks | null, round: NearRound | null): number | null {
+  if (!card || !marks || !round || round.ended || round.kind === 'desgraciat') return null;
+  return songsToGo(card, marks, round);
 }

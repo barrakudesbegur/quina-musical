@@ -38,6 +38,9 @@ export interface CheckCell {
   playing: boolean;
   /** The next press reveals it («Següent»). */
   next: boolean;
+  /** How many presses until it's revealed (1 = the next one, «Següent»; 2, 3… after it), while the Check still
+   * reveals; null once revealed or playing, after the reveals stop, or for a song the Check doesn't play (#78). */
+  ahead: number | null;
   /** In the Check but after the reveals stop (the first ✗): it will never be revealed («no es destaparà»). */
   skipped: boolean;
 }
@@ -78,6 +81,7 @@ export function checkCells(check: CheckInfo, claim: ClaimInfo | null, nowMs: num
       revealed: heard,
       playing: step !== undefined && !heard,
       next: at !== null && at === revealed && stillRevealing,
+      ahead: at !== null && at >= revealed && stillRevealing && (until === null || at <= until) ? at - revealed + 1 : null,
       skipped: at !== null && until !== null && at > until,
     };
   });

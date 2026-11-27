@@ -44,12 +44,15 @@ test("the card in private: every song's mark from the start, full once revealed,
   assert.deepEqual(row.map((c) => c.playing), [false, true, false, false], '«Aserejé» is playing');
   assert.deepEqual(checkCells(check, claim, NOW + 5000).filter((c) => c.inCheck).map((c) => c.revealed), [true, true, false, false]);
   assert.deepEqual(row.map((c) => c.next), [false, false, true, false]);
+  assert.deepEqual(row.map((c) => c.ahead), [null, null, 1, 2], 'upcoming cells count the presses to their reveal (#78)');
+  assert.ok(cells.filter((c) => !c.inCheck).every((c) => c.ahead === null));
   assert.ok(cells.filter((c) => !c.inCheck).every((c) => c.mark === null), "a Line's other rows carry no mark");
 
   const twoFail = onScreen('checkCelebrateNext');
   const cells204 = checkCells(twoFail.check, twoFail.claim, NOW).filter((c) => c.inCheck);
   assert.deepEqual(cells204.map((c) => c.skipped), [false, true, true, true], "#204 fails at its first song: the rest won't be revealed");
   assert.ok(cells204.every((c) => !c.next), 'after the cue nothing is next');
+  assert.ok(cells204.every((c) => c.ahead === null), 'after the cue nothing is upcoming');
   assert.deepEqual(checkCells(onScreen('checkWrongType').check, onScreen('checkWrongType').claim, NOW), [], 'a card of another type: no songs');
 });
 

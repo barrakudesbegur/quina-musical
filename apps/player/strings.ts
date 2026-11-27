@@ -101,7 +101,9 @@ export const S = {
   removeText: 'Deixaràs de veure’l en aquest mòbil. El pots tornar a afegir quan vulguis.',
   removeYes: 'Sí, treure’l',
   removeNo: 'Mantén el cartró',
-  cell: (title: string, marked: boolean) => `${title}${marked ? `: ${CA.landed.toLowerCase()}` : ''}`,
+  /** The remaining-songs pill's words (#72; the pill itself shows only the number, or the rosette at 0). */
+  remaining: (n: number) => (n === 0 ? 'No en falta cap' : n === 1 ? 'En falta 1' : `En falten ${n}`),
+  cell: (title: string, marked: boolean, playing = false) => `${title}${marked ? `: ${CA.landed.toLowerCase()}` : ''}${playing ? ', sona ara' : ''}`,
   markLabel: (mark: string) =>
     (({ corn: 'Gra de blat de moro', shootingStar: 'Estel fugaç', bauble: 'Bola de Nadal', tree: 'Arbre de Nadal', heart: 'Cor', crown: 'Corona de rei', grapes: "Raïm de Cap d'Any", snowflake: 'Floc de neu', topHat: 'Barret de copa', poop: 'Caca del Tió' }) as Record<string, string>)[mark] ?? mark,
 

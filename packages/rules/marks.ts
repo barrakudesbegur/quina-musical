@@ -80,6 +80,17 @@ export function nearWins(card: PlayerCard, marks: CardMarks, { lineConfirmed, ro
 }
 
 /**
+ * How many more songs a card needs for what the round plays for now (#72, the remaining-songs pill): until someone's
+ * Line is confirmed, the fewest gaps in any of its lines; after it, every gap on the card (the Quina). 0: the card has
+ * it (its player should claim). Counts the marks the card shows, so it never says more than the grid does.
+ */
+export function songsToGo(card: PlayerCard, marks: CardMarks, { lineConfirmed }: Pick<NearWinOptions, 'lineConfirmed'>): number {
+  const gaps = card.lines.map((line, li) => line.filter((_, si) => !marks.marked[li]?.[si]).length);
+  const total = gaps.reduce((a, b) => a + b, 0);
+  return lineConfirmed ? total : Math.min(...gaps);
+}
+
+/**
  * The cards that count in a round: those of the printed type it plays (the round's `cardType`; read it with
  * @quina/protocol's roundCardType, which falls back to its kind's default for an older snapshot).
  */

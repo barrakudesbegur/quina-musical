@@ -15,6 +15,8 @@
   let { app }: { app: PlayerApp } = $props();
   // The card just added (or the pad's "Veure'l") is ringed in gold, and scrolled to at once (no motion).
   let section: HTMLElement | undefined = $state();
+  // The song playing now (#74): the latest landing, while the round plays (not during a Check or a pause).
+  const playingSong = $derived(app.scene === 'play' && !app.paused ? (app.latest?.songId ?? null) : null);
   $effect(() => {
     if (app.highlightCard !== null) section?.querySelector('[data-highlight]')?.scrollIntoView({ block: 'center' });
   });
@@ -36,6 +38,7 @@
             stagger={i * PLAYER_CONFIG.markStaggerMs}
             fall={app.falls.get(view.saved.id) ?? null}
             standUp={standUpPlace(i, app.standUp)}
+            playing={playingSong}
           />
         </li>
       {/each}

@@ -1,7 +1,7 @@
 // Player card marks: every landed song marked (no grace rule), Lines shown as plain marks, the "1 song away" list.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { cardMarks, cardsForRound, nearWins, type PlayerCard } from '../../../../packages/rules/marks.ts';
+import { cardMarks, cardsForRound, nearWins, songsToGo, type PlayerCard } from '../../../../packages/rules/marks.ts';
 
 const card: PlayerCard = {
   id: 123,
@@ -66,4 +66,13 @@ test("a round counts only the cards of its card type, whatever its kind", () => 
   assert.deepEqual(cardsForRound(cards, 'especial').map((c) => c.id), [412]);
   assert.deepEqual(cardsForRound(cards, 'desgraciat').map((c) => c.id), [777]);
   assert.deepEqual(cardsForRound(cards, 'daurat'), [], 'a type no card has: none count');
+});
+
+test('songs to go (#72): the fullest line\'s gaps until a Line is confirmed, then the whole card\'s', () => {
+  assert.equal(songsToGo(card, cardMarks(card, []), { lineConfirmed: false }), 4);
+  const m = cardMarks(card, [2, 17, 41, 11]);
+  assert.equal(songsToGo(card, m, { lineConfirmed: false }), 1, 'line 0 misses only 69');
+  assert.equal(songsToGo(card, m, { lineConfirmed: true }), 8, 'the Quina: 12 − 4');
+  assert.equal(songsToGo(card, cardMarks(card, [2, 17, 41, 69]), { lineConfirmed: false }), 0, 'a Line: 0, claim it');
+  assert.equal(songsToGo(card, cardMarks(card, all), { lineConfirmed: true }), 0);
 });

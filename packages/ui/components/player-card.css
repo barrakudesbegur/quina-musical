@@ -1,0 +1,53 @@
+/*
+ * D1 · PlayerCard's own parts (PlayerCard.svelte; the frame, the header band, the stand badges and the veil are the
+ * phone's, in apps/player/player.css, since only the phone draws a player's card).
+ *
+ * The count pill (#72): the songs the card still needs, a number in a paper pill with no label or icon, at the header's
+ * right end; at 0 a gold pill with the rosette (complete: claim it). The DEMPEUS / ASSEGUT pill takes the same place
+ * in the Desgraciat round (#73), in the compact card too.
+ */
+.player-card__count {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  box-sizing: border-box;
+  min-width: 2.25rem;
+  height: 2rem;
+  padding: 0 0.5rem;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: 1.375rem;
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 0 var(--color-line);
+}
+
+/* "#123" ends the band when there's no count; with one, the number keeps its place and the pill follows it. */
+.player-card__header:has(.player-card__count) .player-card__title {
+  flex: 1 1 auto;
+}
+
+.player-card__count[data-done] {
+  padding: 0 0.25rem;
+  background: var(--color-gold);
+}
+
+.player-card__count .icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Compact: the header band alone, a resting row (D1). */
+.player-card-wrap[data-compact] .player-card__header {
+  border-bottom: 0;
+}
+
+/* Sunk (the seated look): lowered and tilted under its veil (player.css draws the veil). */
+.player-card-wrap[data-sunk] {
+  transform: translateY(var(--player-seated-drop, 10px)) rotate(var(--player-seated-tilt, -2deg));
+  transform-origin: 30% 100%;
+}
