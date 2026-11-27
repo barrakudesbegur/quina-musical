@@ -55,6 +55,9 @@ const GOMET = { diameter: 42.52 /* 15 mm */, size: 10.5, spacingEm: 0.15 };
 const SHEETS = { A4: { w: 595.28, h: 841.89 }, A3: { w: 841.89, h: 1190.55 }, SRA3: { w: 907.09, h: 1275.59 } };
 const LAYOUTS = {
   '3x1-h': { name: '3×1 horizontal (today)', sheet: 'A4', landscape: false, cols: 1, rows: 3, titleMax: 14, cover: 46 },
+  // The organizers choose (the user, 27 Nov): covers in colour (A3 · 6, option C) or this card without covers, black and
+  // white on coloured paper like last year's, with last year's 16 pt titles.
+  '3x1-h-bw': { name: '3×1 horizontal, no covers (b&w)', sheet: 'A4', landscape: false, cols: 1, rows: 3, titleMax: 16, noCovers: true },
   '2x1-h': { name: '2×1 horizontal', sheet: 'A4', landscape: false, cols: 1, rows: 2, titleMax: 16 },
   '2x1-v': { name: '2×1 vertical', sheet: 'A4', landscape: true, cols: 2, rows: 1, titleMax: 16 },
   '2x2-h': { name: '2×2 horizontal', sheet: 'A4', landscape: true, cols: 2, rows: 2, titleMax: 16 },
@@ -266,9 +269,9 @@ function geometry(layout) {
   const cellW = (innerW - 4) / 4;
   const cellH = (gridH - 4) / 3;
   const top = layout.cellMode ? layout.cellMode === 'above' : cellH / cellW >= 0.7; // tall cells: the cover above the title
-  const cover = layout.cover || (top ? Math.min(cellW - 10, (cellH - 6) * 0.55) : Math.min(cellH - 10, cellW * 0.36));
-  const text = top ? { w: cellW - 8, h: cellH - cover - 14 } : { w: cellW - cover - 14, h: cellH - 8 };
-  return { page, W, H, innerW, single, style, qrSize, headingPad, numberW: ['gometNino', 'gometQr', 'gometNinoBetween'].includes(style) ? NINO_NUMBER_W : 62, numberGap: ['gometNino', 'gometQr', 'gometNinoBetween'].includes(style) ? NINO_GAP : 8, headerH, bandH, headingSize, gridH, cellW, cellH, top, cover, text };
+  const cover = layout.noCovers ? 0 : layout.cover || (top ? Math.min(cellW - 10, (cellH - 6) * 0.55) : Math.min(cellH - 10, cellW * 0.36));
+  const text = layout.noCovers ? { w: cellW - 11, h: cellH - 8 } : top ? { w: cellW - 8, h: cellH - cover - 14 } : { w: cellW - cover - 14, h: cellH - 8 };
+  return { noCovers: Boolean(layout.noCovers), page, W, H, innerW, single, style, qrSize, headingPad, numberW: ['gometNino', 'gometQr', 'gometNinoBetween'].includes(style) ? NINO_NUMBER_W : 62, numberGap: ['gometNino', 'gometQr', 'gometNinoBetween'].includes(style) ? NINO_GAP : 8, headerH, bandH, headingSize, gridH, cellW, cellH, top, cover, text };
 }
 
 function Header({ g, kind, side, num, qr }) {
@@ -332,7 +335,7 @@ function Cell({ g, id, titleMax, stats }) {
   const s = songs[id];
   const fit = fitSong(s, g.text.w - 3, g.text.h, titleMax);
   stats.push(fit);
-  const cover = h(Image, { src: coverPath(id), style: { width: g.cover, height: g.cover, objectFit: 'cover' } });
+  const cover = g.noCovers ? null : h(Image, { src: coverPath(id), style: { width: g.cover, height: g.cover, objectFit: 'cover' } });
   const words = [
     h(Text, { key: 't', style: [st.songTitle, { fontSize: fit.ts, letterSpacing: 0.06 * fit.ts, textAlign: g.top ? 'center' : 'left' }] }, s.printTitle),
     h(Text, { key: 'a', style: [st.songArtist, { fontSize: fit.as, letterSpacing: 0.06 * fit.as, textAlign: g.top ? 'center' : 'left' }] }, s.printArtist),

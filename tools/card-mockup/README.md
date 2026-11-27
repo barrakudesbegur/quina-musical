@@ -49,7 +49,7 @@ held up to the light, the back's grid falls exactly on the front's (the canvas's
 | `a3-6-band` heading band | branding + GOMET + number + QR, then the heading in a band as wide as the grid | 34 × 32 mm | 17 mm | 13.5 pt, 7 pt (3 too long) |
 | `a3-6-footer` branding at the foot | a big heading, GOMET, number, QR; the branding in a line under the grid | 34 × 34 mm | 18 mm | 13.5 pt, 7 pt (3 too long) |
 | `a3-6-gomet-left` no branding | the GOMET circle, the heading, number, QR | 34 × 36 mm | 19 mm | 13.5 pt, 9.5 pt |
-| `a3-6-gomet-nino-between` **option C** | the user's order: the GOMET circle and the Barrakudes figure, the heading at 38 pt centred in the space between (about 5 mm left of the card's centre), the number next to its QR | 34 × 36 mm | 19 mm | 13.5 pt, 9.5 pt |
+| `a3-6-gomet-nino-between` **option C, chosen** | the user's order: the GOMET circle and the Barrakudes figure, the heading at 38 pt centred in the space between (about 5 mm left of the card's centre), the number next to its QR | 34 × 36 mm | 19 mm | 13.5 pt, 9.5 pt |
 | `a3-6-gomet-qr` rejected | the QR moved to the left to centre the heading: the number must sit next to its QR, which encodes it | | | |
 | `a3-6-gomet-left` **option B** | option C without the figure: the GOMET circle, the heading at 38 pt centred between it and the number (about 1 cm left of the card's centre), the number and the QR | 34 × 36 mm | 19 mm | 13.5 pt, 9.5 pt |
 | `a3-6-gomet-nino` superseded | the GOMET circle, the figure, the heading centred at 38 pt, the number and a 12 mm QR: too small | | | |
@@ -57,6 +57,18 @@ held up to the light, the back's grid falls exactly on the front's (the canvas's
 One more try the user asked for: 2×2 on A4 with that last header and every cover above its title
 (`2x2-v-gomet-left`: 23 × 39 mm cells, 20 mm covers, 13 pt titles, 13 of 192 too long; `2x2-h-gomet-left`:
 34 × 25 mm cells, 12 mm covers, 39 of 192 too long, or 25 with the cover beside).
+
+## The organizers choose: covers in colour, or no covers in black and white (27 Nov)
+
+The user chose header option C for the A3 · 6 card, and asked the organizers to choose between:
+
+- **Option 1, covers in colour:** the A3 · 6 card (149 × 140 mm, header C, covers above the titles), `a3-6-gomet-nino-between`.
+- **Option 2, no covers, black and white:** the 21 × 9.9 cm card the organizers saw before (3 a page on A4, the header
+  with «QUINA QUINA!» and «BARRAKUDES · 2026», the centred 38 pt heading, the GOMET circle, the number next to its QR),
+  without covers, so the titles are last year's 16 pt: `3x1-h-bw`. Black on coloured paper, like last year.
+
+[organizers.cjs](organizers.cjs) puts last year's card and one card of each option on an A3 page, each at its real size
+(out/cartrons-2026-opcions.pdf, captioned in Catalan; print it at 100 % on A3).
 
 ## Layouts compared
 
