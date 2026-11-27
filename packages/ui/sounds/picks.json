@@ -1,0 +1,50 @@
+{
+  "about": "The touch sounds' picks (D206-D208, U186): which recording each class plays on each surface. tools/prep/ui_sounds.py reads this file and writes <surface>.mp3 and sprites.ts beside it. The reasons are in temp/design-canvas/ds/ui-sounds.md. rate: the random playback-rate range per play; bend: the rate's multiplier at the sample's start and end (a pitch slide).",
+  "source": {
+    "repo": "https://github.com/joshwcomeau/button-sounds",
+    "commit": "e0fd81a459cb7ecacd0aa677e477ba8730d6bcdc",
+    "folder": "package/audio",
+    "licence": "MIT, LICENSE-button-sounds.txt"
+  },
+  "layout": { "pressMs": 190, "releaseMs": 300, "gapMs": 60, "peakDb": -6, "fadeMs": 10, "samples": 4, "bitrate": "96k", "sampleRate": 48000 },
+  "surfaces": {
+    "player": {
+      "gain": 0.3,
+      "classes": {
+        "big": { "press": "asus-kbd-medium", "release": "asus-kbd-medium", "rate": [0.94, 1.06] },
+        "small": { "press": "asus-kbd-soft", "release": "asus-kbd-soft", "rate": [0.94, 1.06] },
+        "switchOn": { "press": "tonal-on", "release": "tonal-on", "rate": [0.98, 1.02] },
+        "switchOff": { "press": "tonal-off", "release": "tonal-off", "rate": [0.98, 1.02] },
+        "digit": { "press": "iidx", "release": "iidx", "rate": [0.94, 1.06], "samples": 4 },
+        "backspace": { "press": "ps5-double", "release": "ps5-double", "rate": [0.95, 1.05] },
+        "submit": { "press": "popper-dice", "release": "popper-dice", "rate": [0.97, 1.03] },
+        "drawerOpen": { "release": "sd-resonant", "rate": [0.98, 1.02], "bend": [0.94, 1.06] },
+        "drawerClose": { "press": "sd-resonant", "rate": [0.98, 1.02], "bend": [1.04, 0.9] },
+        "tab": { "press": "heated-blanket", "release": "heated-blanket", "rate": [0.95, 1.05] },
+        "refused": { "press": "ps5-dull", "rate": [0.95, 0.95], "bend": [1, 0.82] },
+        "corner": { "press": "asus-kbd-hard", "rate": [0.95, 1.05] },
+        "floating": { "press": "asus-kbd-space", "rate": [0.95, 1.05] },
+        "iconPick": { "press": "popper-empty", "release": "popper-empty", "rate": [0.94, 1.06] }
+      }
+    },
+    "console": {
+      "gain": 0.15,
+      "classes": {
+        "big": { "press": "hi75-medium", "release": "hi75-medium", "rate": [0.97, 1.03] },
+        "small": { "press": "raddy-medium", "release": "raddy-medium", "rate": [0.97, 1.03] },
+        "switchOn": { "press": "guitar-toggle-on", "release": "guitar-toggle-on", "rate": [0.98, 1.02] },
+        "switchOff": { "press": "guitar-toggle-off", "release": "guitar-toggle-off", "rate": [0.98, 1.02] },
+        "digit": { "press": "hi75-soft", "release": "hi75-soft", "rate": [0.97, 1.03], "samples": 6 },
+        "backspace": { "press": "hi75-space", "release": "hi75-space", "rate": [0.97, 1.03] },
+        "submit": { "press": "halo-shift", "release": "halo-shift", "rate": [0.98, 1.02] },
+        "drawerOpen": { "release": "kvm-switch", "rate": [0.98, 1.02] },
+        "drawerClose": { "press": "kvm-switch", "rate": [0.98, 1.02] },
+        "tab": { "press": "halo-soft", "release": "halo-soft", "rate": [0.97, 1.03] },
+        "chipAdd": { "press": "popper-empty", "release": "popper-empty", "rate": [0.98, 1.02] },
+        "chipRemove": { "press": "raddy-low", "release": "raddy-low", "rate": [0.98, 1.02] },
+        "holdDone": { "press": "synth-on", "release": "synth-on", "rate": [1, 1] },
+        "refused": { "press": "ps5-dull", "rate": [1, 1] }
+      }
+    }
+  }
+}
