@@ -69,8 +69,8 @@ export const LINE_ICONS = {
     'M8.8 12.3l2.2 2.2 4.3-4.6',
   ],
   trophy: ['M8 4h8v5a4 4 0 0 1-8 0z', 'M8 6H5a3 3 0 0 0 3 4', 'M16 6h3a3 3 0 0 1-3 4', 'M12 13v4', 'M8 20h8'],
-  /** Three steps with a star over the top one (the finale on the stage). */
-  podium: ['M3 22v-6h6v6', 'M9 22V12.5h6V22', 'M15 22v-4h6v4', 'M2 22h20', 'M12 1L13.18 3.98L16.37 4.18L13.9 6.22L14.7 9.32L12 7.6L9.3 9.32L10.1 6.22L7.63 4.18L10.82 3.98Z'],
+  /** Three steps in one outline, with a star over the top one (the finale on the stage). */
+  podium: ['M2.5 21.5v-4.5h6.5V13.5h6v4.5h6.5v3.5z', 'M12 1L13.18 3.98L16.37 4.18L13.9 6.22L14.7 9.32L12 7.6L9.3 9.32L10.1 6.22L7.63 4.18L10.82 3.98Z'],
   'figure-standing': ['M12 2.3a2.3 2.3 0 1 0 0 4.6a2.3 2.3 0 1 0 0-4.6z', 'M12 8v6.5', 'M12 14.5l-3 6.5', 'M12 14.5l3 6.5', 'M6.5 10.5L12 9l5.5 1.5'],
   'figure-seated': ['M10 2.3a2.3 2.3 0 1 0 0 4.6a2.3 2.3 0 1 0 0-4.6z', 'M10 8v6h6l1.5 6.5', 'M10 10.5l4.5 1.5', 'M5 12.5V21', 'M5 16.5h5'],
 
