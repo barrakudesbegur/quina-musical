@@ -1614,3 +1614,7 @@ The list is in temp/design-canvas/ds/comments-27nov.md §8. The main points:
 - **Drawers and forms:** the QR-close bug fixed; drag-to-close stays stiff on forms; the "add another card" flow researched and redone; toasts restyled; reordering fixed.
 - **A collapsed view of the cards:** boards only, no code.
 By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md; packages/ui.
+
+### D238 · Song ids follow the playlists' letter-by-letter order · 2026-11-27 · Active
+The user sorts the playlists with an online tool, and asked to "check the order is right and use that for the ids". That tool sorts letter by letter, ignoring spaces and punctuation, and both final playlists are exactly in its order (Sound engine, 27 Nov). So the ids follow the playlists as they are, and U58's convention is letter by letter, not the word-by-word default. Pool 1 is 1–70 and pool 2 starts at 71.
+By: the orchestrator, applying the user's instruction of 25 Nov. Source: Sound engine's report of 27 Nov. Amends: D103. Lives in: requirements/songs-and-cards.md › The pool.

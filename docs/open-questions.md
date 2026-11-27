@@ -165,11 +165,12 @@ Today every console already shares the show's state live: songs, Holds, claims, 
 - (a) The real night's times: doors at 5 pm, the start at 6 pm on 27 Dec. The Horari and the doors voices won't count down today.
 - (b) The same schedule, moved so it starts at a time today the user gives. The countdowns and the doors voices run for real, and it's put back to 27 Dec afterwards.
 
-### U199 · Pool 2 for today's test
-Pool 2's playlist (64 entries, 27 Nov) isn't filtered yet. "Viva La Vida" is listed twice, 14 entries are pool 1's own tracks (positions 35, 44, 45, 50, 53–56, 59–64), and "NI BORRACHO" appears as both the single and pool 1's album track. That leaves 48 new songs. D101 and D193 say the pools have different songs. The download is the same 48 either way.
-- (a) Pool 2 is the 48 new songs, numbered 71–118.
-- (b) Pool 2 keeps every song once, 62 in all, including the 14 shared with pool 1, which get a second number.
-Also for the final playlist: were the 14 shared songs meant to be in both pools?
+### U199 · The 4 songs in both final playlists
+Both final playlists have 70 songs and no repeats inside each (D230). But 4 of pool 2's are the very same tracks as pool 1's: 7 Bailando por Ahi (Juan Magán) = pool 1's 6; 33 Mari Carmen (La Pegatina) = 45; 47 Only Girl (In The World) (Rihanna) = 47; 54 Que Te Quería (La Quinta Estacion) = 53. D101 and D193 say the pools have different songs. Today's run leaves them out of pool 2 (66 songs).
+- (a) Swap those 4 in pool 2's playlist for other songs (4 more downloads).
+- (b) Keep pool 2 at 66 songs.
+- (c) Keep them in both pools.
+
 
 ### U198 · The special card's side labels
 The Check shows one label for a card's type and side, so a player can see that the side checked is the round's (D163). The normal card's are «Normal 1–5» and «Normal 6–10». The special card now has two sides (D226).
@@ -295,10 +296,6 @@ About 2 minutes a song is about 4.7 hours for 140 songs. Sound engine's options:
 D103 numbers a final pool's songs alphabetically, so pool 1 is 1–70. Every session's agreed plan needs ids unique across the night's songs.
 **Default:** Pool 2 continues at 71–140, not 1–70 again (no third pool since D171).
 
-### U58 · The alphabetical convention
-pool 1's playlist is in title order with no song out of place (Sound engine, 25 Nov). It sorts word by word, the usual convention, which matters in three spots: #2 "A quién le importa" before #3 "AL GOLPITO"; #23–24 "El Ultimo Vals" and "El universo sobre mí" before #25 "Elefants"; #34 "L'Empordà" before #35 "La Gozadera", because the apostrophe sorts before letters. Letter by letter, ignoring spaces and punctuation, those would swap. Renumbering takes minutes, any time before the cards.
-**Default:** word by word, as the playlist is now.
-
 ### U61 · A pool's song we can't download
 D106 lets the Interval leave out a track nobody can get. A pool's songs are printed on the cards, and 70 is the count (D100). Pool 1 has no such song today; pool 2 isn't fetched yet.
 **Default:** as D66 says: the user downloads it by hand or swaps it in the playlist before the cards are made, so the pool keeps 70.
@@ -363,6 +360,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U58 · The alphabetical convention** (2026-11-27) → D238: letter by letter, as the user's sorting tool does and the playlists are.
 - **U192 · A two-sided special card** (2026-11-27) → D226: yes, agreed with the team; the Desgraciat on side 1 (pool 1), the Especial on side 2 (pool 2).
 - **U59 · The special card's back** (2026-11-27) → D226: it's side 2, for the Especial.
 - **U187 · The oldest iOS** (2026-11-27) → D219: the latest browsers only; no backwards compatibility.
