@@ -1,0 +1,68 @@
+/*
+ * D4 · Cover (components-v2.md § 5; Cover.svelte, and cover.ts › coverElement for the projector): a song's square
+ * cover in an ink frame. The surface's context sizes it (a grid cell, a row) unless `size` names a step of the ladder;
+ * then the ladder's rule sets the width, the border (≈ size / 30) and the radius (≈ size / 8.5). Every rule that a
+ * context may tune is in :where(), so an app's own `.cover` rules win whatever order the stylesheets load in.
+ */
+:where(.cover) {
+  position: relative;
+  display: block;
+  flex: none;
+  box-sizing: border-box;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-deep);
+}
+
+/* The ladder (COVER_SIZES): --cover-px is a plain number of px, set by the component. */
+:where(.cover[data-size]) {
+  width: calc(var(--cover-px) * 1px);
+  border-width: max(2px, round(calc(var(--cover-px) * 1px / 30), 1px));
+  border-radius: calc(var(--cover-px) * 1px / 8.5);
+}
+
+.cover__picture {
+  display: contents;
+}
+
+.cover__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Blurred (the phone's drum while it turns): a static blur, set once and never animated (ANIMATIONS budget). */
+.cover[data-blurred] .cover__img {
+  filter: blur(2px);
+  scale: 1.08;
+}
+
+.cover__note {
+  display: none;
+}
+
+.cover[data-state='missing'] .cover__picture {
+  display: none;
+}
+
+/* No song (the Hold's music) or a file that fails: a navy tile with a cyan note (C5). The `empty` fallback leaves the
+   surface's own box (the phone's card back). */
+.cover[data-state='missing'][data-fallback='note'] {
+  display: grid;
+  place-items: center;
+  background: var(--color-navy);
+}
+
+.cover[data-state='missing'][data-fallback='note'] .cover__note {
+  display: block;
+  width: 48%;
+  height: 48%;
+  fill: none;
+  stroke: var(--color-cyan);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

@@ -9,7 +9,7 @@
   import type { PublicLanding, PublicSpin } from '../feed/public.ts';
   import { DRUM_TILES, drumTurn, reelOffset, reelState } from '../logic/reel.ts';
   import { S } from '../strings.ts';
-  import Cover from './Cover.svelte';
+  import Cover from '../../../packages/ui/components/Cover.svelte';
 
   let {
     spin,
@@ -94,10 +94,10 @@
         <span class="drum__tile" style:--i={i}>
           {#if landed && i === front}
             {#key landed.position}
-              <span class="drum__landed" data-anim="landing"><Cover songId={landed.songId} size="lg" /></span>
+              <span class="drum__landed" data-anim="landing"><Cover songId={landed.songId} class="cover--lg" fallback="empty" /></span>
             {/key}
           {:else if tileSong !== null}
-            <Cover songId={tileSong} size="lg" />
+            <Cover songId={tileSong} class="cover--lg" fallback="empty" />
           {:else}
             <span class="reel__back reel__back--{i % 3}"></span>
           {/if}

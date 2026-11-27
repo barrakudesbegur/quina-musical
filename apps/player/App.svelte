@@ -2,6 +2,9 @@
   // The player app's shell (D73, D87): one home screen (the garland, the header, the status strips, the drum and
   // Historial | Cartrons), the two corner buttons (Premis, Horari), the Celebration, and the drawers stacked over it
   // all (logic/drawers.ts). All state lives in PlayerApp; this only lays it out.
+  import { provideDs } from '../../packages/ui/components/providers.ts';
+  import { isLocalHost } from '../../packages/ui/client/endpoints.ts';
+  import { PLAYER_CONFIG } from './config.ts';
   import type { PlayerApp } from './model.svelte.ts';
   import { depthOf, drawerOrigin } from './logic/drawers.ts';
   import AppHeader from './components/AppHeader.svelte';
@@ -26,6 +29,8 @@
   import { S } from './strings.ts';
 
   let { app }: { app: PlayerApp } = $props();
+  // The generic components' covers (D4): production serves a JPEG XL of each; the laptop's dev relay only the JPEGs.
+  provideDs({ covers: { base: PLAYER_CONFIG.coverBase, jxl: PLAYER_CONFIG.coverJxl && !isLocalHost(location.hostname) } });
   const named = (id: number) => app.data.cards.find((c) => c.id === id) ?? null;
   const celebrationRound = $derived(app.celebration ? (prizeRounds(app.plan, app.state).find((r) => r.number === app.celebration?.round) ?? null) : null);
   const closeTop = () => app.closeTop();

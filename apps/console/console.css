@@ -345,10 +345,9 @@
   color: var(--color-text-muted);
 }
 
-/* A song's cover */
+/* A song's cover (the design system's Cover, packages/ui/components/cover.css): the console's frame and sizes */
 .cover {
   flex: none;
-  object-fit: cover;
   border: var(--line-width-bold) solid var(--color-line);
   border-radius: var(--radius-md);
   background: var(--color-chip);

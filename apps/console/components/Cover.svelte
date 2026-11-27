@@ -1,16 +1,9 @@
-<!-- A song's cover, decorative (the title is always next to it); a music note when there is none or it fails. -->
+<!-- A song's cover on the console: the design system's Cover (D4), sized by the console's sm / md / lg classes (a music
+     note on navy when there is none or it fails). -->
 <script lang="ts">
-  import { coverUrl } from '../../../packages/ui/data/catalog.ts';
-  import Icon from './Icon.svelte';
+  import Cover from '../../../packages/ui/components/Cover.svelte';
 
   let { songId, size = 'md', morph }: { songId: number | null; size?: 'sm' | 'md' | 'lg'; morph?: string } = $props();
-  let failed = $state<number | null>(null);
 </script>
 
-{#if songId === null || failed === songId}
-  <span class="cover cover--{size} cover--missing" data-morph={morph} aria-hidden="true"><Icon name="music" alone /></span>
-{:else}
-  {#key songId}
-    <img class="cover cover--{size}" data-morph={morph} src={coverUrl(songId)} alt="" onerror={() => (failed = songId)} />
-  {/key}
-{/if}
+<Cover {songId} class="cover--{size}" morph={morph ?? null} />

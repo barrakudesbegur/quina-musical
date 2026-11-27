@@ -2,6 +2,7 @@
 // it once at its root (`provideDs`), so packages/ui never imports an app. Until WiiKey (B5) lands in packages/ui, it is
 // the console's WiiBadge behind one shape. (Icons need no provider: the one family is packages/ui/icons.)
 import { createContext, type Component } from 'svelte';
+import type { CoverSource } from './cover.ts';
 import type { WiiKeySpec } from './types.ts';
 
 /** Draws a control's Wii keys; it shows nothing while no remote is connected. */
@@ -9,6 +10,8 @@ export type WiiRenderer = Component<{ spec: WiiKeySpec }>;
 
 export interface DsProviders {
   wii?: WiiRenderer;
+  /** Where Cover finds the covers (cover.ts): the phone's production adds JPEG XL; default `/covers/`, JPEG only. */
+  covers?: CoverSource;
 }
 
 const [getDs, setDs, hasDs] = createContext<DsProviders>();

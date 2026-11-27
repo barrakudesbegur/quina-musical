@@ -9,7 +9,7 @@
   import { markerLayout } from '../logic/markers.ts';
   import { S } from '../strings.ts';
   import CardMark from './CardMark.svelte';
-  import Cover from './Cover.svelte';
+  import Cover from '../../../packages/ui/components/Cover.svelte';
 
   let { app }: { app: PlayerApp } = $props();
   const history = $derived(historyOf(app.state));
@@ -28,7 +28,7 @@
         <!-- The song playing now has no style of its own (the user, 26 Nov): it's simply the first row. -->
         <li class="song-list__item" data-now={l.position === history.nowPosition ? 'true' : undefined} data-anim={i === 0 ? 'landing' : undefined}>
           <span class="song-list__cover">
-            <Cover songId={l.songId} size="sm" />
+            <Cover songId={l.songId} fallback="empty" />
           </span>
           <span class="song-list__text">
             <span class="song-list__title">{songTitle(app.catalog, l.songId)}</span>
