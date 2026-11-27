@@ -2,7 +2,7 @@
 // and this console's presses from the touch screen and the Wii, told to the engine once each.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LOCK_BUTTON, LockPresses, NO_PRESSES, WiiLockGate, heldByOther, holderName, isLockRefusal, lockedBy, wiiLockButton } from '../../../../console/logic/two-level-lock.ts';
+import { LOCK_BUTTON, LockPresses, NO_PRESSES, WiiLockGate, consoleIds, heldByOther, holderName, isLockRefusal, isOwnId, lockedBy, wiiLockButton } from '../../../../console/logic/two-level-lock.ts';
 import { CONSOLE } from '../../../../console/config.ts';
 
 const OWN = 'Tauleta-3f2a';
@@ -162,4 +162,41 @@ test('the remote: a press refused late by the engine refuses the rest of it', ()
   assert.equal(gate.release('a'), true);
   assert.equal(gate.release('b'), true, 'its let-go does nothing');
   assert.equal(gate.press('a', () => false), false);
+});
+
+test('through the cloud, once each console is its own sender: «cloud:» and our id is ours, any other «cloud:» id surely another', () => {
+  assert.equal(isOwnId('cloud:Tauleta-3f2a', OWN), true);
+  assert.equal(isOwnId(OWN, OWN), true);
+  assert.equal(isOwnId('cloud:Mobil_admin-x1y2', OWN), false);
+  assert.equal(isOwnId('cloud:cloud:Tauleta-3f2a', OWN), false);
+  assert.equal(heldByOther(held('stay', `cloud:${OWN}`, 1000), 'stay', own(), 1500, RULES), null, 'our own hold, stamped by the cloud');
+  assert.equal(lockedBy(held('stay', `cloud:${OWN}`, 1000), 'stay', own(), 5000, RULES), null);
+  // Another cloud console: no timing rule, even while we press at the same moment or just let go.
+  const presses = new LockPresses();
+  presses.press('stay', 'touch', 1000);
+  assert.equal(heldByOther(held('stay', 'cloud:Mobil_admin-x1y2', 1010), 'stay', own(presses.presses), 1100, RULES), 'cloud:Mobil_admin-x1y2');
+  presses.release('stay', 'touch', 1200);
+  assert.equal(heldByOther(held('stay', 'cloud:Mobil_admin-x1y2', 1010), 'stay', own(presses.presses), 1300, RULES), 'cloud:Mobil_admin-x1y2');
+});
+
+test('the timing rule is only for the cloud link\'s shared id: a console the relay lists is surely another', () => {
+  const clients = [
+    { role: 'show' as const, clientId: 'show-1' },
+    { role: 'cloud' as const, clientId: 'cloud-link' },
+    { role: 'tablet' as const, clientId: 'Mobil_admin-x1y2' },
+    { role: 'console' as const, clientId: 'cloud:Portatil-9z' },
+  ];
+  const consoles = consoleIds(clients);
+  assert.deepEqual([...consoles].sort(), ['Mobil_admin-x1y2', 'cloud:Portatil-9z']);
+  const presses = new LockPresses();
+  presses.press('hold', 'wii-minus', 1000);
+  const withList = { clientId: OWN, presses: presses.presses, consoles };
+  assert.equal(heldByOther(held('hold', 'Mobil_admin-x1y2', 1010), 'hold', withList, 1100, RULES), 'Mobil_admin-x1y2', 'a LAN console');
+  assert.equal(heldByOther(held('hold', 'cloud-link', 1010), 'hold', withList, 1100, RULES), null, 'the shared link id: the timing says ours');
+});
+
+test("the holder's name through the cloud: its «cloud:» prefix off", () => {
+  assert.equal(holderName('cloud:Mobil_admin-x1y2', CONSOLE.labelPresets), 'Mòbil admin');
+  assert.equal(holderName('cloud:Tauleta-3f2a', CONSOLE.labelPresets), 'Tauleta');
+  assert.equal(holderName('cloud:tablet-ab12c', CONSOLE.labelPresets), null);
 });

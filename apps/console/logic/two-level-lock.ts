@@ -5,7 +5,7 @@
 // `suspense` still do the work, and the engine refuses another console's press `busy`, which the lock explains (no
 // toast). The lock covers the remote too (WiiLockGate): a key whose button another console holds is refused whole, with
 // a short "no" rumble, since the remote has no screen. Pure.
-import type { CommandRejected, ShowState, TwoLevelButton } from '@quina/protocol';
+import { CLOUD_FROM_PREFIX, isCloudConsoleId, type CommandRejected, type RelayClients, type ShowState, type TwoLevelButton } from '@quina/protocol';
 import type { WiiButton } from '../wii/report.ts';
 import { labelForId } from '../../../packages/ui/client/endpoints.ts';
 import type { HoldMode } from './hold-modes.ts';
@@ -47,18 +47,44 @@ export interface LockRules {
 }
 
 /**
- * Who holds `button` on another console, by its `label`, or null: not held, or held by this console (its clientId; or,
- * through the cloud, this console is pressing it, from about when the hold started, or just let go of it). The rule
- * both the screen's lock and the remote's use.
+ * Whether a holder's id is this console's: its own clientId (on the LAN, the relay's stamp), or `cloud:` and it (through
+ * the cloud, once it stamps each console as its own sender; ed631847).
+ */
+export function isOwnId(holder: string, clientId: string): boolean {
+  return holder === clientId || holder === CLOUD_FROM_PREFIX + clientId;
+}
+
+/** This console, as the lock's own-vs-other rule needs it. */
+export interface Own {
+  clientId: string;
+  presses: OwnPresses;
+  /** The ids of the consoles the relay lists one by one (`relay.clients`: a LAN console's role, or a cloud console's
+   * `console`). A holder among them, or with a `cloud:` id, is surely another console; any other is the cloud link's
+   * shared id (before the cloud stamps each console), which only the timing tells apart. */
+  consoles?: ReadonlySet<string>;
+}
+
+/** The ids `relay.clients` names one console each: the LAN's consoles (`tablet`, `admin`) and the cloud's (`console`). */
+export function consoleIds(clients: RelayClients['clients']): Set<string> {
+  return new Set(clients.filter((c) => c.role === 'tablet' || c.role === 'admin' || c.role === 'console').map((c) => c.clientId));
+}
+
+/**
+ * Who holds `button` on another console, by its `label`, or null: not held, or held by this console. That is its id
+ * (`isOwnId`); and, only for the cloud link's shared id, the timing: this console is pressing the button, from about
+ * when the hold started, or just let go of it. The rule both the screen's lock and the remote's use.
  */
 export function heldByOther(
   held: ShowState['twoLevelHeld'],
   button: TwoLevelButton,
-  own: { clientId: string; presses: OwnPresses },
+  own: Own,
   nowMs: number,
   rules: Pick<LockRules, 'raceMs' | 'echoMs'>,
 ): string | null {
-  if (!held || held.button !== button || held.clientId === own.clientId) return null;
+  if (!held || held.button !== button) return null;
+  if (isOwnId(held.clientId, own.clientId)) return null;
+  // A console of its own (a `cloud:` id, or one the relay lists): surely another, whatever the timing.
+  if (isCloudConsoleId(held.clientId) || own.consoles?.has(held.clientId)) return held.label;
   const pressedAt = own.presses.holding.get(button);
   if (pressedAt !== undefined && held.sinceMs >= pressedAt - rules.raceMs) return null;
   const released = own.presses.releasedAtMs[button];
@@ -73,7 +99,7 @@ export function heldByOther(
 export function lockedBy(
   held: ShowState['twoLevelHeld'],
   button: TwoLevelButton,
-  own: { clientId: string; presses: OwnPresses },
+  own: Own,
   nowMs: number,
   rules: LockRules,
 ): string | null {
@@ -103,7 +129,9 @@ const UNNAMED = new Set(['tablet', 'admin', 'cloud', 'show', 'drum', 'local', 'r
  * admin"); null when the console has no label of its own.
  */
 export function holderName(label: string, presets: readonly string[]): string | null {
-  const head = label.split('-')[0] ?? '';
+  // Through the cloud a console's id is `cloud:` and its own («cloud:Tauleta-3f2a»).
+  const id = label.startsWith(CLOUD_FROM_PREFIX) ? label.slice(CLOUD_FROM_PREFIX.length) : label;
+  const head = id.split('-')[0] ?? '';
   if (!head || UNNAMED.has(head)) return null;
   return presets.find((preset) => labelForId(preset) === head) ?? head.replace(/_/g, ' ');
 }

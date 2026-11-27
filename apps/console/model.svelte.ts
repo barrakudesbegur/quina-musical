@@ -21,7 +21,7 @@ import { lastSpinOf, parseChecklist, resolveLabel, resolveTheme, normalizeLabel,
 import { EMPTY_LANDING_LOG, countedSongs, recordLandings, roundCards, roundKey, type LandingLog } from './logic/future.ts';
 import { cardsInPlay } from './logic/possible-winners.ts';
 import { addAnswer, refusalError, type CardsAddOutcome } from './logic/cards-add.ts';
-import { LockPresses, NO_PRESSES, heldByOther, isLockRefusal, lockedBy, type LockSource, type OwnPresses } from './logic/two-level-lock.ts';
+import { LockPresses, NO_PRESSES, consoleIds, heldByOther, isLockRefusal, lockedBy, type LockSource, type OwnPresses } from './logic/two-level-lock.ts';
 import { addTyped, openPad, padAfterUnknown, padClaim, padKey, removeChip, type AddOutcome, type ClaimPadRules, type ClaimPadState } from './logic/claim-pad.ts';
 import { defaultAction } from './logic/default-action.ts';
 import {
@@ -156,6 +156,8 @@ export class ConsoleModel {
   private readonly lockPresses = new LockPresses();
   /** The same, for the lock (`lockedBy`). */
   ownPresses = $state.raw<OwnPresses>(NO_PRESSES);
+  /** The consoles the relay lists one by one (the lock's own-vs-other rule). */
+  private readonly consoles = $derived(consoleIds(this.show.clients));
   /** The mirror's own presses sent (reqId → button), so a `busy` refusal of one tells this console it isn't the holder. */
   private readonly twoLevelSent = new Map<string, TwoLevelButton>();
   /** Who hears a refusal the lock explains (the Wii controller rumbles its «no» for the remote's). */
@@ -490,12 +492,13 @@ export class ConsoleModel {
 
   /** Whether another console holds `button` right now (the remote's lock, decided at a key's press). Not reactive. */
   heldElsewhereNow(button: TwoLevelButton): boolean {
-    return heldByOther(this.show.client.state?.twoLevelHeld, button, { clientId: this.clientId, presses: this.lockPresses.presses }, this.show.client.now(), CONSOLE.lock) !== null;
+    const own = { clientId: this.clientId, presses: this.lockPresses.presses, consoles: consoleIds(this.show.client.clients) };
+    return heldByOther(this.show.client.state?.twoLevelHeld, button, own, this.show.client.now(), CONSOLE.lock) !== null;
   }
 
   /** Who holds `button` on another console (its label), while it's locked here; else null. Reactive. */
   heldElsewhere(button: TwoLevelButton): string | null {
-    return lockedBy(this.show.state?.twoLevelHeld, button, { clientId: this.clientId, presses: this.ownPresses }, this.show.now, CONSOLE.lock);
+    return lockedBy(this.show.state?.twoLevelHeld, button, { clientId: this.clientId, presses: this.ownPresses, consoles: this.consoles }, this.show.now, CONSOLE.lock);
   }
 
   /** «Cartrons venuts»' «Afegeix»: the typed cards go to the engine, which merges them (D234). False when not sent. */
