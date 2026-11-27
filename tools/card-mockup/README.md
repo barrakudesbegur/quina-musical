@@ -40,7 +40,7 @@ The card is 149 × 140 mm, six to an A3 portrait sheet (`a3-6`), printed «dúpl
 sheets, so 402 normal (not 399) and 300 special: 117 A3 sheets. Each back row is mirrored, and front and back line up:
 held up to the light, the back's grid falls exactly on the front's (the canvas's "Headers" page shows it).
 
-**The header, being chosen.** Two rules from the user: the heading stays at 38 pt ("dont make the text smaller"), and the QR never gets smaller than last year's 45 pt, 16 mm ("it is already hard to scan. it is not negotiable"). Centred on the card, the heading can only reach as far as the busier side allows, so the side blocks are balanced (option A) or the heading sits between them (option B). The card is too narrow for last year's one-row header, so the songs lose height to a two-row one:
+**The header, being chosen.** Two rules from the user: the heading stays at 38 pt ("dont make the text smaller"), and the QR never gets smaller than last year's 45 pt, 16 mm ("it is already hard to scan. it is not negotiable"). Centred on the card, the heading can only reach as far as the busier side allows, so it sits centred in the space between them; the card number always stays next to its QR ("it is the content of the qr"). The card is too narrow for last year's one-row header, so the songs lose height to a two-row one:
 
 | Proposal | Header | Cell | Cover | Titles (median, smallest) |
 |---|---|---|---|---|
@@ -49,8 +49,9 @@ held up to the light, the back's grid falls exactly on the front's (the canvas's
 | `a3-6-band` heading band | branding + GOMET + number + QR, then the heading in a band as wide as the grid | 34 × 32 mm | 17 mm | 13.5 pt, 7 pt (3 too long) |
 | `a3-6-footer` branding at the foot | a big heading, GOMET, number, QR; the branding in a line under the grid | 34 × 34 mm | 18 mm | 13.5 pt, 7 pt (3 too long) |
 | `a3-6-gomet-left` no branding | the GOMET circle, the heading, number, QR | 34 × 36 mm | 19 mm | 13.5 pt, 9.5 pt |
-| `a3-6-gomet-qr` **option A** | the GOMET circle and the QR on the left, the heading centred on the card at 38 pt, the Barrakudes figure and the number on the right | 34 × 36 mm | 19 mm | 13.5 pt, 9.5 pt |
-| `a3-6-gomet-left` **option B** | as above without the figure: the GOMET circle, the heading at 38 pt centred between it and the number (about 1 cm left of the card's centre), the number and the QR | 34 × 36 mm | 19 mm | 13.5 pt, 9.5 pt |
+| `a3-6-gomet-nino-between` **option C** | the user's order: the GOMET circle and the Barrakudes figure, the heading at 38 pt centred in the space between (about 5 mm left of the card's centre), the number next to its QR | 34 × 36 mm | 19 mm | 13.5 pt, 9.5 pt |
+| `a3-6-gomet-qr` rejected | the QR moved to the left to centre the heading: the number must sit next to its QR, which encodes it | | | |
+| `a3-6-gomet-left` **option B** | option C without the figure: the GOMET circle, the heading at 38 pt centred between it and the number (about 1 cm left of the card's centre), the number and the QR | 34 × 36 mm | 19 mm | 13.5 pt, 9.5 pt |
 | `a3-6-gomet-nino` superseded | the GOMET circle, the figure, the heading centred at 38 pt, the number and a 12 mm QR: too small | | | |
 
 One more try the user asked for: 2×2 on A4 with that last header and every cover above its title

@@ -70,6 +70,8 @@ const LAYOUTS = {
   // The user, 27 Nov: the 2×2 retry's header on the A3 · 6 card, with the branding's figure right of the GOMET circle.
   'a3-6-gomet-nino': { name: 'A3 · 6, GOMET + figure, no branding text', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'gometNino', cellMode: 'above' },
   // The QR can't shrink (the user, 27 Nov): GOMET + QR left, the figure + number right, the heading centred at 38 pt.
+  // The user's order kept (27 Nov): GOMET + figure, the heading between, the number next to its QR.
+  'a3-6-gomet-nino-between': { name: 'A3 · 6, GOMET + figure, heading between, number + QR', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'gometNinoBetween', cellMode: 'above' },
   'a3-6-gomet-qr': { name: 'A3 · 6, GOMET + QR left, figure + number right', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'gometQr', cellMode: 'above' },
   'a3-6-gomet-left': { name: 'A3 · 6, GOMET left, no branding', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'gometLeft', cellMode: 'above' },
   // One more try (the user, 27 Nov): 2×2 on A4 with a one-line header (no branding, the GOMET circle on the left), so
@@ -237,7 +239,7 @@ function geometry(layout) {
   // allow it: the number box as wide as «#500», 6 pt gaps, a slimmer padding on the black box.
   const NINO_NUMBER_W = 54; // «#500», the widest number, is 52.8 pt
   const NINO_GAP = 6;
-  const headingPad = style === 'gometNino' ? 4 : style === 'gometQr' ? 5 : 10;
+  const headingPad = ['gometNino', 'gometNinoBetween'].includes(style) ? 4 : style === 'gometQr' ? 5 : 10;
   const rightW = GOMET.diameter + 8 + 62 + 8 + qrSize; // GOMET, number, QR
   const ROW = 46;
   const BAND_SIZE = 22;
@@ -251,6 +253,9 @@ function geometry(layout) {
     gometLeft: { headerH: ROW, room: innerW - rightW - 16, max: 38, footerH: 0 },
     // The heading centred on the card: it may reach as far as the nearer side block allows.
     gometNino: { headerH: ROW, room: 2 * Math.min(innerW / 2 - (GOMET.diameter + 8 + NINO_W) - NINO_GAP, innerW / 2 - (NINO_NUMBER_W + NINO_GAP + qrSize) - NINO_GAP), max: 38, footerH: 0 },
+    // The user's order, GOMET + figure, heading, number + QR (the number stays next to its QR, which encodes it): the heading
+    // centred in the space between the side blocks, at 38 pt.
+    gometNinoBetween: { headerH: ROW, room: innerW - (GOMET.diameter + NINO_GAP + NINO_W) - (NINO_NUMBER_W + NINO_GAP + qrSize) - 2 * NINO_GAP, max: 38, footerH: 0 },
     // GOMET + QR on the left, the figure + number on the right: two balanced sides leave room for a centred 38 pt heading.
     gometQr: { headerH: ROW, room: 2 * Math.min(innerW / 2 - (GOMET.diameter + NINO_GAP + qrSize) - NINO_GAP, innerW / 2 - (NINO_W + NINO_GAP + NINO_NUMBER_W) - NINO_GAP), max: 38, footerH: 0 },
   }[style];
@@ -263,7 +268,7 @@ function geometry(layout) {
   const top = layout.cellMode ? layout.cellMode === 'above' : cellH / cellW >= 0.7; // tall cells: the cover above the title
   const cover = layout.cover || (top ? Math.min(cellW - 10, (cellH - 6) * 0.55) : Math.min(cellH - 10, cellW * 0.36));
   const text = top ? { w: cellW - 8, h: cellH - cover - 14 } : { w: cellW - cover - 14, h: cellH - 8 };
-  return { page, W, H, innerW, single, style, qrSize, headingPad, numberW: ['gometNino', 'gometQr'].includes(style) ? NINO_NUMBER_W : 62, numberGap: ['gometNino', 'gometQr'].includes(style) ? NINO_GAP : 8, headerH, bandH, headingSize, gridH, cellW, cellH, top, cover, text };
+  return { page, W, H, innerW, single, style, qrSize, headingPad, numberW: ['gometNino', 'gometQr', 'gometNinoBetween'].includes(style) ? NINO_NUMBER_W : 62, numberGap: ['gometNino', 'gometQr', 'gometNinoBetween'].includes(style) ? NINO_GAP : 8, headerH, bandH, headingSize, gridH, cellW, cellH, top, cover, text };
 }
 
 function Header({ g, kind, side, num, qr }) {
@@ -283,6 +288,13 @@ function Header({ g, kind, side, num, qr }) {
   }
   if (g.style === 'footer') {
     return row([heading, right]);
+  }
+  if (g.style === 'gometNinoBetween') {
+    return row([
+      h(View, { style: { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: g.numberGap } }, h(Gomet), h(Nino)),
+      h(View, { style: { flex: 1, display: 'flex', alignItems: 'center' } }, heading),
+      h(NumberAndQr, { num, qr, qrSize: g.qrSize, width: g.numberW, gap: g.numberGap }),
+    ], { gap: g.numberGap });
   }
   if (g.style === 'gometQr') {
     return h(View, { style: { position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: g.headerH } },
