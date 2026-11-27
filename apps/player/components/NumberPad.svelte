@@ -1,5 +1,6 @@
 <script lang="ts">
   import Button from '../../../packages/ui/components/Button.svelte';
+  import TextField from '../../../packages/ui/components/TextField.svelte';
   import { PLAYER } from '../actions.ts';
   // "Afegir cartró" (boards "App · calaix per afegir un cartró" and "afegir cartró: casos especials"): the card's
   // number on a paper field, an optional name, its icon (the first free one preselected), the smart keypad and one
@@ -133,12 +134,12 @@
     {:else if error}
       <p class="number-pad__note" role="alert"><span class="number-pad__note-text">{error}</span></p>
     {/if}
-    <input
+    <TextField
       class="number-pad__name"
+      label={S.nameLabel}
       bind:value={name}
       maxlength={PLAYER_CONFIG.maxNameLength}
-      placeholder={S.padName}
-      aria-label={S.nameLabel}
+      placeholder={S.namePlaceholder}
       autocomplete="off"
       enterkeyhint="done"
       onkeydown={(e) => {

@@ -8,6 +8,7 @@
 <script lang="ts">
   import MiniButton from '../../../packages/ui/components/MiniButton.svelte';
   import { getConsole } from '../context.ts';
+  import TextField from '../../../packages/ui/components/TextField.svelte';
   import { readResume, resumeSummary } from '../../../packages/rules/resume.ts';
   import { songTitleOf } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
@@ -44,20 +45,17 @@
     <p class="note">{S.resume.none}</p>
   {/if}
 
-  <label class="field" for="{uid}-code">
-    <span class="field__label">{S.resume.field}</span>
-    <input
-      id="{uid}-code"
-      class="resume__input"
-      type={revealed ? 'text' : 'password'}
-      inputmode="text"
-      autocomplete="off"
-      autocapitalize="characters"
-      spellcheck="false"
-      placeholder={S.resume.placeholder}
-      bind:value={draft}
-    />
-  </label>
+  <TextField
+    class="resume__field"
+    label={S.resume.field}
+    type={revealed ? 'text' : 'password'}
+    inputmode="text"
+    autocomplete="off"
+    autocapitalize="characters"
+    spellcheck="false"
+    placeholder={S.resume.placeholder}
+    bind:value={draft}
+  />
   {#if model.savedResume && readResume(draft).text !== readResume(model.savedResume).text}
     <MiniButton {...MINI.resumeUseSaved} onclick={() => (draft = model.savedResume ?? '')} />
   {/if}
@@ -89,7 +87,7 @@
     border-radius: var(--radius-sm);
     user-select: all;
   }
-  .resume__input {
+  :global(.resume__field .text-field__input) {
     font-family: var(--font-mono, ui-monospace, monospace);
     text-transform: uppercase;
     letter-spacing: 0.04em;

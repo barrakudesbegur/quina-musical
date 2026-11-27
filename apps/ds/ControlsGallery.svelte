@@ -9,6 +9,7 @@
   import SegmentedControl from '../../packages/ui/components/SegmentedControl.svelte';
   import Switch from '../../packages/ui/components/Switch.svelte';
   import Tabs from '../../packages/ui/components/Tabs.svelte';
+  import TextField from '../../packages/ui/components/TextField.svelte';
   import type { TabSpec } from '../../packages/ui/components/control-types.ts';
 
   let { phone }: { phone: boolean } = $props();
@@ -35,6 +36,8 @@
   let three3 = $state<TabId>('one');
   let mode = $state<'a' | 'b'>('a');
   let shown = $state(true);
+  let name = $state('');
+  let query = $state('Elefants');
 </script>
 
 {#snippet cell(caption: string, body: Snippet)}
@@ -118,5 +121,36 @@
     {@render cell('extras: a segmented control on «Segona», a switch on «Tercera»; the others collapse to make room', t3)}
     {#snippet t4()}<div class="ds-gallery__tabs" style:width="30rem"><Tabs tabs={FIVE.slice(0, 3)} bind:selected={three3} label="Tres" panel={body} /></div>{/snippet}
     {@render cell('three tabs: wider padding', t4)}
+  </div>
+</section>
+
+<section class="ds-gallery__section" aria-labelledby="b9">
+  <h2 id="b9">B9 · TextField</h2>
+  <p class="ds-prose">
+    Free text with a visible label: <code>label</code>, <code>value</code>, <code>placeholder</code> (a hint, never the label),
+    <code>hint</code>, <code>invalid</code>, <code>prefixIcon</code>, <code>clearable</code> + <code>clearLabel</code>, <code>rows</code>
+    (a textarea), <code>size</code> (m | l). The hint lines up with the text in the box (#57); the clear button is as far from the end
+    as from the top and the bottom (#59); the text in the box is never highlighted (#58).
+  </p>
+  <div class="ds-gallery__grid ds-gallery__grid--wide">
+    {#snippet f1()}<TextField label="Nom (opcional)" placeholder="Per exemple: Àvia" bind:value={name} />{/snippet}
+    {@render cell('m: label, placeholder as a hint', f1)}
+    {#snippet f2()}<TextField label="Nom de qui ha guanyat" value="" invalid hint="Escriu un nom o un número de butlleta." />{/snippet}
+    {@render cell('invalid, with its hint', f2)}
+    {#snippet f3()}<search><TextField type="search" size="l" label="Cerca una cançó" placeholder="Títol o artista" prefixIcon="magnifier" clearable clearLabel="Esborra la cerca" autocomplete="off" spellcheck="false" enterkeyhint="search" bind:value={query} /></search>{/snippet}
+    {@render cell('l · search: big text, the leading icon, the clear button (D-f)', f3)}
+    {#snippet f4()}<TextField label="Notes" rows={2} hint="Només a la consola." value="Recull el premi a la barra" />{/snippet}
+    {@render cell('rows=2: a textarea, with a hint', f4)}
+    {#snippet f5()}<TextField label="Nom del dispositiu" value="Tauleta" disabled />{/snippet}
+    {@render cell('disabled', f5)}
+  </div>
+
+  <h3>Design resource · Match highlight (D-e)</h3>
+  <p class="ds-prose">A search’s matched letters, in the result rows only: <code>&lt;mark class="ds-mark"&gt;</code> per run, built from text (no <code>{'{@html}'}</code>).</p>
+  <div class="ds-gallery__grid">
+    {#snippet m1()}<p class="ds-gallery__result"><b><mark class="ds-mark">Ele</mark>fants</b><br />Oques Grasses</p>{/snippet}
+    {@render cell('a title’s match', m1)}
+    {#snippet m2()}<p class="ds-gallery__result"><b>All I Want for Christmas Is You</b><br /><mark class="ds-mark">Mar</mark>iah <mark class="ds-mark">C</mark>arey</p>{/snippet}
+    {@render cell('an artist’s, in runs', m2)}
   </div>
 </section>

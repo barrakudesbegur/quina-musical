@@ -1,0 +1,15 @@
+/*
+ * Design resource · Match highlight (comments-27nov.md D-e, #58; components-v2.md § 3 › B9). The letters a search
+ * matched, drawn in its result rows (never inside the input itself, whose text is the player's or presenter's own):
+ * a <mark class="ds-mark"> per matched run, built from text spans (no {@html}). Gold's pale with gold's own edge
+ * under it, like a highlighter stroke; the text keeps its colour.
+ */
+.ds-mark {
+  padding-inline: 1px;
+  border-radius: 4px;
+  background: var(--color-gold-light);
+  box-shadow: inset 0 -3px 0 var(--color-gold);
+  color: inherit;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}

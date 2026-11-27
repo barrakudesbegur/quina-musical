@@ -1,5 +1,6 @@
 <script lang="ts">
   import Button from '../../../packages/ui/components/Button.svelte';
+  import TextField from '../../../packages/ui/components/TextField.svelte';
   import { PLAYER } from '../actions.ts';
   // A card's optional name ("Àvia") and its icon.
   import { PLAYER_CONFIG } from '../config.ts';
@@ -34,8 +35,7 @@
       onsave(value, identity);
     }}
   >
-    <label class="rename__label" for="card-name">{S.nameLabel}</label>
-    <input id="card-name" class="rename__input" bind:value maxlength={PLAYER_CONFIG.maxNameLength} placeholder={S.namePlaceholder} autocomplete="off" enterkeyhint="done" />
+    <TextField class="rename__name" label={S.nameLabel} bind:value maxlength={PLAYER_CONFIG.maxNameLength} placeholder={S.namePlaceholder} autocomplete="off" enterkeyhint="done" />
     <IconPicker
       {others}
       selected={identity}

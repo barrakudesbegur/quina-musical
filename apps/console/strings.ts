@@ -253,8 +253,9 @@ export const S = {
   cerca: {
     modes: { songs: 'Cançons', card: 'Cartró' },
     modeLabel: 'Què cerques',
-    placeholder: 'Cerca per títol o artista',
-    searchLabel: 'Cerca una cançó de la quina per títol o artista',
+    /** The field's visible label (D-f); the placeholder is only a hint. */
+    label: 'Cerca una cançó de la quina',
+    placeholder: 'Títol o artista, encara que sigui a mitges',
     clear: 'Esborra la cerca',
     count: (n: number) => (n === 1 ? '1 cançó' : `${n} cançons`),
     ofRound: (total: number) => `de les ${total} de la quina`,

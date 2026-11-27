@@ -1219,13 +1219,6 @@
   color: var(--color-text-muted);
 }
 
-/* A search's matched letters */
-.song-row mark {
-  border-radius: 3px;
-  background: var(--color-gold-pale);
-  color: inherit;
-}
-
 .song-row__aside {
   display: flex;
   flex: none;
@@ -1277,6 +1270,24 @@
   gap: var(--space-2);
 }
 
+/* The song search (D-f): the TextField (packages/ui/components/text-field.css) on the private surface */
+.search-tab__search {
+  display: flex;
+  flex: 1 1 14rem;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.search-tab__field {
+  --field-fill: var(--color-surface-private);
+}
+
+.search-tab__count:empty {
+  margin-block-end: calc(-1 * var(--space-3));
+}
+
+/* The card's number on the tab's own keypad: a box like the field's, its ✕ the same distance from the top, end and
+   bottom (#59) */
 .search-box {
   display: flex;
   flex: 1 1 10rem;
@@ -1284,46 +1295,10 @@
   align-items: center;
   gap: var(--space-2);
   min-height: var(--tap-min);
-  padding: 0 6px 0 var(--space-3);
+  padding: 0 4px 0 var(--space-3);
   border: var(--line-width) solid var(--color-line);
   border-radius: var(--radius-md);
   background: var(--color-surface-private);
-}
-
-/* R5: a keyboard's focus only, like every other ring */
-.search-box:has(:focus-visible) {
-  outline: 3px solid var(--color-focus);
-  outline-offset: 1px;
-}
-
-.search-box > .icon {
-  flex: none;
-  width: 1.25rem;
-  height: 1.25rem;
-  color: var(--color-text-muted);
-}
-
-.search-box__input {
-  flex: 1;
-  width: 100%;
-  min-width: 0;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: var(--color-text);
-  font: inherit;
-  font-size: var(--text-lg);
-  font-weight: var(--font-weight-strong);
-}
-
-.search-box__input::placeholder {
-  color: var(--color-text-muted);
-  opacity: 0.75;
-}
-
-/* The browser's own clear button: the box has its own ×. */
-.search-box__input::-webkit-search-cancel-button {
-  appearance: none;
 }
 
 .search-box__clear {
@@ -3706,7 +3681,7 @@ kbd {
   gap: var(--space-2);
 }
 
-.menu-group__row .field {
+.menu-group__row .menu-group__name {
   flex: 1;
 }
 

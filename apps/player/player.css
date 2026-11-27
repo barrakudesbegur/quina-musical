@@ -2434,25 +2434,6 @@
   box-shadow: none;
 }
 
-.drawer .number-pad__name {
-  min-height: 0;
-  height: 3.125rem;
-  padding: 0 0.875rem;
-  font-size: 1.125rem;
-  font-weight: var(--font-weight-strong);
-  color: var(--color-text-on-paper);
-  background: var(--color-paper);
-  border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-md);
-}
-
-.drawer .number-pad__name::placeholder {
-  font-size: var(--text-md);
-  font-weight: 800;
-  color: #9a93b8;
-  opacity: 1;
-}
-
 /* The smart keypad (ANIMATIONS.md `pad-keys`): paper keys with a 3D edge; a key that can't lead to a card number
    is dark and dashed, its digit dimmed. That look is a layer over the key, faded by its opacity. */
 .number-pad__keys {
@@ -2700,25 +2681,6 @@
 .rename {
   display: grid;
   gap: var(--space-3);
-}
-
-.rename__label {
-  font-weight: var(--font-weight-strong);
-}
-
-.rename__input {
-  min-height: 3.5rem;
-  padding: 0 var(--space-4);
-  font-size: 1.25rem;
-  font-weight: var(--player-weight-body);
-  border-width: var(--line-width-bold);
-  border-radius: var(--radius-lg);
-  box-shadow: inset 0 4px 0 var(--color-paper-edge);
-}
-
-.rename__input::placeholder {
-  color: var(--color-text-on-paper-muted);
-  opacity: 1;
 }
 
 .confirm__text {

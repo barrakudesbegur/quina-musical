@@ -1,0 +1,165 @@
+/*
+ * B9 · TextField (components-v2.md § 3; TextField.svelte). A visible label, then the box: 48 px, --radius-md, a 3 px
+ * ink border, the paper fill with a faint inset at its top, Nunito 800 17. The clear button sits the same distance
+ * from the box's top, end and bottom (#59, R7); the hint lines up with the text inside the box (#57). The focus ring
+ * goes round the box (R5: :focus-visible inside it, through :has()), with an even gap all round.
+ * Every size is a custom property in :where().
+ */
+
+:where(.text-field) {
+  --field-height: 48px;
+  --field-border: var(--line-width);
+  --field-radius: var(--radius-md);
+  --field-fill: var(--color-paper);
+  --field-ink: var(--color-text-on-paper, var(--color-ink));
+  --field-font: 1.0625rem;
+  --field-pad: var(--space-3);
+  --field-icon: 1.25rem;
+  --field-clear: 34px;
+  --field-label-size: 0.9375rem;
+  --field-label-color: var(--color-text);
+  --field-hint-color: var(--color-text-muted);
+}
+
+/* Big text (the console's «Cerca»: read at a glance while talking) */
+:where(.text-field[data-size='l']) {
+  --field-height: 56px;
+  --field-font: 1.375rem;
+  --field-icon: 1.5rem;
+  --field-clear: 40px;
+}
+
+.text-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.text-field__label {
+  color: var(--field-label-color);
+  font-size: var(--field-label-size);
+  font-weight: 900;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+.text-field__box {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  min-height: var(--field-height);
+  padding-inline: var(--field-pad);
+  border: var(--field-border) solid var(--color-line);
+  border-radius: var(--field-radius);
+  background: var(--field-fill);
+  box-shadow: inset 0 3px 0 rgb(23 19 43 / 0.1);
+  color: var(--field-ink);
+  cursor: text;
+}
+
+/* The clear button's inset at the end equals its inset from the top and the bottom (#59). */
+.text-field__box:has(> .text-field__clear) {
+  padding-inline-end: calc((var(--field-height) - 2 * var(--field-border) - var(--field-clear)) / 2);
+}
+
+.text-field[data-multiline] .text-field__box {
+  align-items: stretch;
+  padding-block: var(--space-2);
+}
+
+/* R5: the ring round the box, an even gap all round */
+.text-field__box:has(:focus-visible) {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.text-field[data-invalid] .text-field__box {
+  border-color: var(--color-red-text, var(--color-red));
+}
+
+.text-field[data-disabled] .text-field__box {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.text-field__icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--color-text-muted);
+  font-size: var(--field-font);
+}
+
+.text-field__icon > svg {
+  width: var(--field-icon);
+  height: var(--field-icon);
+}
+
+.text-field__input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  font-size: max(1rem, var(--field-font));
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+textarea.text-field__input {
+  resize: vertical;
+}
+
+.text-field__input::placeholder {
+  color: var(--color-placeholder, #9a93b8);
+  opacity: 1;
+}
+
+/* The box draws its own clear button. */
+.text-field__input::-webkit-search-cancel-button,
+.text-field__input::-webkit-search-decoration {
+  appearance: none;
+}
+
+.text-field__clear {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--field-clear);
+  height: var(--field-clear);
+  min-height: 0;
+  padding: 0;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-track, var(--color-chip));
+  color: var(--color-ink);
+}
+
+.text-field__clear > svg {
+  width: 55%;
+  height: 55%;
+}
+
+/* The hint lines up with the text inside the box: the box's border and padding (#57). */
+.text-field__hint {
+  margin: 0;
+  padding-inline: calc(var(--field-border) + var(--field-pad));
+  color: var(--field-hint-color);
+  font-size: 0.875rem;
+  font-weight: 800;
+  line-height: 1.3;
+  text-wrap: pretty;
+}
+
+.text-field[data-invalid] .text-field__hint {
+  color: var(--color-red-text, var(--color-red));
+}

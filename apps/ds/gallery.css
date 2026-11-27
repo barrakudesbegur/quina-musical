@@ -266,3 +266,13 @@
   gap: var(--space-6);
   justify-items: start;
 }
+
+/* A result row's text, for the match highlight (D-e) */
+.ds-gallery__result {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  line-height: 1.4;
+}

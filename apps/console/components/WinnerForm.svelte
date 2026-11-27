@@ -6,6 +6,7 @@
 <script lang="ts">
   import { getConsole } from '../context.ts';
   import { S } from '../strings.ts';
+  import TextField from '../../../packages/ui/components/TextField.svelte';
 
   interface Props {
     claimId: string;
@@ -36,18 +37,9 @@
 
 <form class="winner-form" data-state={dirty ? 'dirty' : saved ? 'saved' : 'empty'} onsubmit={save} aria-labelledby={title ? `${uid}-title` : undefined}>
   {#if title}<h4 class="winner-form__title" id="{uid}-title">{title}</h4>{/if}
-  <label class="field" for="{uid}-name">
-    <span class="field__label">{S.winnerForm.name}</span>
-    <input id="{uid}-name" type="text" maxlength="80" autocomplete="off" value={nameDraft} oninput={(e) => (nameDraft = e.currentTarget.value)} />
-  </label>
-  <label class="field winner-form__slip" for="{uid}-slip">
-    <span class="field__label">{S.winnerForm.slip}</span>
-    <input id="{uid}-slip" type="text" maxlength="16" inputmode="text" autocomplete="off" value={slipDraft} oninput={(e) => (slipDraft = e.currentTarget.value)} />
-  </label>
-  <label class="field" for="{uid}-notes">
-    <span class="field__label">{S.winnerForm.notes}</span>
-    <textarea id="{uid}-notes" rows="2" maxlength="500" value={notesDraft} oninput={(e) => (notesDraft = e.currentTarget.value)}></textarea>
-  </label>
+  <TextField label={S.winnerForm.name} maxlength={80} autocomplete="off" value={nameDraft} oninput={(e) => (nameDraft = e.currentTarget.value)} />
+  <TextField class="winner-form__slip" label={S.winnerForm.slip} maxlength={16} inputmode="text" autocomplete="off" value={slipDraft} oninput={(e) => (slipDraft = e.currentTarget.value)} />
+  <TextField label={S.winnerForm.notes} rows={2} maxlength={500} value={notesDraft} oninput={(e) => (notesDraft = e.currentTarget.value)} />
   <div class="winner-form__actions">
     <button type="submit" class="action" data-anim="press" disabled={!dirty || !model.can('winnerInfo')}>{S.winnerForm.save}</button>
     {#if saved}<span class="winner-form__saved" role="status">{S.winnerForm.saved}</span>{/if}

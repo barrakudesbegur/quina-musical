@@ -31,6 +31,7 @@
   import ResumePanel from './ResumePanel.svelte';
   import SetupChecklist from './SetupChecklist.svelte';
   import Switch from '../../../packages/ui/components/Switch.svelte';
+  import TextField from '../../../packages/ui/components/TextField.svelte';
   import SegmentedControl from '../../../packages/ui/components/SegmentedControl.svelte';
   import VolumeSliders from './VolumeSliders.svelte';
   import { getConsoleSounds } from '../context.ts';
@@ -97,10 +98,7 @@
       <section class="menu-group" aria-labelledby="{uid}-device">
         <h3 class="menu-group__title" id="{uid}-device"><Icon name="device" />{S.menu.device}</h3>
         <form class="menu-group__row" onsubmit={saveLabel}>
-          <label class="field" for="{uid}-label">
-            <span class="field__label">{S.menu.labelField}</span>
-            <input id="{uid}-label" type="text" maxlength={CONSOLE.labelMaxLength} autocomplete="off" bind:value={labelDraft} />
-          </label>
+          <TextField class="menu-group__name" label={S.menu.labelField} maxlength={CONSOLE.labelMaxLength} autocomplete="off" bind:value={labelDraft} />
           <MiniButton {...MINI.labelSave} type="submit" />
         </form>
         <SegmentedControl size="s" label={S.menu.labelField} options={CONSOLE.labelPresets.map((preset) => ({ id: preset, label: preset }))} value={model.label} onchange={(preset) => ((labelDraft = preset), model.setLabel(preset))} />
