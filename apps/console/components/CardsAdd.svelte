@@ -1,7 +1,8 @@
 <!--
   «Cartrons venuts» in the menu (D234, part 1; logic/cards-add.ts): the presenters add the cards sold on the night to
   the cards in play, a range («400-450») or single numbers («452, 460»). The TextField (B9) previews what «Afegeix»
-  would add in its hint, or why it can't (a typo, a number that isn't a printed card, all in play already), in red. The
+  would add in its hint; why it can't (a typo, a number that isn't a printed card, all in play already) shows in red
+  once the typing is over (the field left, or «Afegeix» pressed), never while a range is half typed. The
   engine's one command for it replaces the whole list (`setCardsInPlay { ranges }`), so «Afegeix» sends the cards in
   play now with the new ones. Once the engine's `cards.inPlay` holds them, the field empties and a green Notice (E4,
   NOTICES.accepted) confirms it (ANIMATIONS.md › cards-added); a refusal is the console's usual toast, and the typed
@@ -34,13 +35,17 @@
   let sent = $state.raw<{ added: number[]; addedRanges: string } | null>(null);
   /** The engine took them: the Notice's words. */
   let done = $state<string | null>(null);
+  /** The typing is over (the field left, or «Afegeix» pressed): only then a problem shows, in red (modern-web-guidance
+   *  validate-input-after-interaction: «400-» is on its way to a range, not a mistake). */
+  let committed = $state(false);
 
   const preview = $derived(cardsToAdd(inPlay, text, rules));
+  const shownError = $derived(committed && !preview.empty ? preview.error : null);
   const hint = $derived(
-    preview.empty
-      ? S.cardsAdd.hint
-      : preview.error
-        ? errorText(preview.error)
+    shownError
+      ? errorText(shownError)
+      : preview.empty || preview.error
+        ? S.cardsAdd.hint
         : S.cardsAdd.preview(preview.added.length, preview.addedRanges, preview.already),
   );
 
@@ -71,6 +76,7 @@
 
   function submit(e: SubmitEvent): void {
     e.preventDefault();
+    committed = true;
     const { ranges, added, addedRanges } = preview;
     if (disabled || !ranges) return;
     // Taken before sending: an echo that arrives at once would change the preview.
@@ -95,11 +101,12 @@
       spellcheck={false}
       enterkeyhint="done"
       {hint}
-      invalid={!preview.empty && preview.error !== null}
+      invalid={shownError !== null}
       bind:value={text}
-      oninput={() => (done = null)}
+      oninput={() => ((done = null), (committed = false))}
+      onblur={() => (committed = text.trim() !== '')}
     />
-    <MiniButton {...MINI.cardsAdd} type="submit" disabled={disabled || !preview.ranges} />
+    <MiniButton {...MINI.cardsAdd} type="submit" disabled={disabled || preview.empty} />
   </form>
   {#if done}<Notice {...NOTICES.accepted} class="cards-add__done" text={done} />{/if}
 </section>

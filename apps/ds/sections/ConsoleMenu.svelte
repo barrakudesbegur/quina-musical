@@ -66,7 +66,7 @@
     {#snippet c1()}<CardsAdd {inPlay} {count} {rules} onadd={(ranges) => ((inPlay = ranges), true)} />{/snippet}
     {@render cell('type «441-450, 452» and «Afegeix»: the hint previews, then the green Notice confirms', c1)}
     {#snippet c2()}<CardsAdd inPlay="" count={0} {rules} disabled onadd={() => false} />{/snippet}
-    {@render cell('none in play yet; «Afegeix» disabled (offline). In either, «4500» is not a printed card: the hint in red', c2)}
+    {@render cell('none in play yet; «Afegeix» disabled (offline). In either, «4500» is not a printed card: the hint turns red once the field is left or «Afegeix» pressed, never while typing', c2)}
   </div>
 
   <h3>D234 · A two-level button held on another console (design only: blocked on Sound engine)</h3>
