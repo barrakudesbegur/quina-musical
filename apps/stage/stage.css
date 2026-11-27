@@ -1312,52 +1312,20 @@
   padding: var(--space-4) var(--stage-pad) var(--stage-pad);
 }
 
-.song-tile {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: var(--space-4);
-  min-width: 0;
-  padding: var(--space-3);
-  border-radius: var(--stage-radius);
-  background: var(--stage-panel);
-  text-align: start;
+/* The last three are the design system's SongTile `tile` (packages/ui/components/song-tile.css: paper, the ink frame,
+   concentric cover corners, long titles in two lines); the projector sizes them here. The newest is ringed in gold. */
+.play__recent .song-tile {
+  --tile-cover: var(--stage-tile-cover);
+  --tile-title: var(--stage-text-sm);
+  --tile-artist: var(--stage-text-sm);
 }
 
 .song-tile:first-child {
   box-shadow: 0 0 0 var(--line-width) var(--color-accent);
 }
 
-.song-tile__cover {
-  width: var(--stage-tile-cover);
-}
-
 .song-tile__cover[data-state='missing'] {
   display: none;
-}
-
-.song-tile__text {
-  display: grid;
-  gap: var(--space-2);
-  min-width: 0;
-}
-
-.song-tile__title,
-.song-tile__artist {
-  font-size: var(--stage-text-sm);
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.song-tile__title {
-  font-weight: var(--font-weight-strong);
-}
-
-.song-tile__artist {
-  color: var(--color-text-muted);
-  -webkit-line-clamp: 1;
 }
 
 /* `landing` in the row: the tiles shift one place right and the new one slides in from the left. */

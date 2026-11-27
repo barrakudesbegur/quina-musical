@@ -1,6 +1,7 @@
 // Building blocks shared by the scenes: a prize, the sponsors, a round title, a song tile, a countdown, a
 // mini card and a nino sticker. Each owns its DOM nodes and updates them from view data only.
 import { miniCardElement } from '../../../packages/ui/components/mini-card.ts';
+import { songTileElement } from '../../../packages/ui/components/song-tile.ts';
 import type { RoundView, PrizeView, SponsorView } from '../view.ts';
 import type { StageSong } from '../model/songs.ts';
 import { STAGE } from '../config.ts';
@@ -9,7 +10,7 @@ import { formatClock } from '../../../packages/rules/time.ts';
 import { imageSources } from '../../../packages/ui/data/media.ts';
 import { STAGE_TEXT, type CountdownContext } from '../strings.ts';
 import { prizeCardText } from '../../../packages/ui/recipes/prizes.ts';
-import { CoverArt, h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
+import { h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
 import { panTiming, sponsorPage } from '../model/sponsors.ts';
 import { logoTileElement } from '../../../packages/ui/components/sponsors-dom.ts';
 import { ninoFor, type NinoMoment } from '../../../packages/ui/concepts.ts';
@@ -201,24 +202,18 @@ function logoPicture(path: string, label: string): HTMLElement {
   );
 }
 
-/** A landed song: cover, title and artist. */
+/** A landed song: cover, title and artist, as the design system's SongTile `tile` (D5, the projector's last three). */
 export class SongTile {
   readonly root: HTMLElement;
-  private readonly cover = new CoverArt('song-tile__cover');
-  private readonly title: HTMLElement;
-  private readonly artist: HTMLElement;
+  private readonly tile: ReturnType<typeof songTileElement>;
 
   constructor(tag: 'li' | 'div' = 'li') {
-    this.title = h('p', 'song-tile__title');
-    this.artist = h('p', 'song-tile__artist');
-    this.root = h(tag, { class: 'song-tile', hidden: true }, this.cover.root, h('div', 'song-tile__text', this.title, this.artist));
+    this.tile = songTileElement({ layout: 'tile', tag, fallback: 'empty' });
+    this.root = this.tile.root;
   }
 
   set(song: StageSong | null): void {
-    setHidden(this.root, song === null);
-    this.cover.set(song?.songId ?? null);
-    setText(this.title, song?.title ?? '');
-    setText(this.artist, song?.artist ?? '');
+    this.tile.set(song);
   }
 }
 
