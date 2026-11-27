@@ -4,7 +4,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { pull, push, type RootDir } from '../../laptop/media-sync.ts';
+import { createHash } from 'node:crypto';
+import { pull, push, pushJournalFile, type RootDir } from '../../laptop/media-sync.ts';
 import { startDevServer } from '../../loadtest/dev-server.ts';
 import { tempDir } from '../support/temp.ts';
 
@@ -60,11 +61,36 @@ test('push, then pull on another laptop: the same files; only changes move; noth
   }
 });
 
+test('a push that stopped resumes against the real Worker: a journalled file the bucket holds is checked, not sent again', async () => {
+  const server = await startDevServer({ media: true });
+  try {
+    const main = laptop({ 'cache/12/mix.flac': 'song twelve', 'covers/12.jpg': 'cover' });
+    const sha = (text: string) => createHash('sha256').update(text).digest('hex');
+    // What a push that died after its first file leaves: that file in the bucket, its line in the journal, no manifest.
+    const put = await fetch(`${server.http}/api/sync/default/file?path=cache/12/mix.flac`, { method: 'PUT', headers: { 'x-sha256': sha('song twelve') }, body: 'song twelve' });
+    assert.equal(put.status, 200);
+    fs.mkdirSync(main.dataDir, { recursive: true });
+    const line = (p: string, text: string) => `${JSON.stringify({ cloud: server.http, path: p, size: text.length, sha256: sha(text) })}\n`;
+    // covers/12.jpg is journalled too, but never reached the bucket: it goes up.
+    fs.writeFileSync(pushJournalFile(main.dataDir, 'default'), line('cache/12/mix.flac', 'song twelve') + line('covers/12.jpg', 'cover'));
+    const lines: string[] = [];
+    const report = await push({ cloud: server.http, headers: {}, repertoire: 'default', roots: main.roots, dataDir: main.dataDir, log: (l) => lines.push(l) });
+    assert.equal(report.moved, 1);
+    assert.match(lines.join('\n'), /1 of them already in the bucket from a push that stopped/);
+    const spare = laptop();
+    assert.equal((await pull({ cloud: server.http, headers: {}, repertoire: 'default', roots: spare.roots, dataDir: spare.dataDir, log: () => {} })).moved, 2);
+    assert.equal(fs.readFileSync(path.join(spare.base, 'covers/12.jpg'), 'utf8'), 'cover');
+  } finally {
+    await server.stop();
+  }
+});
+
 test('without the R2 bucket, the sync says so and changes nothing', async () => {
   const server = await startDevServer();
   try {
     const main = laptop({ 'covers/1.jpg': 'x' });
-    await assert.rejects(push({ cloud: server.http, headers: {}, repertoire: 'default', roots: main.roots, dataDir: main.dataDir, log: () => {} }), /503/);
+    // A 503 may pass, so it is tried again (here without the real waits) before the push gives up.
+    await assert.rejects(push({ cloud: server.http, headers: {}, repertoire: 'default', roots: main.roots, dataDir: main.dataDir, log: () => {}, retryFirstMs: 1, retryCapMs: 1 }), /503 media sync is not configured.*gave up after 5 attempts/s);
   } finally {
     await server.stop();
   }

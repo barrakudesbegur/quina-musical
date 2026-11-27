@@ -54,5 +54,19 @@ export const LINK = Object.freeze({
   ackTimeoutMs: 10_000,
 });
 
+/** The media sync (laptop/media-sync.ts, `npm run media -- push|pull`). */
+export const MEDIA_SYNC = Object.freeze({
+  /** Files moving at once. */
+  concurrency: 4,
+  /**
+   * Tries per request (each file's upload or download, the manifest's GET and PUT) when the failure may pass: a
+   * network error (an HTTP/2 stream reset killed a 2,796-file push once), HTTP 5xx or 429, or a download cut off.
+   */
+  attempts: 5,
+  /** The wait before each retry, as the link's reconnect: full jitter, the first within 1 s, doubling up to 30 s. */
+  retryFirstMs: 1_000,
+  retryCapMs: 30_000,
+});
+
 /** Durable Object location hints (Cloudflare's names). */
 type DurableObjectLocationHintName = 'wnam' | 'enam' | 'sam' | 'weur' | 'eeur' | 'apac' | 'oc' | 'afr' | 'me';
