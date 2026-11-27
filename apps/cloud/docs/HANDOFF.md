@@ -81,7 +81,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - **R2:** the breaks set, the intro, the throw song and Pausa's set (in `pausa/`) are pushed. The old top-level `interval-*` keys left the manifest and wait for the post-night prune (agreed with Sound engine: under a cent a month). Hold's `audition/` is excluded.
   - **The plan-save bug** (`2503050`): edits that change nothing public were lost when the GameRoom restarted. U126 asks the user to check quina-dev.
 - **Next:**
-  - **D268 is in** (`7c2c6a5`, on Sound engine's step 1 `d2a36f2`): the preflight reads each song's `pools` list only; 2026 checks as pool 1: 70, pool 2: 70, 4 shared (6, 45, 47, 55), its cards pass «each side from its pool», and the plan passes. R2 has the new `index.json` (1 blob, the old pruned). Sound engine drops `pool` (step 3) once the cards generator has moved; nothing on my side reads it any more.
+  - **D268 is complete** (`7c2c6a5` mine; Sound engine's step 3 `d6bb94a` dropped `pool` everywhere): every reader takes a song's `pools`; R2 has the index without `pool` (1 blob, the old one pruned).
   - **D234's lock through the cloud is live** (`e3de22c4`): each cloud console's commands carry `from: cloud:<its hello clientId>`, and the link hands the relay `cloud.consoles { ids }` (Sound engine's `ed63184`). A laptop's link must run the new code (`npm run link` restarted) to forward the list. Frontend checks it live.
   - remember that one Worker serves both names, so every deploy also changes what the QR codes open;
   - Sound engine's `upcoming` event (D170, getUpcoming) is private: add it to the scans when it lands;
