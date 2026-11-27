@@ -15,7 +15,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b2737b84b5d956376cb8e55425f5",
     "durationMs": 207734,
     "spotifyId": "6LD1tYOKReFqZh5ZdCdxIz",
-    "pool": "1"
+    "pool": "1",
+    "printArtist": "Quevedo"
   },
   {
     "id": 3,
@@ -51,7 +52,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b2734fd9adda79bc5839feca9720",
     "durationMs": 180453,
     "spotifyId": "6sHBvzRsuGunQTfCk18KXi",
-    "pool": "1"
+    "pool": "1",
+    "printTitle": "Bailando por Ahí"
   },
   {
     "id": 7,
@@ -78,7 +80,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b273f1d02a6cec967f8b6b78f76e",
     "durationMs": 227986,
     "spotifyId": "6QFCMUUq1T2Vf5sFUXcuQ7",
-    "pool": "1"
+    "pool": "1",
+    "printArtist": "Justin Bieber"
   },
   {
     "id": 10,
@@ -105,7 +108,9 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b27329cced2f38d87456e0b5c398",
     "durationMs": 283747,
     "spotifyId": "2yAVzRiEQooPEJ9SYx11L3",
-    "pool": "1"
+    "pool": "1",
+    "printTitle": "Blue (Da Ba Dee)",
+    "printArtist": "Eiffel 65"
   },
   {
     "id": 13,
@@ -132,7 +137,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b27303cadf1b3fe324c1dc710ed4",
     "durationMs": 223448,
     "spotifyId": "0kosUz0jePvjiz4ctmR6wL",
-    "pool": "1"
+    "pool": "1",
+    "printArtist": "Shakira"
   },
   {
     "id": 16,
@@ -141,7 +147,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b273de83c517bc250ad5eff2c951",
     "durationMs": 237266,
     "spotifyId": "2xnoPV3NLescauc0ZJ1MDZ",
-    "pool": "1"
+    "pool": "1",
+    "printArtist": "Jennifer Lopez"
   },
   {
     "id": 17,
@@ -168,7 +175,9 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b2738a31cacc2818b37d9e4e4bdc",
     "durationMs": 242160,
     "spotifyId": "6U2NuJILEOEpW2tVCuqKHb",
-    "pool": "1"
+    "pool": "1",
+    "printTitle": "Dura",
+    "printArtist": "Daddy Yankee"
   },
   {
     "id": 20,
@@ -195,7 +204,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b273863e3f1cdffcdd9f56ee30f8",
     "durationMs": 204733,
     "spotifyId": "4uofaK0hnyZQFDAepvPNl6",
-    "pool": "1"
+    "pool": "1",
+    "printTitle": "El Último Vals"
   },
   {
     "id": 23,
@@ -213,7 +223,9 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b27381909f39477fbb311c77ef35",
     "durationMs": 225786,
     "spotifyId": "6EKUSdzaD9zRaaR5Yg0SoC",
-    "pool": "1"
+    "pool": "1",
+    "printTitle": "Fashion Girl",
+    "printArtist": "Bad Gyal"
   },
   {
     "id": 25,
@@ -249,7 +261,9 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b273c28aab538b917f707a065464",
     "durationMs": 406400,
     "spotifyId": "1cpIInDCM09St4ajfPvPPZ",
-    "pool": "1"
+    "pool": "1",
+    "printTitle": "Flying Free",
+    "printArtist": "Pont Aeri"
   },
   {
     "id": 29,
@@ -267,7 +281,9 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b2731dc7483a9fcfce54822a2f19",
     "durationMs": 252306,
     "spotifyId": "4QNpBfC0zvjKqPJcyqBy9W",
-    "pool": "1"
+    "pool": "1",
+    "printTitle": "Give Me Everything",
+    "printArtist": "Pitbull"
   },
   {
     "id": 31,
@@ -294,7 +310,9 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b27385432abc16fd92be0d435cb9",
     "durationMs": 220360,
     "spotifyId": "3d0WouFnFmr0K3kjeza3fF",
-    "pool": "1"
+    "pool": "1",
+    "printTitle": "Hips Don't Lie",
+    "printArtist": "Shakira"
   },
   {
     "id": 34,
@@ -312,7 +330,9 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b2731e3b9d4d53e0ac334cd9eec4",
     "durationMs": 203049,
     "spotifyId": "0OMRAvrtLWE2TvcXorRiB9",
-    "pool": "1"
+    "pool": "1",
+    "printTitle": "La Gozadera",
+    "printArtist": "Gente De Zona"
   },
   {
     "id": 36,
@@ -321,7 +341,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b2733fe5daaa1bf8480d1abf819c",
     "durationMs": 257713,
     "spotifyId": "0b3Bkp0UfCkNqquAUmoP5m",
-    "pool": "1"
+    "pool": "1",
+    "printArtist": "Quevedo"
   },
   {
     "id": 37,
@@ -330,7 +351,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b27393ee2e2f2dfb7de9befcc164",
     "durationMs": 195546,
     "spotifyId": "4oVO4fGNRRvEn0CRuFO4qv",
-    "pool": "1"
+    "pool": "1",
+    "printArtist": "ROSALÍA"
   },
   {
     "id": 38,
@@ -375,7 +397,9 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b2739c90c39df78a8c99275c81a2",
     "durationMs": 231400,
     "spotifyId": "0CAfXk7DXMnon4gLudAp7J",
-    "pool": "1"
+    "pool": "1",
+    "printTitle": "Low",
+    "printArtist": "Flo Rida"
   },
   {
     "id": 43,
@@ -429,7 +453,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b273d7b2aa3834b82b1cbe899a48",
     "durationMs": 284866,
     "spotifyId": "3C0nOe05EIt1390bVABLyN",
-    "pool": "1"
+    "pool": "1",
+    "printArtist": "Jennifer Lopez"
   },
   {
     "id": 49,
@@ -447,7 +472,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b273073685293d285b0bd74ab156",
     "durationMs": 197773,
     "spotifyId": "5RZTA3NhiHR2408da3HMNz",
-    "pool": "1"
+    "pool": "1",
+    "printArtist": "Comando Tiburón"
   },
   {
     "id": 51,
@@ -492,7 +518,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b27316d9de2977f84ab10e58a5e7",
     "durationMs": 229520,
     "spotifyId": "4wDk9P2WSvHOsRW6SDYE7L",
-    "pool": "1"
+    "pool": "1",
+    "printArtist": "La Quinta Estación"
   },
   {
     "id": 56,
@@ -510,7 +537,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b27352ce1370223e498d7da83dfe",
     "durationMs": 228546,
     "spotifyId": "15BdyloOmohWRWcnO4QILo",
-    "pool": "1"
+    "pool": "1",
+    "printTitle": "Sé lo que hicisteis"
   },
   {
     "id": 58,
@@ -564,7 +592,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b273eb2087dcd1eb61f833bdedff",
     "durationMs": 298121,
     "spotifyId": "76HKOVWqsEg26SECtmw7Rz",
-    "pool": "1"
+    "pool": "1",
+    "printTitle": "The Way You Make Me Feel"
   },
   {
     "id": 64,
@@ -573,7 +602,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b273fd13588a958fbd23d5524e1b",
     "durationMs": 160000,
     "spotifyId": "2USlegnFJLrVLpoVfPimKB",
-    "pool": "1"
+    "pool": "1",
+    "printArtist": "Gabry Ponte"
   },
   {
     "id": 65,
@@ -591,7 +621,9 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b27363bf1cd36632031eb3081cb0",
     "durationMs": 245040,
     "spotifyId": "0TDLuuLlV54CkRRUOahJb4",
-    "pool": "1"
+    "pool": "1",
+    "printTitle": "Titanium",
+    "printArtist": "David Guetta"
   },
   {
     "id": 67,
@@ -627,7 +659,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b273b68df485f3304211904548a8",
     "durationMs": 169840,
     "spotifyId": "0B9x2BRHqj3Qer7biM3pU3",
-    "pool": "1"
+    "pool": "1",
+    "printTitle": "You're The One That I Want"
   },
   {
     "id": 71,
@@ -681,7 +714,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b27302866611c966f3278668b208",
     "durationMs": 246400,
     "spotifyId": "3QKdve5GUYcjkkN1RjKuwM",
-    "pool": "2"
+    "pool": "2",
+    "printArtist": "Zucchero"
   },
   {
     "id": 77,
@@ -708,7 +742,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b273deec12a28d1e336c5052e9aa",
     "durationMs": 214840,
     "spotifyId": "12KUFSHFgT0XCoiSlvdQi4",
-    "pool": "2"
+    "pool": "2",
+    "printArtist": "Ariana Grande"
   },
   {
     "id": 80,
@@ -744,7 +779,9 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b27385ca00029c70d6b5b8372e96",
     "durationMs": 180565,
     "spotifyId": "7vFoFDWqTX0mHzLfrF1Cfy",
-    "pool": "2"
+    "pool": "2",
+    "printTitle": "Cheerleader",
+    "printArtist": "OMI"
   },
   {
     "id": 84,
@@ -780,7 +817,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b2734ccc50918aa0cb5072773045",
     "durationMs": 177056,
     "spotifyId": "55VfayiDkGUTyFE5M3mUFO",
-    "pool": "2"
+    "pool": "2",
+    "printTitle": "Dios Es Un Stalker"
   },
   {
     "id": 88,
@@ -807,7 +845,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b2732761d7afd5bba7ff5ed8496c",
     "durationMs": 163013,
     "spotifyId": "4bE1OpWxbtFOdNDF7rJMta",
-    "pool": "2"
+    "pool": "2",
+    "printTitle": "En el Amor Todo Es Empezar"
   },
   {
     "id": 91,
@@ -816,7 +855,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b273bdb8d291b4b7a5feca2db8a7",
     "durationMs": 247500,
     "spotifyId": "3e4EFbKbdLvnW42xGB6tIx",
-    "pool": "2"
+    "pool": "2",
+    "printTitle": "Fiebre"
   },
   {
     "id": 92,
@@ -834,7 +874,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b273d0a0b75787a84861363ab426",
     "durationMs": 231653,
     "spotifyId": "3vb3xZADNMONqL7aRQLVPJ",
-    "pool": "2"
+    "pool": "2",
+    "printTitle": "Hay Que Venir al Sur"
   },
   {
     "id": 94,
@@ -852,7 +893,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b2739acaf3d002cb93fabfb10e94",
     "durationMs": 159310,
     "spotifyId": "1TewcrGBlkDAMhehfn0eHh",
-    "pool": "2"
+    "pool": "2",
+    "printArtist": "La Fúmiga"
   },
   {
     "id": 96,
@@ -888,7 +930,9 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b273c0353d023daf5ebda0eb003b",
     "durationMs": 150001,
     "spotifyId": "6iOndD4OFo7GkaDypWQIou",
-    "pool": "2"
+    "pool": "2",
+    "printTitle": "La Plena",
+    "printArtist": "W Sound"
   },
   {
     "id": 100,
@@ -951,7 +995,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b27321af408fba4ba3aa98d8c606",
     "durationMs": 189560,
     "spotifyId": "3ri9fLG89OdSpjxheYxU7S",
-    "pool": "2"
+    "pool": "2",
+    "printArtist": "La Quinta Estación"
   },
   {
     "id": 107,
@@ -996,7 +1041,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b27345e020709cacb4d7733d5714",
     "durationMs": 145428,
     "spotifyId": "5NOVfpl0Xm8D6vIl0sKJeL",
-    "pool": "2"
+    "pool": "2",
+    "printArtist": "Los Buyer"
   },
   {
     "id": 112,
@@ -1086,7 +1132,9 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b2731dc7483a9fcfce54822a2f19",
     "durationMs": 231573,
     "spotifyId": "2cZrrQMjB63c0iIugYH9zS",
-    "pool": "2"
+    "pool": "2",
+    "printTitle": "Rain Over Me",
+    "printArtist": "Pitbull"
   },
   {
     "id": 122,
@@ -1149,7 +1197,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b27354dbaa284c53e085523cfec2",
     "durationMs": 213973,
     "spotifyId": "6UEfyhyfhYQsyipxOd95Ie",
-    "pool": "2"
+    "pool": "2",
+    "printTitle": "Aserejé"
   },
   {
     "id": 129,
@@ -1185,7 +1234,8 @@
     "cover": "https://i.scdn.co/image/ab67616d0000b273cd697913c7e2535b599204cf",
     "durationMs": 270590,
     "spotifyId": "09qvq80v8zA09IO6ZjlpT9",
-    "pool": "2"
+    "pool": "2",
+    "printTitle": "Un Beso Y Una Flor"
   },
   {
     "id": 133,

@@ -16,3 +16,16 @@ test('songs.json → the edition songs: id, title, artist and pool, nothing else
   ]);
   assert.throws(() => songsOf({}), /a list of songs/);
 });
+
+test('songs.json → the edition songs: the print names, where songs.json has them, are the titles and artists', () => {
+  const songs = songsOf([
+    { id: 5, title: 'Aserejé', artist: 'Grupo Arenas', pool: '1' },
+    { id: 128, title: 'The Ketchup Song (Aserejé) - Spanglish Version', artist: 'Las Ketchup', printTitle: 'Aserejé', pool: '2' },
+    { id: 129, title: 'Timber', artist: 'Pitbull, Kesha, Other', printArtist: 'Pitbull, Kesha', pool: '2' },
+  ]);
+  assert.deepEqual(songs, [
+    { id: 5, title: 'Aserejé', artist: 'Grupo Arenas', pool: '1' },
+    { id: 128, title: 'Aserejé', artist: 'Las Ketchup', pool: '2' },
+    { id: 129, title: 'Timber', artist: 'Pitbull, Kesha', pool: '2' },
+  ]);
+});

@@ -73,3 +73,17 @@ def test_the_spec_is_checked(tmp_path):
         path.write_text(json.dumps(bad))
         with pytest.raises(pools.PoolsError, match=message):
             pools.read_spec(path)
+
+
+def test_print_names_follow_the_spotify_id_not_the_song_number():
+    pool1 = [song("a la freSka", "Figa Flawas", "freska"), song("Timber", "Pitbull, Kesha", "timber"),
+             song("Un Beso Y Una Flor - Remastered 2016", "Nino Bravo", "beso")]
+    fixes = {"timber": {"printArtist": "Pitbull, Kesha"}, "beso": {"printTitle": "Un Beso y una Flor"},
+             "elsewhere": {"printTitle": "X"}}
+    merged = pools.with_print_names(pools.merge([(spec("1", "order", 1), pool1)]), fixes)
+    by_track = {s["spotifyId"]: s for s in merged.songs}
+    assert "printArtist" not in by_track["timber"] and "printTitle" not in by_track["timber"]  # the fix keeps Spotify's
+    assert by_track["beso"]["printTitle"] == "Un Beso y una Flor" and "printArtist" not in by_track["beso"]
+    assert not {"printTitle", "printArtist"} & set(by_track["freska"])  # nothing changes, nothing written
+    assert [s["id"] for s in merged.songs] == [1, 2, 3]
+    assert merged.notes == ["print-names.json: elsewhere isn't a song of this repertoire; its fix is unused"]

@@ -238,8 +238,7 @@ def analyze_song(repertoire: repertoires.Repertoire, song: dict, mp3: Path | Non
     return {
         "schemaVersion": 1,
         "songId": song_id,
-        "title": song["title"],
-        "artist": song["artist"],
+        **song_names(song),
         "source": {
             "mp3": repertoires.display(mp3, repertoires.REPO) if mp3 else None,
             "pcm": repertoires.display(flac),
@@ -275,6 +274,12 @@ def analyze_song(repertoire: repertoires.Repertoire, song: dict, mp3: Path | Non
             "beatThisSec": raw.get("beatThisSec"),
         },
     }
+
+
+def song_names(song: dict) -> dict:
+    """The title and artist every screen shows: songs.json's print names (tools/prep/print_names.py), Spotify's own
+    where there are none."""
+    return {"title": song.get("printTitle") or song["title"], "artist": song.get("printArtist") or song["artist"]}
 
 
 def index_row(a: dict) -> dict:

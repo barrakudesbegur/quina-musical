@@ -16,6 +16,10 @@ the night. What to read is data/repertoires/<name>/pools.json:
 - `ids: "keep"`: the playlist's own ids (the fetcher's stable ids), for a playlist numbered some other way.
 - A track listed twice in one playlist keeps its first place. A song already in an earlier pool (the same Spotify
   track, or the same title and first artist) is left out of the later pool. Both are reported, never silent.
+- Every song gets its print names (tools/prep/print_names.py): Spotify's tags off the title, the main artist only,
+  then the hand fixes in data/repertoires/<name>/print-names.json (optional; keyed by Spotify id). `printTitle` /
+  `printArtist` are written only where they differ from `title` / `artist`; a fix for a track not in the
+  repertoire is reported.
 
 Run: tools/prep/.venv/bin/python tools/prep/pools.py [--repertoire NAME|PATH] [--check]
 Only the standard library.
@@ -31,6 +35,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
+import print_names  # noqa: E402
 import repertoire as repertoires  # noqa: E402
 
 POOL_ID_RE = re.compile(r"^[a-z0-9]{1,8}$")
@@ -150,6 +155,12 @@ def merge(pools: list[tuple[PoolSpec, list[dict]]]) -> Merged:
     return Merged(out, notes)
 
 
+def with_print_names(merged: Merged, fixes: dict[str, dict]) -> Merged:
+    """The merged songs with their print names: the rules, then the fixes by Spotify id; an unused fix is a note."""
+    named = print_names.apply(merged.songs, fixes)
+    return Merged(named.songs, merged.notes + named.warnings)
+
+
 def out_of_order(songs: list[dict]) -> list[dict]:
     """The songs a title sort would move: each one that comes before the song above it (U58's convention)."""
     keys = [title_key(s.get("title", "")) for s in songs]
@@ -158,6 +169,10 @@ def out_of_order(songs: list[dict]) -> list[dict]:
 
 def pools_path(repertoire: repertoires.Repertoire) -> Path:
     return repertoires.REPERTOIRES_DIR / repertoire.name / "pools.json"
+
+
+def print_names_path(repertoire: repertoires.Repertoire) -> Path:
+    return repertoires.REPERTOIRES_DIR / repertoire.name / "print-names.json"
 
 
 def main() -> int:
@@ -175,14 +190,18 @@ def main() -> int:
             except FileNotFoundError:
                 raise PoolsError(f"pool {spec.pool}: {repertoires.display(spec.songs_json)} not found (fetch its playlist first)") from None
         merged = merge(playlists)
-    except PoolsError as err:
+        fixes = print_names.read_fixes(print_names_path(repertoire))
+    except (PoolsError, print_names.PrintNamesError) as err:
         sys.exit(f"pools error: {err}")
+    merged = with_print_names(merged, fixes)
     for note in merged.notes:
         print(f"⚠️  {note}")
     for spec in specs:
         ids = [s["id"] for s in merged.songs if s["pool"] == spec.pool]
         span = f"ids {min(ids)}–{max(ids)}" if ids else "no songs"
         print(f"pool {spec.pool}: {len(ids)} songs, {span} ({spec.ids})")
+    renamed = sum(1 for s in merged.songs if "printTitle" in s or "printArtist" in s)
+    print(f"print names: {renamed} of {len(merged.songs)} songs print differently ({len(fixes)} hand fixes)")
     if args.check:
         return 0
     repertoire.songs_json.parent.mkdir(parents=True, exist_ok=True)
