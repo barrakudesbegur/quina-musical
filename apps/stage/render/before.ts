@@ -1,10 +1,11 @@
 // Before the Game: the edition's name, a preview of the night (each card type that plays, in its colour, with
-// its price and its rounds: one band per type, so it's plain that one card is only for the Quina Especial; the
-// Quina Desgraciada gets its own pill with a sad face, like the Especial's star), a
+// its price and its rounds: one band per type, so it's plain that the normal card plays Quines 1–10 and the special card
+// the Quina Especial and the Quina Desgraciada, D243; the Desgraciada gets its own pill with a sad face, like the
+// Especial's star; the price only on round 1's type, D61: 15 € for this year's ten regular rounds, D69), a
 // rough countdown to the planned start, the player app's QR as large as possible (no text; the sitting nino
 // on its corner) and the sponsors' logos. No how-to-play text: the presenters explain.
 import { STAGE } from '../config.ts';
-import type { NightCardType } from '../model/night.ts';
+import { ballsPerRow, type NightCardType } from '../model/night.ts';
 import type { BeforeView, StageView } from '../view.ts';
 import { priceLabel, STAGE_TEXT } from '../strings.ts';
 import { h, setData, setHidden, setText } from './dom.ts';
@@ -19,12 +20,13 @@ function typeBand(t: NightCardType): HTMLElement {
   card.set(t.color, t.special);
   const price = priceLabel(t.priceCents);
   const art = h('div', 'night__art', card.root, price ? h('p', { class: 'price-tag night__price', data: { variant: 'tag', color: 'gold' } }, price) : null);
+  // Up to 7 balls in one row, more in two (ten regular rounds: 1–5 over 6–10, D243).
   const rounds = t.regularRounds.length
     ? h(
         'div',
-        { class: 'night__rounds', attrs: { 'aria-label': STAGE_TEXT.roundsLabel(t.regularRounds), style: `--balls: ${t.regularRounds.length}` } },
+        { class: 'night__rounds', attrs: { 'aria-label': STAGE_TEXT.roundsLabel(t.regularRounds), style: `--balls: ${ballsPerRow(t.regularRounds.length)}` } },
         h('span', { class: 'night__word', attrs: { 'aria-hidden': 'true' } }, STAGE_TEXT.roundsWord),
-        ...t.regularRounds.map((n) => h('span', { class: 'night__ball', attrs: { 'aria-hidden': 'true' } }, String(n))),
+        h('span', { class: 'night__balls', attrs: { 'aria-hidden': 'true' } }, ...t.regularRounds.map((n) => h('span', 'night__ball', String(n)))),
       )
     : null;
   const special = t.special ? h('p', 'night__pill', starIcon('night__pill-icon'), STAGE_TEXT.specialRoundName) : null;

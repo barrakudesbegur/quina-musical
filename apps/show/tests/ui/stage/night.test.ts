@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultCardType } from '@quina/protocol';
-import { nightCardTypes } from '../../../../stage/model/night.ts';
+import { ballsPerRow, nightCardTypes } from '../../../../stage/model/night.ts';
 import { UNKNOWN_CARD_TYPE_COLOR, knownCardTypes, type PrintedCardType } from '../../../../../packages/ui/data/card-types.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import type { RoundPlan } from '../../../../../packages/ui/plan.ts';
@@ -78,4 +78,8 @@ test('without card-types.json: a neutral stand-in names each type; unlisted type
     { type: 'normal', label: 'Cartró normal', color: UNKNOWN_CARD_TYPE_COLOR, priceCents: null, regularRounds: [2], special: false, desgraciat: false },
   ]);
   assert.deepEqual(nightCardTypes({ rounds }, TYPES).map((t) => t.type), ['normal', 'daurat'], 'a listed type before an unlisted one');
+});
+
+test('the balls take one line up to 7 rounds, two lines of half each above (D243: 1–5 over 6–10)', () => {
+  assert.deepEqual([1, 6, 7, 8, 10, 11].map(ballsPerRow), [1, 6, 7, 4, 5, 6]);
 });

@@ -49,3 +49,11 @@ export function nightCardTypes(plan: Pick<GamePlan, 'rounds'> | null, types: rea
       };
     });
 }
+
+/**
+ * How many balls a band's row holds: all of them up to 7, else half each (two rows), so this year's ten regular rounds
+ * read 1–5 over 6–10, the normal card's two sides (D171, D243), with each ball big enough for the far end of the room.
+ */
+export function ballsPerRow(count: number): number {
+  return count <= 7 ? Math.max(1, count) : Math.ceil(count / 2);
+}

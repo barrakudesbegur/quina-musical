@@ -89,7 +89,8 @@ export interface CheckSceneView {
   check: CheckView;
 }
 
-/** No winning card numbers: the shout, and the round's prize once revealed. */
+/** No winning card numbers: the shout, and the round's prize once revealed (a Quina's or the last card standing's; a
+ * Line's shows none for now, D242). */
 export interface CelebrationView {
   scene: 'celebration';
   key: string;
@@ -281,7 +282,9 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
     case 'celebration': {
       const c = flow.celebration;
       if (!c) return play();
-      const prize = prizesOf(plan, c.round, open).find((p) => p.kind === c.kind) ?? null;
+      // D242 (the user's canvas comment S5, 27 Nov): no prize panel in a Line's Celebration for now; how a Celebration
+      // shows its prize waits for the proposals (board Projector-Celebracio-Premi-Propostes).
+      const prize = c.kind === 'line' ? null : (prizesOf(plan, c.round, open).find((p) => p.kind === c.kind) ?? null);
       return { scene, key: `${c.round}:${c.kind}@${c.sinceMs}`, kind: c.kind, prize };
     }
     case 'interval': {

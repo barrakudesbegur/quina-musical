@@ -191,6 +191,49 @@ test("before: card-types.json's names and colours; only round 1's card type show
   assert.deepEqual(view.body.cardTypes.map((t) => [t.label, t.color, t.priceCents]), [['Cartró blau', '#aaccee', 200 * regular], ['Cartró rosa', '#eeaacc', null]]);
 });
 
+/** This year's night (D171, D193): Quines 1–5, the Desgraciat, the Break, Quines 6–10, the Especial; the sample plan's
+ * prizes reused. With card-types.json's prices as apps/cards writes them (D69): 1,50 € a regular round, the especial 5 €. */
+const EDITION_PLAN = (() => {
+  const kinds: Record<number, 'desgraciat' | 'special'> = { 6: 'desgraciat', 12: 'special' };
+  const normal = SAMPLE_PLAN.rounds.find((r) => r.kind === 'normal')!;
+  const rounds = Array.from({ length: 12 }, (_, i) => {
+    const kind = kinds[i + 1] ?? 'normal';
+    return { ...normal, number: i + 1, kind, cardType: defaultCardType(kind), side: i + 1 > 6 ? 2 : 1, line: kind === 'desgraciat' ? [] : normal.line };
+  });
+  return { ...SAMPLE_PLAN, rounds };
+})();
+const EDITION_TYPES = readPrintedCardTypes([
+  { type: 'normal', name: 'Cartró normal', color: '#cfe8ff', title: '', priceCents: 150, priceRule: 'perRegularRound' },
+  { type: 'especial', name: 'Cartró especial', color: '#ffd9e8', title: '', priceCents: 500, priceRule: 'fixed' },
+]);
+
+test('before, this year (D243): the normal card plays Quines 1–10 at 15 €; the special card the Especial and the Desgraciat, no price yet', () => {
+  const state = FIXTURES.before(NOW).state;
+  const view = stageView(state, flowOf(state), EDITION_PLAN, { ...CATALOG, cardTypes: EDITION_TYPES });
+  if (view.body.scene !== 'before') return assert.fail('not before');
+  assert.deepEqual(
+    view.body.cardTypes.map((t) => [t.type, t.regularRounds, t.special, t.desgraciat, t.priceCents]),
+    [
+      ['normal', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], false, false, 1500],
+      ['especial', [], true, true, null],
+    ],
+  );
+});
+
+test("the Break's price, this year (D69, D81): the special card's 5 € before each special round, the normal card's 1,50 € a regular round left", () => {
+  const priceBefore = (nextRound: number) => {
+    const base = FIXTURES.interval(NOW).state;
+    const state: FlowState = { ...base, round: { ...base.round, number: nextRound - 1 }, interval: { sinceMs: NOW - 40_000, nextRound, guideEndMs: NOW + 140_000 } };
+    const view = stageView(state, flowOf(state), EDITION_PLAN, { ...CATALOG, cardTypes: EDITION_TYPES });
+    if (view.body.scene !== 'interval') return assert.fail('not interval');
+    return view.body.price && [view.body.price.label, view.body.price.cents];
+  };
+  assert.deepEqual(priceBefore(2), ['Cartró normal', 1350], 'Quina 2: nine regular rounds left');
+  assert.deepEqual(priceBefore(6), ['Cartró especial', 500], 'the Desgraciat: the special card');
+  assert.deepEqual(priceBefore(7), ['Cartró normal', 750], 'Quina 6, after the Break: five left (the Desgraciat never counts)');
+  assert.deepEqual(priceBefore(12), ['Cartró especial', 500], 'the Especial: the special card again');
+});
+
 /** A fixture's state with its Check's cue played (as the engine's snapshot right after `check.cue`). */
 function cued(name: string, cue: 'pass' | 'fail'): FlowState {
   const { state } = FIXTURES[name](NOW);
@@ -405,6 +448,15 @@ test('celebration: the shout kind and the round prize, never the winning card nu
     prize: { kind: 'bingo', title: 'Pernil', detail: null, sponsor: '[Patrocinador 1]', more: 16 },
   });
   assert.ok(!/\b(57|301)\b/.test(JSON.stringify(view)), 'no winning card number');
+});
+
+test("a Line's Celebration shows no prize panel for now (D242), revealed or not", () => {
+  const state = FIXTURES.celebration(NOW).state;
+  const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
+  if (view.body.scene !== 'celebration') return assert.fail('not celebration');
+  assert.equal(view.body.kind, 'line');
+  assert.equal(view.body.prize, null);
+  assert.ok(!JSON.stringify(view).includes('Ampolla de vi blanc'), "the Line's prize stays off the projector");
 });
 
 test('no winning card number on the projector after a win: Celebration, Interval and the end of the night', () => {

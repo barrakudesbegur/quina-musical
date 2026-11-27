@@ -1,5 +1,6 @@
 // The Celebration: "LÍNIA!" or "QUINA!" huge over the drum's victory lap (never the winning card numbers), the
-// round's prize and sponsor, a flash, rays and the slow paper confetti raining (D185; ANIMATIONS.md `celebrate`). The
+// round's prize and sponsor (a Quina's only: a Line's shows none for now, D242), a flash, rays and the slow paper confetti
+// raining (D185; ANIMATIONS.md `celebrate`). The
 // Desgraciat round's last one standing gets «QUINA POTRA!» (D186, amending D62; board Projector-Desgraciat-Dempeus):
 // the green title tilted, the orange «Quina Desgraciada» plate under it, the prize on paper, green rays and three ninos
 // around it. The scene itself moves on to play (Line) or the Interval (Bingo, last standing) when the engine's scene
