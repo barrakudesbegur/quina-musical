@@ -357,7 +357,7 @@ export const S = {
     /** A number that isn't added, in private, and why (D168). */
     refusal: {
       fallen: 'Ja ha caigut',
-      unknown: 'Aquest número no existeix',
+      unknown: 'Aquest cartró no existeix',
       notThisRound: "No és d'aquesta quina",
       comeBack: 'Un caigut no torna a dempeus: només «Enrere»',
     } satisfies Record<FinaleRefusal, string>,
@@ -433,7 +433,7 @@ export const S = {
       /** "és un cartró especial, i aquesta quina juga els normals" (the types' short names, lowercase). */
       wrongType: (cardType: string | null, roundType: string) =>
         cardType ? `Tipus erroni: és un cartró ${cardType}, i aquesta quina juga els ${roundType}s` : "Tipus erroni: és un cartró d'un altre tipus",
-      unknownCard: 'Aquest número no existeix',
+      unknownCard: 'Aquest cartró no existeix',
     },
     warnings: {
       notSold: 'No registrat com a venut',
@@ -758,7 +758,7 @@ export const S = {
     display: 'Número de cartró',
     chip: (id: number) => `#${id}`,
     removeChip: (id: number) => `Treu el #${id}`,
-    unknown: 'Aquest número no existeix',
+    unknown: 'Aquest cartró no existeix',
     unknownChip: 'no existeix',
     back: 'Esborra',
     /** D164: it closes the number entry and goes back to the round's screen. */
@@ -887,7 +887,7 @@ export const S = {
     unknownClaim: 'aquest cartró cantat no existeix',
     cannotResume: 'no es pot recuperar amb aquest codi: revisa la quina, la llavor i la cançó',
     claimOpen: 'hi ha un cartró en revisió: decidiu-lo primer',
-    unknownCard: 'aquest número de cartró no existeix',
+    unknownCard: 'aquest cartró no existeix',
     nextBlocked: 'deixeu anar Aguanta o el Suspens primer',
     finaleDecided: 'la final ja té guanyador: feu el senyal',
   } satisfies Partial<Record<RejectReason, string>> as Partial<Record<RejectReason, string>>,

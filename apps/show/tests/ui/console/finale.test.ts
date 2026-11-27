@@ -109,7 +109,7 @@ test("the engine's refusals of `finale` come back to the pad, privately, with th
   assert.deepEqual([back.added, back.digits, back.refused], [[57, 204], '23', 'fallen']);
   for (const r of ['fallen', 'unknown', 'notThisRound', 'comeBack'] as const) assert.ok(S.finale.refusal[r]);
   assert.equal(S.finale.refusal.fallen, 'Ja ha caigut');
-  assert.equal(S.finale.refusal.unknown, 'Aquest número no existeix');
+  assert.equal(S.finale.refusal.unknown, 'Aquest cartró no existeix');
   assert.equal(S.finale.refusal.notThisRound, "No és d'aquesta quina");
 });
 

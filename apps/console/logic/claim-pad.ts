@@ -18,7 +18,7 @@ export interface ClaimPadState {
   digits: string;
   chips: readonly PadChip[];
   kind: ClaimKind;
-  /** The typed number was refused («Aquest número no existeix»): it stays typed, in red, until it's edited. */
+  /** The typed number was refused («Aquest cartró no existeix»): it stays typed, in red, until it's edited. */
   refused: boolean;
 }
 
