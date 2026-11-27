@@ -10,6 +10,11 @@ export type PlayerPreset = Omit<ButtonPreset, 'color'> & { readonly color: Butto
 export const PLAYER = {
   /** «+ Cartró» where a list of cards ends or is empty (AddCardPrompt, CardsList, LegacyNotice). */
   addCard: { color: 'orange', size: 'l', icon: 'plus', label: S.addCard },
+  /**
+   * «+ Cartró» floating at the end of the cards list (D188, D218): a quiet pill, navy on the night sky with the floating
+   * shadow, since it claims less attention than the cards (the user's phone test, 27 Nov). The home places it.
+   */
+  addCardFloating: { color: 'navy', floating: true, size: 's', icon: 'plus', label: S.addCard, sound: 'floating' },
   /** The same in Ajustos: the smaller rounded rectangle (D189, D201). */
   addCardSmall: { color: 'orange', size: 's', icon: 'plus', label: S.addCard },
   /** The add-card pad's «Desar»: lit once the number is a card. */
