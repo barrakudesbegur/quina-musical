@@ -1672,6 +1672,6 @@ By: the user (to Backend). Source: Backend's report of 27 Nov. Lives in: apps/cl
 ### D249 · After a Back or a cancelled Spin, the drum returns the card to its place · 2026-11-27 · Active
 So the phone's drum stays the same as the projector's (D237), the projector returns the card to its drumOrder place instead of wherever its drum stops:
 - a Back turns the shortest way onto the card's place, at most half a lap and about 1.6 s. It's usually the neighbouring card, as today;
-- a cancelled Spin brakes naturally, as today, then glides for at most about 1 s onto the card's place.
-There are no speed-ups and no long brakes. The motion is specced in ANIMATIONS.md before it's built, and the phone follows it. Sound engine held a subagent's working fix that changed the motion more (nearly a full lap back, brakes up to 4 s, some speed-ups) until it was specced.
+- a cancelled Spin brakes naturally, as today, then glides onto the card's place with the Back's timing, 0.8 s for one card up to 1.6 s for half a lap. Sound engine's change from "at most about 1 s": that cap made a half-lap glide whip round at about 54 cards a second, faster than a Spin. Now it peaks at about 34, like a Back.
+There are no speed-ups and no long brakes. Built in e3e85224. The motion is specced in ANIMATIONS.md before it's built, and the phone follows it. Sound engine held a subagent's working fix that changed the motion more (nearly a full lap back, brakes up to 4 s, some speed-ups) until it was specced.
 By: the orchestrator, within D237. Source: Sound engine's report of 27 Nov. Lives in: packages/ui ANIMATIONS.md; apps/show/engine/src/wheel/drum.ts.
