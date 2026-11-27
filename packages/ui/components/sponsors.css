@@ -142,6 +142,35 @@
   list-style: none;
 }
 
+/* layout row: one row that scrolls sideways (snapping to tiles, the next one peeking), so a long list never pushes the
+   screen's own content down (the phone's Break and the end of the night, under the prizes). */
+.sponsor-list[data-layout='row'] {
+  grid-template-columns: none;
+  grid-auto-flow: column;
+  grid-auto-columns: 9.5rem;
+  /* its tiles never widen its box: the row scrolls inside whatever width it's given */
+  contain: inline-size;
+  max-width: 100%;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: var(--space-1);
+  padding: var(--space-1) var(--space-1) var(--space-2);
+  scrollbar-width: none;
+  touch-action: pan-x pan-y;
+  mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+}
+
+.sponsor-list[data-layout='row'] > li {
+  scroll-snap-align: start;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .sponsor-list[data-layout='row'] {
+    scroll-behavior: smooth;
+  }
+}
+
 .sponsor-list .logo-tile {
   --logo-tile-w: 100%;
   --logo-tile-h: auto;

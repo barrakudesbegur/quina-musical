@@ -1,6 +1,7 @@
 <!--
-  G4 · SponsorList (the phone): every sponsor as a big logo tile, two a row, in a list that scrolls with its page (the
-  user's canvas comment #90, D-v). A tap opens the logo larger in a modal dialog with the sponsor's name; the logo grows
+  G4 · SponsorList (the phone): every sponsor as a big logo tile (the user's canvas comment #90, D-v), two a row in a
+  list that scrolls with its page (`layout='grid'`), or one row that scrolls sideways (`layout='row'`: the Break and the
+  end of the night, boards M31, M32, so 55 sponsors never push the player's cards down). A tap opens the logo larger in a modal dialog with the sponsor's name; the logo grows
   out of its tile and shrinks back into it on close (ANIMATIONS.md › logo-open: a same-document view transition; reduced
   motion fades). The dialog is native (showModal, Esc, back, a tap outside), named by the sponsor's name.
 -->
@@ -13,7 +14,16 @@
   import type { SponsorLogo } from './sponsor-types.ts';
   import './sponsors.css';
 
-  let { sponsors, label = CA.sponsors.list }: { sponsors: readonly SponsorLogo[]; label?: string } = $props();
+  let {
+    sponsors,
+    label = CA.sponsors.list,
+    layout = 'grid',
+  }: {
+    sponsors: readonly SponsorLogo[];
+    label?: string;
+    /** grid: two a row, the page scrolls; row: one row that scrolls sideways, snapping, the next tile peeking. */
+    layout?: 'grid' | 'row';
+  } = $props();
 
   const uid = $props.id();
   const NAME = 'sponsor-logo';
@@ -79,7 +89,7 @@
   }
 </script>
 
-<ul class="sponsor-list" aria-label={label}>
+<ul class="sponsor-list" data-layout={layout} aria-label={label}>
   {#each sponsors as sponsor, i (`${sponsor.name}|${sponsor.logo}`)}
     <li>
       <LogoTile {sponsor} label={CA.sponsors.show(sponsor.name)} onclick={() => show(i)} imgStyle={morph === 'tile' && open === i ? `view-transition-name: ${NAME}` : undefined} />

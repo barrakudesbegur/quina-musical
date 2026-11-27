@@ -9,6 +9,7 @@
   import { drumSongs } from '../logic/reel.ts';
   import { ninoFor, type NinoMoment } from '../../../packages/ui/concepts.ts';
   import { ninoUrl } from '../../../packages/ui/ninos.ts';
+  import SponsorList from '../../../packages/ui/components/SponsorList.svelte';
   import { S } from '../strings.ts';
   import AddCardPrompt from './AddCardPrompt.svelte';
   import Countdown from './Countdown.svelte';
@@ -32,9 +33,19 @@
   // The drum's tiles: this round's songs still to come, never a landed one (logic/reel.ts drumSongs).
   const history = $derived(historyOf(app.state));
   const drum = $derived(drumSongs(app.catalog?.songs.keys() ?? [], new Set(history?.landings.map((l) => l.songId) ?? []), history?.round ?? 0));
+  const sponsors = $derived((app.plan?.sponsors ?? []).map((s) => ({ name: s.name, logo: s.logo })));
   const nextNumber = $derived(app.state?.interval?.nextRound ?? null);
   const nextName = $derived(nextNumber === null ? '' : roundNameOf(nextNumber, app.state, app.plan));
 </script>
+
+<!-- «Gràcies als col·laboradors» (boards M31, M32): every sponsor's logo, big, in a list that scrolls; a tap opens it
+     larger (G4's SponsorList, the user's canvas comment #90). -->
+{#snippet thanks()}
+  {#if sponsors.length}
+    <h3 class="now__subheading">{S.thanksSponsors}</h3>
+    <SponsorList {sponsors} label={S.thanksSponsors} layout="row" />
+  {/if}
+{/snippet}
 
 <section
   class="now"
@@ -79,6 +90,7 @@
       <h3 class="now__subheading">{S.lastWinners}</h3>
       <PrizeLines round={justPlayed} mine={app.data.cards} />
     {/if}
+    {@render thanks()}
   {:else if app.scene === 'after'}
     <h2 class="now__heading">{S.thanks}</h2>
     <h3 class="now__subheading">{S.summary}</h3>
@@ -90,6 +102,7 @@
         </li>
       {/each}
     </ul>
+    {@render thanks()}
     <p class="now__bye">{S.seeYou}</p>
   {:else}
     <Reel

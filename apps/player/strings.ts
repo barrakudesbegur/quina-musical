@@ -131,6 +131,8 @@ export const S = {
   startsIn: (mmss: string) => `Comença d’aquí a uns ${mmss}`,
   startsSoon: 'Comença ben aviat',
   lastWinners: 'Premis de la quina anterior',
+  /** The sponsors' logos in the Break and at the end of the night (boards M31, M32; G4's SponsorList, #90). */
+  thanksSponsors: 'Gràcies als col·laboradors',
 
   // After the Game
   thanks: CA.thanks,
