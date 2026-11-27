@@ -72,9 +72,10 @@
   hyphens: auto;
 }
 
-/* ---- SponsorStrip (projector): one row, panning without end; still pages under reduced motion ---------------- */
+/* ---- SponsorStrip (projector): one row (or a few, S4), panning without end; still pages under reduced motion ---- */
 :where(.sponsor-strip) {
   --sponsor-gap: 1.5rem;
+  --sponsor-row-gap: 1rem;
   --sponsor-fade: 4rem;
   --pan-duration: 60s;
   --pan-delay: 0s;
@@ -98,6 +99,11 @@
 .sponsor-strip__track > li {
   flex: none;
   padding-inline-end: var(--sponsor-gap);
+}
+
+/* More than one row (`STAGE.sponsorStrip.rows`): the rows stack, each panning on its own. */
+.sponsor-strip__track + .sponsor-strip__track {
+  margin-block-start: var(--sponsor-row-gap);
 }
 
 @media (prefers-reduced-motion: no-preference) {

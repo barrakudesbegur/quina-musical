@@ -94,7 +94,12 @@
   --stage-qr-box: 34.25rem;
   --stage-title-big: 9.375rem;
   --stage-logo-tile: #fff; /* logos and QR on white: many logos are drawn for white paper */
-  --stage-ring-size: 24.375rem;
+  /* The Break's countdown ring: 336 px since the sponsors' tiles grew to the Before screen's size (S4, 27 Nov evening) */
+  --stage-ring-size: 21rem;
+  /* The sponsor strip's tile, before the Game and in the Break alike (G4; the user's comment S4: the size knob, with the
+     speed and the rows in config.ts STAGE.sponsorStrip) */
+  --stage-sponsor-w: 15rem;
+  --stage-sponsor-h: 9.375rem;
   --stage-fail-dim-opacity: 0.1;
   --stage-fail-glow: color-mix(in srgb, var(--color-danger) 50%, transparent);
   --stage-cross: 36.25rem;
@@ -766,6 +771,13 @@
   align-self: end;
   justify-self: stretch;
   margin-inline: -4rem;
+}
+
+/* One tile size on both screens (S4): --stage-sponsor-w / -h. */
+.before__sponsors .logo-tile,
+.interval__sponsors .logo-tile {
+  --logo-tile-w: var(--stage-sponsor-w);
+  --logo-tile-h: var(--stage-sponsor-h);
 }
 
 /* -------------------------------------------------------------------------------------- roundStart */
@@ -2855,17 +2867,14 @@
 /* -------------------------------------------------------------------------------------- interval */
 /* A big "Mitja part", the next round's plate, the card's price for that round (`price-tag`, U5), a large countdown ring
    between the two ninos, the logos. */
-/* The rows close up a little (27 Nov) to make room for the sponsors' bigger tiles (#88). */
+/* The rows close up a little (27 Nov) to make room for the sponsors' bigger tiles (#88); the ring is smaller since S4
+   (27 Nov evening), so the tiles are the Before screen's size and the countdown's words never touch them. */
 .scene--interval {
   display: grid;
   grid-template-rows: auto auto auto minmax(0, 1fr) auto;
   justify-items: center;
   row-gap: 1.5rem;
   padding: 3.5rem 4rem 1rem;
-}
-
-.interval__sponsors .logo-tile {
-  --logo-tile-h: 8.5rem;
 }
 
 .interval__title {
@@ -2930,7 +2939,7 @@
 
 /* The countdown ring: a dark plate with a track, its ice-blue arc emptying towards the guide end (linear),
    and the rough minutes in the middle. */
-/* The countdown is the generic Ring, framed (packages/ui/components/ring.css), at the board's 390 px. */
+/* The countdown is the generic Ring, framed (packages/ui/components/ring.css), at --stage-ring-size (336 px since S4). */
 .ring.interval__ring {
   width: var(--stage-ring-size);
   height: auto;

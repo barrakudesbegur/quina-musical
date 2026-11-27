@@ -79,14 +79,13 @@ export const STAGE = Object.freeze({
     celebration: Object.freeze({ stickers: 'lastStanding' as NinoMoment | null }),
   }),
   /**
-   * The sponsor strip before the Game and in the Interval (G4; the user's canvas comment #88): `sponsor-pan`'s speed,
-   * and one tile's step (240 px tile + 24 px gap in sponsors.css; only used until the row is measured). Under reduced
-   * motion it pages instead (`sponsor-pages`): tiles per page (as many as fit the 1344 px row) and how long a page shows.
+   * The sponsor strip before the Game and in the Break (G4; the user's canvas comments #88 and S4, which has a follow-up
+   * coming: ANIMATIONS.md `sponsor-pan`). Its knobs: `pxPerSec`, the pan's speed; `rows`, how many rows the list is split
+   * into (each pans on its own). The tile's size is stage.css's `--stage-sponsor-w` / `-h`; `tileStepPx` is one tile and
+   * its gap at that size, used only until the row is measured. Under reduced motion it pages instead (`sponsor-pages`):
+   * `perPage` tiles a row (as many as fit the 1440 px box) and `pageMs` a page.
    */
-  sponsorPanPxPerSec: 60,
-  sponsorTileStepPx: 264,
-  sponsorsPerPage: 5,
-  sponsorPageMs: 8000,
+  sponsorStrip: Object.freeze({ rows: 1, pxPerSec: 60, tileStepPx: 264, perPage: 5, pageMs: 8000 }),
   shuffle: Object.freeze({
     /** Where the grid of covers lies, in the box (px). */
     area: Object.freeze({ x: 40, y: 40, width: 1360, height: 1000 }),

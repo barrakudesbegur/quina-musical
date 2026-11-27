@@ -11,7 +11,7 @@ import { imageSources } from '../../../packages/ui/data/media.ts';
 import { STAGE_TEXT, type CountdownContext } from '../strings.ts';
 import { prizeCardText } from '../../../packages/ui/recipes/prizes.ts';
 import { h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
-import { panTiming, sponsorPage } from '../model/sponsors.ts';
+import { loopRepeats, panTiming, sponsorPage, stripRows } from '../model/sponsors.ts';
 import { logoTileElement } from '../../../packages/ui/components/sponsors-dom.ts';
 import { ninoFor, type NinoMoment } from '../../../packages/ui/concepts.ts';
 import { ninoElement, setNino } from '../../../packages/ui/components/nino-dom.ts';
@@ -103,28 +103,32 @@ export class SponsorList {
 }
 
 /**
- * G4 · SponsorStrip before the Game and in the Interval (27 Nov, the user's canvas comment #88, D-v): one row of big
- * logo tiles (packages/ui/components/sponsors.css) panning slowly without end, so every sponsor shows, from a random
- * point of the loop each time the scene shows (`sponsor-pan`). With reduced motion it stands still and turns its page
- * every STAGE.sponsorPageMs instead (`sponsor-pages`), from a random page. The tiles are decorative copies of the
- * list for the loop; the first copy carries the names.
+ * G4 · SponsorStrip before the Game and in the Break (27 Nov, the user's canvas comments #88 and S4, D-v): big logo tiles
+ * (packages/ui/components/sponsors.css) in one row, or `STAGE.sponsorStrip.rows` rows, each panning slowly without end so
+ * every sponsor shows, from a random point of its loop each time the scene shows (`sponsor-pan`). A row whose list is
+ * narrower than the strip repeats it until one loop fills the strip, so no gap ever shows. With reduced motion it stands
+ * still and turns its page every `pageMs` instead (`sponsor-pages`), from a random page. The loop's copies are
+ * decorative: only each row's first copy carries the names.
  */
 export class SponsorStrip {
   readonly root: HTMLElement;
-  private readonly track: HTMLUListElement;
   private readonly reduced = typeof matchMedia === 'function' ? matchMedia('(prefers-reduced-motion: reduce)') : null;
+  private readonly rows: number;
+  private tracks: HTMLUListElement[] = [];
+  /** The sponsors on each row (pan mode), and how many times its loop repeats them. */
+  private rowLists: (readonly SponsorView[])[] = [];
+  private repeats: number[] = [];
   private key = '';
   private sponsors: readonly SponsorView[] = [];
   private page = -1;
   /** Where the pages start (reduced motion), a random page's worth of time. */
   private pageOffsetMs = 0;
-  /** One list's length (px), once measured. */
-  private listPx = 0;
   private lastTickMs = Number.NEGATIVE_INFINITY;
 
-  constructor(extraClass = '') {
-    this.track = h('ul', 'sponsor-strip__track');
-    this.root = h('section', { class: `sponsor-strip ${extraClass}`.trim(), hidden: true, data: { mode: 'pan' } }, this.track);
+  /** `rows`: how many rows (default `STAGE.sponsorStrip.rows`). */
+  constructor(extraClass = '', options: { rows?: number } = {}) {
+    this.rows = Math.max(1, Math.floor(options.rows ?? STAGE.sponsorStrip.rows));
+    this.root = h('section', { class: `sponsor-strip ${extraClass}`.trim(), hidden: true, data: { mode: 'pan' } });
     this.reduced?.addEventListener('change', () => this.redraw(0));
   }
 
@@ -138,20 +142,21 @@ export class SponsorStrip {
   }
 
   /**
-   * Every frame while the scene is on screen. After a gap (the scene shows again) the loop starts from a new random
+   * Every frame while the scene is on screen. After a gap (the scene shows again) each loop starts from a new random
    * point. Under reduced motion the page turns when the clock says so; the swap crossfades.
    */
   tick(nowMs: number): void {
     const shownAgain = nowMs - this.lastTickMs > 1000;
     this.lastTickMs = nowMs;
-    if (shownAgain && this.sponsors.length && this.listPx > 0) this.startAnywhere();
+    if (shownAgain && this.sponsors.length) this.startAnywhere();
     if (this.root.dataset.mode !== 'pages' || !this.sponsors.length) return;
-    const page = sponsorPage(this.sponsors, STAGE.sponsorsPerPage, nowMs + this.pageOffsetMs, STAGE.sponsorPageMs);
+    const { perPage, pageMs } = STAGE.sponsorStrip;
+    const page = sponsorPage(this.sponsors, perPage * this.rows, nowMs + this.pageOffsetMs, pageMs);
     if (page.index === this.page) return;
     const first = this.page === -1;
     this.page = page.index;
-    this.track.replaceChildren(...page.items.map((s) => tile(s, false)));
-    if (!first) playAnim(this.track, 'sponsor-pages');
+    this.setTracks(stripRows(page.items, this.rows).map((row) => row.map((s) => tile(s, false))));
+    if (!first) for (const track of this.tracks) playAnim(track, 'sponsor-pages');
   }
 
   private redraw(nowMs: number): void {
@@ -159,31 +164,59 @@ export class SponsorStrip {
     setData(this.root, 'mode', pan ? 'pan' : 'pages');
     this.page = -1;
     if (!pan) {
-      this.listPx = 1;
+      this.rowLists = [];
       this.startAnywhere();
       this.tick(nowMs);
       return;
     }
-    this.track.replaceChildren(...this.sponsors.map((s) => tile(s, false)), ...this.sponsors.map((s) => tile(s, true)));
-    // One list's length is half the doubled track (each tile carries its gap); measured once laid out.
-    requestAnimationFrame(() => {
-      this.listPx = this.track.scrollWidth / 2 || this.sponsors.length * STAGE.sponsorTileStepPx;
-      this.startAnywhere();
-    });
+    this.rowLists = stripRows(this.sponsors, this.rows);
+    this.repeats = this.rowLists.map(() => 1);
+    this.setTracks(this.rowLists.map((row) => loopTiles(row, 1)));
+    // Measured once laid out (startAnywhere); a scene that isn't showing yet measures again when it shows.
+    requestAnimationFrame(() => this.startAnywhere());
   }
 
-  /** A random point of the loop (or a random page). */
+  /** As many tracks as rows, each holding its tiles. */
+  private setTracks(rows: HTMLElement[][]): void {
+    this.tracks = rows.map((tiles, i) => {
+      const track = this.tracks[i] ?? h('ul', 'sponsor-strip__track');
+      track.replaceChildren(...tiles);
+      return track;
+    });
+    this.root.replaceChildren(...this.tracks);
+  }
+
+  /**
+   * A random point of each row's loop (or a random page). Measures each row first: one list is the track's width over
+   * its copies (each tile carries its gap), and a row narrower than the strip is redrawn with more repeats.
+   */
   private startAnywhere(): void {
+    const { perPage, pageMs, pxPerSec, tileStepPx } = STAGE.sponsorStrip;
     if (this.root.dataset.mode === 'pages') {
-      this.pageOffsetMs = Math.floor(Math.random() * Math.ceil(this.sponsors.length / STAGE.sponsorsPerPage)) * STAGE.sponsorPageMs;
+      this.pageOffsetMs = Math.floor(Math.random() * Math.ceil(this.sponsors.length / (perPage * this.rows))) * pageMs;
       this.page = -1;
       return;
     }
-    this.listPx = this.track.scrollWidth / 2 || this.listPx;
-    const { durationS, delayS } = panTiming(this.listPx, STAGE.sponsorPanPxPerSec, Math.random());
-    setVar(this.root, '--pan-duration', `${durationS.toFixed(2)}s`);
-    setVar(this.root, '--pan-delay', `${delayS.toFixed(2)}s`);
+    const viewPx = this.root.clientWidth;
+    this.rowLists.forEach((row, i) => {
+      const track = this.tracks[i];
+      if (!track) return;
+      const listPx = track.scrollWidth / (2 * this.repeats[i]) || row.length * tileStepPx;
+      const times = viewPx > 0 ? loopRepeats(listPx, viewPx) : this.repeats[i];
+      if (times !== this.repeats[i]) {
+        this.repeats[i] = times;
+        track.replaceChildren(...loopTiles(row, times));
+      }
+      const { durationS, delayS } = panTiming(listPx * times, pxPerSec, Math.random());
+      setVar(track, '--pan-duration', `${durationS.toFixed(2)}s`);
+      setVar(track, '--pan-delay', `${delayS.toFixed(2)}s`);
+    });
   }
+}
+
+/** A row's track: its list `times` times (one loop), drawn twice so the pan by one loop is seamless. */
+function loopTiles(row: readonly SponsorView[], times: number): HTMLElement[] {
+  return Array.from({ length: 2 * times }, (_, k) => row.map((s) => tile(s, k > 0))).flat();
 }
 
 /** One sponsor's tile in the strip; the loop's second copy is hidden from assistive tech. */

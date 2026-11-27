@@ -72,16 +72,19 @@
   };
   const SIZES: StickerTitleSize[] = ['hero', 'hero-2', 'xl', 'l', 'm', 's', 'xs'];
 
-  /** The projector's strip and QR are the stage's own DOM classes, on the shared CSS. */
-  function strip(node: HTMLElement) {
-    const s = new SponsorStrip();
-    s.set(SPONSORS.map((x) => ({ label: x.name, logo: x.logo })));
-    node.append(s.root);
-    let raf = requestAnimationFrame(function loop(t) {
-      s.tick(t);
-      raf = requestAnimationFrame(loop);
-    });
-    return () => cancelAnimationFrame(raf);
+  /** The projector's strip and QR are the stage's own DOM classes, on the shared CSS. `rows`: the strip's rows (S4's
+   * knob); `count`: how many of the sample sponsors (a short list repeats, never a gap). */
+  function strip(rows: number, count: number) {
+    return (node: HTMLElement) => {
+      const s = new SponsorStrip('', { rows });
+      s.set(SPONSORS.slice(0, count).map((x) => ({ label: x.name, logo: x.logo })));
+      node.append(s.root);
+      let raf = requestAnimationFrame(function loop(t) {
+        s.tick(t);
+        raf = requestAnimationFrame(loop);
+      });
+      return () => cancelAnimationFrame(raf);
+    };
   }
   function qr(node: HTMLElement) {
     const q = new QrBlock();
@@ -310,10 +313,18 @@
   <h2 id="s-g4">G4 · LogoTile, {projector ? 'SponsorStrip' : 'SponsorList'}</h2>
   {#if projector}
     <p class="ds-prose">
-      The strip before the Game and in the Break (#88, D-v): 150 px tiles in one row that pans slowly without end (60 px/s), from a random point of
-      its loop each time it shows; its ends fade. Reduced motion: it stands still and turns its page every 8 s, from a random page.
+      The strip before the Game and in the Break (#88, D-v, S4): 240 × 150 px tiles in one row that pans slowly without end (60 px/s), from a random
+      point of its loop each time it shows; its ends fade. Reduced motion: it stands still and turns its page every 8 s, from a random page. Its
+      three knobs: the speed and the rows in the stage's <code>STAGE.sponsorStrip</code>, the tile size in <code>--stage-sponsor-w</code> /
+      <code>-h</code>.
     </p>
-    <div class="ds-s__strip" {@attach strip}></div>
+    <div class="ds-s__strip" {@attach strip(1, SPONSORS.length)}></div>
+    <h3>rows: 2</h3>
+    <p class="ds-prose">The list split in order into two rows, each panning on its own from its own random point.</p>
+    <div class="ds-s__strip" {@attach strip(2, SPONSORS.length)}></div>
+    <h3>A short list</h3>
+    <p class="ds-prose">Three sponsors: narrower than the strip, so the list repeats until one loop fills it, and no gap ever shows.</p>
+    <div class="ds-s__strip" {@attach strip(1, 3)}></div>
   {:else}
     <p class="ds-prose">
       The phone’s list (#90, D-v): big tiles, two a row, in a list that scrolls. A tap opens the logo larger in a dialog that grows out of its tile
