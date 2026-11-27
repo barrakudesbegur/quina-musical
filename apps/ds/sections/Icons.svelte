@@ -50,6 +50,7 @@
 </section>
 
 <style>
+  @layer app {
   .ds-icons__looks {
     display: flex;
     flex-wrap: wrap;
@@ -119,5 +120,6 @@
     font-size: var(--text-xs);
     text-align: center;
     overflow-wrap: anywhere;
+  }
   }
 </style>

@@ -11,7 +11,7 @@ export const CSS_LAYERS = [
   /** ds/resources.css, ds/mark.css: the design resources every component shares (rings, the press, patterns…). */
   'resources',
   /** The overridable defaults, where weight decides as it always did: an app's own defaults for what the components
-   *  also draw (its `.icon` size, a cover's frame, its title type, the stage's element reset, the throw stickers), and
+   *  also draw (its `.icon` size, a cover's frame, its title type and card header, the stage's element reset), and
    *  the zero-weight `:where()` bases of components those defaults tune (Cover's, SongTile's). Blocks in those files. */
   'defaults',
   /** components/, icons/, wii/: the design system's components. */
