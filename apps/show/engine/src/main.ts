@@ -433,7 +433,7 @@ function apply(effect: Effect): void {
       SYNTHS.downlifter(ctx, graph.synthBus, { t0: now + 0.02, t1: now + HOLD.rewindSec + 0.2, peakDb: -15 });
       return;
     case 'drumBack':
-      drum.turnBack({ audible: clock.audible(), card: cardFor(effect.insertId), select: effect.selectId != null });
+      drum.turnBack({ audible: clock.audible(), cards: cardsFor(effect.ids), targetId: effect.insertId, select: effect.selectId != null });
       if (effect.selectId == null) showStatusLine('');
       return;
     case 'drumReset':
@@ -441,7 +441,7 @@ function apply(effect: Effect): void {
       // A restored Game's last landing stays under the pointer; otherwise any card may be.
       // The engine's order (drumOrder from the round's public drumSeed, D237), so the phones lay out the same drum.
       {
-        const cards = effect.ids.map(cardFor).filter((card) => card !== null);
+        const cards = cardsFor(effect.ids);
         drum.setCards(cards, Math.max(0, cards.findIndex((card) => card.id === effect.selectId)));
       }
       showStatusLine(show?.status === 'locked' ? 'Loading…' : 'Press Next to start');
@@ -724,7 +724,7 @@ function cancelTransition({ keepOutgoing, drum: wheel, backOut = false }: Effect
   }
   rt.outgoing = null;
   SYNTHS.downlifter(ctx, graph.synthBus, { t0: now, t1: now + (backOut ? fade + 0.8 : 0.9), peakDb: backOut ? -18 : -14 });
-  drum.cancelSpin({ audible: clock.audible(), card: cardFor(wheel.insertId), select: wheel.selectId != null });
+  drum.cancelSpin({ audible: clock.audible(), cards: cardsFor(wheel.ids), targetId: wheel.insertId, select: wheel.selectId != null });
   if (wheel.selectId == null) showStatusLine('');
 }
 
@@ -1050,6 +1050,11 @@ function emitHealth(): void {
 // ------------------------------------------------------------------------------------------ page
 function cardFor(id: number | null): DrumCard | null {
   return id == null ? null : rt.catalog.get(id) ?? null;
+}
+
+/** The drum's cards in the engine's order (the round's drum order, D237). */
+function cardsFor(ids: readonly number[]): DrumCard[] {
+  return ids.map(cardFor).filter((card) => card !== null);
 }
 
 function showNowPlaying(id: number | null): void {

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { Show } from '../engine/src/show/show.ts';
 import { planTransition, type PlanRequest, type SignatureSource } from '../engine/src/plan/planner.ts';
 import type { Effect, EffectOf, EffectType } from '../engine/src/show/show.ts';
-import { AUTO_SOUNDS_DEFAULT, VOLUME_DEFAULTS, firstPlaySec, makeCommand, volumeDb } from '@quina/protocol';
+import { AUTO_SOUNDS_DEFAULT, VOLUME_DEFAULTS, drumOrder, firstPlaySec, makeCommand, volumeDb } from '@quina/protocol';
 import type { Command, EventOf, GameSettings, PhaseName, ShowEvent, ShowEventType, SoundName } from '@quina/protocol';
 import { HOLD, ENGINE, FLOW, PACE, LOOP } from '../engine/src/config.ts';
 import { LOOKAHEAD_SEC } from '../engine/src/plan/planner.ts';
@@ -187,7 +187,8 @@ test('Back undoes the last landing: the song becomes next again, the drum turns 
   const suw = h.show.game.songsUntilWinner;
   const out = h.send('back');
   assert.ok(find(out, 'rewind'));
-  assert.deepEqual(find(out, 'drumBack'), { type: 'drumBack', insertId: first, selectId: first });
+  // The first song comes back at its own place in the round's drum order (D237), with every song still to play.
+  assert.deepEqual(find(out, 'drumBack'), { type: 'drumBack', insertId: first, selectId: first, ids: drumOrder(queueBefore, h.show.drumSeed) });
   assert.equal(get(out, 'holdMusic').mood, 'error', 'Back plays the error Hold music');
   assert.equal(h.show.position, 0);
   assert.equal(h.show.status, 'hold');
@@ -638,7 +639,7 @@ test("a song left playing with auto-advance off loops its last phrase and never 
   assert.equal(h.show.position, 1);
 });
 
-test('the drum only ever shows songs still to play (and the last landing under the pointer): Next, Back, Hold, Aguanta and Suspense', () => {
+test('the drum only ever shows songs still to play (and the last landing under the pointer), in the drum order: Next, Back, Hold, Aguanta and Suspense', () => {
   const cmds: (() => Command)[] = [
     () => makeCommand('next'), () => makeCommand('next'), () => makeCommand('next'), () => makeCommand('back'), () => makeCommand('hold'),
     () => makeCommand('hold', { on: true, duck: false }), () => makeCommand('hold', { on: false }), () => makeCommand('holdMusic'),
@@ -648,28 +649,34 @@ test('the drum only ever shows songs still to play (and the last landing under t
     const rnd = seededRandom(2000 + seed);
     const h = setup({ seed, settings: { autoAdvance: false } });
     h.send('unlock');
-    // The runtime's drum, as its effects build it (main.ts: drumReset, a Spin's removeId, Back's and a cancel's insertId).
-    const drum = new Set<number>();
+    // The runtime's drum, as its effects build it (main.ts: drumReset, a Spin's removeId, Back's and a cancel's order).
+    let drum: number[] = [];
     let seen = 0;
-    const replay = () => {
+    // Back and a cancel only bring their card back: every other card stays, in its order (D237).
+    const back = (ids: number[], insertId: number | null, where: string) => {
+      const without = (list: number[]) => list.filter((id) => id !== insertId);
+      assert.deepEqual(without(ids), without(drum), `${where}: the card comes back and nothing else moves`);
+      if (insertId != null) assert.ok(ids.includes(insertId), `${where}: the card is back`);
+      drum = [...ids];
+    };
+    const replay = (where: string) => {
       for (const e of h.log.slice(seen)) {
-        if (e.type === 'drumReset') {
-          drum.clear();
-          for (const id of e.ids) drum.add(id);
-        } else if ((e.type === 'startTransition' || e.type === 'startSuspense') && e.drum.removeId != null) drum.delete(e.drum.removeId);
-        else if (e.type === 'cancelTransition' && e.drum.insertId != null) drum.add(e.drum.insertId);
-        else if (e.type === 'drumBack' && e.insertId != null) drum.add(e.insertId);
+        if (e.type === 'drumReset') drum = [...e.ids];
+        else if ((e.type === 'startTransition' || e.type === 'startSuspense') && e.drum.removeId != null) drum = drum.filter((id) => id !== e.drum.removeId);
+        else if (e.type === 'cancelTransition') back(e.drum.ids, e.drum.insertId, where);
+        else if (e.type === 'drumBack') back(e.ids, e.insertId, where);
       }
       seen = h.log.length;
     };
     for (let step = 0; step < 200; step++) {
       h.dispatch(cmds[Math.floor(rnd() * cmds.length)]());
       h.advance(rnd() * 8);
-      replay();
       const s = h.show;
-      const pending = s.queue.slice(s.position + 1);
       const where = `seed ${seed} step ${step} (${s.status}, position ${s.position})`;
-      for (const id of pending) assert.ok(drum.has(id), `${where}: pending song ${id} missing from the drum`);
+      replay(where);
+      const pending = s.queue.slice(s.position + 1);
+      assert.deepEqual(drum, drumOrder(s.queue, s.drumSeed).filter((id) => drum.includes(id)), `${where}: the drum in drumOrder`);
+      for (const id of pending) assert.ok(drum.includes(id), `${where}: pending song ${id} missing from the drum`);
       const allowed = new Set([...pending, ...(s.position >= 0 ? [s.queue[s.position]] : [])]);
       for (const id of drum) assert.ok(allowed.has(id), `${where}: song ${id} on the drum has already played`);
     }

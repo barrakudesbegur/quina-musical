@@ -262,7 +262,9 @@ export interface CancelTransitionEffect {
   type: 'cancelTransition';
   planId: string;
   keepOutgoing: boolean;
-  drum: { insertId: number | null; selectId: number | null };
+  /** `ids`: the drum's cards once `insertId` (the last landing, off the drum since the Spin started) is back, in the
+   * round's drum order (D237): the drum takes this order and brakes onto `insertId` at its place. */
+  drum: { insertId: number | null; selectId: number | null; ids: number[] };
   /** A cancelled Suspense (D144): its build backs out and fades instead of stopping at once. */
   backOut?: boolean;
 }
@@ -289,10 +291,13 @@ export interface RewindEffect {
   type: 'rewind';
   songId: number;
 }
+/** Back (a landing undone): `insertId`, the landing before it, comes back and the drum turns back onto it. `ids`: the
+ * drum's cards with it back, in the round's drum order (D237), so it returns to its own place, not beside the pointer. */
 export interface DrumBackEffect {
   type: 'drumBack';
   insertId: number | null;
   selectId: number | null;
+  ids: number[];
 }
 export interface DrumResetEffect {
   type: 'drumReset';
@@ -1555,9 +1560,15 @@ export class Show {
    * drum order (D237). */
   drumResetEffect(position: number): DrumResetEffect {
     const last = position >= 0 ? this.queue[position] : undefined;
-    const shown = new Set([...(last == null ? [] : [last]), ...this.queue.slice(position + 1)]);
-    const ids = drumOrder(this.queue, this.drumSeed).filter((id) => shown.has(id));
+    const ids = this.drumIds(position);
     return last == null ? { type: 'drumReset', ids } : { type: 'drumReset', ids, selectId: last };
+  }
+
+  /** The drum's cards at `position`: the songs still to play and the last landing (none before the first), in the
+   * round's drum order (D237), as a phone lays them out. Back and a cancelled Spin put a card back at its place in it. */
+  drumIds(position: number): number[] {
+    const shown = new Set(this.queue.slice(Math.max(0, position)));
+    return drumOrder(this.queue, this.drumSeed).filter((id) => shown.has(id));
   }
 
   /**
@@ -1970,7 +1981,7 @@ export class Show {
     this.suspense = null;
     const lastId = this.position >= 0 ? this.queue[this.position] : null;
     const backOut = reason === 'cancel';
-    this.out.push({ type: 'cancelTransition', planId: s.id, keepOutgoing, drum: { insertId: lastId, selectId: lastId }, ...(backOut ? { backOut } : {}) });
+    this.out.push({ type: 'cancelTransition', planId: s.id, keepOutgoing, drum: { insertId: lastId, selectId: lastId, ids: this.drumIds(this.position) }, ...(backOut ? { backOut } : {}) });
     this.emit({ type: 'transition.cancelled', id: s.id, reason, keptOutgoing: keepOutgoing, atMs: this.env.toEpochMs(now) });
     if (!backOut || !keepOutgoing) return this.enterHold(reason === 'back' ? 'back' : 'cancel', { music: !keepOutgoing });
     if (s.fromStay) return this.enterHold('hold', { music: false, duck: false });
@@ -2257,7 +2268,7 @@ export class Show {
     // Undecided Claims survive a Back; their Checks are out of date and wait to be run again.
     if (this.scene === 'check') this.requeueClaims();
     const prevId = this.position >= 0 ? this.queue[this.position] : null;
-    this.out.push({ type: 'drumBack', insertId: prevId, selectId: prevId });
+    this.out.push({ type: 'drumBack', insertId: prevId, selectId: prevId, ids: this.drumIds(this.position) });
     this.enterHold('back', { music: true, musicDelaySec: HOLD.rewindSec * 0.8 });
     this.emit({ type: 'landing.undone', songId: undoneId, position: this.position + 1, atMs: this.env.toEpochMs(now) });
     this.prefetch();
@@ -2276,7 +2287,7 @@ export class Show {
     if (this.loop?.purpose === 'suspense') this.loop = null; // a released Suspense's A plays on from its phrase
     this.transition = null;
     const lastId = this.position >= 0 ? this.queue[this.position] : null;
-    this.out.push({ type: 'cancelTransition', planId: t.id, keepOutgoing, drum: { insertId: lastId, selectId: lastId } });
+    this.out.push({ type: 'cancelTransition', planId: t.id, keepOutgoing, drum: { insertId: lastId, selectId: lastId, ids: this.drumIds(this.position) } });
     this.emit({ type: 'transition.cancelled', id: t.id, reason, keptOutgoing: keepOutgoing, atMs: this.env.toEpochMs(now) });
     this.enterHold(reason === 'back' ? 'back' : 'cancel', { music: !keepOutgoing });
   }

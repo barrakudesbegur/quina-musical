@@ -10,6 +10,69 @@ const MOTION_BLUR_MIN_PIXELS_PER_FRAME = 6;
 const MOTION_BLUR_STRENGTH = 0.2;
 const MIN_SECONDS_BETWEEN_TICKS = 0.022;
 const TICK_LOOKAHEAD_SEC = 0.15;
+// drum-back (D249): a card that comes back (Back, a cancelled Spin or Suspense) goes to its own place in the round's
+// drum order, and the drum moves onto it there with no speed-up and never more than half a lap.
+/** A Back's turn onto the card: 0.9 s for one card, rising smoothly to 1.6 s for half a lap. */
+const TURN_SEC: readonly [number, number] = [0.9, 1.6];
+/** A cancel's glide onto the card, once its natural brake is nearly still: 0.8 s for one card, 1 s for half a lap. */
+const GLIDE_SEC: readonly [number, number] = [0.8, 1];
+/** Nearly still, in cards/s: a braking drum hands over to its glide at this speed, and a drum this slow just glides. */
+const GLIDE_FROM_SPEED = 1;
+
+const mod = (a: number, n: number): number => ((a % n) + n) % n;
+/** The shortest move, in cards, from `from` onto card `to` of `n`: at most half a lap either way. */
+const shortest = (to: number, from: number, n: number): number => {
+  const d = mod(to - from, n);
+  return d > n / 2 ? d - n : d;
+};
+/** A move's length in seconds: `one` for a card or less, rising evenly to `half` for half a lap of `n` cards. */
+const moveSec = (delta: number, n: number, [one, half]: readonly [number, number]): number =>
+  one + (half - one) * (n / 2 > 1 ? Math.min(1, Math.max(0, (Math.abs(delta) - 1) / (n / 2 - 1))) : 0);
+
+/** At rest exactly on its last card (the sampled motion ends a float's width off it). */
+const pinned = (s: Solution): Solution => ({ ...s, traveled: Math.round(s.fromIndex + s.traveled) - s.fromIndex });
+
+/**
+ * One cubic glide from the drum's motion (`from`, `velocity`) onto card `target` of `cardCount`, the shortest way,
+ * at rest on it after `range`'s time for its length. From rest the speed rises and falls once; it's continuous
+ * throughout (hoverSpin's arrival, with no hover after it).
+ */
+function glideOnto(cardCount: number, from: number, velocity: number, target: number, range: readonly [number, number]): Solution {
+  const sec = moveSec(shortest(target, from, cardCount), cardCount, range);
+  return pinned(hoverSpin({ cardCount, fromPosition: from, velocity, targetIndex: target, arriveSec: sec, durationSec: sec, sway: 0 }));
+}
+
+/** `first`'s samples before `at`, then all of `second` (which starts where `first` is at `at`), as one motion. */
+function chained(first: Solution, at: number, second: Solution): Solution {
+  const offset = second.fromIndex - first.fromIndex;
+  const length = at + second.positions.length;
+  const positions = new Float32Array(length);
+  const velocities = new Float32Array(length);
+  positions.set(first.positions.subarray(0, at));
+  velocities.set(first.velocities.subarray(0, at));
+  second.positions.forEach((x, j) => (positions[at + j] = offset + x));
+  velocities.set(second.velocities, at);
+  const cut = at * first.dt;
+  const ticks = [...first.ticks.filter((tick) => tick.t <= cut + 1e-9), ...second.ticks.map((tick) => ({ ...tick, t: cut + tick.t }))];
+  const traveled = offset + second.traveled;
+  return { ...first, positions, velocities, ticks, lockTime: cut + second.lockTime, durationSec: cut + second.durationSec, traveled,
+    direction: Math.sign(traveled) || first.direction };
+}
+
+/**
+ * A moving drum's return onto card `target` (null: no card comes back) of `cardCount`, from (`from`, `velocity`):
+ * it brakes naturally, as a cancel always did (brakeRest's 1.2–2.5 s in its own direction, no target), and once it's
+ * nearly still glides the short way onto the card (`range`'s time). A drum nearly still already just glides.
+ */
+function returnOnto(cardCount: number, from: number, velocity: number, target: number | null, range: readonly [number, number]): Solution {
+  if (target != null && Math.abs(velocity) <= GLIDE_FROM_SPEED) return glideOnto(cardCount, from, velocity, target, range);
+  const rest = brakeRest(from, velocity);
+  const brake = brakeSpin({ cardCount, fromPosition: from, velocity, restPosition: rest });
+  if (target == null || mod(target - rest, cardCount) === 0) return pinned(brake); // it stops on the card
+  const at = Math.max(0, brake.velocities.findIndex((v) => Math.abs(v) <= GLIDE_FROM_SPEED));
+  const glide = glideOnto(cardCount, from + brake.positions[at], brake.velocities[at], target, range);
+  return chained(brake, at, glide);
+}
 
 /** A card on the drum: a song and its cover. */
 export interface DrumCard extends Album {
@@ -152,63 +215,74 @@ export class DrumView {
     return { position: positionAt(spin.solution, t), velocity: velocityAt(spin.solution, t) };
   }
 
-  // A cancelled Spin brakes to a stop. With `card`, that card (the last counted song, which left the drum
-  // at spin start) is put back exactly where the drum will stop, and selected.
-  cancelSpin({ audible, card = null, select = false }: { audible: number; card?: DrumCard | null; select?: boolean }): void {
+  // A cancelled Spin or Suspense (Back, Hold, a backed-out Suspense). `cards` is the engine's order with `targetId`
+  // (the last counted song, off the drum since the Spin started) back at its own place in the round's drum order
+  // (D237), as the phones have it. The drum brakes naturally, as a cancel always did, then glides the short way onto
+  // the card (drum-back, D249). Without a target it just brakes where it would stop.
+  cancelSpin({ audible, cards, targetId = null, select = false }: { audible: number; cards: DrumCard[]; targetId?: number | null; select?: boolean }): void {
+    this.returnCard({ audible, cards, targetId, select, kind: 'brake' });
+  }
+
+  // Back: the landing before the undone one (`targetId`) comes back at its own place in `cards`, the engine's order
+  // (the round's drum order, D237), and the drum turns the shortest way onto it, at most half a lap (drum-back, D249).
+  // Usually it's the neighbouring card. A drum still moving brakes naturally first. Without a target (a Back to before
+  // the first landing) it turns back one card, opposite to its last Spin, as it always did.
+  turnBack({ audible, cards, targetId = null, select = false }: { audible: number; cards: DrumCard[]; targetId?: number | null; select?: boolean }): void {
+    this.returnCard({ audible, cards, targetId, select, kind: 'turn' });
+  }
+
+  returnCard({ audible, cards, targetId, select, kind }: { audible: number; cards: DrumCard[]; targetId: number | null; select: boolean; kind: 'brake' | 'turn' }): void {
     const { position, velocity } = this.motionAt(audible);
-    const n = this.cards.length;
-    if (!n) return;
-    let from = position - Math.floor(position / n) * n;
-    let rest = brakeRest(from, velocity);
-    if (card) {
-      let insertAt: number;
-      if (rest >= from) {
-        if (rest > n) {
-          from -= n;
-          rest -= n;
-        }
-        insertAt = rest; // cards from here on shift up; the drum, behind it, does not move
-      } else {
-        if (rest < -1) {
-          from += n;
-          rest += n;
-        }
-        insertAt = rest + 1; // the drum, above it, shifts up with its cards
-        from += 1;
-        rest += 1;
-      }
-      this.cards.splice(insertAt, 0, card);
-      this.rebuild();
+    this.spin = null;
+    if (!this.cards.length) {
+      // An empty drum (its one card off for the Spin): nothing to move, the cards come back on the card.
+      this.setCards(cards, Math.max(0, cards.findIndex((card) => card.id === targetId)));
+      return this.restOnCard(audible, targetId, select, kind);
     }
-    const solution = brakeSpin({ cardCount: this.cards.length, fromPosition: from, velocity, restPosition: rest });
+    const from = this.reorder(cards, position);
+    const m = this.cards.length;
+    if (!m) return;
+    const found = targetId == null ? -1 : this.indexOf(targetId);
+    const target = found < 0 ? null : found;
+    if (target != null && this.reducedMotion) {
+      this.restPosition = target;
+      return this.restOnCard(audible, targetId, select, kind);
+    }
+    // A Back from rest turns (TURN_SEC); a cancel, or a Back while the drum still moves, brakes and glides (GLIDE_SEC).
+    const solution = kind === 'brake' || Math.abs(velocity) > GLIDE_FROM_SPEED
+      ? returnOnto(m, from, velocity, target, GLIDE_SEC)
+      : glideOnto(m, from, velocity, target ?? mod(Math.round(from) - this.lastDirection, m), TURN_SEC);
+    this.play(solution, audible, target == null || !select ? null : targetId, kind);
+  }
+
+  // Reduced motion (or nothing to turn): the drum is on the card at once, landing there on the next frame.
+  restOnCard(audible: number, targetId: number | null, select: boolean, kind: DrumMotionKind): void {
+    const index = targetId == null ? -1 : this.indexOf(targetId);
+    if (index < 0) return this.clearSelection();
+    const still = glideSpin({ cardCount: this.cards.length, fromIndex: index, delta: 0, durationSec: FIXED_STEP });
+    this.play(still, audible, select ? targetId : null, kind);
+  }
+
+  // Replay `solution` from `audible`; `targetId` is selected (and onLand called) when it stops.
+  play(solution: Solution, audible: number, targetId: number | null, kind: DrumMotionKind): void {
     this.clearSelection();
     this.spin = {
-      solution, startCtx: audible, landAt: audible + solution.durationSec, targetId: select && card ? card.id : null,
-      ticks: tickTimes(solution), audioTick: 0, visualTick: 0, lastTickCtx: -1, landed: false, quiet: !select, kind: 'brake',
+      solution, startCtx: audible, landAt: audible + solution.durationSec, targetId,
+      ticks: tickTimes(solution), audioTick: 0, visualTick: 0, lastTickCtx: -1, landed: false, quiet: targetId == null, kind,
     };
   }
 
-  // Back: the drum turns back one card, opposite to its last Spin. `card` (the song before the undone one)
-  // is put back next to the current card first, so that is where it stops.
-  turnBack({ audible, card = null, select = false }: { audible: number; card?: DrumCard | null; select?: boolean }): void {
-    const { position } = this.motionAt(audible);
-    this.spin = null;
+  // The engine's order for the cards (`cards`), keeping the card under the pointer there: returns the pointer's
+  // position among the new cards (the same card, the same fraction off it).
+  reorder(cards: DrumCard[], position: number): number {
     const n = this.cards.length;
-    if (!n) return;
-    let from = (((Math.round(position) % n) + n) % n);
-    const back = -this.lastDirection;
-    if (card) {
-      const insertAt = back < 0 ? from : from + 1;
-      this.cards.splice(insertAt, 0, card);
-      if (back < 0) from += 1;
-      this.rebuild();
-    }
-    const solution = glideSpin({ cardCount: this.cards.length, fromIndex: from, delta: back, durationSec: 0.9 });
-    this.clearSelection();
-    this.spin = {
-      solution, startCtx: audible, landAt: audible + 0.9, targetId: select && card ? card.id : null,
-      ticks: tickTimes(solution), audioTick: 0, visualTick: 0, lastTickCtx: -1, landed: false, quiet: !select, kind: 'turn',
-    };
+    const local = position - Math.floor(position / n) * n;
+    const near = Math.round(local) % n;
+    const id = this.cards[near]?.id;
+    this.cards = cards;
+    this.rebuild();
+    const index = id == null ? -1 : this.indexOf(id);
+    return (index < 0 ? Math.min(near, Math.max(0, cards.length - 1)) : index) + (local - Math.round(local));
   }
 
   layout(): void {

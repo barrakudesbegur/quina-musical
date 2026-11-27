@@ -57,3 +57,47 @@ test("the state's round carries the round's public drumSeed, the journal's, and 
   const r = setup({ seed: 9, restore: replayJournal(journalOf(h.log)), startSec: 0.5 });
   assert.equal(r.show.snapshot().round.drumSeed, started.drumSeed, 'a restarted page keeps the order');
 });
+
+test('Back, a cancelled Spin and a backed-out Suspense put the card back at its own place in the drum order, as the phones have it', () => {
+  const h = setup({ seed: 7, settings: { autoAdvance: false, pace: 22 } });
+  h.send('unlock');
+  h.send('roundIntro');
+  const started = journalOf(h.send('newRound')).find((e) => e.kind === 'round.started');
+  assert.ok(started?.kind === 'round.started' && started.drumSeed != null);
+  const { queue, drumSeed } = { queue: started.queue, drumSeed: started.drumSeed };
+  const order = drumOrder(queue, drumSeed);
+  // The phones' drum at a position: the songs still to play and the last landing, in drumOrder.
+  const shown = (position: number) => order.filter((id) => queue.indexOf(id) >= position);
+  // The returned card sits after exactly the shown cards that come before it in drumOrder.
+  const placeOf = (ids: number[], id: number) => order.slice(0, order.indexOf(id)).filter((other) => ids.includes(other)).length;
+  h.advance(FLOW.shuffleSec + 0.1);
+  for (let position = 0; position < 3; position++) {
+    h.send('next');
+    h.until(() => h.show.position === position && h.show.status === 'playing', 60);
+  }
+  // Back while the third song plays: the second comes back.
+  const back = h.send('back').find((e): e is Extract<Effect, { type: 'drumBack' }> => e.type === 'drumBack');
+  assert.equal(back?.insertId, queue[1]);
+  assert.deepEqual(back.ids, shown(1), "the drum's order after a Back is drumOrder, filtered to the cards shown");
+  assert.equal(back.ids.indexOf(queue[1]), placeOf(back.ids, queue[1]), 'the card at its own place');
+  // A Spin cancelled by Back: the second song (off the drum since the Spin started) comes back at its place.
+  const spin = h.send('next').find((e): e is Extract<Effect, { type: 'startTransition' }> => e.type === 'startTransition');
+  assert.equal(spin?.drum.removeId, queue[1]);
+  h.advance(0.5);
+  const cancel = h.send('back').find((e): e is Extract<Effect, { type: 'cancelTransition' }> => e.type === 'cancelTransition');
+  assert.equal(cancel?.drum.insertId, queue[1]);
+  assert.deepEqual(cancel.drum.ids, shown(1));
+  // A Suspense backed out (D144): the same.
+  const open = h.send('suspense').find((e): e is Extract<Effect, { type: 'startSuspense' }> => e.type === 'startSuspense');
+  assert.equal(open?.drum.removeId, queue[1]);
+  h.advance(3);
+  const backOut = h.send('suspense', { on: false, cancel: true }).find((e): e is Extract<Effect, { type: 'cancelTransition' }> => e.type === 'cancelTransition');
+  assert.ok(backOut?.backOut);
+  assert.equal(backOut.drum.insertId, queue[1]);
+  assert.deepEqual(backOut.drum.ids, shown(1));
+  // Back to before the first landing: nothing comes back, the whole round's drum.
+  h.send('back');
+  const first = h.send('back').find((e): e is Extract<Effect, { type: 'drumBack' }> => e.type === 'drumBack');
+  assert.equal(first?.insertId, null);
+  assert.deepEqual(first.ids, order);
+});
