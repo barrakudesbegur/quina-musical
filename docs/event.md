@@ -108,7 +108,7 @@ This page explains the event: what happens on the night, who does what, and how 
 - **The pool** is the curated playlist the cards are printed from.
   - Over several weeks, everyone in the team adds songs to a shared Spotify playlist.
   - Then a few members meet and filter it down to the final count.
-  - **2026 has two pools of 70 songs each,** with different songs: one for Quines 1–5 and one for Quines 6–10, as the organizers decided on 26 November (D193). The special rounds play the first pool, on a one-sided special card (D217); a two-sided one is still to be agreed. The first was final on 25 November; the second is still being filled.
+  - **2026 has two pools of 70 songs each,** with different songs: one for Quines 1–5 and one for Quines 6–10, as the organizers decided on 26 November (D193). The special card is printed on both sides too: the Desgraciat plays the first pool on one side, and the Especial the second pool on the other (D226), so the change of pool happens in the break. The first was final on 25 November; the second is still being filled.
   - An archive playlist keeps past songs.
 - **The size is a hard choice** because it shapes the night: more songs mean longer rounds. 2024 had 87 songs, which was too many. 2025 had 77 (the plan said about 80, and fewer was fine). Each edition decides its own.
 - **The songs:** popular hits from every era and genre, including Catalan, Spanish and Christmas songs.

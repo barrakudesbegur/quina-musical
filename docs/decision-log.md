@@ -1476,7 +1476,7 @@ By: the user via canvas. Source: Frontend's report of 27 Nov. Lives in: docs/tea
 UI only; the sponsor data doesn't change.
 By: the user via canvas. Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md › Every sponsor appears, Projector, Player app.
 
-### D217 · The special card stays one-sided, from pool 1, for now · 2026-11-27 · Active
+### D217 · The special card stays one-sided, from pool 1, for now · 2026-11-27 · Superseded by D226
 What the team agreed so far: the special card has one side, with pool 1's songs, and both special rounds play it. The user likes U167's two-sided card (the Desgraciat on pool 1, the Especial on pool 2) and will ask the team (U192). Until then the agreement is built. Answers U167 for now with (a).
 By: the user and the team. Source: open-questions.md › Answered (U167). Lives in: requirements/songs-and-cards.md; requirements/game-rules.md; event.md › The songs.
 
@@ -1540,3 +1540,7 @@ The user to Frontend:
 - **A card with no name** shows only its number, never a predefined or generated name.
 - **A seated card's tilt** must not cover the «No juguen en aquesta quina» label or throw it off centre. Rotations never hurt the layout.
 By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md › Player app.
+
+### D226 · The special card has two sides: the Desgraciat on pool 1, the Especial on pool 2 · 2026-11-27 · Active
+Confirmed with the team. The special card is printed on both sides, like the normal one. Side 1 has pool 1's songs and plays the Desgraciat, and side 2 has pool 2's songs and plays the Especial. "so the pool change happens on the break": Quines 1–5 and the Desgraciat play pool 1, the Descans comes, then Quines 6–10 and the Especial play pool 2. Six rounds per pool, which was D171's reason. One special card still plays both special rounds (D81). The Descans's "turn the card over" line (D202) now covers both cards. Answers U192 and U59, and supersedes D217.
+By: the user and the team. Source: the user's message of 27 Nov. Supersedes: D217. Lives in: requirements/game-rules.md › The night's rounds; requirements/songs-and-cards.md; event.md › The songs.

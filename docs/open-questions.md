@@ -136,6 +136,11 @@ If they do, a reminder to an uncollected winner is the one push message with rea
 - (a) No, or very rarely.
 - (b) Yes, it happens.
 
+### U198 · The special card's side labels
+The Check shows one label for a card's type and side, so a player can see that the side checked is the round's (D163). The normal card's are «Normal 1–5» and «Normal 6–10». The special card now has two sides (D226).
+- (a) By round: «Especial · Desgraciada» and «Especial · Quina Especial».
+- (b) By pool, like the normal card: «Especial 1» and «Especial 2».
+
 ### U193 · Where the install button goes on the phone's home (D221)
 The user: "where we put the add card button, when he doesn't have any, we could put the install button there (only would show if can install and +card button is not showing)". The reading: when a player has no cards, the cards list shows its big add-card button. Once they have cards, the floating «+ Cartró» takes over adding (D218, D220), and that same spot in the list shows the install button instead, only when the browser can install the app and it isn't installed yet. Never on iPhones (Ajustos only).
 - (a) Yes, that.
@@ -238,10 +243,6 @@ Not heard yet: phrase landings, the lighter early palette and rare impacts, Sign
 - **Suspense release:** it lands on the outgoing song's phrase boundary, up to about 9 s after the release. The alternative is a 2-bar boundary, about twice as fast. **Default:** the phrase.
 - **Signatures are rarer:** about 5% of transitions (38 of last year's 77 songs get one). Options: keep it; lower the automatic pick's score (0.6); pick more by hand. **Default:** keep, and pick by hand while reviewing this year's songs.
 
-### U59 · The special card's back
-The special card is printed from pool 1, on one side (D217), unless the team agrees to two sides (U192).
-**Default:** a blank back. It could carry something instead, like house rules or sponsors; that needs deciding before print.
-
 ### U52 · Duplex printing and the paper
 Printing both sides (D102) means telling the print shop "dúplex, vora llarga" (long-edge flip: with 3 cards in one column, each card's back lands behind it). Shops misalign duplex by up to about 2 mm, and songs may show through thin paper.
 **Default:** today's coloured paper, printed duplex, with one proof sheet first to check the alignment, the show-through and both QRs held up to the light. Thicker paper (about 120–160 g/m²) only if the proof shows through. Printing costs more, and the page count doesn't change.
@@ -292,9 +293,6 @@ Corner style B and drawers J2 are picked (D87). For the prizes drawer, Frontend 
 
 ## Tasks only the user can do
 
-### U192 · Ask the team about a two-sided special card
-Today's agreement (D217): the special card has one side, from pool 1, and both special rounds play it. The user likes U167's (b): the Desgraciat on side 1 (pool 1) and the Especial on side 2 (pool 2), six rounds per pool. It needs the team's OK before the cards are made on 4–5 Dec.
-
 ### U191 · Ask the presenters about a notebook on the tablet
 The idea is in [ideas.md](ideas.md): their own colour-coded notes, imported and shown as a draggable notebook over half the console. First, do they want it at all, or do they prefer paper?
 
@@ -331,6 +329,8 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U192 · A two-sided special card** (2026-11-27) → D226: yes, agreed with the team; the Desgraciat on side 1 (pool 1), the Especial on side 2 (pool 2).
+- **U59 · The special card's back** (2026-11-27) → D226: it's side 2, for the Especial.
 - **U187 · The oldest iOS** (2026-11-27) → D219: the latest browsers only; no backwards compatibility.
 - **U180 · The phone's home as drawn** (2026-11-27) → D218: build it now, from the design system's components.
 - **U167 · The special rounds' pool** (2026-11-27) → D217: for now, one side from pool 1, as the team agreed; the two-sided card is the user's task U192.
