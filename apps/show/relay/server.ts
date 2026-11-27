@@ -1,5 +1,5 @@
 // Relay: the pages, the audio and a dumb WebSocket hub. No game logic lives here; the show page owns the state.
-//   node relay/server.ts [--port 5174] [--host 0.0.0.0] [--dist] [--repertoire NAME|PATH]
+//   node relay/server.ts [--port 5174] [--host 0.0.0.0] [--dist [--dist-dir PATH]] [--repertoire NAME|PATH]
 // Pages are a Vite app (vite.config.ts): in development Vite runs here as middleware, so everything shares
 // one origin; with --dist the relay serves the built dist/ instead (`npm start` builds it first) and refuses a dist
 // built from other sources than these (relay/build-stamp.ts).
@@ -37,12 +37,13 @@ import { distProblem } from './build-stamp.ts';
 import { LaptopPlan, type CurrentPlan } from './plan.ts';
 import { CACHE, DEFAULT_REPERTOIRE, LINK, MEDIA, OUT, REPERTOIRE_ENV, PREP, REPO, SHOW, display, loadRepertoire, type Repertoire } from './repertoire.ts';
 
-const DIST = path.join(SHOW, 'dist');
 const args = process.argv.slice(2);
 const argValue = (name: string, fallback: string): string => {
   const i = args.indexOf(name);
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
 };
+/** The build --dist serves: dist/, or another build's folder (the CSS order check builds into a scratch one). */
+const DIST = path.resolve(argValue('--dist-dir', path.join(SHOW, 'dist')));
 const PORT = Number(argValue('--port', process.env.PORT || '5174'));
 // Only this laptop by default; the hotspot's devices (tablet, admin phone, a split drum) need `--lan`.
 const LAN = args.includes('--lan');

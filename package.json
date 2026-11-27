@@ -16,7 +16,8 @@
     "test": "npm test -w @quina/show && npm test -w @quina/cloud && npm run test:tools",
     "test:pipeline": "npm run test:pipeline -w @quina/show",
     "test:e2e": "npm test -w @quina/e2e",
-    "test:tools": "tsc -p tools/git/tsconfig.json && tsc -p tools/edition/tsconfig.json && node --test \"tools/git/*.test.ts\" \"tools/edition/*.test.ts\"",
+    "check:css": "node tools/e2e/css-order/check.ts",
+    "test:tools": "tsc -p tools/git/tsconfig.json && tsc -p tools/edition/tsconfig.json && node --test \"tools/git/*.test.ts\" \"tools/edition/*.test.ts\" \"tools/e2e/css-order/*.test.ts\"",
     "setup:laptop": "node tools/laptop/setup.ts",
     "sync-main": "node tools/git/sync-main.ts",
     "edition": "node tools/edition/main.ts"

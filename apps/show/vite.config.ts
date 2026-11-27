@@ -10,6 +10,7 @@ import path from 'node:path';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { build, defineConfig, type Plugin, type Rolldown } from 'vite';
 import { pageApps, sourceHashes, writeStamp } from './relay/build-stamp.ts';
+import { LAYER_STATEMENT } from '../../packages/ui/layers.ts';
 
 const show = import.meta.dirname;
 /** apps/: the build's root, so each app keeps its own URL (/console/, /player/…). */
@@ -28,24 +29,43 @@ const SHOW_PAGES: Record<string, string> = {
 /** Every other app with an index.html (build-stamp.ts's NOT_PAGES leaves out the rest: `ds`, the design system's
  *  gallery, is development only, so the dev server serves /ds/ and no phone ever downloads it). */
 const appPages = Object.fromEntries(pageApps(root).map((name) => [name, `${name}/index.html`] as const));
+/** The CSS order check (tools/e2e/css-order) builds the gallery too, into a scratch folder of its own, to compare it
+ *  with the dev server's: QUINA_BUILD_GALLERY=1. Never in a real build. */
+const galleryPage: Record<string, string> = process.env.QUINA_BUILD_GALLERY ? { ds: 'ds/index.html' } : {};
 
-/** The build's stamp: the sources' hashes as the build starts, written into dist/ once it's done. */
+/**
+ * The cascade layers' order (packages/ui/layers.ts), first thing in every page's <head>, before any stylesheet: in
+ * development Vite adds each module's CSS as it runs, and the build links its chunks shared ones first, so the first
+ * stylesheet differs between the two. Declared here, the order is the same in both, whatever loads first.
+ */
+function cascadeLayers(): Plugin {
+  return {
+    name: 'quina-css-layers',
+    transformIndexHtml: () => [{ tag: 'style', children: LAYER_STATEMENT, injectTo: 'head-prepend' }],
+  };
+}
+
+/** The build's stamp: the sources' hashes as the build starts, written into dist/ (the build's outDir) once it's done. */
 function buildStamp(): Plugin {
   let files: Record<string, string> = {};
+  let outDir = path.join(show, 'dist');
   return {
     name: 'quina-build-stamp',
     apply: 'build',
+    configResolved(config) {
+      outDir = config.build.outDir;
+    },
     buildStart() {
       files = sourceHashes(repo);
     },
     closeBundle() {
-      writeStamp(path.join(show, 'dist'), files);
+      writeStamp(outDir, files);
     },
   };
 }
 
 const input = Object.fromEntries(
-  Object.entries({ ...SHOW_PAGES, ...appPages }).map(([name, file]) => [name, path.join(root, file)] as const),
+  Object.entries({ ...SHOW_PAGES, ...appPages, ...galleryPage }).map(([name, file]) => [name, path.join(root, file)] as const),
 );
 
 /**
@@ -56,9 +76,13 @@ const input = Object.fromEntries(
  */
 function playerWorker(): Plugin {
   let precache: string[] = [];
+  let dist = path.join(show, 'dist');
   return {
     name: 'quina-player-worker',
     apply: 'build',
+    configResolved(config) {
+      dist = config.build.outDir;
+    },
     generateBundle(_options, bundle) {
       const chunks = new Map(Object.values(bundle).filter((f): f is Rolldown.OutputChunk => f.type === 'chunk').map((c) => [c.fileName, c]));
       const entry = [...chunks.values()].find((c) => c.isEntry && c.name === 'player');
@@ -79,7 +103,6 @@ function playerWorker(): Plugin {
       precache = [...files].filter((f) => !(f.endsWith('.woff') && [...files].some((o) => o.startsWith(f.replace(/-[\w-]+\.woff$/, '-')) && o.endsWith('.woff2')))).sort();
     },
     async closeBundle() {
-      const dist = path.join(show, 'dist');
       // Only what was written (a chunk that held only CSS is dropped after generateBundle).
       precache = precache.filter((f) => fs.existsSync(path.join(dist, f))).map((f) => `/${f}`);
       const html = path.join(dist, 'player/index.html');
@@ -108,7 +131,7 @@ export default defineConfig({
   // The player's installable app (D221, D223): its manifest and icons, copied to dist/ as they are and served at the
   // site's root (apps/cloud's static/_headers: no-cache). Audio, covers and data come from the relay, not from here.
   publicDir: path.join(root, 'player/public'),
-  plugins: [svelte(), buildStamp(), playerWorker()],
+  plugins: [cascadeLayers(), svelte(), buildStamp(), playerWorker()],
   // A live show page must never reload itself because a file changed: no HMR (a manual reload picks up edits).
   server: { hmr: false, fs: { allow: [repo] } },
   build: {

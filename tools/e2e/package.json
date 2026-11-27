@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "playwright test",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "css-order": "node css-order/check.ts"
   },
   "dependencies": {
     "@quina/protocol": "*",
