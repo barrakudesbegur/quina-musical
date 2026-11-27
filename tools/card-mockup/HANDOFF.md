@@ -21,8 +21,8 @@ the same day.
   Sound engine renumbers (ids follow the playlist order) and re-prepares; 135 songs, 5 shared.
 - **Covers:** Sound engine's audit replaced #122; #112 and #93 came right with the new tracks; #117's «?» disc is the
   real 1996 art. #100's white cover goes on the proof sheet's checklist.
-- **Waiting on the user:** Q20, #117's print names: title «Els Segadors Remix» (the user), artist «Pont Aeri-Chasis»
-  proposed. Send both to Sound engine (print-names.json, by Spotify id 6azT5xEjuB5FNW3YC4Ed3i).
+- **#117's print names (Q20, the user: yes):** «Els Segadors Remix» / «Pont Aeri-Chasis», sent to Sound engine for
+  print-names.json (Spotify id 6azT5xEjuB5FNW3YC4Ed3i) and to the Orchestrator.
 - **Waiting:** U212, the organizers' pick; the 1 Dec playlist, then the real cards on 4–5 Dec (a proof sheet first).
 
 ## Decided with the user (all reported to the Orchestrator)
