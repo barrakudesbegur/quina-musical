@@ -127,7 +127,7 @@ The user's dates: the playlist Tue 1 Dec; the pool prepared and checked by Thu 3
      - → or PageDown (a keyboard or a USB presenter clicker) presses the default action, as the Wii's A.
      - The console holds a screen wake lock where allowed.
      - **Safari and iPad gaps:**
-       - the console needs iPadOS 15.4 or later (`:has`, `dvh`, `<dialog>`, `structuredClone`);
+       - the console targets the latest iPadOS only (D219; it uses `:has`, `dvh`, `<dialog>`, container queries);
        - no WebHID on any tablet, so the Wii remote pairs only with the laptop's Chrome;
        - Wake Lock needs a secure context, so over the hotspot's http the tablet must be set to Auto-Lock › Never (in Backend's night runbook);
        - Admin's copy to clipboard falls back on http.
