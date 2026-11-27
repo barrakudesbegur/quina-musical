@@ -3,10 +3,14 @@
   // 3D, the front one in the gold window. The tiles show songs still to come (`songs`, logic/reel.ts drumSongs), in an
   // order with nothing to do with the Queue, blurred until a landing is public; then the landed song flips in on the
   // front tile. The ring turns tile by tile and stops on a whole one (ANIMATIONS.md `reel-spin`, `landing`). Reduced
-  // motion: the ring stays still, with "Sona la ruleta…". `compact` draws it small in the strip over the cards;
-  // `stopped` holds it still while the phone is offline (the drum stops).
+  // motion: the ring stays still, with "Sona la ruleta…". `compact` draws it small in the strip over the cards (the
+  // collapsed look a parent can morph to: `data-size="strip"`); `stopped` holds it still while the phone is offline.
+  // The ring is a real cylinder (D-s, #82, #83): one transform per tile round the shared axis, the radius from the tile
+  // count (player.css). While still, a sideways drag tugs it a little and it springs back (`drum-tug`, D220: a stiff
+  // wobble that never turns a hidden cover into view, logic/drum-tug.ts); a vertical drag scrolls the page.
   import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
   import type { PublicLanding, PublicSpin } from '../feed/public.ts';
+  import { tugAngle, tugAxis } from '../logic/drum-tug.ts';
   import { DRUM_TILES, drumTurn, reelOffset, reelState } from '../logic/reel.ts';
   import { S } from '../strings.ts';
   import Cover from '../../../packages/ui/components/Cover.svelte';
@@ -65,6 +69,52 @@
   const front = $derived(((rest % DRUM_TILES) + DRUM_TILES) % DRUM_TILES);
   const landed = $derived(reel.phase === 'landed' && latest ? latest : null);
 
+  // The tug (drum-tug): only while still, never with reduced motion. `tug` is the ring's extra turn in degrees.
+  const canTug = $derived(!reduced && (reel.phase === 'idle' || reel.phase === 'landed'));
+  let tug = $state(0);
+  let tugging = $state(false);
+  let springing = $state(false);
+  let drag: { id: number; x: number; y: number; axis: 'x' | 'y' | null } | null = null;
+  function tugStart(e: PointerEvent): void {
+    if (!canTug || drag || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, axis: null };
+  }
+  function tugMove(e: PointerEvent): void {
+    if (!drag || e.pointerId !== drag.id) return;
+    const dx = e.clientX - drag.x;
+    if (drag.axis === null) {
+      drag.axis = tugAxis(dx, e.clientY - drag.y);
+      if (drag.axis === 'y') return void (drag = null);
+      if (drag.axis === 'x') {
+        try {
+          (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+        } catch {
+          // A pointer the browser no longer tracks: the drag still follows its moves.
+        }
+        tugging = true;
+        springing = false;
+      }
+    }
+    if (drag?.axis === 'x') tug = tugAngle(dx);
+  }
+  function tugEnd(e: PointerEvent): void {
+    if (!drag || e.pointerId !== drag.id) return;
+    drag = null;
+    if (!tugging) return;
+    tugging = false;
+    springing = tug !== 0;
+    tug = 0;
+  }
+  // A Spin starting mid-drag drops the drag at once.
+  $effect(() => {
+    if (!canTug && (tugging || tug !== 0)) {
+      drag = null;
+      tugging = false;
+      springing = false;
+      tug = 0;
+    }
+  });
+
   // While the drum turns, draw it every frame (transform only). Ticks as tiles pass the window, at most 10 per second.
   $effect(() => {
     if (reduced || stopped || !spin) return;
@@ -88,8 +138,27 @@
 </script>
 
 <div class="reel" data-testid="reel" data-state={reel.phase} data-size={compact ? 'strip' : 'full'} data-blur={landed ? undefined : 'true'}>
-  <div class="drum" aria-hidden="true">
-    <div class="drum__ring" data-anim="reel-spin" data-turning={turning && !reduced ? 'true' : undefined} style:--turn={turn}>
+  <!-- The tug is decorative play (aria-hidden, no action). -->
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
+  <div
+    class="drum"
+    aria-hidden="true"
+    data-tug={canTug ? 'on' : undefined}
+    onpointerdown={tugStart}
+    onpointermove={tugMove}
+    onpointerup={tugEnd}
+    onpointercancel={tugEnd}
+  >
+    <div
+      class="drum__ring"
+      data-anim="reel-spin"
+      data-turning={turning && !reduced ? 'true' : undefined}
+      data-tugging={tugging || undefined}
+      data-spring={springing || undefined}
+      style:--turn={turn}
+      style:--tug={tug}
+      ontransitionend={() => (springing = false)}
+    >
       {#each songs as tileSong, i (i)}
         <span class="drum__tile" style:--i={i}>
           {#if landed && i === front}
