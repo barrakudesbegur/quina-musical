@@ -12,7 +12,9 @@
   line-height: 1.05;
   text-transform: uppercase;
   text-wrap: balance;
+  /* R9: hyphens with the page's language first, a break anywhere as the last resort */
   overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .ticket__title + .ticket__title,
@@ -107,7 +109,9 @@
   font-weight: 900;
   line-height: 1.1;
   text-wrap: balance;
+  /* R9: hyphens with the page's language first, a break anywhere as the last resort */
   overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .prize-card :is(.prize-card__detail, .prize-card__sponsor, .prize-card__more) {
