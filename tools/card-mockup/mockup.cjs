@@ -67,6 +67,8 @@ const LAYOUTS = {
   'a3-6-one-row': { name: 'A3 · 6, header in one row', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'oneRow' },
   'a3-6-band': { name: 'A3 · 6, heading band', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'band' },
   'a3-6-footer': { name: 'A3 · 6, branding at the foot', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'footer' },
+  // The user, 27 Nov: the 2×2 retry's header on the A3 · 6 card, with the branding's figure right of the GOMET circle.
+  'a3-6-gomet-nino': { name: 'A3 · 6, GOMET + figure, no branding text', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'gometNino', cellMode: 'above' },
   'a3-6-gomet-left': { name: 'A3 · 6, GOMET left, no branding', sheet: 'A3', landscape: false, cols: 2, rows: 3, titleMax: 16, header: 'gometLeft', cellMode: 'above' },
   // One more try (the user, 27 Nov): 2×2 on A4 with a one-line header (no branding, the GOMET circle on the left), so
   // the grid is taller, and every song's cover above its title.
@@ -198,6 +200,10 @@ const brandCompactWidth = 512 * BRAND_COMPACT.icon + 5 + Math.max(
   textWidth(LIGHT, BRAND[0], BRAND_COMPACT.top) + 0.8 * BRAND[0].length,
   textWidth(LIGHT, BRAND[1], BRAND_COMPACT.bottom) + 0.8 * BRAND[1].length);
 const FOOTER_H = 12;
+// The branding's figure («nino») on its own, as tall as the header's QR.
+const NINO_H = 38;
+const NINO_W = (NINO_H * 512) / 683;
+const Nino = () => h(Svg, { viewBox: '0 0 512 683', style: { height: NINO_H, width: NINO_W } }, h(Path, { d: ICON_D, fill: '#000000' }));
 const BrandFooter = () =>
   h(View, { style: { display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 5, height: FOOTER_H } },
     h(Svg, { viewBox: '0 0 512 683', style: { height: 12, width: 9 } }, h(Path, { d: ICON_D, fill: '#000000' })),
@@ -235,6 +241,8 @@ function geometry(layout) {
     band: { headerH: ROW + 6 + bandH, room: innerW - 20, max: BAND_SIZE, footerH: 0 },
     footer: { headerH: ROW, room: innerW - rightW - 8, max: 34, footerH: 6 + FOOTER_H },
     gometLeft: { headerH: ROW, room: innerW - rightW - 16, max: 38, footerH: 0 },
+    // The heading centred on the card: it may reach as far as the nearer side block allows.
+    gometNino: { headerH: ROW, room: 2 * Math.min(innerW / 2 - (GOMET.diameter + 8 + NINO_W) - 8, innerW / 2 - (62 + 8 + qrSize) - 8), max: 38, footerH: 0 },
   }[style];
   const headerH = spec.headerH;
   const widest = Math.max(...[...HEADINGS.normal, ...HEADINGS.especial].map((t) => headingWidth(t, 38, true)));
@@ -265,6 +273,12 @@ function Header({ g, kind, side, num, qr }) {
   }
   if (g.style === 'footer') {
     return row([heading, right]);
+  }
+  if (g.style === 'gometNino') {
+    return h(View, { style: { position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', height: g.headerH } },
+      h(View, { style: { display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 8 } }, h(Gomet), h(Nino)),
+      centred(heading),
+      h(NumberAndQr, { num, qr, qrSize: g.qrSize }));
   }
   if (g.style === 'gometLeft') {
     // No branding: the GOMET circle on the left, the heading centred between it and the number.

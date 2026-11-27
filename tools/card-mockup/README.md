@@ -49,6 +49,7 @@ held up to the light, the back's grid falls exactly on the front's (the canvas's
 | `a3-6-band` heading band | branding + GOMET + number + QR, then the heading in a band as wide as the grid | 34 × 32 mm | 17 mm | 13.5 pt, 7 pt (3 too long) |
 | `a3-6-footer` branding at the foot | a big heading, GOMET, number, QR; the branding in a line under the grid | 34 × 34 mm | 18 mm | 13.5 pt, 7 pt (3 too long) |
 | `a3-6-gomet-left` no branding | the GOMET circle, the heading, number, QR | 34 × 36 mm | 19 mm | 13.5 pt, 9.5 pt |
+| `a3-6-gomet-nino` **the user's header** (27 Nov) | the GOMET circle, the Barrakudes figure beside it, the heading centred on the card (about 28 pt), number, QR; no branding text | 34 × 36 mm | 19 mm | 13.5 pt, 9.5 pt |
 
 One more try the user asked for: 2×2 on A4 with that last header and every cover above its title
 (`2x2-v-gomet-left`: 23 × 39 mm cells, 20 mm covers, 13 pt titles, 13 of 192 too long; `2x2-h-gomet-left`:
