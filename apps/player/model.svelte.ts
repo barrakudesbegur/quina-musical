@@ -31,7 +31,9 @@ import {
   soundsOn,
   type PlayerData,
   type PlayerStorage,
+  type StorageLike,
 } from './logic/storage.ts';
+import { saveBootState } from './logic/boot-cache.ts';
 import { araViewFor, type AraView } from './logic/tabs.ts';
 import { celebrationOf, cardViews, currentRound, focusRoundNumber, latestLanding, markKeys, planOf, roundKindOf } from './logic/view.ts';
 import { songsOnCards, yourSongOf } from './logic/your-song.ts';
@@ -45,6 +47,10 @@ export interface PlayerAppOptions {
   sounds: Sounds;
   loadCatalog: () => Promise<Catalog>;
   edition?: string;
+  /** The state this tab saw last (logic/boot-cache.ts): the app opens on it until the feed's first snapshot. */
+  initialState?: PublicState | null;
+  /** Where each new state is kept for the next reload (sessionStorage; null: not kept). */
+  bootStore?: StorageLike | null;
 }
 
 /** A toast: its words, and the identity of the card it is about (its icon), if any. */
@@ -58,6 +64,9 @@ const HEAT_KEEP = 6;
 export class PlayerApp {
   // ---- inputs -------------------------------------------------------------------------------------------
   state = $state.raw<PublicState | null>(null);
+  /** True until the first state is on screen: the screen paints it as it is, with no transition into it (no fade
+   *  from a blank or welcome screen, no offline veil fading in at load; the user, 27 Nov). */
+  booting = $state(true);
   connection = $state.raw<FeedConnection>({ online: false, sinceMs: Date.now(), lastOutageMs: 0 });
   data = $state.raw<PlayerData>(emptyData(PLAYER_CONFIG.edition));
   catalog = $state.raw<Catalog | null>(null);
@@ -150,16 +159,36 @@ export class PlayerApp {
   private freshTimer: ReturnType<typeof setTimeout> | null = null;
   private standUpTimer: ReturnType<typeof setTimeout> | null = null;
 
-  constructor({ feed, storage, sounds, loadCatalog, edition = PLAYER_CONFIG.edition }: PlayerAppOptions) {
+  constructor({ feed, storage, sounds, loadCatalog, edition = PLAYER_CONFIG.edition, initialState = null, bootStore = null }: PlayerAppOptions) {
     this.feed = feed;
     this.storage = storage;
     this.sounds = sounds;
     this.loadCatalog = loadCatalog;
     this.data = storage.load(edition).data;
+    this.bootStore = bootStore;
+    this.state = initialState;
+  }
+
+  private readonly bootStore: StorageLike | null;
+
+  /** The first state is painted: let transitions run again two frames later (after that paint has happened). */
+  private settle(): void {
+    if (!this.booting) return;
+    if (typeof requestAnimationFrame !== 'function') {
+      this.booting = false;
+      return;
+    }
+    requestAnimationFrame(() => requestAnimationFrame(() => (this.booting = false)));
   }
 
   /** Start following the feed, the clock, the catalogue and other tabs. Returns a stop function. */
   start(): () => void {
+    // A state saved by this tab opens the app quietly, as the first snapshot after opening would (no cues).
+    if (this.state) {
+      this.react();
+      this.stepBanner();
+      this.settle();
+    }
     this.feed.setCards(this.data.cards.map((c) => c.id));
     this.stops.push(this.feed.subscribe((update) => this.onFeed(update)));
     this.feed.start();
@@ -336,8 +365,13 @@ export class PlayerApp {
     this.localNow = Date.now();
     this.cloudNow = this.feed.now();
     if (state !== this.state) {
+      const first = this.state === null && state !== null;
       this.state = state;
-      if (state) this.noteState(state);
+      if (state) {
+        this.noteState(state);
+        saveBootState(this.bootStore, this.data.edition, state, Date.now());
+      }
+      if (first) this.settle();
       this.react();
       this.celebrationClosesDrawers();
     }

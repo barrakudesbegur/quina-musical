@@ -81,7 +81,6 @@ export const S = {
   noCardsHint: 'Escaneja el codi QR del teu cartró amb la càmera del mòbil, o escriu-ne el número.',
   notPlaying: 'No juguen en aquesta quina',
   /** Which printed type a round plays (card-types.json's name, "Cartró normal"), so a card that rests is explained. */
-  typeRule: (name: string) => `En aquesta quina només juga el ${name.charAt(0).toLowerCase()}${name.slice(1)}.`,
   unknownCard: 'No trobem aquest cartró.',
   /** The Desgraciat round: a playing card's badge, still standing or seated (sunk by one of its songs). */
   stand: { standing: 'Dempeus', seated: 'Assegut' },

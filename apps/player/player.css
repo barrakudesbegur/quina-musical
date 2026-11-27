@@ -177,6 +177,15 @@
   user-select: text;
 }
 
+/* Opening: the first state is painted as it is, with no transition into it (the offline veil and strip don't fade in
+   at load, nothing slides from the empty sky); transitions run again two frames later (PlayerApp.booting). */
+.player[data-booting],
+.player[data-booting] *,
+.player[data-booting] *::before,
+.player[data-booting] *::after {
+  transition: none !important;
+}
+
 /* Outlined titles (".gt" on the boards): Londrina in white over a thick ink stroke and a hard ink shadow. Small
    ones get a thinner stroke and more letter-spacing, so they stay easy to read. Londrina is always in capitals
    (D96); a unit next to a number stays lowercase (`.unit`, D114), and so does Nunito inside a Londrina button. */
@@ -796,7 +805,6 @@
   margin-top: var(--space-5);
 }
 
-.now__rule,
 .now__bye,
 .now__countdown {
   color: var(--color-text-soft);
@@ -1637,10 +1645,6 @@
 }
 
 /* ---- cards --------------------------------------------------------------------------------------------- */
-.cards__rule {
-  color: var(--color-text-soft);
-}
-
 /* A card: paper with an ink outline; its header strip in the card's own colour. */
 .player-card {
   padding: 0;
@@ -4627,7 +4631,7 @@ html:has(.drawer[open]) {
 }
 
 /* The texts that sit straight on the background turn ink (or white with the ink outline) on gold. */
-.player[data-your-song='on'] :is(.reel__label, .cards__rule, .history__round-title) {
+.player[data-your-song='on'] :is(.reel__label, .history__round-title) {
   color: var(--color-line);
 }
 

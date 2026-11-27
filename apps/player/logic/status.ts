@@ -1,6 +1,7 @@
 // The connection strip at the top of the screen, and the presenters' pause. Pure: the clocks are passed in.
 // - offline: once the laptop's link to the cloud has been down for 20 s, or the phone has had no feed for 20 s.
-//   Only while the show is on (not before or after the Game, when a switched-off laptop is normal). The normal
+//   Only while the show is on (not before or after the Game, when a switched-off laptop is normal), or when the phone
+//   opened with no state at all and its own feed never came (logic/boot-cache.ts covers a reload). The normal
 //   screen stays usable underneath: the strip reads "Sense connexió · reconnectant…" and the screen greys.
 // - reconnecting: the phone's own feed has been down for 3 s (the short-drop pill, "Reconnectant…").
 // - connected: whichever of the two was showing turns green ("Connectat") for 1 s once things are back.
@@ -41,6 +42,9 @@ export function connectionProblem({ state, connection, localNowMs, cloudNowMs }:
   const feedDownMs = connection.online ? 0 : localNowMs - connection.sinceMs;
   const linkDownMs = state && !state.link.online ? cloudNowMs - state.link.sinceMs : 0;
   if ((feedDownMs >= times.offlineAfterMs || linkDownMs >= times.offlineAfterMs) && showIsOn(state)) return 'offline';
+  // Opened with no state at all (no snapshot yet, none saved by this tab) and still no feed: it's this phone's own
+  // connection, whatever the show is doing, so say so instead of an empty sky with only the short-drop pill.
+  if (state === null && feedDownMs >= times.offlineAfterMs) return 'offline';
   if (feedDownMs >= times.reconnectingAfterMs) return 'reconnecting';
   return null;
 }

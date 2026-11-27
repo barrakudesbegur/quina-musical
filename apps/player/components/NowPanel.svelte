@@ -5,7 +5,7 @@
   // screen: App.svelte.)
   import { formatClock } from '../../../packages/rules/time.ts';
   import type { PlayerApp } from '../model.svelte.ts';
-  import { historyOf, plannedStarts, prizeRounds, roundNameOf, roundRule } from '../logic/view.ts';
+  import { historyOf, plannedStarts, prizeRounds, roundNameOf } from '../logic/view.ts';
   import { drumSongs } from '../logic/reel.ts';
   import { S } from '../strings.ts';
   import AddCardPrompt from './AddCardPrompt.svelte';
@@ -22,10 +22,6 @@
   const startAtMs = $derived(app.plan ? (plannedStarts(app.plan)?.get(app.plan.rounds[0]?.number ?? 1) ?? null) : null);
   const shuffle = $derived(app.state?.shuffle ?? null);
   const shuffling = $derived(shuffle !== null && app.cloudNow < shuffle.endAtMs);
-  // The round being introduced (else the current one) and which cards it counts: said unless it's a regular round
-  // playing the normal cards.
-  const introduced = $derived(app.state?.intro ?? app.round);
-  const rule = $derived(introduced ? roundRule(introduced, app.cardTypes) : null);
   const HOUR = 60 * 60_000;
   // The drum's tiles: this round's songs still to come, never a landed one (logic/reel.ts drumSongs).
   const history = $derived(historyOf(app.state));
@@ -51,7 +47,6 @@
     {/if}
   {:else if app.scene === 'roundStart'}
     {#if app.focusRound !== null}<h2 class="now__heading" data-kind={app.focusKind}><RoundMark kind={app.focusKind} />{S.roundName({ number: app.focusRound, kind: app.focusKind }, app.plan)}</h2>{/if}
-    {#if rule && !rule.usual}<p class="now__rule">{S.typeRule(rule.name)}</p>{/if}
     {#if shuffle}<Shuffle running={shuffling} />{/if}
     {#if focusPrizes}
       <h3 class="now__subheading">{S.prizesOf(S.roundName(focusPrizes, app.plan))}</h3>

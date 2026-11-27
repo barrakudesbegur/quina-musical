@@ -38,6 +38,7 @@
   data-ground="night"
   data-scene={app.scene}
   data-state={app.screenState}
+  data-booting={app.booting ? 'true' : undefined}
   data-drawers={app.drawers.length}
   data-motion={app.reducedMotion ? 'reduced' : 'full'}
   data-hidden={app.hidden ? 'true' : 'false'}
@@ -68,7 +69,9 @@
         ondismiss={() => app.dismissLegacy()}
       />
     {/if}
-    <AraHome {app} />
+    <!-- No state yet (a first open; a reload has this tab's last one): an empty sky until the feed's first snapshot,
+         never the before-the-night screen by default. -->
+    {#if app.state}<AraHome {app} />{/if}
   </main>
 
   <CornerButtons onprizes={() => app.open({ kind: 'premis' })} onschedule={() => app.open({ kind: 'horari' })} />

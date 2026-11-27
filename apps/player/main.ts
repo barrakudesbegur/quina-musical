@@ -18,12 +18,22 @@ import { chooseFeed, type FeedChoice, type PlayerFeed } from './feed/feed.ts';
 import { DEFAULT_CLEANUP, browserCleanupEnv, cleanupLegacy } from './logic/cleanup.ts';
 import { devHints, homeHref, parseRoute, type DevHints } from './logic/router.ts';
 import { MemoryStorage, PlayerStorage, addCard, emptyData, renameCard, type StorageLike } from './logic/storage.ts';
+import { loadBootState } from './logic/boot-cache.ts';
 
 const edition = PLAYER_CONFIG.edition;
 
 function localStore(): StorageLike | null {
   try {
     return typeof localStorage === 'undefined' ? null : localStorage;
+  } catch {
+    return null;
+  }
+}
+
+/** This tab's own store: the last state, for a reload (logic/boot-cache.ts). */
+function sessionStore(): StorageLike | null {
+  try {
+    return typeof sessionStorage === 'undefined' ? null : sessionStorage;
   } catch {
     return null;
   }
@@ -80,7 +90,10 @@ async function main(): Promise<void> {
   const sounds = new Sounds();
   registerTouchSounds(sounds);
   wireTouchSounds(document, PLAYER_TOUCH);
-  const app = new PlayerApp({ feed, storage, sounds, edition, loadCatalog: () => loadCatalog(PLAYER_CONFIG.catalogUrl) });
+  // A reload opens on the state this tab saw a moment ago, not on the before-the-night screen (never in a demo).
+  const bootStore = choice.kind === 'demo' ? null : sessionStore();
+  const initialState = loadBootState(bootStore, edition, Date.now());
+  const app = new PlayerApp({ feed, storage, sounds, edition, initialState, bootStore, loadCatalog: () => loadCatalog(PLAYER_CONFIG.catalogUrl) });
 
   app.openRoute(route);
   if (route.kind !== 'home') history.replaceState(null, '', homeHref(location, { edition }));

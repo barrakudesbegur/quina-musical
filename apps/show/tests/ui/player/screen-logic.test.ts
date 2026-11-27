@@ -60,6 +60,14 @@ test('a short drop of the phone\'s feed: nothing for 3 s, then "Reconnectant…"
   assert.equal(connectionProblem(at({ state: before, connection: feedDown, localNowMs: T + 60_000 })), 'reconnecting', 'never offline before the Game');
 });
 
+test('opened with no state at all and no feed: the short-drop strip, then offline (it is this phone\'s connection)', () => {
+  const feedDown = { online: false, sinceMs: T, lastOutageMs: 0 };
+  assert.equal(connectionProblem(at({ state: null, connection: feedDown, localNowMs: T + 2999 })), null);
+  assert.equal(connectionProblem(at({ state: null, connection: feedDown, localNowMs: T + 3000 })), 'reconnecting');
+  assert.equal(connectionProblem(at({ state: null, connection: feedDown, localNowMs: T + 20_000 })), 'offline');
+  assert.equal(connectionProblem(at({ state: null, connection: online, localNowMs: T + 60_000 })), null, 'connected, waiting for the first snapshot');
+});
+
 test('no offline strip before or after the Game, when a switched-off laptop is normal', () => {
   const before = { ...playing({ link: { online: false, sinceMs: 0 } }), scene: 'before' as const };
   assert.equal(connectionProblem(at({ state: before })), null);
@@ -239,8 +247,6 @@ test("which cards a round counts, in the phone's words: the type by name; only a
   assert.deepEqual(roundRule({ kind: 'desgraciat', cardType: 'especial' }, types), { name: 'Cartró especial', usual: false }, 'D70: the Desgraciat names its type too');
   assert.deepEqual(roundRule({ kind: 'normal', cardType: 'desgraciat' }, types), { name: 'Cartró desgraciat', usual: false });
   assert.deepEqual(roundRule({ kind: 'special', cardType: 'daurat' }, []), { name: 'Cartró daurat', usual: false }, 'unlisted: the stand-in name');
-  assert.equal(S.typeRule('Cartró especial'), 'En aquesta quina només juga el cartró especial.');
-  assert.equal(S.typeRule('Cartró de Nadal'), 'En aquesta quina només juga el cartró de Nadal.', 'only the first letter is lowered');
 });
 
 /** The sample plan as phones get it with rounds 1 to 3 revealed. */

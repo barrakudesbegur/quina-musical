@@ -7,7 +7,6 @@
   import type { PlayerApp } from '../model.svelte.ts';
   import { PLAYER_CONFIG } from '../config.ts';
   import { standUpPlace } from '../logic/desgraciat.ts';
-  import { roundRule } from '../logic/view.ts';
   import { S } from '../strings.ts';
   import AddCardPrompt from './AddCardPrompt.svelte';
   import CardPanel from './CardPanel.svelte';
@@ -26,10 +25,6 @@
   {#if !app.data.cards.length}
     <AddCardPrompt onadd={() => app.open({ kind: 'pad' })} />
   {:else}
-    {#if app.round && app.restingViews.length}
-      {@const rule = roundRule(app.round, app.cardTypes)}
-      <p class="cards__rule">{S.typeRule(rule.name)}</p>
-    {/if}
     <ul class="cards__list">
       {#each app.playingViews as view, i (view.saved.id)}
         <li class="cards__item" data-highlight={app.highlightCard === view.saved.id ? 'true' : undefined}>

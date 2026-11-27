@@ -71,7 +71,6 @@ test('one special card plays the Desgraciat and then the Especial (D81): its fal
   assert.deepEqual(especial.map((v) => [v.saved.id, v.valid, v.stand]), [[123, false, null], [57, false, null], [412, true, null]]);
   assert.equal(especial[2].marks?.count, 1, '45 only; the Desgraciat round\'s 31 is not carried over');
   assert.deepEqual([...especial[2].near], [], 'nothing near a win yet');
-  assert.equal(S.typeRule('Cartró especial'), 'En aquesta quina només juga el cartró especial.', 'the same line in both rounds');
 });
 
 test('outside the Desgraciat round no card has a stand; the near-win highlight never runs in it', () => {
