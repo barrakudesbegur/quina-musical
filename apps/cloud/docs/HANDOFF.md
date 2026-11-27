@@ -4,11 +4,17 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 
 ## Now (2026-11-27)
 
+- **D227 and D235, the realistic run in production (27 Nov):**
+  - **The edition tool's shared parts** (tools/edition, `npm run edition`): `check`, `upload` (preview, then `--yes` saves the cloud's plan to `data/link/backups/` and PUTs; `--start "YYYY-MM-DD HH:MM"` moves the start, Begur's time, and the doors an hour before, for a test, without touching the file), and `logos` (sips to the 300 KB limit, POST /api/media, paths written into the plan). The laptop's service token may now save the plan and upload images (a separate agent token is U63). Waiting: `build` with Sound engine's `checkEdition` and `editionSongs` (U68–U75).
+  - **The plan is up on quina-dev:** `data/editions/2026.plan.json` (tracked): D192's order with D193's and D226's sides, the 10-minute Descans after round 6, the Orchestrator's example bundles (96 prizes, 58 sponsors, 55 logos; no money), 27 Dec times. The old plan is saved in `data/link/backups/`. The test's start time is U204: re-upload with `--start`, then a plain upload restores 27 Dec.
+  - **The 2026 temporary cards and covers are on both names** (`db958fd2`): deploys now name their repertoire (`QUINA_REPERTOIRE=2026 npm run deploy`; assets.ts refuses dist/ without one).
+  - **Left:** the 2026 media to R2 once Sound engine has prepared both pools: `npm run media -- push --repertoire 2026 --dry-run` first, then the push (6–8 GB, also a fresh copy of the Hold and Interval music); the voice sync root if there's time.
+  - **The preflight** now FAILs a stale show build (Sound engine's build stamp, `distProblem`) and WARNs provisional hooks. My tests remove their temp folders (5,500 had piled up, 2.1 GB, deleted).
 - **In progress:** nothing half-built. **Paused by the user (27 Nov: the focus is the Frontend):** the voice cues' media sync and preflight check (D198, D202–D204), not started. Agreed with Sound engine: the protocol's `VOICE_CUES` plus `chime` and `fanfare`; `tools/prep/voices.py` prepares them into `data/cache/voice/<name>.flac` and `data/out/voice/index.json` (`{ schemaVersion: 1, voices: [{ name, durationSec, placeholder }] }`); placeholders never go in `data/media/voice/` (the user's recordings only, ignored by git). Mine, when resumed: sync roots `voice-cache` and `voice-data` (like the hold music; `voice/` left out of the default repertoire's `cache` and `data` roots), deployed before any laptop pushes them; a preflight check from the index: FAIL for a missing name or file, WARN while any is a placeholder. Meanwhile, keep pushing and deploying Frontend's tested commits.
 - **Ready for the player's PWA (27 Nov, D221–D222, Frontend's work, within the pause).** Agreed with Frontend: the worker `/player-sw.js` (scope `/`, `updateViaCache: 'none'`; never `/sw.js`, which stays last year's kill switch), caches prefixed `quina-player-`, `/player.webmanifest`, fixed icons under `/icons/` (`player-192`, `player-512`, `player-maskable-512`, `player-badge-96`, `apple-touch-icon-180`, all `.png`), from the UI build's public folder at `apps/show/dist/`. The worker never answers `/console/`, `/admin/`, `/api/`, `/ws/`, `/media/`, `/sw.js`, non-GET or cross-origin requests (Access's 302 must never be cached). Done: scripts/assets.ts copies the three into dist/ (and warns while the UI build lacks them); static/_headers gives them `no-cache` (the manifest `application/manifest+json`) and hashed `/assets/*` a year, immutable; test/node/static.e2e.test.ts checks it; live since `650d9089`. When Frontend's files land: check them live after that deploy (the deploy's PWA warning goes).
   - **For Sound engine when the pause lifts** ("not now" in docs/HANDOFF.md since 27 Nov: Sound engine does important tasks only): the relay's `--dist` serving (apps/show/relay/server.ts `serveFile`, one `cache` per target) needs the same `no-cache` for `/player-sw.js` and the manifest, and a MIME type for `.webmanifest`. Service workers need a secure context, so on the venue LAN over plain http (not localhost) the worker won't register at all; the relay part matters only for localhost.
 - **Just done (26 Nov):**
-  - **Twenty-eight deploys** (deploy-plan.md), each tested on its sha first:
+  - **Thirty-two deploys** (deploy-plan.md), each tested on its sha first:
     - `94b395be` (`2503050`): the plan-save fix;
     - `fddfdc1d` (`a89826f`): step 1 of the paced Check;
     - `ec6983b0` (`242a8cd`): step 2 (D127–D165);
@@ -37,6 +43,10 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `ae688f69` (`47a6e09`): screens only (the ✗ marks back to the error red, long card names, the projector's last three on SongTile).
     - `1909c987` (`17bc4ca`): screens only (the phone's sponsors row, components on the palette, the Break's countdown Ring, the error red).
     - `a0650f6e` (`efe30fb`): screens only (the controls family: switches, tabs, the Cerca search, the slider, the «Editar» drawer).
+    - `acf7c5a2` (`6dbc57d`, pushed as `3aa5879`): Frontend's phone home and D226, Admin's banner and sounds sent to the phones, and my GET for them;
+    - `c4449e5c` (`1c367a1`, pushed as `2968b58`): the laptop's token saves the plan and uploads logos; the preflight's show build and provisional hooks; tests clean their temp folders;
+    - `db958fd2` (`2c37ec3`, `--repertoire 2026`): the 2026 temporary cards (both types two-sided) and 136 covers on both names.
+    - `bc4113ec` (`81c8205`, `QUINA_REPERTOIRE=2026 npm run deploy`): Frontend's `96f6ee8` (the home's fixed garland, the drum's landing, your song's gold), the push's `--dry-run` and the deploy's repertoire guard; the 2026 cards and covers kept.
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
@@ -53,9 +63,8 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
   - the fail cue's 3 s in `check` (Sound engine's `a54d866`): the e2e can check the stage's `data-cue="fail"` there;
   - **D178**: each set of 70 songs is a pool (Pool 1, Pool 2); what the tools prepare together is the **repertoire** (agreed with Sound engine and the Orchestrator; "library" is the logo library's). My side is `40e3df1` (deployed as `c93f219c`): `--repertoire` everywhere, R2 under `repertoires/<name>/` (manifest v2), the preflight's Repertoire group. The old `pools/` keys stay, unreachable by the tool, until deploy-plan step 6.5 expires them (after this year's push: until then they're R2's only copy of the Hold and Interval music);
   - this year's songs to R2 as soon as they're prepared (U55, D113). Prune last year's after the night;
-  - 1–3 Dec: the cards move into the repertoires (queue item 3), and deploys name their repertoire;
-  - the provisional-hooks WARN, once Sound engine sends the field.
-- **Not building:** Pausa in the journal (U111), the edition file and its upload (U68–U75, U63).
+  - 1–3 Dec: the cards move into the repertoires (queue item 3; deploys already name their repertoire).
+- **Not building:** Pausa in the journal (U111); the edition file's `build`, cloud-kept versions and reset (U68–U75); a token of its own for agents (U63).
 - **Blocked:** nothing.
 - **Waiting on the user** (docs/open-questions.md):
   - optionally, the Access destinations for `quina.barrakudesbegur.org` (deploy-plan step 7.4);
@@ -138,7 +147,7 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
 3. **The cards move (1–3 Dec, agreed with Sound engine and Frontend; nothing before 1 Dec, D80).** The 2026 repertoire (`data/repertoires/2026.json`, Sound engine's) uses `apps/cards/dist/cards.json`, which becomes this year's cards on 4–5 Dec. Last year's test cards move to `data/repertoires/default/cards/`. Sound engine commits first; then mine, on top:
    - `tools/e2e/show.spec.ts` and `desgraciat-live.spec.ts` read the cards through `loadRepertoire().cardsJson` ($QUINA_REPERTOIRE, else default), as the e2e's relay does;
    - the live run first checks that the cloud's `/cards/cards.json` is byte-identical to that repertoire's, and fails at once if not (after the 2026 deploy: `QUINA_REPERTOIRE=2026`);
-   - **deploys name their repertoire** (`--repertoire 2026`): a plain `npm run deploy` falls back to `default`, which would put last year's test cards and covers on the QR domain;
+   - ~~deploys name their repertoire~~ done (`81c8205`): `QUINA_REPERTOIRE=2026 npm run deploy`; assets.ts refuses dist/ without a named repertoire, so last year's test cards can't reach the QR domain by accident;
    - a preflight check that the cloud's cards.json matches the repertoire's (FAIL if not).
 4. **Card sides and pools, step B** (D100–D102, D178; Sound engine's step A is `e8e10d3`/`e1c54ec`). **Done in `3cf30a6`:** journal-check takes `side` (1–9, absent for side 1); PublicRound.side and the public intro's side, only when not 1; Admin's resume point carries it (`-C<n>`); the preflight's Card sides check (the protocol's `sideWarnings`, pools counted from songs.json: FAIL for a round on an unprinted side or an empty pool, WARN for a printed side no round plays). Deployed as `228d23ab`, before any side-2 round. **The cards.json readers** (on Frontend's `dd240f2`, cards in `sides`): the preflight's cards check reads each card's sides against its type's (card-types.json), each side 3×4 with its songs in its side's pool, and an old card's `lines` as side 1, as the engine's `cardFace` does; a side whose pool has no songs here (today's test repertoire has no pool 2) warns. show.spec.ts reads the round's side. The default test repertoire: all songs in pool 1, so its cards' side 2 is drawn from the whole repertoire.
 5. The Pausa scene in the public feed, once UI proposes its shape (it reuses `pause {on}`; nothing new expected).
