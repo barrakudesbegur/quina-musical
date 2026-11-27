@@ -15,7 +15,6 @@
   import Button from '../../../packages/ui/components/Button.svelte';
   import Icon from '../../../packages/ui/icons/Icon.svelte';
   import { ACTIONS, FX, ICONS, MINI, WII } from '../../console/actions.ts';
-  import ThrowIcon from '../../console/components/ThrowIcon.svelte';
   import { PLAYER, PLAYER_CORNERS, PLAYER_ICONS, PLAYER_LINKS } from '../../player/actions.ts';
   import './buttons.css';
 
@@ -63,7 +62,7 @@
   <p class="ds-prose">
     A tap is level 1, a hold escalates to level 2 on the strip at its foot, in its own palette (D-k). Off has no
     pattern; level 1 on pans the stripes; level 2 on is the strip's dark shade with the dots panning; locked never shows
-    a pattern (R3, #17–#23). The Throw's two buttons are the same component with a meter and sticker art.
+    a pattern (R3, #17–#23). The Throw's two buttons are the same component with a meter; their icons are line icons in the outline look (D245).
   </p>
   <div class="ds-gallery__grid ds-buttons__tall">
     {#snippet t1()}<TwoLevelButton {...ACTIONS.hold} iconPlacement="top" lead="mantén" />{/snippet}
@@ -81,11 +80,11 @@
   </div>
   <h3>The Throw’s two buttons</h3>
   <div class="ds-gallery__grid ds-gallery__grid--wide ds-buttons__tall">
-    {#snippet r1()}<TwoLevelButton {...ACTIONS.throw} label="Llançament" note="toca: sona el llançament">{#snippet art()}<ThrowIcon song="throw" />{/snippet}</TwoLevelButton>{/snippet}
+    {#snippet r1()}<TwoLevelButton {...ACTIONS.throw} label="Llançament" note="toca: sona el llançament" />{/snippet}
     {@render cell('idle: its colour, no stripes (#20)', r1)}
-    {#snippet r2()}<TwoLevelButton {...ACTIONS.storm} label="Tempesta" sub="de blat de moro" note="toca: atura" active={1} {meter}>{#snippet art()}<ThrowIcon song="storm" />{/snippet}</TwoLevelButton>{/snippet}
+    {#snippet r2()}<TwoLevelButton {...ACTIONS.storm} label="Tempesta" sub="de blat de moro" note="toca: atura" active={1} {meter} />{/snippet}
     {@render cell('playing: sunk, stripes panning, the meter with the drop', r2)}
-    {#snippet r3()}<TwoLevelButton {...ACTIONS.storm} label="Tempesta" sub="de blat de moro" level2={null}>{#snippet art()}<ThrowIcon song="storm" />{/snippet}</TwoLevelButton>{/snippet}
+    {#snippet r3()}<TwoLevelButton {...ACTIONS.storm} label="Tempesta" sub="de blat de moro" level2={null} />{/snippet}
     {@render cell('no strip (level2 null): the hold sweeps the whole body', r3)}
   </div>
 </section>

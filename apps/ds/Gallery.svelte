@@ -18,6 +18,7 @@
   import CardsSongs from './sections/CardsSongs.svelte';
   import PanelsSection from './PanelsSection.svelte';
   import ButtonsFamily from './sections/Buttons.svelte';
+  import IconsSection from './sections/Icons.svelte';
   import ControlsGallery from './ControlsGallery.svelte';
   import ConsoleMenu from './sections/ConsoleMenu.svelte';
 
@@ -195,6 +196,7 @@
   <PanelsSection {density} />
   <!-- A2–A9, the buttons family (the buttons helper's section) -->
   {#if !projector}<ButtonsFamily {phone} {cell} />{/if}
+  <IconsSection {cell} />
 
   <section class="ds-gallery__section" aria-labelledby="res">
     <h2 id="res">Design resources (R1–R11, 27 Nov)</h2>

@@ -82,6 +82,10 @@ export const CONSOLE_ICONS = {
   remote: 'wii-remote',
   /** «Final a l'escenari» (#92: a line icon like the others). */
   podium: 'podium',
+  /** «Llançament» (D138): two swords crossed (U170 option A, D245). */
+  throw: 'crossed-swords',
+  /** «Tempesta» (D151): a cloud raining corn kernels (U170 option A, D245). */
+  storm: 'cloud-corn',
   /** The menu's «Sons automàtics» (D237): the sounds the show plays by itself. */
   autoSounds: 'cycle',
   /** «Prova de so» (D229). */

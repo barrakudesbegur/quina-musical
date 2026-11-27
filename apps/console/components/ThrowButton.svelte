@@ -9,7 +9,9 @@
   `variant`: big (the big bottom place), line (a break's slim line along the top, D195: the name and its note on the
   left, the time on the right, the strip under them) or top (the last round's top row, between «Enrere» and
   «Comprovar»: no strip, the fill sweeps the whole button). The layouts are console.css's (`.throw-button`).
-  Only on the tablet: no Wii keys, and A never plays it. Hooks: data-testid="throw-button" or "storm-button".
+  Its icon is the preset's (actions.ts): crossed swords or a cloud raining corn, in the outline look like the other big
+  buttons' (D245). Only on the tablet: no Wii keys, and A never plays it. Hooks: data-testid="throw-button" or
+  "storm-button".
 -->
 <script lang="ts">
   import type { ThrowSong } from '@quina/protocol';
@@ -19,7 +21,6 @@
   import type { TwoLevelAction } from '../../../packages/ui/components/hold/two-level.ts';
   import { ACTIONS } from '../actions.ts';
   import { S } from '../strings.ts';
-  import ThrowIcon from './ThrowIcon.svelte';
   import TwoLevelButton from '../../../packages/ui/components/TwoLevelButton.svelte';
 
   interface Props {
@@ -75,6 +76,4 @@
   ontap={() => act('tap')}
   onescalate={() => act('escalate')}
   onrelease={() => act('release')}
->
-  {#snippet art()}<ThrowIcon {song} />{/snippet}
-</TwoLevelButton>
+/>

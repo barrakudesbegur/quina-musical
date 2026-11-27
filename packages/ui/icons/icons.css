@@ -14,6 +14,9 @@
  * - Alone (`alone`: no text beside it, a cover's placeholder, a badge, an icon-only key): the ink is the size step's,
  *   2.6 units of the 24 grid (box ÷ 9.2), so it scales with the box; the outline adds 1.6 units each side.
  * - One cap and join: round everywhere.
+ * - The gap where one part passes behind another (a part marked `behind`, the crossed swords, 27 Nov): the front
+ *   part's outline widened to its ink plus .8 × the ink on each side cuts the back one away (`--icon-cut`, the
+ *   mask's stroke); in the outline look the cut clears the front's ink line and leaves a gap as wide as that line.
  * A context sets the box (width, height) and the colour; it never sets a stroke width. `--icon-ink` exists to be
  * read (the board generator, a sibling glyph), not to make one icon lighter or heavier.
  */
@@ -22,6 +25,7 @@
   --icon-ink-outlined: 0.13em;
   --icon-outline: 2.5px;
   --icon-scaling: non-scaling-stroke;
+  --icon-cut: calc(var(--icon-ink) * 2.6);
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -36,12 +40,26 @@
 
 .icon.icon--outline {
   --icon-ink: var(--icon-ink-outlined);
+  --icon-cut: calc(var(--icon-ink) + 4 * var(--icon-outline));
 }
 
 .icon.icon--alone {
   --icon-ink: 2.6;
   --icon-outline: 1.6;
   --icon-scaling: none;
+}
+
+/* The mask behind parts are drawn through (line.ts `behind`): white shows them, each front part's widened outline
+   hides them. The cut uses the same non-scaling stroke as the lines, so the gap follows the ink at every size. */
+.icon .icon__reveal {
+  fill: #fff;
+  stroke: none;
+}
+
+.icon .icon__cut {
+  fill: #000;
+  stroke: #000;
+  stroke-width: var(--icon-cut);
 }
 
 .icon .icon__fill {

@@ -54,8 +54,8 @@ export const ACTIONS = {
   next: { color: colorOf('next'), size: 'l', icon: 'skip', label: S.cluster.next },
   roundIntro: { color: colorOf('next'), size: 'l', icon: 'play', label: S.interval.start, note: S.interval.startNote },
   // Stripes only while the song plays (R3, #20); the strip restarts it from its hook (D138).
-  throw: { color: colorOf('throw'), pattern: 'stripes', icon: null, label: CONCEPTS.throw.label, level2: { label: S.throws.restart, icon: 'restart' } },
-  storm: { color: colorOf('storm'), pattern: 'stripes', icon: null, label: CONCEPTS.storm.label, level2: { label: S.throws.restart, icon: 'restart' } },
+  throw: { color: colorOf('throw'), pattern: 'stripes', icon: 'crossed-swords', label: CONCEPTS.throw.label, level2: { label: S.throws.restart, icon: 'restart' } },
+  storm: { color: colorOf('storm'), pattern: 'stripes', icon: 'cloud-corn', label: CONCEPTS.storm.label, level2: { label: S.throws.restart, icon: 'restart' } },
   finaleAdd: { color: colorOf('claim'), size: 's', icon: 'plus', label: S.finale.add, note: S.finale.addNote },
   finaleCue: { color: colorOf('celebration'), icon: 'star', label: S.finale.celebrate, ring: 'gold' },
 

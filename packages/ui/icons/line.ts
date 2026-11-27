@@ -9,17 +9,21 @@
 // - `solid`: filled in currentColor with no stroke (dots, the Especial's star);
 // - `accent`: a stroke in the button's own colour inside a big button (the outline look);
 // - `paper` / `ink` / `inkSolid`: a two-tone icon in paper and ink whatever the text colour (the finish flag);
-// - `transform`: an SVG transform for that part; `clip`: drawn inside the icon's `paper` part.
+// - `transform`: an SVG transform for that part; `clip`: drawn inside the icon's `paper` part;
+// - `behind`: the part lies behind the others: every part that isn't `behind` cuts a gap out of it, its own outline
+//   plus a gap (an SVG mask, `icon__cut` in icons.css), so two lines that cross never touch (the crossed swords).
 
 export interface IconPart {
   d: string;
   part?: 'fill' | 'solid' | 'accent' | 'paper' | 'ink' | 'inkSolid';
   transform?: string;
   clip?: true;
+  behind?: true;
 }
 export type IconPath = string | IconPart;
 
 const fill = (d: string): IconPart => ({ d, part: 'fill' });
+const behind = (d: string): IconPart => ({ d, behind: true });
 const solid = (d: string): IconPart => ({ d, part: 'solid' });
 /** A circle as a path (every part is a `<path>`, so one rule styles them all). */
 const circle = (cx: number, cy: number, r: number): string => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0z`;
@@ -147,6 +151,31 @@ export const LINE_ICONS = {
     },
     { d: 'M15 8.5v1.5M15 14v1.5', transform: 'rotate(-20 12 12)' },
   ],
+  /**
+   * Two swords crossed, tips up (the throws, D138; U170 option A drawn as a line icon, D245). Each: a blade 3.8 wide
+   * with a pointed tip, a guard across it, the grip and a round pommel; they cross on the blades, clear of the guards.
+   * The front one (tip top left) cuts a gap out of the back one, so the outlines never cross.
+   */
+  'crossed-swords': [
+    behind('M7.16 14.16L16.76 4.56L20.6 3.4L19.44 7.24L9.84 16.84'),
+    behind('M6.1 13.1L10.9 17.9'),
+    behind('M8.5 15.5L5 19'),
+    behind(circle(3.7, 20.3, 1)),
+    'M16.84 14.16L7.24 4.56L3.4 3.4L4.56 7.24L14.16 16.84',
+    'M17.9 13.1L13.1 17.9',
+    'M15.5 15.5L19 19',
+    circle(20.3, 20.3, 1),
+  ],
+  /**
+   * A cloud raining three corn kernels (the corn-seed storm, D151; U170 option A drawn as a line icon, D245): three
+   * bumps on a flat base, and the house kernel (the corn card mark's outline) small and filled, falling apart.
+   */
+  'cloud-corn': [
+    'M6.2 11H17.4A3.2 3.2 0 0 0 15.44 5.27A4 4 0 0 0 7.6 6.21A2.6 2.6 0 0 0 6.2 11z',
+    fill('M5.63 15.73C6.28 15.42 7.01 15.63 7.32 16.42C7.64 17.23 7.55 18.27 7 18.54C6.45 18.8 5.57 18.24 5.14 17.49C4.71 16.76 4.99 16.05 5.63 15.73z'),
+    fill('M12 18.18C12.72 18.18 13.28 18.69 13.22 19.54C13.15 20.4 12.61 21.3 12 21.3C11.39 21.3 10.85 20.4 10.78 19.54C10.72 18.69 11.28 18.18 12 18.18z'),
+    fill('M18.37 15.73C19.01 16.05 19.29 16.76 18.86 17.49C18.43 18.24 17.55 18.8 17 18.54C16.45 18.27 16.36 17.23 16.68 16.42C16.99 15.63 17.72 15.42 18.37 15.73z'),
+  ],
   /** A steaming cup (a break). */
   cup: ['M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z', 'M17 11h1.5a2.5 2.5 0 0 1 0 5H17', 'M8 3v3', 'M12 3v3'],
   star: ['M12 3l2.8 5.8 6.2.9-4.5 4.4 1 6.2L12 17.4l-5.5 2.9 1-6.2L3 9.7l6.2-.9z'],
@@ -188,5 +217,7 @@ export type LineIconName = keyof typeof LINE_ICONS;
 export const pathOf = (p: IconPath): string => (typeof p === 'string' ? p : p.d);
 /** A path's part class ("icon__fill", "icon__accent"…), or undefined for a plain stroke. */
 export const partClass = (p: IconPath): string | undefined => (typeof p === 'string' || !p.part ? undefined : `icon__${p.part}`);
+/** Whether a part lies behind the others (`behind`): it's drawn through the gap the others cut. */
+export const isBehind = (p: IconPath): boolean => typeof p !== 'string' && p.behind === true;
 /** Parts that the outline look draws its ink line under (two-tone and accent parts keep their own look). */
 export const outlined = (p: IconPath): boolean => typeof p === 'string' || p.part === undefined || p.part === 'fill' || p.part === 'solid';

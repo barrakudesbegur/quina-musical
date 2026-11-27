@@ -2,8 +2,8 @@
 // surface that shows it. It is the only place that says "the Hold is cyan"; the generic components never name a
 // concept, and each app's actions.ts spreads these into its controls with the note, sound and Wii key it adds.
 // Plain data, so the plain-TypeScript projector can read it too. Ids are GLOSSARY.md's terms; labels come from
-// i18n/ca.ts, never typed here. `icon` names the drawing in the one icon family (packages/ui/icons, H1); the throw
-// songs' multicoloured stickers aren't line icons, so their concepts name none.
+// i18n/ca.ts, never typed here. `icon` names the drawing in the one icon family (packages/ui/icons, H1), the throw
+// songs' too (crossed swords and a cloud raining corn, D245).
 import { CA } from './i18n/ca.ts';
 import type { PaletteColor, Pattern } from './components/types.ts';
 import type { LineIconName } from './icons/line.ts';
@@ -39,8 +39,8 @@ export const CONCEPTS = {
   lastStanding: { color: 'live', label: CA.concepts.lastStanding, icon: 'star' },
   fallen: { color: 'slate', label: CA.concepts.fallen, icon: 'figure-seated' },
   standing: { color: 'green', label: CA.standing, icon: 'figure-standing' },
-  throw: { color: 'pink', label: CA.concepts.throw, icon: null, pattern: 'stripes' },
-  storm: { color: 'navy', label: CA.concepts.storm, icon: null, pattern: 'stripes' },
+  throw: { color: 'pink', label: CA.concepts.throw, icon: 'crossed-swords', pattern: 'stripes' },
+  storm: { color: 'navy', label: CA.concepts.storm, icon: 'cloud-corn', pattern: 'stripes' },
   break: { color: 'cyan', label: CA.concepts.break, icon: null },
 } as const satisfies Record<string, ConceptLook>;
 

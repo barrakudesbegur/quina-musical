@@ -3,7 +3,7 @@
   (components-v2.md § 2 › A3, with the 27 Nov comments). The console's Parlem → Pausa and Aguanta → Suspens, and the
   Throw's two buttons («Llançament», «Tempesta»: a tap starts, stops or resumes; the hold restarts from the hook).
 
-  It knows nothing of the game: a preset gives its look (`color`, `pattern`, `icon` or the `art` snippet, `label`,
+  It knows nothing of the game: a preset gives its look (`color`, `pattern`, `icon`, `label`,
   `sub`, `note`, `wii`, and `level2`: the strip's words, icon and keys), and the app's thin wrapper gives its state
   and gets its gestures: `active` (null, 1 or 2: which level is on), `canEscalate`, `disabled`, and `ontap`,
   `onescalate` (the hold crossed `holdMs`, finger still down), `onrelease` (an escalated press ended); `onpress` and
@@ -23,7 +23,6 @@
   (button.css): the <button> is `ds-pushable`, `.button__piece` (`ds-piece`) sinks.
 -->
 <script lang="ts">
-  import type { Snippet } from 'svelte';
   import type { HTMLButtonAttributes } from 'svelte/elements';
   import Icon from '../icons/Icon.svelte';
   import { CA } from '../i18n/ca.ts';
@@ -42,8 +41,6 @@
     ring?: Ring | null;
     icon?: IconName | null;
     iconPlacement?: 'start' | 'top';
-    /** A multicolour sticker in the icon's place (a Throw song's, until the icon family draws it: H1, U170). */
-    art?: Snippet;
     label: string;
     /** A second line beside the label, under it (a Throw's «de blat de moro»). */
     sub?: string | null;
@@ -82,7 +79,6 @@
     ring = null,
     icon = null,
     iconPlacement = 'start',
-    art,
     label,
     sub = null,
     note = null,
@@ -175,9 +171,7 @@
     {#if !level2}<span class="two-level__fill two-level__fill--body" aria-hidden="true"></span>{/if}
     <span class="button__body">
       <span class="button__head">
-        {#if art}
-          <span class="button__icon two-level__art" aria-hidden="true">{@render art()}</span>
-        {:else if icon}
+        {#if icon}
           <span class="button__icon" aria-hidden="true"><Icon name={icon} outline /></span>
         {/if}
         <span class="two-level__words">

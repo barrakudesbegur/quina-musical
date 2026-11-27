@@ -2011,10 +2011,12 @@
 
 /* Parlem and Aguanta (HoldModeButton) and the Throw's two buttons (ThrowButton) are the generic TwoLevelButton
    (packages/ui/components/two-level.css); the cluster only sizes them. «Llançament» and «Tempesta» (the
-   Consola-Llancament-Tempesta board): the name with its sticker art and its second line, the tap's note, the song's
-   time while it's on, the «Des del principi» strip. */
+   Consola-Llancament-Tempesta board): the name with its icon (crossed swords, a cloud raining corn: D245) and its
+   second line, the tap's note, the song's time while it's on, the «Des del principi» strip. Their icon boxes are the
+   size the old stickers had (1.18 × the cluster's). */
 .throw-button {
   --button-label-size: clamp(var(--text-2xl), 4.2vw, 3.125rem);
+  --button-icon-size: 3.25rem;
   --button-label-line: 0.95;
   --button-note-size: 0.9375rem;
   --button-head-gap: var(--space-3);
@@ -2026,7 +2028,7 @@
   --button-min-height: 0;
   --button-pad-block: var(--space-1);
   --button-label-size: var(--text-2xl);
-  --button-icon-size: 1.9rem;
+  --button-icon-size: 2.25rem;
   --button-head-gap: var(--space-2);
   --two-level-strip: 32px;
   --two-level-strip-size: var(--text-sm);
@@ -2063,13 +2065,13 @@
   min-width: 13rem;
 }
 
-/* The top row (the last round): compact, the art over the name, no strip; the fill sweeps the whole button */
+/* The top row (the last round): compact, the icon over the name, no strip; the fill sweeps the whole button */
 .throw-button[data-layout='top'] {
   --button-min-height: calc(var(--tap-big) + var(--space-2));
   --button-pad-block: var(--space-1);
   --button-pad-inline: var(--space-1);
   --button-label-size: var(--text-lg);
-  --button-icon-size: 1.5rem;
+  --button-icon-size: 1.75rem;
   --two-level-sub-size: 0.6875rem;
 }
 
@@ -2174,7 +2176,7 @@
   /* The throw songs keep their strip under them, edge to edge */
   .throw-button {
     --button-label-size: var(--text-xl);
-    --button-icon-size: 1.7rem;
+    --button-icon-size: 2rem;
     --button-head-gap: var(--space-2);
   }
 
