@@ -17,7 +17,7 @@
 </script>
 
 <div class="cheat-sheet__actions no-print panel__actions">
-  <button type="button" class="tone-primary" onclick={() => window.print()}>{S.cheat.print}</button>
+  <button type="button" data-color="orange" onclick={() => window.print()}>{S.cheat.print}</button>
   <span class="panel__help">{S.cheat.printHelp}</span>
 </div>
 

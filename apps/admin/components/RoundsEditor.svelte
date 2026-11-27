@@ -117,7 +117,7 @@
             <div class="round__tools">
               <button type="button" onclick={() => move(i, i - 1)} disabled={fixed || i <= locked} aria-label={S.rounds.upLabel(name)}>↑ {S.rounds.up}</button>
               <button type="button" onclick={() => move(i, i + 1)} disabled={fixed || i === planTotal - 1} aria-label={S.rounds.downLabel(name)}>↓ {S.rounds.down}</button>
-              <button type="button" class={confirming === i ? 'tone-danger' : ''} onclick={() => remove(i)} onblur={() => confirming === i && (confirming = null)} aria-label={confirming === i ? S.rounds.confirmRemove : S.rounds.removeLabel(name)} disabled={fixed || planTotal === 1}>
+              <button type="button" data-color={confirming === i ? 'red' : undefined} onclick={() => remove(i)} onblur={() => confirming === i && (confirming = null)} aria-label={confirming === i ? S.rounds.confirmRemove : S.rounds.removeLabel(name)} disabled={fixed || planTotal === 1}>
                 {confirming === i ? S.rounds.confirmRemove : S.rounds.remove}
               </button>
             </div>

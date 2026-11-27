@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Button from '../../../packages/ui/components/Button.svelte';
+  import { PLAYER } from '../actions.ts';
   // The Ajustos drawer (D87; it was "Menú"; the J2 look, board Mobil-B-J2): the player's cards as plain rows, each
   // with its grip to reorder it (ANIMATIONS.md `card-reorder`; the home screen shows them in this order), its icon,
   // name and number, and its edit and remove buttons; "Afegir cartró"; the settings panel (the Sons switch,
@@ -90,7 +92,7 @@
       <p class="menu__empty">{S.noCards}</p>
     {/if}
     {#if app.data.cards.length < PLAYER_CONFIG.maxCards}
-      <button type="button" class="big-button tone-primary menu__add" aria-label={S.addCardLabel} aria-haspopup="dialog" onclick={() => app.open({ kind: 'pad' })}><Icon name="plusOutlined" /> {S.addCard}</button>
+      <Button {...PLAYER.addCardSmall} class="menu__add" aria-label={S.addCardLabel} aria-haspopup="dialog" onclick={() => app.open({ kind: 'pad' })} />
     {/if}
   </section>
 

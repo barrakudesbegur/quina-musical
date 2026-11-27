@@ -96,7 +96,7 @@
     </div>
 
     <div class="panel__actions">
-      <button type="submit" class="tone-primary" disabled={!preview.ok || !commands.canSend}>{S.cards.send}</button>
+      <button type="submit" data-color="orange" disabled={!preview.ok || !commands.canSend}>{S.cards.send}</button>
       <CommandStatus record={commands.last('setCardsInPlay')} />
     </div>
   </form>

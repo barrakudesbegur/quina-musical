@@ -25,6 +25,7 @@
   import { prizeRounds, roundNameOf } from './logic/view.ts';
   import { S } from './strings.ts';
 
+
   let { app }: { app: PlayerApp } = $props();
   const named = (id: number) => app.data.cards.find((c) => c.id === id) ?? null;
   const celebrationRound = $derived(app.celebration ? (prizeRounds(app.plan, app.state).find((r) => r.number === app.celebration?.round) ?? null) : null);
@@ -34,6 +35,8 @@
 
 <div
   class="player"
+  data-density="phone"
+  data-ground="night"
   data-scene={app.scene}
   data-state={app.screenState}
   data-drawers={app.drawers.length}

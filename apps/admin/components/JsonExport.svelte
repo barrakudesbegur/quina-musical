@@ -25,7 +25,7 @@
   {:else}
     {#if !session.check.ok}<p class="notice notice--warn">{S.json.exportStale}</p>{/if}
     <div class="panel__actions">
-      <button type="button" class="tone-primary" onclick={() => downloadText(exportFileName(plan.edition, 'pla', Date.now()), text)}>{S.json.download}</button>
+      <button type="button" data-color="orange" onclick={() => downloadText(exportFileName(plan.edition, 'pla', Date.now()), text)}>{S.json.download}</button>
       <button type="button" onclick={copy}>{S.json.copy}</button>
       <span role="status" class="panel__help">
         {#if copied === true}{S.json.copied}{:else if copied === false}{S.json.copyFailed}{/if}

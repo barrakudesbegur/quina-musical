@@ -142,25 +142,6 @@ button:where([data-color]) {
   color: var(--palette-contrast);
 }
 
-/* Role colours for buttons and badges: components add one of these */
-.tone-primary {
-  background: var(--color-primary);
-}
-.tone-danger {
-  background: var(--color-danger);
-}
-.tone-ok {
-  background: var(--color-ok);
-}
-.tone-accent {
-  background: var(--color-accent);
-  color: var(--color-text-on-paper);
-}
-.tone-calm {
-  background: var(--color-cyan);
-  color: var(--color-text-on-paper);
-}
-
 .surface {
   background: var(--color-surface);
   border: var(--line-width) solid var(--color-line);

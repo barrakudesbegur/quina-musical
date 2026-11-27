@@ -57,7 +57,7 @@
     <textarea rows="10" bind:value={text} oninput={() => (result = null)} spellcheck="false" autocomplete="off" class="json-import__text"></textarea>
   </label>
   <div class="panel__actions">
-    <button type="button" class="tone-primary" onclick={check}>{S.json.check}</button>
+    <button type="button" data-color="orange" onclick={check}>{S.json.check}</button>
     <label class="field field--inline">
       <span class="field__label">{S.json.file}</span>
       <input type="file" accept="application/json,.json" onchange={pick} />
@@ -114,7 +114,7 @@
           </ul>
         </div>
         <div class="panel__actions">
-          <button type="button" class="tone-danger" onclick={() => replace(plan)}>{S.json.replace}</button>
+          <button type="button" data-color="red" onclick={() => replace(plan)}>{S.json.replace}</button>
           <button type="button" onclick={() => (result = null)}>{S.json.discard}</button>
         </div>
       {/if}

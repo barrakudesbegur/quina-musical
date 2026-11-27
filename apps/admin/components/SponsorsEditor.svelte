@@ -117,7 +117,7 @@
             <span class="panel__help">{S.sponsors.usage(usage)}</span>
             <button
               type="button"
-              class={confirming === sponsor.id ? 'tone-danger' : ''}
+              data-color={confirming === sponsor.id ? 'red' : undefined}
               onclick={() => remove(sponsor.id)}
               onblur={() => confirming === sponsor.id && (confirming = null)}
               aria-label={confirming === sponsor.id ? S.sponsors.confirmRemove(usage) : S.sponsors.removeLabel(sponsor.name || sponsor.id)}

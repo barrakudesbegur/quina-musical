@@ -51,7 +51,7 @@
           <div class="prize__tools">
             <button type="button" onclick={() => edit((b) => movePrize(b, j, j - 1))} disabled={j <= range.min} aria-label={S.prize.upLabel(j + 1)}>↑</button>
             <button type="button" onclick={() => edit((b) => movePrize(b, j, j + 1))} disabled={j >= range.max} aria-label={S.prize.downLabel(j + 1)}>↓</button>
-            <button type="button" class={confirming === j ? 'tone-danger' : ''} onclick={() => remove(j)} onblur={() => confirming === j && (confirming = null)} aria-label={confirming === j ? S.prize.confirmRemove : S.prize.removeLabel(j + 1)}>
+            <button type="button" data-color={confirming === j ? 'red' : undefined} onclick={() => remove(j)} onblur={() => confirming === j && (confirming = null)} aria-label={confirming === j ? S.prize.confirmRemove : S.prize.removeLabel(j + 1)}>
               {confirming === j ? S.prize.confirmRemove : S.prize.remove}
             </button>
           </div>

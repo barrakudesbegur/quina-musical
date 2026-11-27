@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Button from '../../../packages/ui/components/Button.svelte';
+  import { PLAYER } from '../actions.ts';
   // A card's optional name ("Àvia") and its icon.
   import { PLAYER_CONFIG } from '../config.ts';
   import type { SavedCard } from '../logic/storage.ts';
@@ -40,8 +42,8 @@
       onselect={(n) => (identity = n)}
     />
     <div class="rename__actions">
-      <button type="submit" class="big-button tone-primary">{S.save}</button>
-      <button type="button" class="big-button" onclick={onclose}>{S.renameDiscard}</button>
+      <Button {...PLAYER.renameSave} type="submit" />
+      <Button {...PLAYER.renameDiscard} onclick={onclose} />
     </div>
   </form>
 </Drawer>

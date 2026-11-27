@@ -81,11 +81,11 @@
   {#if asking}
     <div class="manual-resume__ask" role="group" aria-label={S.night.resumeAsk}>
       <p>{S.night.resumeAsk}</p>
-      <button type="button" class="tone-accent" onclick={send}>{S.night.resumeConfirm}</button>
+      <button type="button" data-color="gold" onclick={send}>{S.night.resumeConfirm}</button>
       <button type="button" onclick={() => (asking = false)}>{S.night.resumeCancel}</button>
     </div>
   {:else}
-    <button type="button" class="tone-accent" disabled={!parsed.point || !allowed || !commands.canSend} onclick={() => (asking = true)}>{S.night.resume}</button>
+    <button type="button" data-color="gold" disabled={!parsed.point || !allowed || !commands.canSend} onclick={() => (asking = true)}>{S.night.resume}</button>
   {/if}
   {#if !allowed}<p class="panel__help">{S.night.resumeNotNow}</p>{/if}
   <CommandStatus record={commands.last('resumeAt')} />
@@ -112,7 +112,7 @@
                 <p class="panel__help">{S.night.seedNote}</p>
               {/if}
             {/if}
-            <button type="button" class="tone-accent" onclick={() => useGame(game.gameId)}>{S.night.cloudUse}</button>
+            <button type="button" data-color="gold" onclick={() => useGame(game.gameId)}>{S.night.cloudUse}</button>
             {#if outcome?.gameId === game.gameId}<p role="status">{outcome.text}</p>{/if}
           </li>
         {/each}

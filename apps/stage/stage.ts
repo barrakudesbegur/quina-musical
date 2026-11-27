@@ -153,6 +153,9 @@ class Stage {
     this.box = h('div', 'stage__box', ...Object.values(this.scenes).map((s) => s.root), this.pause);
     this.link = h('div', { class: 'stage__link', hidden: true, attrs: { role: 'status' } }, h('span', 'stage__link-text'));
     root.classList.add('stage-root');
+    // The design system's density and ground (packages/ui/ds): the projector's scale, on the night sky.
+    root.dataset.density = 'projector';
+    root.dataset.ground = 'night';
     root.dataset.mode = mode;
     root.setAttribute('aria-live', 'off');
     root.replaceChildren(h('div', { class: 'stage__backdrop', attrs: { 'aria-hidden': 'true' } }), this.slot, h('div', { class: 'stage__drum-cover', attrs: { 'aria-hidden': 'true' } }), this.box, this.link);
@@ -424,7 +427,7 @@ class Stage {
     this.source.dispose();
     this.root.replaceChildren();
     this.root.classList.remove('stage-root');
-    for (const key of ['mode', 'scene', 'drum', 'link', 'paused', 'catalog']) delete this.root.dataset[key];
+    for (const key of ['mode', 'scene', 'drum', 'link', 'paused', 'catalog', 'density', 'ground']) delete this.root.dataset[key];
     if (this.mode === 'overlay') {
       document.documentElement.style.removeProperty('--stage-band-top');
       document.documentElement.style.removeProperty('--stage-band-height');

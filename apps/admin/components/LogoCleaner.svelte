@@ -147,7 +147,7 @@
 
   <p class="panel__help">{S.logo.storageNote}</p>
   <div class="panel__actions">
-    <button type="button" class="tone-primary" disabled={!encoded || tooBig || working} onclick={() => encoded && onuse(encoded.dataUrl)}>{S.logo.use}</button>
+    <button type="button" data-color="orange" disabled={!encoded || tooBig || working} onclick={() => encoded && onuse(encoded.dataUrl)}>{S.logo.use}</button>
     <button type="button" onclick={onclose}>{S.logo.close}</button>
   </div>
 </section>

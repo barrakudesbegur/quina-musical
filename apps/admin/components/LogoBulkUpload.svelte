@@ -51,7 +51,7 @@
   {#if skipped.length}<p class="panel__help">{S.bulk.skipped(skipped)}</p>{/if}
   {#if rows.length}
     <div class="panel__actions">
-      <button type="button" class="tone-primary" onclick={upload} disabled={running || rows.every((r) => r.state !== 'waiting')}>{S.bulk.upload(pairs.length)}</button>
+      <button type="button" data-color="orange" onclick={upload} disabled={running || rows.every((r) => r.state !== 'waiting')}>{S.bulk.upload(pairs.length)}</button>
       <span class="panel__help" role="status">{S.bulk.progress(done, pairs.length)}</span>
     </div>
     <ul class="logo-bulk__list">

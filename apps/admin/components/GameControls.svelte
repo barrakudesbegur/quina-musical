@@ -54,7 +54,7 @@
   <div class="game-controls__block">
     <p class="panel__help">{S.night.startHelp}</p>
     <div class="panel__actions">
-      <button type="button" class="tone-primary" onclick={start} disabled={!canStart}>{S.night.start}</button>
+      <button type="button" data-color="orange" onclick={start} disabled={!canStart}>{S.night.start}</button>
       {#if snapshot && scene !== 'before'}<span class="panel__help">{S.night.startOnlyBefore}</span>{/if}
       <CommandStatus record={commands.last('roundIntro')} />
     </div>
@@ -67,7 +67,7 @@
       <input type="text" bind:value={confirmText} autocomplete="off" autocapitalize="characters" spellcheck="false" />
     </label>
     <div class="panel__actions">
-      <button type="submit" class="tone-danger" disabled={!canEnd}>{S.night.end}</button>
+      <button type="submit" data-color="red" disabled={!canEnd}>{S.night.end}</button>
       <CommandStatus record={commands.last('endGame')} />
     </div>
   </form>

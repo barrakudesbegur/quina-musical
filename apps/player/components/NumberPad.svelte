@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Button from '../../../packages/ui/components/Button.svelte';
+  import { PLAYER } from '../actions.ts';
   // "Afegir cartró" (boards "App · calaix per afegir un cartró" and "afegir cartró: casos especials"): the card's
   // number on a paper field, an optional name, its icon (the first free one preselected), the smart keypad and one
   // "Desar". A digit key works only while the number can still become a printed card's (logic/pad.ts); "Desar" lights
@@ -163,11 +165,7 @@
         {/each}
       </div>
       <div class="number-pad__footer">
-        <button type="button" class="big-button tone-ok number-pad__save" disabled={!rules.canSave} onclick={save}>
-          <!-- The tick in the outline look: white over the ink, like the outlined words. -->
-          <Icon name="tickOutlined" />
-          {S.save}
-        </button>
+        <Button {...PLAYER.save} class="number-pad__save" disabled={!rules.canSave} onclick={save} />
       </div>
     </div>
   {/if}

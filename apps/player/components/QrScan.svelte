@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Button from '../../../packages/ui/components/Button.svelte';
+  import { PLAYER } from '../actions.ts';
   // The add-card drawer's camera (D141; board Mobil-Afegir-QR): the rear camera fills the drawer's body, dimmed outside
   // a gold viewfinder where a line sweeps (ANIMATIONS.md `qr-scan`). The browser asks for the camera the first time.
   // A QR of this year's card hands its number back (`qr-found`); any other QR shows an orange note and it keeps looking
@@ -81,7 +83,7 @@
       </span>
       <p class="qr-scan__off-title">{S.qrOffTitle}</p>
       <p class="qr-scan__off-text">{phase === 'denied' ? S.qrDenied : S.qrFailed}</p>
-      <button type="button" class="big-button tone-primary qr-scan__write" onclick={onwrite}>{S.qrWrite}</button>
+      <Button {...PLAYER.typeNumber} class="qr-scan__write" onclick={onwrite} />
     </div>
   {:else}
     <!-- svelte-ignore a11y_media_has_caption -->

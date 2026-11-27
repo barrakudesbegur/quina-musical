@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Button from '../../../packages/ui/components/Button.svelte';
+  import { PLAYER } from '../actions.ts';
   // The Celebration (ANIMATIONS.md `celebrate`). No winning card numbers, ever: people only care when it's them.
   // Someone else's win: "LÍNIA!" or "QUINA!" over the gold rays, a light confetti burst and the prize. The
   // player's own confirmed card (a confirmed winner that is one of the phone's cards): "La teva línia!" with
@@ -67,6 +69,6 @@
         {#if prize.headline[0].sponsor}<span class="celebration__sponsor">{S.sponsoredBy(prize.headline[0].sponsor)}</span>{/if}
       </p>
     {/if}
-    <button type="button" class="big-button celebration__close" onclick={onclose}>{S.close}</button>
+    <Button {...PLAYER.close} class="celebration__close" onclick={onclose} />
   </div>
 </div>

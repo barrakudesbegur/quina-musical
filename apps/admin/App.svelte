@@ -59,7 +59,7 @@
   <title>{route === 'xuleta' ? `${S.cheat.title} · ${session.current?.title ?? S.pageTitle}` : S.pageTitle}</title>
 </svelte:head>
 
-<div class="manage" data-route={route}>
+<div class="manage" data-route={route} data-density="console" data-ground="night">
   <header class="manage__header">
     <h1 class="manage__title">{S.heading} · {session.current?.title ?? ''}</h1>
     <StatusBar {show} {session} />

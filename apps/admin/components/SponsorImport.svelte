@@ -71,7 +71,7 @@
       </tbody>
     </table>
     <div class="panel__actions">
-      <button type="button" class="tone-primary" onclick={add} disabled={count === 0}>{S.sponsorImport.addCount(count)}</button>
+      <button type="button" data-color="orange" onclick={add} disabled={count === 0}>{S.sponsorImport.addCount(count)}</button>
       <button type="button" onclick={() => (entries = null)}>{S.sponsorImport.cancel}</button>
     </div>
   {/if}

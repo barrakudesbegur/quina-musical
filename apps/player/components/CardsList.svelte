@@ -1,4 +1,6 @@
 <script lang="ts">
+  import Button from '../../../packages/ui/components/Button.svelte';
+  import { PLAYER } from '../actions.ts';
   // Cartrons: the player's cards that count in this round as grids, the others listed by name, and "Afegir
   // cartró". The cards simply scroll (the stacking scroll waits for the user). Naming and removing them is in the
   // menu. Cards never reorder, in the Desgraciat round too: people find their card by its place.
@@ -9,7 +11,6 @@
   import { S } from '../strings.ts';
   import AddCardPrompt from './AddCardPrompt.svelte';
   import CardPanel from './CardPanel.svelte';
-  import Icon from './Icon.svelte';
   import Swatch from './Swatch.svelte';
 
   let { app }: { app: PlayerApp } = $props();
@@ -58,7 +59,7 @@
       </section>
     {/if}
     {#if app.data.cards.length < PLAYER_CONFIG.maxCards}
-      <button type="button" class="big-button tone-primary cards__add" aria-label={S.addCardLabel} aria-haspopup="dialog" onclick={() => app.open({ kind: 'pad' })}><Icon name="plus" /> {S.addCard}</button>
+      <Button {...PLAYER.addCard} class="cards__add" sound="floating" aria-label={S.addCardLabel} aria-haspopup="dialog" onclick={() => app.open({ kind: 'pad' })} />
     {/if}
   {/if}
 </section>
