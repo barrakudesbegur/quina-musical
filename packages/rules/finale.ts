@@ -6,14 +6,16 @@
 // - «Salvats!» (D181): a landing whose song is on every finalist still standing counts for none of them (D180).
 import type { FinaleInfo } from '@quina/protocol';
 
-/** The nino poses a finalist can have: images every screen already ships (packages/ui/assets/ninos/nino-<pose>.svg). */
-export const FINALE_POSES = ['alt-2', 'sardana', 'mans-adalt'] as const;
+/**
+ * The nino poses a finalist can have, one each (D182): the newest ninos (the user's canvas comment #86: "the newer ones
+ * look better"), every one a single standing figure, all different colours. Images every screen ships
+ * (packages/ui/assets/ninos/nino-<pose>.svg).
+ */
+export const FINALE_POSES = ['sardana', 'afro', 'ballet', 'cuiner', 'capita', 'rosa', 'angel', 'dimoni'] as const;
 export type FinalePose = (typeof FINALE_POSES)[number];
 
-/** The hue tints (degrees) of the first eight finalists, the boards' provisional colours (the first three keep their
- * drawings' own). Each further eight shift them by FINALE_HUE_STEP, so the 20 finalists the `finale` command allows never
- * share a look. */
-const FINALE_HUES = [0, 0, 0, 150, 130, 250, 290, 215] as const;
+/** The first eight finalists keep their drawings' own colours; each further eight turn every hue by this much, so the 20
+ * finalists the `finale` command allows never share a look. */
 const FINALE_HUE_STEP = 40;
 
 export interface FinaleLook {
@@ -25,7 +27,7 @@ export interface FinaleLook {
 /** The look of the finalist entered `index`-th (0-based): by the order entered, so adding one never changes the others'. */
 export function finaleLook(index: number): FinaleLook {
   const i = Math.max(0, Math.floor(index));
-  const hue = FINALE_HUES[i % FINALE_HUES.length] + FINALE_HUE_STEP * Math.floor(i / FINALE_HUES.length);
+  const hue = FINALE_HUE_STEP * Math.floor(i / FINALE_POSES.length);
   return { pose: FINALE_POSES[i % FINALE_POSES.length], hue: hue % 360 };
 }
 

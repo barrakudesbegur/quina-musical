@@ -2,6 +2,8 @@
 // reference box (1440×1080, the 4:3 projector), which is scaled to fit any screen and letterboxed. Look
 // values (colours, type, durations of CSS motion) are not here: they are CSS custom properties in
 // ui/tokens.css and stage/stage.css. Timings here are the ones the pure timing logic needs.
+import type { NinoMoment } from '../../packages/ui/concepts.ts';
+import type { NinoPose } from '../../packages/ui/ninos.ts';
 
 export const STAGE = Object.freeze({
   /** The Heat shown before the first `heat.sample` starts: a calm glow. */
@@ -43,51 +45,38 @@ export const STAGE = Object.freeze({
   /** `check-unreveal`: how long a step back's lifted mark stays (its lift-off is `--stage-dur-unreveal`, 240 ms). */
   checkUnrevealMs: 300,
   /**
-   * Ninos stickers, by where they show: URLs of the game-style versions (flat colour, sticker border) of
-   * `brand/ninos/`, kept in `assets/` and bundled by Vite. A null sticker is left out (its plaque centres its
-   * text instead).
-   * - `checkFailed`: the nino-espatxarrat (`brand/ninos/figures/nino-espatxarrat.svg`), fallen beside a failed
-   *   Check's big ✗ (`check-result`).
-   * - `before`: the sitting nino (`nino-sentat`) on the QR's top-right corner before the Game.
-   * - `intervalLeft`, `intervalRight`: the meditating and the dancing ninos (`nino-meditant`, `nino-sardana`)
-   *   either side of the Interval's countdown.
-   * - The Desgraciat round: `standUp`, the hands-up nino (`nino-mans-adalt`, from packages/ui/assets/ninos) beside
-   *   the round's name at its intro ("everyone stand up"; its Celebration's ninos are `finale.celebration.stickers`);
-   *   `checkFallen`, the sitting nino
-   *   beside a fallen card's big ✗ (`check-fallen`: the card sat down).
+   * Ninos stickers, by where they show: the moment whose pool they come from (packages/ui/concepts.ts › NINO_FOR; the
+   * stickers are packages/ui/assets/ninos). Each scene picks with ninoFor(moment, seed), the seed changing from one
+   * occurrence to the next (the card number, the round number), so the same figure doesn't come back every time
+   * (the user's canvas comment #86). A null moment leaves the sticker out (its plaque centres its text instead).
+   * - `checkFailed`: the squashed ninos beside a failed Check's big ✗ (`check-result`), by card number.
+   * - `before`: the sitting nino on the QR's top-right corner before the Game.
+   * - `interval`: the two ninos either side of the Interval's countdown, by the coming round.
+   * - The Desgraciat round: `standUp`, a hands-up nino beside the round's name at its intro ("everyone stand up"; its
+   *   Celebration's ninos are `finale.celebration`); `checkFallen`, the sitting nino beside a fallen card's big ✗
+   *   (`check-fallen`: the card sat down).
    */
   stickers: Object.freeze({
-    checkFailed: new URL('./assets/nino-espatxarrat.svg', import.meta.url).href as string | null,
-    checkFallen: new URL('./assets/nino-sentat.svg', import.meta.url).href as string | null,
-    standUp: new URL('../../packages/ui/assets/ninos/nino-mans-adalt.svg', import.meta.url).href as string | null,
-    before: new URL('./assets/nino-sentat.svg', import.meta.url).href as string | null,
-    intervalLeft: new URL('./assets/nino-meditant.svg', import.meta.url).href as string | null,
-    intervalRight: new URL('./assets/nino-sardana.svg', import.meta.url).href as string | null,
+    checkFailed: 'failedCheck' as NinoMoment | null,
+    checkFallen: 'fallen' as NinoMoment | null,
+    standUp: 'standUp' as NinoMoment | null,
+    before: 'before' as NinoMoment | null,
+    interval: 'break' as NinoMoment | null,
   }),
   /**
    * The Desgraciat's finale on stage (board Projector-Desgraciat-Final; ANIMATIONS.md › The finale on stage):
    * - `band`: the drum's band while it's on, smaller and higher so the stage fits under the title (the show page's drum
    *   follows `--stage-band-*`);
-   * - `ninos`: each finalist's pose (packages/rules/finale.ts `FINALE_POSES`), tinted by its hue; `winner`: the party nino;
+   * - each finalist's nino is their pose (packages/rules/finale.ts `FINALE_POSES`), tinted by its hue; the winner wears
+   *   `winner`, the party nino;
    * - `confetti`: «Salvats!»'s slow paper confetti (D185), from the ribbon, in the look of `STAGE.paper`;
-   * - `celebration`: the «QUINA POTRA!» Celebration's stickers.
+   * - `celebration`: the «QUINA POTRA!» Celebration's three stickers, from the moment's pool by round.
    */
   finale: Object.freeze({
     band: Object.freeze({ top: 70, height: 330 }),
-    ninos: Object.freeze({
-      'alt-2': new URL('../../packages/ui/assets/ninos/nino-alt-2.svg', import.meta.url).href,
-      sardana: new URL('../../packages/ui/assets/ninos/nino-sardana.svg', import.meta.url).href,
-      'mans-adalt': new URL('../../packages/ui/assets/ninos/nino-mans-adalt.svg', import.meta.url).href,
-    }),
-    winner: new URL('../../packages/ui/assets/ninos/nino-confeti.svg', import.meta.url).href,
+    winner: 'confeti' as NinoPose,
     confetti: Object.freeze({ count: 180, durationMs: 9000, origin: Object.freeze({ x: 0.5, y: 0.56 }), spread: 0.5 }),
-    celebration: Object.freeze({
-      stickers: Object.freeze({
-        topLeft: new URL('../../packages/ui/assets/ninos/nino-mans-adalt.svg', import.meta.url).href as string | null,
-        topRight: new URL('../../packages/ui/assets/ninos/nino-confeti.svg', import.meta.url).href as string | null,
-        bottomLeft: new URL('../../packages/ui/assets/ninos/nino-salt-cames-obertes.svg', import.meta.url).href as string | null,
-      }),
-    }),
+    celebration: Object.freeze({ stickers: 'lastStanding' as NinoMoment | null }),
   }),
   /** The sponsor strip before the Game and in the Interval (`sponsor-pages`): plates per row, and how long a page shows. */
   sponsorsPerPage: 8,

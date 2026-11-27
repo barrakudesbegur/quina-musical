@@ -11,6 +11,8 @@ import { priceLabel, STAGE_TEXT } from '../strings.ts';
 import type { IntervalView } from '../view.ts';
 import { h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
 import { CountdownChip, MiniCard, SponsorList, stickerImage } from './parts.ts';
+import { ninosFor } from '../../../packages/ui/concepts.ts';
+import { setNino } from '../../../packages/ui/components/nino-dom.ts';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -85,6 +87,8 @@ export class IntervalScene implements SceneRenderer<IntervalView> {
   private readonly priceText: HTMLElement;
   private readonly priceTag: HTMLElement;
   private body: IntervalView | null = null;
+  /** The two ninos either side of the countdown: a different pair for each Break (NINO_FOR.break, by the coming round). */
+  private readonly ninos: (HTMLImageElement | null)[];
 
   constructor() {
     this.root.dataset.testid = 'interval';
@@ -94,9 +98,10 @@ export class IntervalScene implements SceneRenderer<IntervalView> {
     this.priceTag = h('p', { class: 'interval__price', hidden: true, data: { testid: 'interval-price' } }, this.price.root, this.priceText);
     this.words.root.classList.add('interval__words');
     this.words.root.setAttribute('role', 'timer');
-    const left = stickerImage(STAGE.stickers.intervalLeft, 'nino-meditant', 'interval__nino interval__nino--left');
-    const right = stickerImage(STAGE.stickers.intervalRight, 'nino-sardana', 'interval__nino interval__nino--right');
-    for (const s of [left, right]) if (s) setData(s, 'anim', 'idle');
+    const left = stickerImage(STAGE.stickers.interval, 'interval__nino interval__nino--left');
+    const right = stickerImage(STAGE.stickers.interval, 'interval__nino interval__nino--right');
+    this.ninos = [left, right];
+    for (const s of this.ninos) if (s) setData(s, 'anim', 'idle');
     this.root.append(
       this.title,
       this.plate,
@@ -108,6 +113,11 @@ export class IntervalScene implements SceneRenderer<IntervalView> {
 
   render(body: IntervalView): void {
     this.body = body;
+    const moment = STAGE.stickers.interval;
+    if (moment) {
+      const pair = ninosFor(moment, body.nextRound.number * 2, 2);
+      this.ninos.forEach((img, i) => img && setNino(img, { pose: pair[i % pair.length] }));
+    }
     setText(this.plate, body.plate);
     setData(this.plate, 'special', body.nextRound.special ? 'true' : null);
     setHidden(this.priceTag, body.price === null);

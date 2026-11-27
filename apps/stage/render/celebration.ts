@@ -14,7 +14,16 @@ import type { CelebrationView } from '../view.ts';
 import { h, playAnim, setData, setHidden, setText } from './dom.ts';
 import { Garland } from './garland.ts';
 import { PrizeBlock, stickerImage } from './parts.ts';
+import { ninosFor } from '../../../packages/ui/concepts.ts';
+import { setNino } from '../../../packages/ui/components/nino-dom.ts';
 import { sceneRoot, type SceneEnv, type SceneRenderer } from './scene.ts';
+
+/** A small number from a string key, the same for the same key. */
+function seedOf(key: string): number {
+  let n = 0;
+  for (const ch of key) n = (n * 31 + ch.charCodeAt(0)) % 9973;
+  return n;
+}
 
 export class CelebrationScene implements SceneRenderer<CelebrationView> {
   readonly root = sceneRoot('celebration');
@@ -39,9 +48,9 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
     this.paper = h('canvas', { class: 'celebration__paper', attrs: { 'aria-hidden': 'true' } });
     this.shout = h('h1', 'shout');
     this.roundPlate = h('p', { class: 'celebration__round', hidden: true }, STAGE_TEXT.desgraciatRoundName);
-    const spots = STAGE.finale.celebration.stickers;
+    const moment = STAGE.finale.celebration.stickers;
     this.stickers = (['topLeft', 'topRight', 'bottomLeft'] as const).flatMap((spot) => {
-      const img = stickerImage(spots[spot], spot, `celebration__sticker celebration__sticker--${spot}`);
+      const img = stickerImage(moment, `celebration__sticker celebration__sticker--${spot}`);
       if (img) img.hidden = true;
       return img ? [img] : [];
     });
@@ -68,6 +77,12 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
     setHidden(this.shout, shout === null);
     setHidden(this.roundPlate, !standing);
     for (const sticker of this.stickers) setHidden(sticker, !standing);
+    const moment = STAGE.finale.celebration.stickers;
+    if (standing && moment) {
+      // Three different ninos round the title, a different set each night's key (NINO_FOR.lastStanding).
+      const poses = ninosFor(moment, seedOf(body.key), this.stickers.length);
+      this.stickers.forEach((img, i) => setNino(img, { pose: poses[i % poses.length] }));
+    }
     this.prize.set(body.prize);
     if (body.key !== this.key) {
       this.key = body.key;

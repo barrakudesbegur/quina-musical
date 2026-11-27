@@ -24,8 +24,8 @@ const finale = (patch: Partial<FinaleInfo> = {}): FinaleInfo => ({
 test('each finalist keeps one look, by the order entered; 20 finalists never share one', () => {
   const looks = Array.from({ length: 20 }, (_, i) => finaleLook(i));
   assert.equal(new Set(looks.map((l) => `${l.pose}/${l.hue}`)).size, 20);
-  assert.deepEqual(looks.slice(0, 3).map((l) => l.pose), [...FINALE_POSES]);
-  assert.deepEqual(looks.slice(0, 3).map((l) => l.hue), [0, 0, 0], "the first three keep their drawings' colours");
+  assert.deepEqual(looks.slice(0, FINALE_POSES.length).map((l) => l.pose), [...FINALE_POSES]);
+  assert.ok(looks.slice(0, FINALE_POSES.length).every((l) => l.hue === 0), "the first eight keep their drawings' colours");
   const row = finaleRow(finale(), { position: 3, spinning: false });
   assert.deepEqual(row.map((s) => s.cardId), [12, 34, 57], 'ascending, so they can line up');
   assert.deepEqual(row.find((s) => s.cardId === 57)?.look, finaleLook(0), '#57 was entered first');

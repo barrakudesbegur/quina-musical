@@ -1,0 +1,67 @@
+/*
+ * F1 · Nino (components-v2.md § 7; Nino.svelte, nino-dom.ts for the projector). A Barrakudes figure as a sticker: the
+ * art carries its flat colour, ink outline and white border (packages/ui/assets/ninos, tools/ninos/stickers.ts); this
+ * adds the drop, the tilt, the finalists' tint, the faded look and the idle motion. Decorative everywhere.
+ * Every rule is in :where() (zero specificity), so a scene's placement (its height, tilt, entrance transition) always
+ * wins, whatever order the stylesheets load in. Variables: --nino-size (its height), --nino-tilt, --nino-hue, --nino-drop.
+ */
+:where(.nino) {
+  --nino-size: 100%;
+  --nino-tilt: 0deg;
+  --nino-hue: 0deg;
+  --nino-drop: drop-shadow(0 8px 0 rgb(10 14 38 / 0.55));
+  --nino-sway-period: 8s;
+}
+
+:where(.nino) {
+  display: block;
+  width: auto;
+  height: var(--nino-size);
+  rotate: var(--nino-tilt);
+  filter: var(--nino-drop) hue-rotate(var(--nino-hue));
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+  transition:
+    opacity var(--dur-finale-fall, 350ms) var(--ease-out),
+    filter var(--dur-finale-fall, 350ms) var(--ease-out);
+}
+
+:where(.nino[data-flip]) {
+  scale: -1 1;
+}
+
+/* faded: a Fallen finalist (D182), 45 % and a quarter of its colour; a fade, so it runs with reduced motion too */
+:where(.nino[data-faded]) {
+  opacity: 0.45;
+  filter: var(--nino-drop) hue-rotate(var(--nino-hue)) saturate(0.25);
+}
+
+/* idle (ANIMATIONS.md › idle, pause): sway ±3° round its own tilt; breathe 1 → 1.04 over 4 s. Moving, so only with
+   motion allowed (and the phone's data-motion="full"); still otherwise. */
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) :where(.nino[data-motion='sway']) {
+    animation: nino-sway var(--nino-sway-period) ease-in-out infinite alternate;
+  }
+
+  :where([data-density='console'], [data-density='projector'], [data-motion='full']) :where(.nino[data-motion='breathe']) {
+    transform-origin: 50% 100%;
+    animation: nino-breathe 4s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes nino-sway {
+  from {
+    transform: rotate(-3deg);
+  }
+  to {
+    transform: rotate(3deg);
+  }
+}
+
+@keyframes nino-breathe {
+  to {
+    transform: scale(1.04);
+  }
+}

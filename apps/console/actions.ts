@@ -70,6 +70,11 @@ export const ACTIONS = {
   padSubmit: { color: colorOf('claim'), icon: 'check', label: S.numpad.submit([]), sound: 'submit' },
   finaleClose: { color: 'grey', icon: 'play', label: S.finale.close },
   finaleGo: { color: colorOf('claim'), icon: 'podium', iconPlacement: 'top', label: S.finale.begin, sound: 'submit' },
+  // ---- the finale's head (FinaleStage): the compact height (D-h, #87), the small buttons' sound ----
+  /** «Editar»: a toggle; on, it turns gold (`finaleEditOn`). */
+  finaleEdit: { color: 'grey', variant: 'soft', size: 'xs', icon: 'pencil', label: S.finale.edit, sound: 'small' },
+  finaleEditOn: { color: colorOf('celebration'), size: 'xs', icon: 'pencil', label: S.finale.edit, sound: 'small' },
+  finaleAddOne: { color: colorOf('claim'), size: 'xs', icon: 'plus', label: S.finale.addOne, sound: 'small' },
 
   // ---- the review (ReviewPanel) ----
   reviewContinue: { color: colorOf('checkReveal'), icon: 'eye', iconPlacement: 'top', label: S.review.continue },

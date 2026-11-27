@@ -7,6 +7,8 @@
   import type { PlayerApp } from '../model.svelte.ts';
   import { historyOf, plannedStarts, prizeRounds, roundNameOf } from '../logic/view.ts';
   import { drumSongs } from '../logic/reel.ts';
+  import { ninoFor, type NinoMoment } from '../../../packages/ui/concepts.ts';
+  import { ninoUrl } from '../../../packages/ui/ninos.ts';
   import { S } from '../strings.ts';
   import AddCardPrompt from './AddCardPrompt.svelte';
   import Countdown from './Countdown.svelte';
@@ -14,6 +16,10 @@
   import Reel from './Reel.svelte';
   import RoundMark from './RoundMark.svelte';
   import Shuffle from './Shuffle.svelte';
+
+  /** The scene's nino for this round (NINO_FOR; the user's canvas comment #86): a different one from round to round. */
+  const sticker = (moment: NinoMoment, seed: number | null | undefined): string | undefined =>
+    seed === null || seed === undefined ? undefined : `url("${ninoUrl(ninoFor(moment, seed))}")`;
 
   let { app, compact = false, stopped = false }: { app: PlayerApp; compact?: boolean; stopped?: boolean } = $props();
   const prizes = $derived(prizeRounds(app.plan, app.state, app.data.cards.map((c) => c.id)));
@@ -30,7 +36,14 @@
   const nextName = $derived(nextNumber === null ? '' : roundNameOf(nextNumber, app.state, app.plan));
 </script>
 
-<section class="now" data-scene={app.scene} data-size={compact ? 'strip' : 'full'}>
+<section
+  class="now"
+  data-scene={app.scene}
+  data-size={compact ? 'strip' : 'full'}
+  style:--player-sticker-round={sticker('roundIntro', app.focusRound)}
+  style:--player-sticker-interval={sticker('break', nextNumber)}
+  style:--player-sticker-stand-up={sticker('standUp', app.focusRound)}
+>
   {#if app.scene === 'before'}
     <h2 class="now__heading">{S.welcome}</h2>
     {#if !app.data.cards.length}

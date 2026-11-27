@@ -2,8 +2,8 @@
   The Dempeus tab once the Desgraciat's finale is on (D187; the Consola-Desgraciat-Final board ⑥–⑧, ⓐ–ⓒ; ANIMATIONS.md ›
   The finale on stage › Console). The tab becomes the stage, in the same order as the projector:
   - the head: how many stand («8 a l'escenari», then «5 dempeus»), «Salvats!» beside it until the next Spin (D181),
-    «+ Afegir» while editing, «Editar» (off by default, D183) and «Al revés» (this tablet's own order, facing the room);
-  - one nino per finalist over their number plate (packages/rules/finale.ts): a fallen one faded with a ✗ and a red
+    «+ Afegir» while editing, «Editar» (off by default, D183; both the compact Button size xs, #87) and «Al revés» (this tablet's own order, facing the room);
+  - one nino per finalist (the generic Nino, F1) over their number plate (packages/rules/finale.ts): a fallen one faded with a ✗ and a red
     plate until the next Spin (D182); while editing, an × on each standing one removes them at once, no confirmation;
   - one left: the winner in a gold-ringed box with the party nino; the big button is then «Celebrem!» (ThumbCluster).
   Nothing here brings a fallen finalist back: only «Enrere» undoes a landing (D183).
@@ -17,12 +17,17 @@
   import { getConsole } from '../context.ts';
   import { finaleTabView } from '../logic/finale.ts';
   import { S } from '../strings.ts';
+  import Button from '../../../packages/ui/components/Button.svelte';
+  import Nino from '../../../packages/ui/components/Nino.svelte';
+  import { ninoFor } from '../../../packages/ui/concepts.ts';
+  import { ACTIONS } from '../actions.ts';
   import Icon from './Icon.svelte';
-  import Nino from './Nino.svelte';
 
   let { finale }: { finale: FinaleInfo } = $props();
 
   const model = getConsole();
+  /** The winner wears the party nino (NINO_FOR.finaleWinner). */
+  const FINALE_WINNER = ninoFor('finaleWinner', 0);
   const uid = $props.id();
   const F = S.finale;
   const T = CONSOLE.finale;
@@ -49,14 +54,17 @@
       {/if}
       <span class="finale-stage__spacer"></span>
       {#if editing}
-        <button type="button" class="mini finale-stage__add" data-anim="press" data-testid="finale-add-one" disabled={!model.can('finale')} onclick={() => model.openFinalePad()}>
-          <Icon name="plus" /><span>{F.addOne}</span>
-        </button>
+        <Button {...ACTIONS.finaleAddOne} class="finale-stage__add" data-testid="finale-add-one" disabled={!model.can('finale')} onclick={() => model.openFinalePad()} />
       {/if}
       {#if finale.winner === null}
-        <button type="button" class="mini finale-stage__edit" data-anim="press finale-edit" aria-pressed={editing} data-testid="finale-edit" onclick={() => (model.finaleEditing = !model.finaleEditing)}>
-          <Icon name="edit" /><span>{F.edit}</span>
-        </button>
+        <Button
+          {...(editing ? ACTIONS.finaleEditOn : ACTIONS.finaleEdit)}
+          class="finale-stage__edit"
+          data-anim="finale-edit"
+          pressed={editing}
+          data-testid="finale-edit"
+          onclick={() => (model.finaleEditing = !model.finaleEditing)}
+        />
       {/if}
       <button type="button" class="finale-stage__switch" role="switch" aria-checked={model.finaleReversed} data-anim="press" data-testid="finale-reversed" onclick={() => model.setFinaleReversed(!model.finaleReversed)}>
         <Icon name="swap" /><span class="finale-stage__switch-label">{F.reversed}</span>
@@ -78,7 +86,7 @@
         >
           {#key savedKey}
             <span class="finale-stage__figure" data-anim={savedKey && spot.fate === 'standing' ? 'finale-safe' : undefined} style:--tilt="{i % 2 ? -8 : 8}deg">
-              <Nino pose={spot.look.pose} hue={spot.look.hue} winner={spot.fate === 'winner'} />
+              <Nino pose={spot.fate === 'winner' ? FINALE_WINNER : spot.look.pose} hue={spot.fate === 'winner' ? null : spot.look.hue} faded={spot.fate === 'fallen'} motion="none" />
               {#if spot.fate === 'fallen'}<span class="finale-stage__cross" aria-hidden="true"><Icon name="cross" /></span>{/if}
             </span>
           {/key}

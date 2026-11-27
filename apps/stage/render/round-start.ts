@@ -9,7 +9,7 @@ import { STAGE_TEXT } from '../strings.ts';
 import type { AnimDetail } from '../model/moments.ts';
 import type { RoundStartView } from '../view.ts';
 import { CoverArt, h, playAnim, setData, setHidden, setVar } from './dom.ts';
-import { PrizeBlock, RoundTitle, stickerImage } from './parts.ts';
+import { PrizeBlock, RoundTitle, pickSticker, stickerImage } from './parts.ts';
 import { sceneRoot, type SceneEnv, type SceneRenderer } from './scene.ts';
 
 /** The phases in which the grid covers the screen. */
@@ -36,7 +36,7 @@ export class RoundStartScene implements SceneRenderer<RoundStartView> {
   constructor(env: SceneEnv) {
     this.env = env;
     this.special = h('p', { class: 'round-start__rule', hidden: true }, STAGE_TEXT.specialRule);
-    this.standUp = stickerImage(STAGE.stickers.standUp, 'nino-mans-adalt', 'round-start__sticker');
+    this.standUp = stickerImage(STAGE.stickers.standUp, 'round-start__sticker');
     if (this.standUp) this.standUp.hidden = true;
     this.intro = h(
       'div',
@@ -56,6 +56,7 @@ export class RoundStartScene implements SceneRenderer<RoundStartView> {
     this.title.set(body.round);
     setHidden(this.special, !body.round?.special);
     if (this.standUp) setHidden(this.standUp, !body.round?.desgraciat);
+    pickSticker(this.standUp, STAGE.stickers.standUp, body.round?.number ?? 0);
     setData(this.root, 'round', body.round?.desgraciat ? 'desgraciat' : null);
     this.prizes.forEach((block, i) => block.set(body.prizes[i] ?? null));
     const key = body.shuffle?.key ?? null;

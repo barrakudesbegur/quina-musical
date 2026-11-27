@@ -8,6 +8,7 @@ import { STAGE } from '../config.ts';
 import { fateAt, finaleLayout, type FinaleNino, type FinaleView } from '../model/finale.ts';
 import type { AnimDetail } from '../model/moments.ts';
 import { runPaperConfetti } from '../../../packages/ui/motion/paper-confetti.ts';
+import { ninoUrl } from '../../../packages/ui/ninos.ts';
 import { STAGE_TEXT } from '../strings.ts';
 import { h, playAnim, setData, setHidden, setVar } from './dom.ts';
 import type { SceneEnv } from './scene.ts';
@@ -43,7 +44,7 @@ class NinoSlot {
   /** The fate on screen now; the winner wears the party nino. */
   show(fate: FinaleNino['fate'], pose: FinaleNino['pose']): void {
     setData(this.root, 'fate', fate);
-    const src = fate === 'win' ? STAGE.finale.winner : STAGE.finale.ninos[pose];
+    const src = ninoUrl(fate === 'win' ? STAGE.finale.winner : pose);
     if (src !== this.src) {
       this.src = src;
       this.img.src = src;

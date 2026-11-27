@@ -9,6 +9,8 @@ import { imageSources } from '../../../packages/ui/data/media.ts';
 import { STAGE_TEXT, type CountdownContext } from '../strings.ts';
 import { CoverArt, h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
 import { sponsorPage } from '../model/sponsors.ts';
+import { ninoFor, type NinoMoment } from '../../../packages/ui/concepts.ts';
+import { ninoElement, setNino } from '../../../packages/ui/components/nino-dom.ts';
 
 /** The round's name (RoundView's): "Quina 4", "Quina Especial" or "Quina Desgraciada". */
 export class RoundTitle {
@@ -230,7 +232,15 @@ export class MiniCard {
   }
 }
 
-/** A nino sticker (game-style, with its white border), or null when the stage has none for this spot. */
-export function stickerImage(url: string | null, name: string, extraClass: string): HTMLImageElement | null {
-  return url ? h('img', { class: `sticker ${extraClass}`.trim(), data: { sticker: name }, attrs: { src: url, alt: '', decoding: 'async', draggable: 'false' } }) : null;
+/**
+ * A nino sticker (F1, packages/ui/components/nino-dom.ts) from a moment's pool (NINO_FOR), or null when the stage has
+ * none for this spot. It starts on the pool's first pose; `pickSticker` changes it per occurrence.
+ */
+export function stickerImage(moment: NinoMoment | null, extraClass: string): HTMLImageElement | null {
+  return moment ? ninoElement({ pose: ninoFor(moment, 0) }, `sticker ${extraClass}`) : null;
+}
+
+/** The moment's nino for this occurrence (a card number, a round number), so the same one doesn't always come back. */
+export function pickSticker(img: HTMLImageElement | null, moment: NinoMoment | null, seed: number): void {
+  if (img && moment) setNino(img, { pose: ninoFor(moment, seed) });
 }

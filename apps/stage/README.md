@@ -51,7 +51,7 @@ Songs are named only from landings (the `transition.landed` event, or the snapsh
 - **No plan:** the night's preview, the prize and sponsor blocks hide. "Quina N de M" falls back to `game.roundsTotal`. The Check's type badge still names the type (below).
 - **`card-types.json` missing or broken:** card type names, colours and prices fall back to the plan's old copy (`plan.cardTypes`, deprecated) while plans carry one, then to "Cartró <id>" in a neutral colour.
 - **QR can't be drawn:** the short link shows in its place.
-- **Ninos stickers:** the game-style versions (flat colour, white sticker border) of `brand/ninos/` live in `assets/` and are bundled by Vite (`STAGE.stickers`): `nino-sentat` on the QR before the Game, `nino-meditant` and `nino-sardana` either side of the Interval's countdown, `nino-espatxarrat` beside a failed Check's ✗. A null sticker is left out.
+- **Ninos stickers:** the game-style versions (flat colour, white sticker border) of `brand/ninos/` live in `packages/ui/assets/ninos` (made by `tools/ninos/stickers.ts`) and are drawn by `packages/ui/components/nino-dom.ts`. `STAGE.stickers` names each spot's moment, and the scene picks from that moment's pool (`packages/ui/concepts.ts` › `NINO_FOR`) by a seed that changes each time (the card number, the round), so the same nino doesn't always come back: the sitting nino on the QR before the Game, two different ninos either side of each Interval's countdown, a squashed nino beside a failed Check's ✗. A null moment is left out.
 
 ### The Desgraciat's finale
 

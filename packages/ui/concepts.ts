@@ -7,6 +7,7 @@
 import { CA } from './i18n/ca.ts';
 import type { PaletteColor, Pattern } from './components/types.ts';
 import type { LineIconName } from './icons/line.ts';
+import type { NinoPose } from './ninos.ts';
 
 /** A drawing in the one icon family (H1), by what it shows. */
 export type Drawing = LineIconName;
@@ -43,3 +44,52 @@ export const CONCEPTS = {
 } as const satisfies Record<string, ConceptLook>;
 
 export type ConceptId = keyof typeof CONCEPTS;
+
+/**
+ * Which ninos each moment shows (components-v2.md F1 and § 11; the user's canvas comment #86, D-u): a small pool per
+ * moment, so the same figure doesn't come back every time. The newest set leads each pool (the user: "the newer ones
+ * look better"). A moment whose pose carries a meaning keeps it alone: the sitting nino on the QR's corner and on a
+ * card that sat down (D72), the meditating one breathing through the Pause, the party nino for the finale's winner.
+ * The finalists' poses are packages/rules/finale.ts › FINALE_POSES. A screen picks with ninoFor(moment, seed).
+ */
+export const NINO_FOR = {
+  /** Before the Game, on the QR's corner: it sits there. */
+  before: ['sentat'],
+  roundIntro: ['afro', 'rosa', 'capita', 'cuiner', 'alt-2'],
+  /** The Desgraciat round's intro: "everyone stand up". */
+  standUp: ['mans-adalt', 'ballet', 'sardana-alt'],
+  lineCelebration: ['astronauta', 'basket', 'bikini', 'salt-cames-obertes'],
+  bingoCelebration: ['angel', 'ballet-2', 'confeti', 'mans-adalt'],
+  validCheck: ['xocantla', 'rosa'],
+  /** The Break, either side of its countdown (two at once). */
+  break: ['meditant', 'sardana', 'snorkel', 'peix', 'mag', 'sardana-alt', 'cuiner'],
+  pause: ['meditant'],
+  /** Beside the big ✗, sized by its width: the squashed ninos that lie flat (the dizzy one is too tall there). */
+  failedCheck: ['espatxarrat', 'caiguent'],
+  /** A card that sat down in the Desgraciat round (D72). */
+  fallen: ['sentat'],
+  /** «QUINA POTRA!»: the last one standing's Celebration (three at once). */
+  lastStanding: ['mans-adalt', 'confeti', 'salt-cames-obertes', 'ballet', 'afro'],
+  finaleWinner: ['confeti'],
+  legacy: ['confeti'],
+  endOfNight: ['fent-una-torre', 'dimoni', 'ballet-2'],
+} as const satisfies Record<string, readonly NinoPose[]>;
+
+export type NinoMoment = keyof typeof NINO_FOR;
+
+/**
+ * The moment's nino for a seed that changes from one occurrence to the next (a round number, a card number, a count):
+ * consecutive seeds never give the same pose twice in a row while the pool has more than one.
+ */
+export function ninoFor(moment: NinoMoment, seed: number): NinoPose {
+  const pool: readonly NinoPose[] = NINO_FOR[moment];
+  const i = Math.abs(Math.trunc(Number.isFinite(seed) ? seed : 0)) % pool.length;
+  return pool[i];
+}
+
+/** `count` different ninos of a moment at once (the Break's two, «QUINA POTRA!»'s three), starting at the seed's. */
+export function ninosFor(moment: NinoMoment, seed: number, count: number): NinoPose[] {
+  const pool: readonly NinoPose[] = NINO_FOR[moment];
+  const start = Math.abs(Math.trunc(Number.isFinite(seed) ? seed : 0));
+  return Array.from({ length: Math.min(count, pool.length) }, (_, k) => pool[(start + k) % pool.length]);
+}

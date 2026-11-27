@@ -34,7 +34,7 @@ import type { AnimDetail } from '../model/moments.ts';
 import { checkResultDetail, STAGE_TEXT } from '../strings.ts';
 import type { CheckSceneView } from '../view.ts';
 import { CoverArt, h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
-import { MiniCard, stickerImage } from './parts.ts';
+import { MiniCard, pickSticker, stickerImage } from './parts.ts';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
 
 interface CellNodes {
@@ -132,9 +132,9 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     this.type = h('div', { class: 'check__type', data: { state: 'pending' } }, this.typeCard.root, this.typeName, this.typeMark);
     this.grid = h('div', 'card-grid');
     this.resultTitle = h('p', 'check-result__title');
-    this.sticker = stickerImage(STAGE.stickers.checkFailed, 'nino-espatxarrat', 'check-result__sticker');
+    this.sticker = stickerImage(STAGE.stickers.checkFailed, 'check-result__sticker');
     if (this.sticker) this.sticker.hidden = true;
-    this.fallenSticker = stickerImage(STAGE.stickers.checkFallen, 'nino-sentat', 'check-result__sticker check-result__sticker--fallen');
+    this.fallenSticker = stickerImage(STAGE.stickers.checkFallen, 'check-result__sticker check-result__sticker--fallen');
     if (this.fallenSticker) this.fallenSticker.hidden = true;
     this.result = h(
       'div',
@@ -303,8 +303,10 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     setData(this.result, 'result', result);
     if (this.sticker) setHidden(this.sticker, !failed || (fallen && this.fallenSticker !== null));
     if (this.fallenSticker) setHidden(this.fallenSticker, !fallen);
-    const sticker = fallen && this.fallenSticker ? 'nino-sentat' : failed && this.sticker ? 'nino-espatxarrat' : null;
-    setData(this.result, 'sticker', sticker);
+    pickSticker(this.sticker, STAGE.stickers.checkFailed, check.cardId);
+    pickSticker(this.fallenSticker, STAGE.stickers.checkFallen, check.cardId);
+    const sticker = fallen && this.fallenSticker ? this.fallenSticker : failed && this.sticker ? this.sticker : null;
+    setData(this.result, 'sticker', sticker ? `nino-${sticker.dataset.pose}` : null);
     setHidden(this.bigCard.root, !(failed && check.cardType?.ok === false));
     setHidden(this.resultTitle, failed);
     const miss = firstMiss(check);

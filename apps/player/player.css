@@ -112,16 +112,17 @@
   --player-back-gold: repeating-linear-gradient(45deg, var(--color-gold) 0 7px, color-mix(in srgb, var(--color-gold) 86%, var(--color-line)) 7px 14px);
   --player-back-badge: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='17' fill='%23FFF6E5' stroke='%2317132B' stroke-width='4'/%3E%3Cpath d='M17 26V13l9-2v12' fill='none' stroke='%2317132B' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='14.5' cy='26' r='3' fill='%2317132B'/%3E%3Ccircle cx='23.5' cy='23.5' r='3' fill='%2317132B'/%3E%3C/svg%3E");
 
-  /* the ninos stickers (flat colour, white sticker border), by screen */
+  /* the ninos stickers (flat colour, white sticker border), by screen: each one the first of its moment's pool
+     (packages/ui/concepts.ts › NINO_FOR); NowPanel swaps the round's, the Break's and the stand-up's per round (#86) */
   --player-sticker-shadow: drop-shadow(0 6px 0 rgb(10 14 38 / 0.55));
   --player-sticker-welcome: url('../../packages/ui/assets/ninos/nino-sentat.svg');
-  --player-sticker-round: url('../../packages/ui/assets/ninos/nino-alt-2.svg');
+  --player-sticker-round: url('../../packages/ui/assets/ninos/nino-afro.svg');
   --player-sticker-interval: url('../../packages/ui/assets/ninos/nino-sardana.svg');
   --player-sticker-after: url('../../packages/ui/assets/ninos/nino-fent-una-torre.svg');
   --player-sticker-pause: url('../../packages/ui/assets/ninos/nino-meditant.svg');
   --player-sticker-valid: url('../../packages/ui/assets/ninos/nino-xocantla.svg');
-  --player-sticker-line: url('../../packages/ui/assets/ninos/nino-salt-cames-obertes.svg');
-  --player-sticker-bingo: url('../../packages/ui/assets/ninos/nino-mans-adalt.svg');
+  --player-sticker-line: url('../../packages/ui/assets/ninos/nino-astronauta.svg');
+  --player-sticker-bingo: url('../../packages/ui/assets/ninos/nino-angel.svg');
   --player-sticker-legacy: url('../../packages/ui/assets/ninos/nino-confeti.svg');
   --player-sticker-seated: url('../../packages/ui/assets/ninos/nino-sentat.svg'); /* on a card that sat down */
   --player-sticker-stand-up: url('../../packages/ui/assets/ninos/nino-mans-adalt.svg'); /* everyone stand up */

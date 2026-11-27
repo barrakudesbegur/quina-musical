@@ -6621,8 +6621,6 @@ kbd {
 .console {
   --finale-plate: #fff6e5;
   --finale-floor: #f3eee2;
-  --finale-fallen-opacity: 0.45;
-  --finale-fallen-saturation: 0.25;
   --dur-finale-grow: 250ms;
   --dur-finale-fall: 350ms;
   --dur-finale-safe: 600ms;
@@ -6912,12 +6910,6 @@ kbd {
   min-width: 0;
 }
 
-.finale-stage__head .mini {
-  min-height: 2.25rem;
-  padding: 0 var(--space-2);
-  font-size: var(--text-sm);
-}
-
 .finale-stage__count {
   display: flex;
   align-items: baseline;
@@ -6963,16 +6955,6 @@ kbd {
 
 .finale-stage__spacer {
   flex: 1;
-}
-
-.finale-stage__add {
-  background: var(--color-green);
-  color: #ffffff;
-}
-
-.finale-stage__edit[aria-pressed='true'] {
-  background: var(--color-gold);
-  color: var(--color-ink);
 }
 
 .finale-stage__switch {
@@ -7031,21 +7013,10 @@ kbd {
   height: 4.25rem;
 }
 
-.nino {
-  display: block;
-  height: 100%;
-  width: auto;
-  filter: hue-rotate(var(--nino-hue, 0deg));
-  -webkit-user-drag: none;
-  transition:
-    opacity var(--dur-finale-fall) var(--ease-out),
-    filter var(--dur-finale-fall) var(--ease-out);
-}
-
-/* finale-fall: the fallen keep their nino, faded at their place (D182), with a ✗ and a red plate until the next Spin */
-.finale-stage__spot[data-fate='fallen'] .nino {
-  opacity: var(--finale-fallen-opacity);
-  filter: hue-rotate(var(--nino-hue, 0deg)) saturate(var(--finale-fallen-saturation));
+/* The finalists' ninos (F1, packages/ui/components/nino.css): the figure's own height, no drop at the tablet's size, and
+   the fade of a fall at the finale's pace. A fallen one is faded by the component's `faded` (D182). */
+.finale-stage__figure .nino {
+  --nino-drop: drop-shadow(0 0 0 transparent);
 }
 
 .finale-stage__cross {

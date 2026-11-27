@@ -52,7 +52,7 @@ export class BeforeScene implements SceneRenderer<BeforeView> {
     this.title = h('h1', { class: 'before__title', data: { anim: 'idle' } });
     this.night = h('ul', { class: 'night', hidden: true });
     this.countdown.root.classList.add('before__countdown');
-    const sticker = stickerImage(STAGE.stickers.before, 'nino-sentat', 'before__sticker');
+    const sticker = stickerImage(STAGE.stickers.before, 'before__sticker');
     if (sticker) setData(sticker, 'anim', 'idle');
     this.root.append(
       this.title,
