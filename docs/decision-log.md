@@ -1902,3 +1902,12 @@ By: the user (to Frontend; the labels delegated to Frontend). Source: Frontend's
 ### D291 · Enrere on a round's first song undoes the round's start · 2026-11-28 · Active; to model and build later
 After today's production test: "if it is the first song, change the enrere button to go back to before the round started, it is like an undo round start button." To settle when it's modelled: the Shuffle's order is set in front of everyone and never changes (event.md › Fairness), so a restarted round keeps its Queue; and prizes already unlocked on phones at the intro stay unlocked. Not now: "we can do this after the frontend finishes what he is doing, dont make him lose focus now".
 By: the user. Source: the user's message of 28 Nov. Lives in: requirements/show-and-music.md › The presenters' actions (when modelled).
+
+### D292 · A test-only «Proves» section in the console · 2026-11-28 · Active
+"for doing test runs i would like to have a non-prod only that lets me reset, or go to specific moments of the quina. nothing too crazy, you can deploy directly and re run the local thing." Where: "i dont know, you decide what is best, but i expected in the console". Which moments: "for now you decide, and dont add many. later i will think better what i need". Backend's proposal, which the user answered "yes":
+- A «Proves» section in the console's menu with three controls: «Nova partida» (a new Game: the show page reloads with `fresh=1`; phones clear their rounds but keep their cards), «Anar a la ronda N» (round N's intro), and «Ronda N, després de K cançons» (round N in play with K songs played).
+- It shows only when the relay is started with `--test`, and only on local consoles (the laptop and the LAN tablet), never on the cloud console. The cloud refuses `testReset`, and `relay.mode` isn't forwarded by the link. The night never uses `--test`.
+- Plain, with no design board: it's a test tool.
+- Sound engine: `--test`, `relay.mode`, `testReset` and the jumps mid-show. Frontend: the console section. Backend: the cloud refusal, the deploy, and the laptop restarted with `--test`.
+- The list of moments is the user's to extend later.
+By: the user (to Backend). Source: Backend's report of 28 Nov. Lives in: requirements/operations.md › Rehearsals; docs/night-runbook.md (a line when it lands).
