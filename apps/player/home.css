@@ -9,9 +9,16 @@
 @layer app {
 /* ---- the home's scroll box (§8 Y1, Y2) ------------------------------------------------------------------------- */
 /* The header, the status strips and the home scroll in one box over the whole screen, under the garland (fixed at the
-   top, player.css). The box is masked: the content fades to see-through under the garland and under the corners, so
-   whatever is behind shows there (the night, the gold, the beams), never a gradient painted in one colour. No
-   pull-to-refresh, no scroll chaining to the page, no sideways scroll. */
+   top, player.css). Edge to edge (the user's phone test, 28 Nov; viewport-fit=cover, index.html): the box and the sky
+   behind it reach every edge of the screen, under the status bar and the Android gesture bar, and only the controls
+   keep clear of those bars (the garland, the corners, «+ Cartró», the hint, the toasts and the drawers add the safe
+   area to their own place). The box's padding is the garland's room and the corners' room, safe area included, so the
+   first and last rows rest clear of them, and the content scrolls on past them to the screen's edges. The box is
+   masked: the content fades to see-through under the garland and under the corners, so whatever is behind shows there
+   (the night, the gold, the beams), never a gradient painted in one colour. Each fade is anchored to its control and
+   runs on to the screen's edge (the status bar's, the gesture bar's), so the content passes faintly under the bars
+   instead of stopping short of them. (No scroll padding: Historial's rows take their bottom-edge range, history-edge,
+   from the scrollport's edge.) No pull-to-refresh, no scroll chaining to the page, no sideways scroll. */
 .player__scroll {
   --home-fade-top: calc(env(safe-area-inset-top, 0px) + var(--player-garland-height));
   --home-fade-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--player-corner-space));
@@ -25,10 +32,10 @@
   padding-bottom: var(--home-fade-bottom);
   mask-image: linear-gradient(
     to bottom,
-    transparent calc(var(--home-fade-top) * 0.35),
+    transparent,
     #000 var(--home-fade-top),
     #000 calc(100% - var(--home-fade-bottom)),
-    transparent calc(100% - var(--home-fade-bottom) * 0.3)
+    transparent
   );
 }
 

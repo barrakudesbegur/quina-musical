@@ -128,6 +128,9 @@
     finger, never past 30 % of its height) and a close only after the finger travels half its height, whatever the flick; the app
     asks before losing what was typed. A touch that starts in <code>[data-own-gesture]</code> (a list’s grip) is never the sheet’s
     drag. A sheet opened from another sheet’s content (the QR camera) closes only itself, every way, and shows no ‹.
+    <strong>(28 Nov, edge to edge)</strong> The sheet reaches the screen’s bottom edge, under a phone’s gesture bar: its body’s
+    last row, or its footer’s buttons, keep the safe area clear inside (<code>env(safe-area-inset-bottom)</code>), so the
+    content scrolls on under the bar.
   </p>
   <div class="ds-gallery__grid">
     {#if phone}

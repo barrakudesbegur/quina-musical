@@ -2,6 +2,9 @@
 <html lang="ca">
   <head>
     <meta charset="utf-8" />
+    <!-- Edge to edge (28 Nov): the sky and the home's content run under the status bar and Android's gesture bar (Chrome
+         135+ on Android 15+ draws a tab there with viewport-fit=cover, and shows no bottom "chin"); the controls keep
+         clear of them with env(safe-area-inset-*). theme-color colours Chrome's bar (main.ts; gold in `your-song`). -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#18204a" />
     <meta name="description" content="Segueix els teus cartrons de la Quina Musical." />

@@ -2107,7 +2107,8 @@
   z-index: 1;
   margin-top: auto;
   margin-inline: calc(-1 * var(--space-4));
-  padding: var(--space-2) var(--space-4) var(--space-3);
+  /* Flush on the screen's bottom edge, its buttons clear of the gesture bar (edge to edge, 28 Nov). */
+  padding: var(--space-2) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
   background: var(--sheet-bg);
   border-top: 2px solid #2c3878;
   box-shadow: 0 -14px 16px -10px rgb(8 10 30 / 0.9);
@@ -3055,7 +3056,8 @@
   display: grid;
   place-items: center;
   overflow: hidden;
-  padding: var(--space-5) var(--player-gutter);
+  /* The sky runs under the status bar and the gesture bar; the words and the card keep clear of them (28 Nov). */
+  padding: calc(var(--space-5) + env(safe-area-inset-top, 0px)) var(--player-gutter) calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
   background-color: var(--color-bg);
   background-image: var(--sky-stars);
   background-size: var(--sky-stars-size);
