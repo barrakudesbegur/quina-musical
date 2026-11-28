@@ -210,9 +210,14 @@
 
 .stage-root :where(h1, h2, h3, p, ul, ol, li, figure, figcaption) {
   margin: 0;
-  padding: 0;
   font: inherit;
   list-style: none;
+}
+
+/* Only the lists come padded from the browser. Zeroing every element's padding here took a component's own (the last
+   three's SongTile is an `li`: its 12 px round the cover, song-tile.css's zero-weight base in this layer). */
+.stage-root :where(ul, ol) {
+  padding: 0;
 }
 
 .stage-root img {
