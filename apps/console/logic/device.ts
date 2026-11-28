@@ -27,9 +27,9 @@ export function resolveLabel(param: string | null, stored: string | null, maxLen
 
 export const isTheme = (value: unknown): value is Theme => value === 'light' || value === 'dark';
 
-/** The stored theme, or the default. */
-export function resolveTheme(stored: string | null, fallback: Theme): Theme {
-  return isTheme(stored) ? stored : fallback;
+/** A demo URL's `?theme=` (for review and screenshots; never stored), else the stored theme, else the default. */
+export function resolveTheme(stored: string | null, fallback: Theme, demoParam: string | null = null): Theme {
+  return isTheme(demoParam) ? demoParam : isTheme(stored) ? stored : fallback;
 }
 
 /** The setup checklist's ticked items, from storage; unknown ids are dropped. Never throws. */

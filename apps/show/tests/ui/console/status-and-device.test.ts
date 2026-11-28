@@ -123,6 +123,8 @@ test('theme and checklist from storage', () => {
   assert.equal(resolveTheme('dark', 'light'), 'dark');
   assert.equal(resolveTheme('neon', 'light'), 'light');
   assert.equal(resolveTheme(null, 'light'), 'light');
+  assert.equal(resolveTheme('light', 'light', 'dark'), 'dark', "a demo URL's ?theme= wins");
+  assert.equal(resolveTheme('dark', 'light', 'neon'), 'dark');
   assert.deepEqual(parseChecklist('["hotspot","bogus",3]', ['hotspot', 'charger']), ['hotspot']);
   assert.deepEqual(parseChecklist('{', ['hotspot']), []);
   assert.deepEqual(parseChecklist(null, ['hotspot']), []);

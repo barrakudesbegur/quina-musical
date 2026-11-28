@@ -91,6 +91,12 @@
   --color-danger-text: #ff8a8f;
 }
 
+/* Grey's soft look fills with the chip colour, night here: its words and icon in snow, not the light theme's ink
+   (the Dempeus stage's «Editar» was ink on night). */
+.console[data-theme='dark'] [data-color='grey'] {
+  --palette-fg-night: var(--color-snow);
+}
+
 /* Light (Consola-Joc) */
 .console[data-theme='light'],
 :root:has(.console[data-theme='light']) {

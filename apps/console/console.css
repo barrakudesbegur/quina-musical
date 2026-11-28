@@ -899,9 +899,12 @@
   justify-content: flex-start;
 }
 
+/* The presets' names scale with the row (a container), so «Molt ràpid» and the nameless «30 s» fit beside − and + at
+   the tablet's 1194 px (they were cut there) and on narrower screens, never above their size */
 .pace__row {
   display: flex;
-  gap: 6px;
+  gap: 4px;
+  container-type: inline-size;
 }
 
 .pace__step {
@@ -915,8 +918,8 @@
 .pace__preset {
   flex: 1 1 auto;
   --mini-height: 52px;
-  --mini-pad: 6px;
-  --mini-label: var(--text-sm);
+  --mini-pad: 4px;
+  --mini-label: clamp(0.75rem, 3.1cqi, var(--text-sm));
   line-height: 1.05;
   font-variant-numeric: tabular-nums;
 }
@@ -2005,6 +2008,16 @@
   white-space: nowrap;
 }
 
+/* The last round's top row (D155) narrows the slot to five twelfths: «Comprovar cartró» takes two lines beside its
+   rosette, a size smaller so the row keeps its height (on one line it ran out of the screen at 1194 px) */
+.thumb-cluster[data-top] .thumb-cluster__slot--claim .button {
+  --button-label-size: var(--text-lg);
+}
+
+.thumb-cluster[data-top] .thumb-cluster__slot--claim .button__label {
+  white-space: normal;
+}
+
 /* «Comença la quina» in a break (D195): Següent's size (Button l), a little smaller so its three words fit */
 .thumb-cluster__intro {
   --button-label-size: clamp(var(--text-2xl), 5vw, 3.5rem);
@@ -2029,6 +2042,14 @@
 .thumb-cluster__slot--back .button__wii {
   top: auto;
   bottom: var(--corner-inset);
+}
+
+/* With the remote's ① ② at its bottom right, «mantén» moves left of them (they covered its end). The compact cluster
+   hides the keys, so it stays centred there. */
+@media (orientation: landscape) and (min-width: 48rem) {
+  .thumb-cluster__slot--back .button:has(.button__wii > *) .button__note {
+    padding-inline-end: 3.25rem;
+  }
 }
 
 /* Parlem and Aguanta (HoldModeButton) and the Throw's two buttons (ThrowButton) are the generic TwoLevelButton
@@ -4436,7 +4457,8 @@ kbd {
    on stage › Console) ------------------------------------------------------------------------------------------- */
 .console {
   --finale-plate: #fff6e5;
-  --finale-floor: #f3eee2;
+  /* The stage's floor: the theme's chip colour (cream in light; night in dark, where cream stood out) */
+  --finale-floor: var(--color-chip);
   --dur-finale-grow: 250ms;
   --dur-finale-fall: 350ms;
   --dur-finale-safe: 600ms;

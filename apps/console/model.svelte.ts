@@ -304,7 +304,7 @@ export class ConsoleModel {
       }
     });
 
-    this.theme = resolveTheme(readStored(CONSOLE.storage.theme), DEFAULT_THEME);
+    this.theme = resolveTheme(readStored(CONSOLE.storage.theme), DEFAULT_THEME, this.show.demo ? new URLSearchParams(location.search).get('theme') : null);
     this.checklist = parseChecklist(readStored(CONSOLE.storage.checklist), S.checklist.map((c) => c.id));
   }
 
