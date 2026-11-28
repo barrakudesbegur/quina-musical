@@ -326,7 +326,7 @@ Rounds in order, a card type and side per round, prize bundles, sponsors, the do
 2. An older phone: smooth scrolling with 3–4 cards, usable at the end of a round.
 3. Last year's offline cache (can be checked now): open the QR address on a phone that used last year's app; it must load this year's player, not the cached old one.
 4. On the iPad console, the Llançament icon's crossed swords: the front sword's outline must cut a clean gap in the back one (Safari, e4c0a3ca).
-5. The projector at 4:3, then 16:9: the drum, the last-3 row and the Check readable from the back.
+5. The projector at 4:3, 16:10 and 16:9 (D276): the drum, the last-3 row and the Check readable from the back.
 6. The console on the actual tablet (iPad and Android) over the hotspot, then pair a phone as the tech's console. It needs the latest iPadOS or Chrome (D219).
 7. Scanning a card on Android (a Samsung and an older phone) before the cards are printed on 4–5 Dec: the camera, the Quick Settings scanner and Google Lens. Each must open the card itself, with or without the installed app (D224).
 8. The real Wii remote: every button, the shake for Suspens, and its range from the stage to the laptop.

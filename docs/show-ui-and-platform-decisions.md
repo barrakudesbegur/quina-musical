@@ -197,7 +197,7 @@ These override the sections below where they differ.
 
 ## Projector
 
-- **Hardware:** a 4:3 projector, far from the audience, so only big elements and no small text. It must also work at 16:9.
+- **Hardware:** a 4:3 projector, far from the audience, so only big elements and no small text. It must also work at 16:10 and 16:9 (D276).
 - **Style:** juicy, game-like, plenty of animation, Christmas.
 - **States:**
 
