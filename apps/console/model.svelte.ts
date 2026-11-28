@@ -230,6 +230,7 @@ export class ConsoleModel {
       showOnline: this.show.showOnline,
       hasState: this.show.state !== null,
       status: this.show.state?.status ?? null,
+      audioStalled: Boolean(this.show.state?.audioStalled),
       unpaired: looksUnpaired({
         connected: this.show.connected,
         heardClients: this.show.clients.length > 0,

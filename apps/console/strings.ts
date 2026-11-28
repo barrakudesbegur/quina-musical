@@ -69,6 +69,9 @@ export const S = {
     unpaired: "Aquest dispositiu no està vinculat amb el portàtil. Obriu la consola amb l'enllaç o el QR del portàtil (porta el codi «t=»).",
     showOffline: 'La pàgina del show no està oberta al portàtil: les ordres no arriben.',
     waiting: "Esperant l'estat del show…",
+    /** D284: the steps of docs/night-runbook.md › When something goes wrong, in its order. */
+    audioStalled:
+      "L'àudio del portàtil s'ha encallat: el show no avança. 1. Tanqueu tots els Chrome del portàtil (⌘Q a cada un) i torneu-los a obrir. 2. Si continua: «sudo killall coreaudiod» al Terminal, i torneu a obrir Chrome. 3. Si encara: reinicieu el Mac.",
     locked: 'La pàgina del show espera un clic a «Start show» al portàtil.',
   },
 

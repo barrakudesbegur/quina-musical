@@ -37,6 +37,19 @@ test('the alert names the most serious failure first', () => {
   assert.equal(consoleAlert({ connected: true, showOnline: false, hasState: false, status: null, unpaired: true }), 'unpaired');
 });
 
+test("a stopped audio clock (D284) is the alert while the show page is on, and gives way to the link's failures", () => {
+  const on = { connected: true, showOnline: true, hasState: true, status: 'playing', audioStalled: true } as const;
+  assert.equal(consoleAlert(on), 'audioStalled');
+  assert.equal(consoleAlert({ ...on, status: 'locked' }), 'audioStalled', 'the show is stuck either way');
+  assert.equal(consoleAlert({ ...on, audioStalled: false }), null);
+  assert.equal(consoleAlert({ ...on, showOnline: false }), 'showOffline', 'a closed show page: its last report is stale');
+  assert.equal(consoleAlert({ ...on, connected: false }), 'disconnected');
+  const stalled = FIXTURES.audioStalled(NOW).state;
+  assert.ok(stalled.audioStalled && stalled.audioStalled.sinceMs < NOW, 'the fixture: stalled since before now');
+  assert.equal(S.alerts.audioStalled.match(/coreaudiod/g)?.length, 1);
+  assert.ok(/Chrome.*coreaudiod.*reinicieu/s.test(S.alerts.audioStalled), "the runbook's steps, in its order");
+});
+
 test('Heat as a whole percentage', () => {
   assert.equal(heatPercent(0.71), 71);
   assert.equal(heatPercent(1.4), 100);

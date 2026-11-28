@@ -736,6 +736,8 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
       events: [{ afterMs: 300, event: later(s, 2, now) }],
     };
   },
+  /** The show page's audio clock stopped 4 s ago (D284): the consoles show the alert with the runbook's steps. */
+  audioStalled: (now) => ({ state: { ...baseState(now), audioStalled: { sinceMs: now - 4000 } } }),
   hold: (now) => {
     const s = baseState(now);
     return { state: withFlow(s, { status: 'hold', autoAtMs: null, hold: { sinceMs: now - 12000, reason: 'hold', holdMusic: false, holdMusicAtMs: now + 33000 } }) };

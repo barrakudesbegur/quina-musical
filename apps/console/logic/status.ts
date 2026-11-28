@@ -57,7 +57,7 @@ export function driftTone(sec: number | null | undefined): DriftTone {
 }
 
 /** The one alert the console shows above everything, most serious first. */
-export type ConsoleAlert = 'disconnected' | 'unpaired' | 'showOffline' | 'waiting' | 'locked';
+export type ConsoleAlert = 'disconnected' | 'unpaired' | 'showOffline' | 'waiting' | 'audioStalled' | 'locked';
 
 export interface AlertInput {
   connected: boolean;
@@ -66,13 +66,16 @@ export interface AlertInput {
   status: ShowStatus | null;
   /** Connected for a while but the relay has sent nothing (it ignores unpaired devices on the hotspot). */
   unpaired?: boolean;
+  /** The show page's audio clock stopped (D284, `ShowState.audioStalled`): nothing advances until it's fixed. */
+  audioStalled?: boolean;
 }
 
-export function consoleAlert({ connected, showOnline, hasState, status, unpaired = false }: AlertInput): ConsoleAlert | null {
+export function consoleAlert({ connected, showOnline, hasState, status, unpaired = false, audioStalled = false }: AlertInput): ConsoleAlert | null {
   if (!connected) return 'disconnected';
   if (unpaired) return 'unpaired';
   if (!showOnline) return 'showOffline';
   if (!hasState) return 'waiting';
+  if (audioStalled) return 'audioStalled';
   if (status === 'locked') return 'locked';
   return null;
 }
