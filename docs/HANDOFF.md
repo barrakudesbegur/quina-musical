@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D284**, **U230**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D285**, **U230**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -32,6 +32,8 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 - D282: a Mac app with a control page runs one `npm run night`. **Backend and Frontend are on hold for it** until the user resumes. Backend's design note for then: the `npm run night` supervisor itself serves the control page and its status API on 127.0.0.1 (the relay can't, since stopping it would kill the page), runs the relay, link, caffeinate and Chrome as children, and the .app is an osacompile or shell .app built in the repo (no quarantine). U218 was closed as moot, but the user wants to talk about Rubber Band in WebAssembly (the browser Blend).
 - The research: docs/research/reports/laptop-app.md, android-show-app.md, wii-remote-mac.md, browser-only-show.md, presenter-remote.md, two-projectors.md.
 - **How to ask (the user, 28 Nov):** a stated preference is an answer; never re-ask it, and never turn the user's own purchases into questions (memory: feedback-stated-preference-is-an-answer).
+
+**Chrome's audio clock stopped on this Mac (28 Nov):** the user's fix is to quit every Chrome (including a kiosk from the 27 Nov production test, profile /tmp/quina-show, and that test's relay), then `sudo killall coreaudiod`, then a reboot. Until then Backend's production e2e was red and D277's cloud deploy waited; the e2e now runs with `--disable-audio-output` (057ff2a). D284 adds detection (Sound engine building; Frontend's banner, Backend's preflight after).
 
 **The sessions:**
 - **Sound engine:** important tasks only. Done today: the README's Chrome profile (9c5ef734), split mode marked a nice-to-have (9d1cb3ac), D277's public Spin target and the Pausa volume fix (a2d0b4af).
