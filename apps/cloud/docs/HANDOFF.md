@@ -72,6 +72,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `b488bafa` (`b4aa6fb`, repertoire 2026): Sound engine's renumber (135 songs, 66 new ids, 2 new tracks), its 135 covers and the remade temporary cards (699, `checkLabel` in card-types.json); `/cards/*` byte-identical to the data on both names.
     - `3aa936b9` (`aa4c4d6`, repertoire 2026): Frontend's phone jank pass (the reel's attribute is now `data-phase`); the live Desgraciat run then passed against quina-dev with `QUINA_REPERTOIRE=2026` (it leaves a rehearsal Game as the current Game, never a plan).
     - `9516f6be` (`a2083a5`, repertoire 2026): Frontend's D266 (every screen names a card side by card-types.json's `checkLabel`; its reader is strict, so a file without `checkLabel`/`shortName` reads as no types). The served card-types.json has carried both since `b488bafa`.
+    - `84998894` (`d52edb5`, repertoire 2026): Frontend's canvas-redraw fixes (`855935c`: the phone's Check strip and Admin's notice no longer 0 px, Londrina in capitals with a lint, the console at 1194 × 834, the Pausa nino, «Seguides», the Wii note naming MacWiiPair, the ✗ red).
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
