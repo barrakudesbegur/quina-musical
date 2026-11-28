@@ -1836,3 +1836,12 @@ By: the user (to Frontend). Source: Frontend's report of 28 Nov. Amends: D166. L
 ### D280 · The edition's name is «Quina Quina! 3» · 2026-11-28 · Active
 Answers U223: the official name is «Quina Quina! 3», the third edition of «Quina Quina!». The event is a quina musical at Christmas («Nadal» appears too), and other contexts may use other names. The printed card leaves out the 3, so players don't think its back counts for Quina 3. The 2026 plan's title becomes «Quina Quina! 3». Amends D22.
 By: the user (to Frontend). Source: Frontend's report of 28 Nov. Lives in: requirements/game-rules.md › The Game and its edition.
+
+### D281 · The laptop at the tech's table; the backup remote is the user's pick · 2026-11-28 · Active
+- **Answers U221 with (b):** "my preference is to keep the laptop on the table, near the projector, with the mixer with me as well." The laptop and the mixer sit at the tech's table next to the projector, 6–7 m from the stage. The Wii remote pairs with the laptop (D275); the runbook's range test stays.
+- **Answers U229:** the user buys the backup, "a presenter remote, or maybe a mini gamepad". The Console supports whichever is bought: a presenter remote does Següent today (PageDown); a mini gamepad's mapping is built when it's bought.
+By: the user. Source: the user's messages of 28 Nov ("i already told you before"). Lives in: requirements/operations.md › Where things run.
+
+### D282 · A Mac app with a control page starts the night · 2026-11-28 · Active
+Answers U215: the user wants "a mac app that i open and has a basic ui that has buttons", and for the buttons, "yes, whatever is relevant". Backend builds one `npm run night` command (keep awake, the relay with `--lan`, the link, the show page and the laptop's Console in Chrome with their profiles, the preflight) and a small Mac app that runs it and opens a control page on the laptop: start and stop, open the show page and the Console, run the preflight, the QR codes and addresses for the tablet and phones (hotspot and cloud), and status lights (relay, link, cloud, Wii remote and battery, sound output). Pairing stays with MacWiiPair. Frontend draws the control page as a board before any code. Ready before the tech rehearsal, so the rehearsal runs what the night runs. U218 is moot: the projector stick and the audio phone are dropped (D274), so this year runs on the laptop, and "nothing installed" stays after the night (R2-Q26).
+By: the user. Source: the user's messages of 28 Nov. Lives in: requirements/operations.md › Where things run; docs/night-runbook.md.

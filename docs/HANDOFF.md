@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D281**, **U230**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D283**, **U230**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -44,9 +44,8 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 - U204: the realistic run's start time today, or 27 Dec (Backend uploads the plan with `--start` when it's relayed);
 - U212: the organizers pick the card, «Quadrat amb portades» (the default, A3 six a sheet) or «Apaïsat sense portades» (A4 three a page). The generator makes both (`--layout a4-3`); the cards are made on 4–5 Dec, after a proof sheet;
 - U225: the thick ✗ (Frontend re-asks with a picture); U222–U224, U216, U217, U206, U208 answered (D277–D280);
-- U218: when the "just a website" setup happens (U219 answered: D273, a 5G drop isn't a design concern); the Wii remote stays, paired by MacWiiPair (D275); U229: the backup remote; a second projector if found: inside for the back tables, same image (D276; for the runbook: film the displayOffsetMs calibration from mid-tent, ~12 m); U220 (user task): try the Wii remote with MacWiiPair; U221: where the laptop sits (the user prefers the table by the projector, with the mixer; decided by the remote research);
+- Answered today and logged: D273–D282 (5G, the projector stick, the Wii remote, a second projector, the Spin's target, the near-win sound, the Check's labels, «Quina Quina! 3», the laptop at the tech's table, the Mac app). **Next to brief:** D282's Mac app (Backend: `npm run night` + the app; Frontend: the control page's board first). For the runbook: film the displayOffsetMs calibration from mid-tent (done, step 10);
 - U216, U217: the Check's side label on a wrong-type card, and «Desgraciat» twice in the Desgraciat's Check header (Frontend, 28 Nov);
-- U215: a double-click start for the night laptop (research in docs/research/reports/laptop-app.md; recommended: a launcher only);
 - U214: the grill format only in a card design session (the default), or plain questions there too;
 - U205 (Parlem's 40 s Hold music), U206 (the drum's landing public 2.5 s early), U207 (✕ in a stack), U208 (the near-win sounds);
 - U194 (push), U196 (App Clip), U197 (TWA): the research says pass; U195 (uncollected prizes);

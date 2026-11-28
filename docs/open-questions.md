@@ -141,33 +141,10 @@ The user: "When the presenter lets a song play it should always loop and not swi
 - (a) Parlem keeps the ducked song looping too, and the 40 s takeover and its switch go.
 - (b) Keep the 40 s takeover, with real Hold tracks added (U20).
 
-### U218 · When the "just a website" setup happens
-The user (28 Nov): "just a website … a PWA that works offline … the show page simply displays the info, and then we have a media player … for the projector i could even use a chromecast … my laptop is free to move … This last setup is what i've been trying to get since the beginning." R2-Q26 chose the installed laptop and deferred "nothing installed" until after this year. Research: docs/research/reports/browser-only-show.md, wii-remote-mac.md, laptop-app.md.
-- (a) The direction for after 27 Dec. This year the laptop stays the only playback device, with the cheap pieces: the start app (U215), the cloud Console as the main path, and the Wii remote fixes.
-- (b) This year: reopens R2-Q26, and the rehearsals run on the new setup.
-
-### U229 · The backup remote
-D275: the user buys a backup for the Wii remote, "a presenter remote, or maybe a mini gamepad so i can use it for something else" (docs/research/reports/presenter-remote.md).
-- (a) A 2.4 GHz presenter remote with a USB receiver (a Logitech R400 or similar). Its receiver is a plain USB keyboard: no pairing, and it can sit on a USB extension near the stage. Següent works today with no code (PageDown); the tap-and-hold mapping for its other keys is a Console change (Frontend, board first).
-- (b) A mini gamepad (for example an 8BitDo Micro). More buttons and useful for other things, but it's Bluetooth, so to the laptop it has the Wii remote's range; and the Console needs a gamepad or keyboard mapping for it (Frontend, board first).
-
 ### U225 · The ✗ in the Check's cells
 S1's verdict ✗ is thick. The Check cells' ✗ are thinner.
 - (a) The thick ✗ on every surface.
 - (b) As today.
-
-### U221 · Where the laptop sits, and how the distance is bridged
-The user wants the laptop free of the projector and the mixer. ADR-0002's split mode (the audio on another device) is recorded but not built (docs/research/reports/browser-only-show.md). The distances in metres aren't recorded yet: the user is asked for them.
-The user's preference (D274): the laptop on the table near the projector, with the mixer there too, "but i can adapt"; the remote's connection decides it (docs/research/reports/presenter-remote.md).
-- (a) The laptop at the stage, next to the mixer and the Wii remote, with a fibre HDMI cable to the projector (about 150–210 USD for 50 m, no delay). Also fixes the remote's range.
-- (b) The laptop at the projector, with a long balanced audio cable to the mixer (the cable default in mixer-design-decisions.md › Devices). The Wii remote's range stays at the limit.
-- (c) Build split mode first (Sound engine and Frontend, medium work, over the relay on the hotspot), rehearsed before the freeze.
-
-### U215 · A double-click start for the night laptop
-The user (28 Nov) asked whether a simple macOS, Windows and Linux app would be easy and a good idea, since the command line isn't ideal on a non-developer laptop. The research (docs/research/reports/laptop-app.md): the show needs Chrome with its flags (the engine and WebHID for the Wii remote), the relay's Python helper for the Blend, and macOS-only setup and preflight. Windows and Linux would be a port nobody can rehearse before the freeze, and R2-Q26 keeps the laptop installed, with "nothing installed" after this year.
-- (a) A launcher only: Backend builds one `npm run night` (caffeinate, the relay with `--lan`, the link, the show page in Chrome with its flags, the preflight) and a `Start the Quina.command` that runs it, before the tech rehearsal, so it's what the rehearsal runs. The spare Mac is prepared in advance by the tech (`npm run setup:laptop`). A desktop app waits until after the night.
-- (b) Nothing new: the runbook's four terminals, as today.
-- (c) A desktop app now (Electron, macOS only): reopens R2-Q26, needs a Wii picker of its own and the rehearsals run on the app.
 
 ### U214 · The grill format outside the card design session
 On 26 Nov the user told the orchestrator not to use the grill format. On 27 Nov, in the card design session, they asked for it ("the skill to check is grill with docs": numbered ❓ rounds, each with a ➡️ recommendation, worded so "yes" accepts it). On 28 Nov they restarted the orchestrator with "plain questions (one numbered question, one set of options, a recommendation)".
@@ -364,6 +341,8 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U221 · Where the laptop sits; U229 · the backup remote** (2026-11-28) → D281: at the tech's table with the mixer; the user's pick of backup.
+- **U215 · The night's start; U218 · the browser-only setup** (2026-11-28) → D282: a Mac app with a control page; U218 moot.
 - **U206 · The phone's drum landing** (2026-11-28) → D277: the Spin's target travels from the Spin's start, shown only at the landing.
 - **U208 · The near-win sound** (2026-11-28) → D278: (b), the sound and buzz stay without the marking.
 - **U216, U217, U222, U224** (2026-11-28) → D279: (a), (b), (b), and Frontend's pick on "decide yourself".
