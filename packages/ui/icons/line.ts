@@ -27,6 +27,9 @@ const behind = (d: string): IconPart => ({ d, behind: true });
 const solid = (d: string): IconPart => ({ d, part: 'solid' });
 /** A circle as a path (every part is a `<path>`, so one rule styles them all). */
 const circle = (cx: number, cy: number, r: number): string => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0z`;
+/** A rounded rectangle as a path. */
+const roundRect = (x: number, y: number, w: number, h: number, r: number): string =>
+  `M${x + r} ${y}h${w - 2 * r}a${r} ${r} 0 0 1 ${r} ${r}v${h - 2 * r}a${r} ${r} 0 0 1 ${-r} ${r}h${-(w - 2 * r)}a${r} ${r} 0 0 1 ${-r} ${-r}v${-(h - 2 * r)}a${r} ${r} 0 0 1 ${r} ${-r}z`;
 
 /** The finish flag's waving cloth and its 5 × 4 squares (every other one inked). */
 const FLAG_CLOTH = 'M3 5c3-1.6 6-1.6 9 0s6 1.6 9 0v14.4c-3 1.6-6 1.6-9 0s-6-1.6-9 0z';
@@ -202,6 +205,22 @@ export const LINE_ICONS = {
   wifi: ['M2.5 9a14 14 0 0 1 19 0', 'M5.5 12.5a9.5 9.5 0 0 1 13 0', 'M8.6 16a5 5 0 0 1 6.8 0', 'M12 19.5h.01'],
   'wifi-off': ['M2 8.5a15 15 0 0 1 20 0', 'M5.5 12a10 10 0 0 1 13 0', 'M9 15.5a5 5 0 0 1 6 0', 'M3 3l18 18', fill(circle(12, 19, 1.2))],
   keyboard: ['M3 7h18v10H3z', 'M7 11h.01', 'M11 11h.01', 'M15 11h.01', 'M8 14h8'],
+  /** A QR code, softened as the pad's QR button draws it (QrButton): three rounded finders, each with its dot, and a few
+   *  dots in the fourth corner (the phone's «Escanejar el QR», 28 Nov). */
+  'qr-code': [
+    roundRect(3, 3, 7, 7, 2),
+    roundRect(14, 3, 7, 7, 2),
+    roundRect(3, 14, 7, 7, 2),
+    solid(roundRect(5.5, 5.5, 2, 2, 0.6)),
+    solid(roundRect(16.5, 5.5, 2, 2, 0.6)),
+    solid(roundRect(5.5, 16.5, 2, 2, 0.6)),
+    solid(roundRect(13, 13, 3, 3, 0.9)),
+    solid(roundRect(18, 13, 3, 3, 0.9)),
+    solid(roundRect(18, 18, 3, 3, 0.9)),
+    solid(roundRect(13, 18, 3, 3, 0.9)),
+  ],
+  /** «#», as a card's number is written (#57): the phone's «Escriure el número» (28 Nov). */
+  hash: ['M10 4l-2 16', 'M16 4l-2 16', 'M4.5 9h15', 'M4.5 15h15'],
   /** The Wii remote: its body, the cross, the A and the 1 and 2. */
   'wii-remote': [
     'M9.5 2h5A2.5 2.5 0 0 1 17 4.5v15a2.5 2.5 0 0 1-2.5 2.5h-5A2.5 2.5 0 0 1 7 19.5v-15A2.5 2.5 0 0 1 9.5 2z',
