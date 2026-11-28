@@ -2,6 +2,188 @@
 
 Resume the Frontend's work from this file. Keep it current at every milestone, because sessions get cleared.
 
+## What's left (28 Nov, after the realistic test)
+
+**The user, after the realistic test:** "it went HORIBLY WRONG. yes, the songs played and the player app mostly works. but the console logic is very bad, the transitions need a lot of improvement, the setup and startup is confusing, the show page (projected screen) has absolutely nothing to do with the design from the mockups ... i thought that the frontend implemented all of it and aparently he didnt."
+
+**How this was checked.** Four read-only audits on 28 Nov evening, against the code and the running app, not against reports:
+- the code: origin/main d3634e28 / 49a962b7 in clean worktrees;
+- the projector: `/stage/` on every fixture and a real `/show/` night at 1440×1080 and 1920×1080;
+- the console: a real local Game with the 2026 plan, walked as presenters would;
+- the phone: 147 snapshots re-shot, plus a real Game on a 390 px phone;
+- Admin, the cheat sheet, setup and the DS page.
+
+**Where the detail is:**
+- **Full reports, committed:** `packages/ui/audit-28nov/` (projector.md, console.md, phone.md, phone-reqs.md, admin.md, ds-notes.md).
+- **Screenshots** (git-ignored, on this laptop): `temp/audit-28nov/`.
+- **Not judged:** sound (the runs were headless and silent), the Wii remote, real phones on the venue network, and a real Safari 18.
+
+### 0. The root cause, mine
+- **Boards stopped being a check.** Most Projector and Console boards were drawn by Python generators (`temp/design-canvas/look/gen/projector_*.py`, `console_*.py`), not captured from the app. 28 of the 30 phone boards are DOM snapshots of the app, so they always "match".
+- **The redraw replaced the agreed boards.** In the 28 Nov "X" redraw I regenerated most Projector boards "as built", with «NOT BUILT YET» tags. That replaced the versions the user had agreed, which now sit in the Archive as `Abans-28nov-Projector-*`, `Abans-28nov-Mobil-*` and so on.
+  - The canvas then looked close to the app while the app had never reached the agreed design. I treated "board matches code" as progress.
+  - The same redraw quietly dropped agreed phone designs: the countdown rings before the start and in the Descans, «El teu premi d'aquesta nit», and the readable three-level QR stack.
+- **Tests can't catch any of this.** The 1042 UI tests never mount a component or open a browser, so they stayed green throughout.
+- **First decision for the user:** which projector look is agreed?
+  - (a) the pre-redraw boards (`Abans-28nov-Projector-*`; the user's complaint points here);
+  - (b) the current boards plus their «NOT BUILT YET» items.
+
+### 1. The projector (apps/stage, `/show/`), board by board (projector.md)
+| Board | Status | What differs (short) |
+|---|---|---|
+| **Projector-Joc** (main play screen) + the drum | **partly** | Three giant flat covers in a 640 px band, a thin reticle, a gradient flapper and a small plain «QUINA N» that **overlaps the covers** at 4:3 and 16:9. Missing: the gold round plate, the ink-stroked title, the gold artist, ink-outlined covers, the thick gold window, the ink pointer, the starfield |
+| Projector-Barreja-Gir-Suspens (Shuffle, Spin, Suspense) | partly | The Shuffle covers have no ink outline. The «?» has no ink stroke. During a Spin the artist line overlaps the tiles. With the real repertoire the grid is ~130 small covers, two of them missing art. The Shuffle's item-box sound and whoosh bed aren't played |
+| Projector-Presentacio (a round's Intro) | partly | Prize cards run off the bottom with real two-line titles (Especial «Televisor i Casc de moto», Desgraciat). Never shown on the night as runbooked (§2.1) |
+| Projector-Abans (before the start) | partly | The Desgraciat pill's sad face still has a circle (D23). No starfield. «7:00 PM» on /show/ vs «7:00 pm» on /stage/. Without a plan, it's only a title and a QR. Skipped on the night by `?autostart=1` |
+| Projector-Comprovacio (Check while it plays) | built (current board) | The type badge loses its ✓ from the second Check on (`render/check.ts` `setTypeMark()`, stale `dataset.mark`) |
+| Projector-Comprovacio-Correcte | **built, never seen live** | The engine goes straight to the Celebration at the cue for the last (usually only) card (`show.ts` `cue()` → `finishBatch`) |
+| Projector-Comprovacio-Fallida | built (current board) | Same badge bug |
+| Projector-Comprovacio-Revisio | built (fixtures) | — |
+| Projector-Comprovacio-TipusErroni-Abans / -TipusErroni | built | The second has no fixture |
+| Projector-Comprovacio-Desgraciat (fallback) | built | — |
+| Projector-Linia | built (current board) | — |
+| Projector-Quina | partly | The spec's "fireworks sticker" isn't built |
+| Projector-Quina-Focs | proposal, not to build | Fireworks C, waiting for a go |
+| Projector-Pausa | built (current board) | — |
+| Projector-Descans / -Descans-Desgraciat | built (current board) | — |
+| Projector-Desgraciat-Joc | partly | The play-screen gaps |
+| Projector-Desgraciat-Final | partly | The finale's pop, bloop and ta-da sounds aren't played |
+| Projector-Desgraciat-Potra | built | — |
+| Projector-Final (end of the night) | partly | A ragged rolling list that starts empty, not the board's static grid of white logo tiles under a big title; a sponsor with no logo is bare text |
+| Projector-Sense-Connexio | built (no fixture) | — |
+
+- **"Built" means built as the current redrawn board.** Against the agreed pre-redraw boards, every scene also lacks the starfield ground and consistent ink-stroked Londrina titles.
+- **Not wired anywhere:** D285/D287's sponsor sticker collage (the module and gallery are on main; the stage and phones still show the old PrizeCard), and fireworks C.
+
+### 2. The console (apps/console) (console.md)
+**Blocks the night:**
+1. **The start is wrong end to end.**
+   - **autostart:** the runbook's `/show/?autostart=1` (Backend: `apps/cloud/laptop/chrome-profiles.ts:37`) makes the show page's «Start show» unlock send `next` (`apps/show/engine/src/main.ts:1237`). Round 1's first song lands with no doors, no Intro and no public Shuffle. A show-page reload mid-night does the same.
+   - **The click:** the kiosk show page needs a physical click that no console can send.
+   - **No refusal:** the engine accepts every play command at the doors.
+2. **Songs keep landing while the claim pad is open, and Parlem can't be reached from it.** Two landings were measured while typing two numbers (App.svelte:129-136). A fairness problem.
+3. **The engine counts 5 rounds; the plan has 12** (`apps/show/engine/src/config.ts:194` `roundsTotal: 5`, never taken from the plan).
+   - From round 5 on, every Bingo Celebration says «Era l'última quina: acabeu la nit des del menú» (CelebrationPanel.svelte:21).
+   - The Interval says «QUINA 6 DE 5».
+   - The menu's «Quines en total» stepper does nothing.
+4. **Auto-advance stops at every final Phase while «Auto» stays green** (PacePanel.svelte:68). It feels like the show froze, several times per round.
+
+**Wrong or confusing:**
+5. **The doors break D195.** The big button is «Llançament» (it blasts the throw song). Starting the night is a mini button in the menu. There's no doors music (the engine has no doors set).
+6. **Status the presenters can't trust:**
+   - Parlem is striped with «prem per reprendre» at the intro, the Interval and the end, where a tap does nothing.
+   - «Últim gir: automàtic» shows for the presenters' own presses.
+   - «No sona cap cançó» shows while intro or Celebration music plays.
+   - «Següent» names a song before the Shuffle that then never plays.
+   - Every claim shows a late-claim warning, and the claims strip mixes in old claims.
+7. **D196 is broken in several places:**
+   - the intro has no «Ara sona»;
+   - Pausa stacks two;
+   - the review puts one in the action column;
+   - «Barreja» and «Passa al descans» sit in the left column while the cluster shows a dead «Següent».
+8. **At 1194×834** the doors, Celebration and Pausa pages overflow, so the header and the cluster scroll away. On a phone the Check's buttons are off-screen.
+9. **The menu's «Xuleta del pla B» can't collapse:** `hidden` is overridden by `display:flex`.
+10. **Smaller:**
+    - generic «ara no es pot fer» refusals;
+    - «Llançament» offered after every round;
+    - the header keeps the finished round's name and Heat;
+    - no Schedule in the menu;
+    - D291 (Enrere on the first song) isn't built;
+    - Pace and drift messages start before the night.
+
+**Boards:**
+- **4 built as drawn:** Desgraciat-Final (minor gaps), Pestanyes-Noves, Efectes-Icones, Alerta-Audio.
+- **11 partly built.**
+- **Not as agreed:** Consola-Comandament (the D93 remote drawing with leader lines isn't built) and Consola-Veus-Redoble (D198 mostly not built: the «Veu» chip, «Salta la veu», «Propera veu», the «Fanfara i veu» strip, the drum roll on Tatxan!, the remote's redoble row).
+- **Consola-Menu-Sons:** the Volums layout isn't the board's three groups.
+
+**What works:**
+- Next, Back, Parlem, Pausa and its resume, Aguanta and Suspens;
+- the D234 two-console lock;
+- the paced Check (reveals, cue, wrong type, review, discard, late claim);
+- the Desgraciat finale;
+- the Interval's «Comença la quina»;
+- the end screen;
+- «Cartrons venuts»;
+- the Futur, Cerca, Estat and Premis tabs.
+
+### 3. The phone (apps/player) (phone.md, phone-reqs.md)
+1. **Offline is never shown in a real Game.** With the browser offline for 25 s: no strip, no veil. The feed has no heartbeat or silence timeout. Mobil-SenseConnexio is built only in the demo.
+2. **Wrong round on the cards during Intros and the Descans.** At round 2's intro the cards still show round 1's marks (logic/view.ts:115-128), exactly when players turn their paper cards over.
+3. **«Sons» off doesn't survive a reload** (read in the code; not tested live).
+4. **The relay feed has no plan for phones** (LocalPlanStore), so laptop-only rehearsals show «0 premis / Per anunciar». Phones have no LAN fallback without internet.
+5. **Not built:**
+   - card types and prices before the Game (Mobil-Abans ③);
+   - the price in the Descans;
+   - the QR camera switch;
+   - before the Game, the home lacks the rounds and round 1's prizes (they're only in drawers).
+6. **Drift from decisions:**
+   - the pad's leave question uses «Continuar» / «Descartar» (rejected in D188);
+   - Horari says «Primer descans» (D192);
+   - a count pill shows before the first landing;
+   - the end header reads «QUINA QUINA! 3».
+7. **Collapsed cards (D289):** a one-card phone never announces «LÍNIA!»/«QUINA!», because big cards need 2+ playing cards (`collapsed.ts:22-24`). Nobody decided that.
+8. **UX:**
+   - the last-year card drawer is a dead end (no button);
+   - the floating «+ Cartró» covers the Historial/Cartrons switch;
+   - the link opens scrolled.
+9. **iOS 18:**
+   - nothing hides content any more (D293, the lint);
+   - but iOS 18 phones get an untested home: no strip-fade, the drum collapse snaps;
+   - the your-song layer sits under drawers on 18.0–18.2;
+   - wake lock in an installed app may fail before 18.4.
+   - Test on a real iOS 18 iPhone on the venue network.
+10. **Boards:** several snapped frames show impossible states («La teva línia!» with no complete row; Afegir-Estats ① empty; B-J2 ⑤ «#6»; B-J2 shows two Descans against D192). Fix the fixtures and the snapshotter's taps.
+
+### 4. Admin, the cheat sheet, setup, the DS page (admin.md, ds-notes.md)
+1. **Setup is not usable by a non-developer.**
+   - A cold start is 4 terminals, 2 Chrome commands of about 300 characters and an English «START SHOW» click on the projector. The click stays even with the autoplay flag.
+   - The relay's start-up output gives no next steps.
+   - D282 (`npm run night`, the Mac app, a control page) has no code and no board.
+2. **The runbook's repertoire doesn't match.** Following it, the preflight FAILs and says to restart with last year's songs: the relay runs `--repertoire 2026`, but `npm run preflight` and `setup:laptop` default to `default`. The README's relay command has no `--repertoire`, so it serves the 77 songs of 2025 (Backend).
+3. **Opening Admin can overwrite the saved plan with a blank one** (Admin is mine).
+   - When neither the GET nor the socket push arrives within 0.6 s, the autosave sends 1 round, 0 sponsors (`apps/admin/state/plan-session.svelte.ts`). Reproduced.
+   - No save history exists.
+4. **The cheat sheet** (`/admin/#xuleta`, printed):
+   - it drops the claim rules and the special round's rules (a blank band in print);
+   - pages hold 4–5 rounds, not 3;
+   - there's no presenters' running-order checklist and no "+6 dB" note;
+   - Admin's and the console's laptop-key lists contradict each other;
+   - the keys can't start a round, Shuffle, check a card or end a round, and only work with the projector window focused. A presenter couldn't run the night from it.
+5. **Admin at this plan's size:**
+   - Preparació is 58,325 px tall on a laptop (134 dropdowns, 58-sponsor selects repeated) and 84,607 px on a phone, scrolling sideways;
+   - three places edit the plan with no merge: the git file, the cloud Admin and the laptop Admin;
+   - stubs: cards opened on phones and the Shuffle seeds;
+   - the audition link is dead on the cloud.
+6. **The DS page** covers every generic component on the boards. It lacks the projector's scenes (the Check grid and verdicts, the drum, the finale), the your-song effect, the console's real SoundIcon pad and an Admin density.
+
+### 5. Reported as done that isn't fully done (my reports, 24–28 Nov)
+- **The 28 Nov canvas redraw ("X done")** made the boards match the app instead of the app match the agreed boards (§0). Every "as built" board since then hides a gap.
+- **Projector scenes:** I reported boards and stage fixes (the D276 ratios, the stage bugs, U225 thick marks) as done. The main play screen and the drum were never built to the agreed design, and the round label overlaps the covers at both ratios.
+- **The phone's offline strip and veil:** built and snapped from the demo, but never shown in a real Game.
+- **The console's D195 doors and D196 «Ara sona»** (843bb85b, 80fe9250): reported as built, broken in the live walk (§2).
+- **Comandament's remote drawing (D93) and Veus-Redoble (D198):** not built.
+- **The menu's Plan B disclosure** doesn't close.
+- **Collapsed cards (D289):** built, but one card never announces «LÍNIA!», and the user's "zig zag" reading is unconfirmed.
+- **strip-fade (449ccb2e)** shipped blank on iOS 18 (fixed in 20c8423e/e6d95db1). The iOS 18 home is still untested on a real phone.
+- **mark-bob, announceWins and the empty state:** built and tested only in headless Chrome and demos, never on real phones or with sound.
+- **The sticker collage (D287) and fireworks C:** board and module only, not wired. I said so at the time; listed so nobody counts them.
+- **«Green tests» in my reports** meant node and type tests only. No component or browser test exists.
+
+### Cross-team items found (route them)
+- **Backend:**
+  - the runbook's `?autostart=1`;
+  - the preflight / setup / README repertoire defaults;
+  - the relay crashes on an unhandled python spawn error when `tools/prep/.venv` is missing and a Blend calls `/api/stretch` (server.ts `stretchRender`);
+  - phones on the relay feed have no plan.
+- **Sound engine:**
+  - `unlock()` sends `next` with autostart;
+  - `roundsTotal` isn't taken from the plan;
+  - the engine accepts play commands at the doors;
+  - no doors music;
+  - the Shuffle's and the finale's missing sound cues;
+  - «Cartró correcte!» skipped for the last card.
+
 ## Now (2026-11-26, late)
 
 ## Now (2026-11-27, night): read this block first
