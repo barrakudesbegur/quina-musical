@@ -140,3 +140,11 @@ export const SAMPLE_PLAN: GamePlan = {
     specialRoundRules: ['Només compten els cartrons especials.'],
   },
 };
+
+/** `?demo=beforeStart`'s planned start: 25 minutes after the page loaded, on the minute (fixed for the page's life). */
+const BEFORE_START_AT_MS = (Math.floor(Date.now() / 60_000) + 25) * 60_000;
+
+/** The plan a demo page uses (`?demo=<name>`): the sample plan, with a start time for `beforeStart`. */
+export function demoPlan(name: string | null): GamePlan {
+  return name === 'beforeStart' ? { ...SAMPLE_PLAN, schedule: { ...SAMPLE_PLAN.schedule, startAtMs: BEFORE_START_AT_MS } } : SAMPLE_PLAN;
+}

@@ -4,7 +4,7 @@
 // - the cloud link's /cloud/plan.json on the show laptop, falling back to this browser's localStorage;
 // - localStorage plus the sample plan in demo mode (`?demo=`).
 import { checkGamePlan, type GamePlan } from '../plan.ts';
-import { SAMPLE_PLAN } from '../fixtures/plan.ts';
+import { demoPlan } from '../fixtures/plan.ts';
 import { CloudPlanStore, checkedPlan } from './cloud-plan.ts';
 import { isLocalHost } from '../client/endpoints.ts';
 import { relayTokenForPage } from '../client/pairing.ts';
@@ -164,7 +164,8 @@ export function planStoreForPage(): PlanStore {
   return store;
 }
 
-/** The page's plan: the stored one, or the sample plan in demo mode (`?demo=`) when none is stored. */
+/** The page's plan: the stored one, or the demo's plan (the sample plan; fixtures/plan.ts › demoPlan) in demo mode
+ *  (`?demo=`) when none is stored. */
 export function loadPlanForPage(store: PlanStore = new LocalPlanStore(), demo = typeof location !== 'undefined' && new URLSearchParams(location.search).has('demo')): GamePlan | null {
-  return store.load() ?? (demo ? SAMPLE_PLAN : null);
+  return store.load() ?? (demo ? demoPlan(typeof location === 'undefined' ? null : new URLSearchParams(location.search).get('demo')) : null);
 }

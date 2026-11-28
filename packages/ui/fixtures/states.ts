@@ -642,6 +642,8 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
       }),
     };
   },
+  /** Before, with the plan's start time 25 minutes away (fixtures/plan.ts › demoPlan): the countdown and the clock. */
+  beforeStart: (now) => FIXTURES.before(now),
   roundStart: (now) => {
     const s = baseState(now);
     return {
@@ -680,6 +682,40 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
         autoAtMs: null,
         transition: { id: 'tr-25', recipe: 'R7', phase: 'late', to: 74, landAtMs: now + 6000 },
       }),
+    };
+  },
+  /** Quina 3's first Spin, right after its Shuffle: nothing has landed yet, and the drum turns to its first song. */
+  firstSpin: (now) => {
+    const s = baseState(now);
+    const first = FIXTURE_LANDED[0];
+    return {
+      state: withFlow(s, {
+        status: 'transition',
+        current: null,
+        next: song(first),
+        queue: { position: -1, length: 77 },
+        landings: [],
+        history: [],
+        possibleWinners: { line: [], bingo: [] },
+        autoAtMs: null,
+        phase: 'early',
+        heat: 0.05,
+        round: { ...s.round, startedAtMs: now - 15_000 },
+        transition: { id: 'tr-1', recipe: 'R1', phase: 'early', to: first, landAtMs: now + 6000 },
+      }),
+    };
+  },
+  /**
+   * A console that has seen every landing of Quina 3 (a snapshot carries only the last 10): the first 10, then the round
+   * as `play` has it, so Estat's chart counts the cards from them and «Han sonat» lists all 17.
+   */
+  estatChart: (now) => {
+    const s = baseState(now);
+    const early = FIXTURE_LANDED.slice(0, 10);
+    const earlyAt = now - (FIXTURE_LANDED.length - early.length) * 14000;
+    return {
+      state: withFlow(s, { queue: { ...s.queue, position: early.length - 1 }, landings: landings(earlyAt, early, earlyAt), current: { ...s.current!, ...song(early[early.length - 1]) } }),
+      events: [{ afterMs: 300, event: later(s, 2, now) }],
     };
   },
   hold: (now) => {

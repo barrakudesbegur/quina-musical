@@ -5,7 +5,7 @@
 // Fixture names that aren't player demos run as they are; unknown names fall back to `play`.
 import { PROTOCOL_VERSION, type EventOf, type LandingInfo, type ShowState } from '@quina/protocol';
 import { DESGRACIAT_LANDED, FIXTURES, FIXTURE_LANDED, FIXTURE_SONGS } from '../../../packages/ui/fixtures/states.ts';
-import { SAMPLE_PLAN } from '../../../packages/ui/fixtures/plan.ts';
+import { SAMPLE_PLAN, demoPlan } from '../../../packages/ui/fixtures/plan.ts';
 import type { FlowFields } from '../../../packages/ui/flow.ts';
 import type { GamePlan } from '../../../packages/ui/plan.ts';
 import type { FeedUpdate, PlayerFeed } from './feed.ts';
@@ -116,6 +116,8 @@ export const PLAYER_DEMOS: Record<string, PlayerDemo> = {
   interval: { fixture: 'interval', cards: 'default' },
   after: { fixture: 'after', cards: 'default' },
   pause: { fixture: 'pause', cards: 'default' },
+  /** Before the start with the plan's start time 25 minutes away: «Comencem cap a les …» and its countdown. */
+  beforeStart: { fixture: 'beforeStart', cards: 'default', plan: demoPlan('beforeStart') },
   offline: { fixture: 'play', cards: 'default', link: { online: false, agoMs: 25_000 } },
   reconnect: { fixture: 'play', cards: 'default', dropFeed: { afterMs: 1500, forMs: 6000 } },
   notice: { fixture: 'play', cards: 'default', notice: 'El bar tanca a les 00:30. Gràcies per venir!' },
