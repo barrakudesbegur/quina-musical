@@ -17,7 +17,9 @@ const theme = params.get('theme') === 'dark' ? 'dark' : 'light';
 // Each app's own look, as it loads it (the two apps' stylesheets would collide on one page).
 if (density === 'phone') await import('../player/player.css');
 else if (density === 'projector') {
-  // The projector's components carry their own CSS (packages/ui/components); stage.css is the scenes' layout.
+  // The projector's components carry their own CSS (packages/ui/components); stage.css is the scenes' layout, so only
+  // the garland's rules and the stage's tokens are lifted from it (E2's garland; stage-garland.ts).
+  (await import('./stage-garland.ts')).liftStageGarland();
 } else {
   await import('../console/theme.css');
   await import('../console/console.css');

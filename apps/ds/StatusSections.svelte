@@ -1,8 +1,9 @@
 <!--
-  Work stream S's gallery sections (status, the finale, the stickers): E1 Ring, E3 Toast, F1 Nino, F2's compact
-  «Editar», G1 StickerTitle, G2 Plate, G4 LogoTile + SponsorList / SponsorStrip, G5 QrBlock. Each in its variants and
-  states at the page's density; the projector's pieces show on /ds/?density=projector. Captions in English
-  (GLOSSARY.md); the words inside the components are UI content, so Catalan.
+  Work stream S's gallery sections (status, the finale, the stickers): E1 Ring, E2 Garland + HeatMeter (its own file,
+  sections/HeatGarland.svelte), E3 Toast, F1 Nino, F2's compact «Editar», G1 StickerTitle, G2 Plate, G4 LogoTile +
+  SponsorList / SponsorStrip, G5 QrBlock. Each in its variants and states at the page's density; the projector's pieces
+  show on /ds/?density=projector. Captions in English (GLOSSARY.md); the words inside the components are UI content, so
+  Catalan.
 -->
 <script lang="ts">
   import { untrack, type Snippet } from 'svelte';
@@ -31,6 +32,7 @@
   import CardMark from '../player/components/CardMark.svelte';
   import { SponsorStrip } from '../stage/render/parts.ts';
   import { QrBlock } from '../stage/render/qr.ts';
+  import HeatGarland from './sections/HeatGarland.svelte';
 
   let { density }: { density: 'console' | 'phone' | 'projector' } = $props();
   const mode = untrack(() => density);
@@ -131,6 +133,9 @@
     {@render cell(`framed: the Break’s countdown, cyan, ${projector ? '390' : '170'} px (the projector’s CountdownRing is this, ring-dom.ts)`, big)}
   </div>
 </section>
+
+<!-- ---- E2 · Garland, HeatMeter (sections/HeatGarland.svelte) ------------------------------------------------- -->
+<HeatGarland {density} />
 
 <!-- ---- E3 · Toast --------------------------------------------------------------------------------------------- -->
 {#if !projector}
