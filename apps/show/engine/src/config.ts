@@ -978,6 +978,15 @@ export const MIX = Object.freeze({
   headroomDb: -6,
 });
 
+/**
+ * The rehearsal test tools (`testJump`, never on the night). A jump stops what plays as Panic does (a 0.3 s fade, and the
+ * runtime lets go of every player 30 ms after it: main.ts stopAll), so the moment it jumps to waits until then, or its
+ * music would be let go with the rest.
+ */
+export const TEST_JUMP = Object.freeze({
+  settleSec: 0.5,
+});
+
 /** Pausa (D128, D135): what plays is saved and resumes exactly where it was. */
 export const PAUSA = Object.freeze({
   /** What was playing fades out over this long, and the Pausa set fades in. */

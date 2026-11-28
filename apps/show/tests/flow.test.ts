@@ -63,7 +63,8 @@ const lastClaimId = (h: Harness) => {
 
 // ---------------------------------------------------------------------------------------- the scene rules
 test('the scene rules: what each scene accepts (the agreed table, plus `before` acting as `play`)', () => {
-  const ANY: CommandName[] = ['unlock', 'getState', 'getJournal', 'getUpcoming', 'setPace', 'setGame', 'setAutoSound', 'setVolume', 'setCardsInPlay', 'addCardsInPlay', 'sfx', 'overrideNextRecipe', 'panic', 'pause', 'endGame', 'winnerInfo', 'revealPrizes', 'twoLevelHold'];
+  // The rehearsal test tools too (TEST_COMMANDS, gated by the relay's --test and the page's relay.mode).
+  const ANY: CommandName[] = ['unlock', 'getState', 'getJournal', 'getUpcoming', 'setPace', 'setGame', 'setAutoSound', 'setVolume', 'setCardsInPlay', 'addCardsInPlay', 'sfx', 'overrideNextRecipe', 'panic', 'pause', 'endGame', 'winnerInfo', 'revealPrizes', 'twoLevelHold', 'testReset', 'testJump'];
   const PLAY: CommandName[] = ['next', 'back', 'hold', 'holdMusic', 'suspense', 'confirmLine', 'newRound'];
   const CHECK: CommandName[] = ['checkStart', 'checkNext', 'checkBack', 'checkAuto', 'checkReview', 'reviewEnd'];
   const cases: [string, Partial<SceneContext> & { scene: ShowScene }, CommandName[]][] = [

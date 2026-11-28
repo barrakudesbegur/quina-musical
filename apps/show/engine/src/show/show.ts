@@ -73,10 +73,10 @@ import type {
   VolumeKey,
   Volumes,
 } from '@quina/protocol';
-import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, FLOW, INTERVAL, INTRO, LOOP, PAUSA, SCHEDULE, THROW, VOICE, DRUMROLL, TWO_LEVEL } from '../config.ts';
+import { HOLD, ENGINE, PHASES, PACE, SUSPENSE, FLOW, INTERVAL, INTRO, LOOP, PAUSA, SCHEDULE, THROW, VOICE, DRUMROLL, TWO_LEVEL, TEST_JUMP } from '../config.ts';
 import { validCards, possibleWinners, parseCardRanges, cardCounts, firstWinAt, standingCards, standingCourse, standingRun, type PrintedCard } from '../game/cards.ts';
 import { computeCheck, stepSound, type CheckResult, type CheckSong, type TimedStep } from '../game/check.ts';
-import { tieFreeShuffle, type TieRule } from '../game/shuffle.ts';
+import { tieFreeShuffle, type TieFreeShuffle, type TieRule } from '../game/shuffle.ts';
 import { sceneAllows, type SceneContext } from '@quina/protocol';
 import { phasePlan, standingPlan } from '../game/phase.ts';
 import { phaseFor } from '../plan/phases.ts';
@@ -480,6 +480,10 @@ export interface LogEffect {
   level: 'info' | 'warn';
   message: string;
 }
+/** `testReset` (a rehearsal test tool): reload the page with `fresh=1`, its other URL params kept: a new Game. */
+export interface ReloadFreshEffect {
+  type: 'reloadFresh';
+}
 /** What the runtime must do, as a discriminated union on `type`: `switch (effect.type)` narrows it. */
 export type Effect =
   | SoundTestEffect
@@ -520,7 +524,8 @@ export type Effect =
   | PausaMusicEffect
   | VolumesEffect
   | PauseOverlayEffect
-  | LogEffect;
+  | LogEffect
+  | ReloadFreshEffect;
 export type EffectType = Effect['type'];
 /** One effect by type, for example `EffectOf<'startTransition'>`. */
 export type EffectOf<T extends EffectType> = Extract<Effect, { type: T }>;
@@ -642,6 +647,22 @@ const copyClaim = (c: ClaimInfo): ClaimInfo => ({ ...c, warnings: [...c.warnings
 
 /** Who a command without the relay's `from` came from: the show page itself (never in the relay's client list). */
 const OWN_PAGE = 'local';
+
+/** Where a test jump lands (`testJump`, rehearsal test runs only): round `number`'s intro, or that round in play. */
+export interface TestJumpTarget {
+  /** When it lands (audio clock): once the runtime has let go of what played (TEST_JUMP.settleSec). */
+  at: number;
+  number: number;
+  kind: RoundKind;
+  cardType: string;
+  side: number;
+  pool: string;
+  /** In play: its fresh Shuffle and the Queue index of the last counted song (−1: none yet). Null: the intro. */
+  play: { drawn: TieFreeShuffle; position: number } | null;
+}
+/** What still goes through while a test jump settles: what only reads, a console letting go of a button, and the test
+ * tools themselves (another jump replaces it). */
+const DURING_JUMP: ReadonlySet<string> = new Set(['getState', 'getJournal', 'getUpcoming', 'twoLevelHold', 'testReset', 'testJump']);
 
 /** Copy one field when the source sets it. The call compiles only if the source's field fits the target's. */
 /** A Game id from the clock (no random draw, so seeded shows stay as they were), e.g. `g-2026-11-24-mhv2k1x0`. */
@@ -784,6 +805,8 @@ export class Show {
   twoLevelHeld: { button: TwoLevelButton; clientId: string; sinceMs: number; until: number } | null = null;
   /** The runtime's report of a stalled audio clock (D284, `audioStalled`), else null. Not journaled. */
   audioStall: { sinceMs: number } | null = null;
+  /** A test jump settling (`testJump`): Panic stopped what played, and it lands at its `at`. Never set on the night. */
+  jump: TestJumpTarget | null = null;
   /** The phones' next Heat sample (`heat.sample`, audio clock), drawn at the last landing. */
   heatSample: { at: number; value: number } | null = null;
   holdMusicMood: HoldMood = 'hold';
@@ -853,9 +876,15 @@ export class Show {
     const c = check.command;
     const reqId = c.reqId;
     const cmd: string = c.cmd;
-    // A locked page (no "Start show" click yet) still answers, and may be resumed by hand before the click.
-    if (this.status === 'locked' && c.cmd !== 'unlock' && c.cmd !== 'getState' && c.cmd !== 'getJournal' && c.cmd !== 'resumeAt') {
+    // A locked page (no "Start show" click yet) still answers, and may be resumed by hand before the click (or, in a
+    // test run, reset to a new Game).
+    if (this.status === 'locked' && c.cmd !== 'unlock' && c.cmd !== 'getState' && c.cmd !== 'getJournal' && c.cmd !== 'resumeAt' && c.cmd !== 'testReset') {
       this.reject(reqId, c.cmd, 'locked');
+      return this.flush();
+    }
+    // A test jump settling (rehearsal test runs only): the show waits for it to land.
+    if (this.jump && !DURING_JUMP.has(c.cmd)) {
+      this.reject(reqId, c.cmd, 'busy', 'a test jump is landing');
       return this.flush();
     }
     if (!sceneAllows(c.cmd, this.sceneContext())) {
@@ -1095,6 +1124,13 @@ export class Show {
       case 'revealPrizes':
         this.revealPrizes(c.round, 'presenters');
         break;
+      case 'testReset':
+        // Rehearsal test runs only (the relay's --test, the page's relay.mode): the runtime reloads the page on a new Game.
+        this.out.push({ type: 'reloadFresh' });
+        return this.flush();
+      case 'testJump':
+        this.testJump(reqId, c.round, c.songs ?? null);
+        break;
       default:
         // checkCommand only lets known commands through, and the compiler checks every one is handled here.
         c satisfies never;
@@ -1115,6 +1151,11 @@ export class Show {
 
   /** One tick of the machine at `now` (its effects wait in `out`). */
   tickAt(now: number) {
+    // A test jump settling: nothing moves until it lands (Panic left nothing playing).
+    if (this.jump) {
+      if (now < this.jump.at) return;
+      this.landJump(this.jump);
+    }
     if (this.volumesMovedAt != null && now >= this.volumesMovedAt + FLOW.volumesJournalSec) {
       this.volumesMovedAt = null;
       this.journal({ kind: 'settings.changed', settings: this.journalSettings() });
@@ -1306,16 +1347,27 @@ export class Show {
       return refuse(`song ${c.lastSongId} is not at position ${c.position} of this Queue: check the seed and the position`);
     }
     if (lineFrom != null && lineFrom > c.position + 1) return refuse(`the Line cannot be confirmed from position ${lineFrom}, after the last counted song`);
+    this.resumeRound({ number: c.round, kind: c.kind, cardType, side, pool, drawn, position: c.position, lineFrom });
+  }
+
+  /**
+   * A round resumed from its Shuffle `drawn`, with its songs up to `position` counted from now (−1: none yet) and the
+   * Line confirmed from `lineFrom` (or not): `resumeAt` once its token checks out, and a test jump into play. Journaled as
+   * `round.resumed`, which puts the Game in `play` from now; the projector hears of the scene too. Hold music until Next.
+   */
+  resumeRound({ number, kind, cardType, side, pool, drawn, position, lineFrom }: {
+    number: number; kind: RoundKind; cardType: string; side: number; pool: string; drawn: TieFreeShuffle; position: number; lineFrom: number | null;
+  }) {
     this.resetLive();
-    this.foldPlayed(c.round);
+    this.foldPlayed(number);
     this.queue = drawn.queue;
     this.shuffleSeed = drawn.seed;
     this.shuffleAttempts = drawn.attempts;
     this.drumSeed = freshDrumSeed();
-    this.position = c.position;
+    this.position = position;
     const now = this.env.now();
     const nowMs = this.env.nowMs();
-    this.landings = this.queue.slice(0, c.position + 1).map((songId, position) => ({ songId, position, atMs: nowMs, undone: false, T: now }));
+    this.landings = this.queue.slice(0, position + 1).map((songId, p) => ({ songId, position: p, atMs: nowMs, undone: false, T: now }));
     this.claims = [];
     this.reviewMarks.clear();
     this.finale = null;
@@ -1329,25 +1381,23 @@ export class Show {
     this.interval = null;
     this.intro = null;
     this.shuffle = null;
-    this.round = { number: c.round, kind: c.kind, cardType, side, pool, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * this.roundTargetSec(c.kind), lineConfirmed: lineFrom != null };
-    this.phaseModel = { kind: lineFrom != null ? 'bingo' : firstClimb(c.kind), start: lineFrom ?? 0, seed: Math.floor(this.env.random() * 2 ** 32) >>> 0, valid: [], plan: null };
+    this.round = { number, kind, cardType, side, pool, startedAtMs: nowMs, targetEndMs: nowMs + 1000 * this.roundTargetSec(kind), lineConfirmed: lineFrom != null };
+    this.phaseModel = { kind: lineFrom != null ? 'bingo' : firstClimb(kind), start: lineFrom ?? 0, seed: Math.floor(this.env.random() * 2 ** 32) >>> 0, valid: [], plan: null };
     this.expectedSongs = null;
     this.targetShiftSec = 0;
     this.rebuildPhase({ songsMove: 'target' });
     this.updateNudge();
     this.journal({
-      kind: 'round.resumed', round: c.round, roundKind: c.kind, cardType, ...(side !== DEFAULT_SIDE ? { side } : {}), queue: [...this.queue], phaseSeed: this.phaseModel.seed,
+      kind: 'round.resumed', round: number, roundKind: kind, cardType, ...(side !== DEFAULT_SIDE ? { side } : {}), queue: [...this.queue], phaseSeed: this.phaseModel.seed,
       startedAtMs: this.round.startedAtMs, targetEndMs: this.round.targetEndMs, settings: this.journalSettings(),
-      shuffleSeed: this.shuffleSeed, shuffleAttempts: this.shuffleAttempts, drumSeed: this.drumSeed, position: c.position, lineConfirmedFrom: lineFrom,
+      shuffleSeed: this.shuffleSeed, shuffleAttempts: this.shuffleAttempts, drumSeed: this.drumSeed, position, lineConfirmedFrom: lineFrom,
     }, nowMs);
-    // The journal entry already puts the Game in `play`; the projector still hears about the scene.
-    if (this.scene !== 'play') {
-      const previous = this.scene;
-      this.scene = 'play';
-      this.sceneSinceMs = nowMs;
-      this.emit({ type: 'scene.changed', scene: 'play', previous, atMs: nowMs });
-    }
-    this.out.push(this.drumResetEffect(c.position));
+    // The journal entry puts the Game in `play` from now (also from `play`: a test jump); the projector hears of a change.
+    const previous = this.scene;
+    this.scene = 'play';
+    this.sceneSinceMs = nowMs;
+    if (previous !== 'play') this.emit({ type: 'scene.changed', scene: 'play', previous, atMs: nowMs });
+    this.out.push(this.drumResetEffect(position));
     this.prefetch();
     // The music never stops by accident: Hold music until the presenters press Next.
     if (this.unlocked) this.enterHold('music', { music: true });
@@ -2471,9 +2521,12 @@ export class Show {
     };
   }
 
-  /** Move to another scene: journaled (a resumed Game comes back in it) and announced to the projector. */
-  setScene(scene: ShowScene, round = this.round.number, roundKind: RoundKind = this.round.kind, cardType: string = this.round.cardType, side: number = this.round.side) {
-    if (scene === this.scene) return;
+  /**
+   * Move to another scene: journaled (a resumed Game comes back in it) and announced to the projector. `again`: also
+   * when it is the scene already (a test jump to an intro from a round's start, which another round's intro replaces).
+   */
+  setScene(scene: ShowScene, round = this.round.number, roundKind: RoundKind = this.round.kind, cardType: string = this.round.cardType, side: number = this.round.side, { again = false }: { again?: boolean } = {}) {
+    if (scene === this.scene && !again) return;
     this.setSoundTest(null); // a scene change ends the sound test (D229)
     const previous = this.scene;
     const atMs = this.env.nowMs();
@@ -3222,13 +3275,16 @@ export class Show {
     return this.flush();
   }
 
-  /** Introduce a round: its name and prizes on screen while its intro music plays. No Queue yet. */
-  roundIntro(number: number, kind: RoundKind, cardType: string, side: number) {
+  /**
+   * Introduce a round: its name and prizes on screen while its intro music plays. No Queue yet. `again`: a test jump,
+   * which may come from `roundStart` itself (the scene rules keep the presenters' intro out of it).
+   */
+  roundIntro(number: number, kind: RoundKind, cardType: string, side: number, { again = false }: { again?: boolean } = {}) {
     this.pending = null;
     this.celebration = null;
     this.interval = null;
     this.intro = { round: number, kind, cardType, side, sinceMs: this.env.nowMs() };
-    this.setScene('roundStart', number, kind, cardType, side);
+    this.setScene('roundStart', number, kind, cardType, side, { again });
     // Announcing a round reveals its prizes (unless the plan keeps them all secret: plan.ts revealedRounds).
     this.revealPrizes(number, 'intro');
     // Its fanfare and the voice naming it over the intro music, which comes up as the voice ends (D198).
@@ -3272,6 +3328,85 @@ export class Show {
     // The goodbye over the end set's first song, which comes up as it ends (D202).
     this.playIntervalMusic('end');
     this.pressCue('goodbye');
+  }
+
+  // ------------------------------------------------------------------ rehearsal test tools (TEST_COMMANDS, never the night)
+  /**
+   * `testJump`: round `number`'s intro, or with `songs` that round in play with its first `songs` songs counted, in the
+   * same Game (the cards in play, the settings and the volumes stay). The round is the plan's (its kind, card type and
+   * side, as `plannedSide` reads it), else a normal round on the default card type. Whatever plays stops at once, as with
+   * Panic, and the jump lands once the runtime has let go of it (TEST_JUMP.settleSec, `landJump`): until then every other
+   * command is `busy`. A refused jump stops nothing. Another jump meanwhile replaces it.
+   */
+  testJump(reqId: string, number: number, songs: number | null) {
+    const planned = roundPlan(this.plan, number);
+    const kind = planned?.kind ?? 'normal';
+    const cardType = planned?.cardType || defaultCardType(kind);
+    const side = this.plannedSide(number, kind, cardType);
+    const pool = this.roundPool(cardType, side);
+    if (pool == null) return this.reject(reqId, 'testJump', 'invalid', `card type ${cardType} has no side ${side}`);
+    let play: TestJumpTarget['play'] = null;
+    if (songs != null) {
+      // A fresh Shuffle, as a round's start draws it (its seed from env.random; a fixed test Queue stays fixed).
+      const drawn = this.drawQueue(cardType, kind, side, pool);
+      if (songs > drawn.queue.length) return this.reject(reqId, 'testJump', 'invalid', `round ${number}'s Queue has ${drawn.queue.length} songs, fewer than ${songs}`);
+      if (drawn.tied) this.out.push({ type: 'log', level: 'warn', message: `round ${number}: every Shuffle up to ${FLOW.shuffleMaxAttempts} had a Tie; kept the last` });
+      play = { drawn, position: songs - 1 };
+    }
+    // Panic: nothing lands, and everything stops (a voice cue, a held effect, Pausa, a throw song, a Check's sounds).
+    this.panic();
+    this.autoCheck = false; // no Check comes on screen while it settles
+    this.jump = { at: this.env.now() + TEST_JUMP.settleSec, number, kind, cardType, side, pool, play };
+  }
+
+  /** The test jump lands: the show flow it left is cleared, then the round's intro (as roundIntro) or the round in play
+   * (as resumeAt: Hold music until Next). */
+  landJump(j: TestJumpTarget) {
+    this.jump = null;
+    this.clearFlow({ intro: j.play == null });
+    if (j.play) {
+      this.resumeRound({ number: j.number, kind: j.kind, cardType: j.cardType, side: j.side, pool: j.pool, drawn: j.play.drawn, position: j.play.position, lineFrom: null });
+    } else {
+      this.out.push(this.drumResetEffect(this.position)); // the drum at rest, as a round's end leaves it
+      this.roundIntro(j.number, j.kind, j.cardType, j.side, { again: true });
+    }
+    this.emitState();
+  }
+
+  /**
+   * Before a test jump lands, the show flow of the moment it left goes, so the moment it lands in is clean: the Check and
+   * its batch, the Celebration (and Parlem's duck of its music), the Interval, the intro, the Shuffle, and live playback.
+   * An intro keeps the round it left as a round's end does (its Queue, landings and decided Claims), so what was still
+   * open there is closed in the journal too: an undecided Claim is discarded (`claim.reviewing`, `claim.discarded`), and
+   * a finale not yet cued is called off (`finale.set` with none). A jump into play needs neither: its `round.resumed`
+   * starts the round afresh.
+   */
+  clearFlow({ intro }: { intro: boolean }) {
+    if (this.scene === 'celebration') this.out.push({ type: 'bedDuck', db: 0, seconds: HOLD.releaseSec });
+    this.stopCheck();
+    this.reviewMarks.clear();
+    this.batch = null;
+    this.autoCheck = false;
+    this.celebrationNext = null;
+    this.celebrationChoice = null;
+    this.celebration = null;
+    this.winningHook = null;
+    this.interval = null;
+    this.intro = null;
+    this.shuffle = null;
+    this.resetLive();
+    if (!intro) return;
+    for (const claim of this.claims) {
+      if (settled(claim)) continue;
+      if (claim.status !== 'reviewing') this.journal({ kind: 'claim.reviewing', round: claim.round, claimId: claim.claimId });
+      claim.status = 'discarded';
+      claim.cueNext = false;
+      this.journal({ kind: 'claim.discarded', round: claim.round, claimId: claim.claimId });
+    }
+    if (this.finale && !this.finaleCued) {
+      this.finale = null;
+      this.journal({ kind: 'finale.set', round: this.round.number, cardIds: [] });
+    }
   }
 
   // ------------------------------------------------------------------------------- voice cues (D198, D202–D204)

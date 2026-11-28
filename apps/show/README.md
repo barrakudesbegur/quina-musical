@@ -17,6 +17,8 @@ npm run dev                       # relay + Vite on http://localhost:5174, this 
 
 For a show, run the built pages instead: `npm start` builds them and serves `dist/`. The relay with `--dist` refuses a `dist/` built from other sources than the checkout's (`dist/build.json`, relay/build-stamp.ts), so a stale build never reaches the night. Add `-- --lan` so the hotspot's tablets and phones can connect. They pair with the relay token in the LAN URL the relay prints (`?t=…`, see docs/protocol.md › Relay).
 
+**Rehearsal test runs only, never on the night:** add `--test` (`npm start -- --lan --repertoire 2026 --test`, or `npm run dev -- --test`) and the consoles' test tools work: reset the Game (`testReset`: the show page reloads on a new Game, `fresh=1`) or jump to a round's intro or into its play with some songs counted (`testJump`). The relay prints a TEST MODE banner and tells every screen (`relay.mode`); without the flag the relay drops those commands, and the show page ignores them unless its relay is in test mode. A console through the cloud never gets them through. Restart without `--test` before the show (docs/protocol.md › Commands › Test runs).
+
 The Python venvs (never `/usr/bin/python3`, it is 3.9):
 - `uv venv --python /opt/homebrew/bin/python3.13 tools/prep/.venv && uv pip install --python tools/prep/.venv/bin/python -r tools/prep/requirements-layering.txt -r tools/prep/requirements-test.txt` (from the repo root) (the analysis, keys and tests);
 - `tools/prep/.venv-stems` for Demucs, set up as `tools/prep/requirements-stems.txt` says.

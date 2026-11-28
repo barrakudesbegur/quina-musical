@@ -298,11 +298,38 @@ export const COMMANDS = Object.freeze({
    * where the scene has Parlem (Hold reason `pause`). Next during Pausa ends it with a transition instead.
    */
   pause: { on: { type: 'boolean', optional: true } },
+
+  // ---- rehearsal test runs only (TEST_COMMANDS): never on the night ----
+  /**
+   * The show page reloads itself with `fresh=1`, its other URL params kept (`autostart=1`…): a new Game, whose start
+   * overlay asks for the click as usual. The old Game's journal stays. Also on a page still waiting for its click.
+   */
+  testReset: {},
+  /**
+   * Jump to a moment of the night, in the same Game (the cards in play, the settings and the volumes stay). From any
+   * scene, whatever plays first stops silently, as with Panic, and the show flow is cleared (Check, Claims, Celebration,
+   * Interval, intro, Shuffle, finale); every other command waits as `busy` until the jump lands, once the audio has let
+   * go (TEST_JUMP.settleSec). Round `round` is the Game plan's (its kind, card type and side), else a normal round on the
+   * default card type. Without `songs`: its intro, as `roundIntro` does. With `songs`: that round in play on a fresh
+   * Shuffle with its first `songs` songs counted, as `resumeAt` at position `songs − 1` does (0: none yet), in Hold music
+   * until Next; more songs than its Queue has is `invalid`.
+   */
+  testJump: { round: { type: 'integer', min: 1, max: 20 }, songs: { type: 'integer', optional: true, min: 0, max: 999 } },
 } as const satisfies Record<string, Record<string, FieldSpec>>);
 
 type Specs = typeof COMMANDS;
 export type CommandName = keyof Specs;
 export const COMMAND_NAMES = Object.keys(COMMANDS) as CommandName[];
+
+/**
+ * The rehearsal test tools: never on the night. The relay forwards them only when it runs with `--test`, and never from
+ * the cloud link's socket (the cloud's consoles); the show page acts on them only after its relay said
+ * `relay.mode { test: true }`. docs/protocol.md › Commands › Test runs.
+ */
+export const TEST_COMMANDS = ['testReset', 'testJump'] as const satisfies readonly CommandName[];
+export type TestCommandName = (typeof TEST_COMMANDS)[number];
+/** Whether `cmd` (untrusted) names one of the test tools (TEST_COMMANDS). */
+export const isTestCommand = (cmd: unknown): cmd is TestCommandName => (TEST_COMMANDS as readonly unknown[]).includes(cmd);
 
 // ---- types derived from the specs ------------------------------------------------------------------
 type ValueOf<F extends FieldSpec> = F extends { oneOf: readonly (infer O)[] }

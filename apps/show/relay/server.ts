@@ -1,5 +1,6 @@
 // Relay: the pages, the audio and a dumb WebSocket hub. No game logic lives here; the show page owns the state.
-//   node relay/server.ts [--port 5174] [--host 0.0.0.0] [--dist [--dist-dir PATH]] [--repertoire NAME|PATH]
+//   node relay/server.ts [--port 5174] [--host 0.0.0.0] [--dist [--dist-dir PATH]] [--repertoire NAME|PATH] [--test]
+// `--test` (rehearsal test runs only, never on the night) lets the consoles' test tools through (relay/gate.ts).
 // Pages are a Vite app (vite.config.ts): in development Vite runs here as middleware, so everything shares
 // one origin; with --dist the relay serves the built dist/ instead (`npm start` builds it first) and refuses a dist
 // built from other sources than these (relay/build-stamp.ts).
@@ -34,6 +35,7 @@ import {
   type RelayClients, type RelayPlan, type RemoteStatusMessage, type Role, type ShowState,
 } from '@quina/protocol';
 import { distProblem } from './build-stamp.ts';
+import { TEST_MODE_BANNER, relayAcceptsCommand, relayModeMessage } from './gate.ts';
 import { LaptopPlan, type CurrentPlan } from './plan.ts';
 import { CACHE, DEFAULT_REPERTOIRE, LINK, MEDIA, OUT, REPERTOIRE_ENV, PREP, REPO, SHOW, display, loadRepertoire, type Repertoire } from './repertoire.ts';
 
@@ -49,6 +51,9 @@ const PORT = Number(argValue('--port', process.env.PORT || '5174'));
 const LAN = args.includes('--lan');
 const HOST = argValue('--host', LAN ? '0.0.0.0' : '127.0.0.1');
 const USE_DIST = args.includes('--dist');
+/** Rehearsal test runs only, never on the night: the test tools (TEST_COMMANDS) go through, and every socket hears so
+ * (`relay.mode`). */
+const TEST_MODE = args.includes('--test');
 const REPERTOIRE: Repertoire = repertoireOrExit(argValue('--repertoire', process.env[REPERTOIRE_ENV] || DEFAULT_REPERTOIRE));
 const ANALYSIS_DIR = path.join(REPERTOIRE.dataDir, 'analysis');
 
@@ -490,8 +495,10 @@ function isEnginePath(pathname: string): boolean {
 // from it); the hotspot's devices pair with the relay token. A socket without a valid hello hears nothing.
 // - Events come only from the show socket. The Game journal (journal.entry, journal.entries: the Queue, seeds,
 //   names) goes to the cloud link only; every other event goes to the paired remotes and the link.
-// - Commands come only from paired remotes and the link, and go to the show; `getJournal` only from the link.
+// - Commands come only from paired remotes and the link, and go to the show; `getJournal` only from the link; the test
+//   tools only with `--test`, and never from the link (relay/gate.ts).
 // - The cloud's consoles (`cloud.consoles`) come only from the link, and go out folded into `relay.clients`.
+// - Every paired socket hears the relay's test mode (`relay.mode`) right after its hello.
 interface Client {
   role: Role | 'unknown';
   clientId: string;
@@ -506,7 +513,6 @@ const wss = new WebSocketServer({ noServer: true });
 let lastState: ShowState | null = null;
 const LOCAL_ROLES: readonly Role[] = ['show', 'cloud'];
 const LISTENERS: readonly Role[] = ['tablet', 'admin', 'drum', 'cloud'];
-const COMMANDERS: readonly Role[] = ['tablet', 'admin', 'cloud'];
 const JOURNAL_EVENTS = new Set(['journal.entry', 'journal.entries']);
 
 /** Whether `client` should receive a show event of this type. */
@@ -541,6 +547,7 @@ wss.on('connection', (socket: WebSocket, req: http.IncomingMessage) => {
       if (self.role === 'unknown') return; // unpaired: it hears nothing
       if (lastState && receives(self, 'state')) socket.send(JSON.stringify(lastState));
       socket.send(JSON.stringify(planMessage(PLAN.current())));
+      socket.send(JSON.stringify(relayModeMessage(TEST_MODE)));
       if (isConsole(self)) for (const [clientId, status] of remoteStatuses) if (clientId !== self.clientId) socket.send(JSON.stringify(status));
       broadcast(clientList());
       return;
@@ -564,8 +571,7 @@ wss.on('connection', (socket: WebSocket, req: http.IncomingMessage) => {
     }
     const isCommand = message.type === 'cmd';
     if (isCommand) {
-      if (self.role === 'unknown' || !COMMANDERS.includes(self.role)) return;
-      if (message.cmd === 'getJournal' && self.role !== 'cloud') return;
+      if (!relayAcceptsCommand(message.cmd, self.role, TEST_MODE)) return;
     } else if (self.role !== 'show') return;
     if (message.type === 'state') lastState = message as unknown as ShowState;
     // Who sent a command (D234's lock mirror): the relay's word, overwriting any a console set, so none can speak for
@@ -648,4 +654,6 @@ server.listen(PORT, HOST, () => {
   }
   else console.log('This laptop only. Start with --lan to let the hotspot\'s tablets and phones pair.');
   console.log(`repertoire ${REPERTOIRE.name} (${display(REPERTOIRE.manifest)}): ${repertoireStatus()}`);
+  // Last, so it is what the screen shows.
+  if (TEST_MODE) console.warn(TEST_MODE_BANNER);
 });

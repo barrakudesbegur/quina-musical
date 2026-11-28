@@ -38,6 +38,8 @@ import {
   isPhaseName,
   isPoolId,
   isSide,
+  isRelayMode,
+  isTestCommand,
   AUTO_SOUNDS_DEFAULT,
   VOLUME_DEFAULTS,
   type AutoSounds,
@@ -347,7 +349,8 @@ async function boot() {
     showStatusLine(`Represa ${where}: Quina ${resumed.number}, cançó ${resumed.position + 1}`);
   }
   bus.on((message, { local }) => {
-    if (!local && isRecord(message) && message.type === 'cmd') run(created.command(message));
+    if (!local && isRelayMode(message)) relayTestMode = message.test;
+    if (!local && isRecord(message) && message.type === 'cmd' && testToolAllowed(message.cmd)) run(created.command(message));
     // Who is connected: a two-level button held on a console that left is let go (D234).
     if (!local && isRecord(message) && message.type === 'relay.clients' && Array.isArray(message.clients)) {
       run(created.clientsChanged(message.clients.flatMap((c: unknown) => (isRecord(c) && typeof c.clientId === 'string' ? [c.clientId] : []))));
@@ -358,7 +361,10 @@ async function boot() {
       run(created.setPlan(check?.ok ? check.plan : null));
     }
   });
-  bus.onOpen = () => run(created.command(makeCommand('getState')));
+  bus.onOpen = () => {
+    relayTestMode = false; // until this connection's relay says otherwise (relay.mode comes right after the hello)
+    run(created.command(makeCommand('getState')));
+  };
   bus.connect();
   graph.loadSamples(ENGINE.fxSamples);
   blends.loadKeys();
@@ -376,8 +382,21 @@ async function boot() {
   requestAnimationFrame(frame);
 }
 
+/**
+ * The relay's test mode (`relay.mode`, its `--test`: rehearsal test runs only, never on the night). Only then does this
+ * page act on the test tools (TEST_COMMANDS); it starts off on every (re)connection, until the relay says.
+ */
+let relayTestMode = false;
+
+/** Whether a command may reach the machine: any but a test tool, which needs the relay in test mode. */
+function testToolAllowed(cmd: unknown): boolean {
+  if (!isTestCommand(cmd) || relayTestMode) return true;
+  console.warn(`${cmd}: ignored, the relay is not in test mode (start it with --test, for test runs only)`);
+  return false;
+}
+
 function send<C extends CommandName>(cmd: C, ...fields: CommandArgs<C>): void {
-  if (!show) return;
+  if (!show || !testToolAllowed(cmd)) return;
   // Commands from this page carry a `local-` reqId instead of the one makeCommand draws.
   run(show.command({ ...makeCommand(cmd, ...fields), reqId: `local-${Date.now().toString(36)}` }));
 }
@@ -536,6 +555,13 @@ function apply(effect: Effect): void {
       if (effect.level === 'warn') console.warn(effect.message);
       else console.info(effect.message);
       return;
+    case 'reloadFresh': {
+      // testReset (rehearsal test runs only): a new Game. The other params stay (autostart=1…), and so does the old journal.
+      const url = new URL(location.href);
+      url.searchParams.set('fresh', '1');
+      location.replace(url.href);
+      return;
+    }
     default: {
       const unhandled: never = effect; // every effect is handled above; an unknown one is only logged
       console.warn('unknown effect', unhandled);

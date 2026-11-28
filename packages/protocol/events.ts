@@ -974,6 +974,24 @@ export interface RelayPlan {
 }
 
 /**
+ * Whether the relay runs in test mode (its `--test` flag, rehearsal test runs only, never on the night): sent to every
+ * paired socket right after its hello, always (`test: false` without the flag). Only with `test: true` does the relay
+ * forward the test tools (TEST_COMMANDS) and the show page act on them; consoles may show their test section from it.
+ */
+export interface RelayMode {
+  v: ProtocolVersion;
+  type: 'relay.mode';
+  test: boolean;
+}
+
+/** A `relay.mode` message (untrusted): right version, and `test` a boolean. */
+export function isRelayMode(message: unknown): message is RelayMode {
+  if (!message || typeof message !== 'object') return false;
+  const m = message as Record<string, unknown>;
+  return m.v === PROTOCOL_VERSION && m.type === 'relay.mode' && typeof m.test === 'boolean';
+}
+
+/**
  * The Wii Remote's status between consoles (Frontend's, 35573a0): the console the remote pairs with publishes it
  * through the relay, and every paired console shows the remote's badges and chip from it. PRIVATE: the relay
  * forwards it from the host console to the other paired consoles only (tablet and admin roles), never to the show
@@ -1049,7 +1067,11 @@ export function withCloudConsoles(clients: RelayClients['clients'], cloudIds: re
   return [...clients, ...cloudIds.map((clientId) => ({ role: 'console' as const, clientId }))];
 }
 
-/** What a remote receives: the engine's events plus the relay's client list and the Game plan. */
+/**
+ * What a remote receives: the engine's events plus the relay's client list and the Game plan. The relay's test mode
+ * (`relay.mode`, test runs only) comes too, and `isEvent` lets it through, but it stays out of this union for now, so
+ * what is built on it keeps compiling (the cloud's forwarded events would take it in): read it with `isRelayMode`.
+ */
 export type IncomingEvent = ShowEvent | RelayClients | RelayPlan;
 
 type Unversioned<E> = E extends unknown ? Omit<E, 'v'> : never;
@@ -1063,11 +1085,12 @@ export function makeEvent<E extends ShowEventBody>(event: E): E & { v: ProtocolV
 
 /**
  * Accept a message on a remote: right version and a known event type. It trusts the engine for the
- * fields; a remote must still ignore event types it does not handle (additions stay v1).
+ * fields; a remote must still ignore event types it does not handle (additions stay v1). It also lets the relay's
+ * `relay.mode` through, which IncomingEvent leaves out for now: `isRelayMode` reads it.
  */
 export function isEvent(message: unknown): message is IncomingEvent {
   if (!message || typeof message !== 'object') return false;
   const m = message as Record<string, unknown>;
   if (m.v !== PROTOCOL_VERSION || typeof m.type !== 'string') return false;
-  return (EVENT_TYPES as readonly string[]).includes(m.type) || m.type === 'relay.clients' || m.type === 'relay.plan';
+  return (EVENT_TYPES as readonly string[]).includes(m.type) || m.type === 'relay.clients' || m.type === 'relay.plan' || m.type === 'relay.mode';
 }

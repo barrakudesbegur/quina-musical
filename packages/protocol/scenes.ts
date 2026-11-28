@@ -101,6 +101,9 @@ const RULES = {
   finaleCue: ['play'],
   // The night's last round, its normal screen and its Check, and after it, on the end screen (D155).
   storm: (c) => c.scene === 'after' || (c.lastRound === true && (c.scene === 'play' || c.scene === 'check')),
+  // The rehearsal test tools (TEST_COMMANDS), never on the night: from any moment, Pausa included.
+  testReset: 'any',
+  testJump: 'any',
 } satisfies Record<CommandName, Rule>;
 
 export const SCENE_RULES: Readonly<Record<CommandName, Rule>> = Object.freeze(RULES);
