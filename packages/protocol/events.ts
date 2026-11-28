@@ -53,6 +53,28 @@ export interface HoldInfo {
   ducked?: boolean;
 }
 
+/**
+ * The pulse of the song the room hears (`ShowState.beat`), so a phone runs a CSS loop phase-aligned to it with no
+ * script per frame: period = k · 60000 / bpm ms (k beats a cycle, e.g. `beatsPerBar`), and
+ * delay = downbeatAtMs > now ? downbeatAtMs − now : −((now − downbeatAtMs) mod period).
+ *
+ * It is what plays: after a landing the song runs at its own speed (a Blend stretches only its bars before the
+ * hook). From the outgoing song's exit on, it is already the incoming song's, with `downbeatAtMs` = the landing
+ * (`landAtMs`), and only after that Spin's `transition.scheduled`. The engine sends a new one when the grid moves (a
+ * landing, a loop re-cue, a Pausa resume, a cancelled Spin) or drifts from this one by more than a few tens of ms;
+ * otherwise it stays the same object value. null when no song is heard: Hold music, scene music (the Interval, the
+ * breaks, Pausa, the intro, the Celebration), a Check's reveals, or a song with no beat grid.
+ */
+export interface BeatInfo {
+  /** Beats per minute as heard: the song's local tempo × its playback rate. */
+  bpm: number;
+  /** Beats in a bar: the song's metre (4 for almost every song; 3 and 2 exist). */
+  beatsPerBar: number;
+  /** A bar's first beat, epoch ms on the show clock. Normally a recent downbeat (in the past) on the grid playing now;
+   * ahead of now only for a Spin's landing (= its `landAtMs`): nothing moves before it. */
+  downbeatAtMs: number;
+}
+
 export interface CurrentSong extends SongRef {
   hookId: string;
   /** The song's first play in this Game (D174): its slot is `pace.firstPlaySec`, and it landed on its best hook. */
@@ -96,6 +118,12 @@ export interface GameSettings {
    * switch. The engine only keeps it. Default true. Optional in the type only: an older journal lacks it.
    */
   remoteShake?: boolean;
+  /**
+   * PUBLIC (phones): a card that completes a Line or the Quina shows a big «LÍNIA!» or «QUINA!» over its map on the
+   * phones, until the next song lands. The presenters can switch it off; the engine only keeps and journals it.
+   * Default true. Optional in the type only: an older journal lacks it, and absent means true.
+   */
+  announceWins?: boolean;
   /** The sounds the engine plays by itself, each on or off (D237, AUTO_SOUNDS; `setAutoSound`), every key. A journal
    * from before D237 lacks it (JournalSettings; autoSoundsOf reads its old switches). */
   autoSounds: AutoSounds;
@@ -481,6 +509,9 @@ export interface ShowState {
   hold: HoldInfo | null;
   holdMusic: boolean;
   current: CurrentSong | null;
+  /** PUBLIC: the pulse of the song the room hears, for the phones' marks to move in time (BeatInfo). null when no
+   * song is heard. Optional in the type only (added later in v1): the engine always sends it. Not journaled. */
+  beat?: BeatInfo | null;
   /** PRIVATE: the Queue's next song. */
   next: SongRef | null;
   /** `position` is the Queue index of the last counted landing (−1 before the first). */

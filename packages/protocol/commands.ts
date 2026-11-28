@@ -92,6 +92,9 @@ export const COMMANDS = Object.freeze({
     holdMusicOn: { type: 'boolean', optional: true },
     /** The remote's shake gesture on or off (D148), the same on every console. The engine only keeps it. */
     remoteShake: { type: 'boolean', optional: true },
+    /** The phones' «LÍNIA!»/«QUINA!» over a card that completes one (GameSettings.announceWins, default true). The engine
+     * only keeps and journals it. */
+    announceWins: { type: 'boolean', optional: true },
   },
   /** The sound test (D229): plays `kind` on a loop at its slider's level (`setVolume` moves it live); null ends it.
    * Only before the first round's intro (scene `before`), with nothing playing; any scene change ends it. Not journaled. */
