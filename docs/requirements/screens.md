@@ -43,7 +43,7 @@ _From event.md › When and where (Projection), The night, step by step, Claims 
 | Pause | "Tornem de seguida" |
 | Claim and Check | "CARTRÓ #123" and one label for the card's type and side, "Normal 1–5", "Normal 6–10", "Desgraciat" or "Especial" (D163, D193, D266), first (a wrong type fails here); the card's grid; each song ✓ or ✗ in turn, at the presenters' pace; the result. A Check under review stays on the Check screen with "Revisió manual", no pass or fail (D118, D119, D123) |
 | A failed Check | A huge red ✗ with red light beams, and no text. The Desgraciat has no public Check: its finale on stage replaces it (D166) |
-| Celebration | "LÍNIA!", "QUINA!" or, in the Desgraciat, "QUINA POTRA!" huge (D186), the prize bundle and sponsors, confetti, ninos and a victory lap of the drum. A Line's Celebration shows no prize panel for now, on the projector or the phones; how a Celebration shows its prize is pending Frontend's proposals (D242) |
+| Celebration | "LÍNIA!", "QUINA!" or, in the Desgraciat, "QUINA POTRA!" huge (D186), the prize bundle and sponsors, confetti, ninos and a victory lap of the drum. A Line's Celebration shows no prize panel for now, on the projector or the phones (D242). Next: the Line's and the Quina's Celebrations show only the logos of the sponsors whose gifts make up that prize, with no prize text and no «Gentilesa de» label, once its board is approved (D285). The Quina's fireworks are shells going off behind «QUINA!», animated (D285) |
 | Interval | The next round's name, a rough countdown, "Quina 4 de 12", the price of a card for the coming round, and sponsor thanks |
 | After the Game | Thanks and sponsor credits |
 
