@@ -15,11 +15,12 @@
 <script lang="ts">
   import { getConsole } from '../context.ts';
   import { throwClock, throwProgress } from '../logic/throw-songs.ts';
-  import { ACTIONS, BREAK_SET_OPTIONS } from '../actions.ts';
+  import { BREAK_SET_OPTIONS } from '../actions.ts';
   import { isBreakSet } from '../logic/scene.ts';
   import SegmentedControl from '../../../packages/ui/components/SegmentedControl.svelte';
   import { S } from '../strings.ts';
   import Icon from './Icon.svelte';
+  import ThrowChip from './ThrowChip.svelte';
 
   const model = getConsole();
   const uid = $props.id();
@@ -37,7 +38,7 @@
     <div class="now-playing__song">
       {#if thrown?.playing}
         <h2 class="panel__label interval-music__label" id="{uid}-title">
-          {S.intervalMusic.title}<span class="interval-music__chip" data-color={ACTIONS[thrown.song].color}>{S.throws.names[thrown.song].label}</span>
+          {S.intervalMusic.title}<ThrowChip song={thrown.song} />
         </h2>
         <p class="now-playing__name">{thrown.title}</p>
         {#if thrown.artist}<p class="now-playing__artist">{thrown.artist}</p>{/if}
@@ -90,18 +91,6 @@
   .interval-music__label {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
-  }
-  .interval-music__chip {
-    display: inline-block;
-    padding: 0 8px;
-    border: var(--line-width-thin) solid var(--color-ink);
-    border-radius: var(--radius-pill);
-    background: var(--palette-solid);
-    color: var(--palette-contrast);
-    font-size: var(--text-xs);
-    letter-spacing: 0;
-    text-transform: none;
   }
   .interval-music__where {
     font-size: var(--text-sm);

@@ -3,7 +3,8 @@
   (console.css):
   - landscape: the header's three panels across the top; the scene's panels in a column on the left, the
     helpers' tabs filling the rest of it; the action cluster on the right. The playback opens the column on every
-    screen (D196): «Ara sona» (IntervalMusic while the breaks', Pausa's or the end's playlist plays, then NowPlaying),
+    screen (D196): «Ara sona», one panel (IntervalMusic while the breaks', Pausa's or the end's playlist plays, also at
+    the doors; else NowPlaying, which names a throw song playing on its own; in play both, the ring being NowPlaying's),
     and in one line (NowLine) where the full panel has no room: over Cerca while its box has the focus, and at the top
     of the Check board and the pads (D199). In a Check, the Check board takes the whole body, and so do the claim pad
     and the finalists' pad (the Desgraciat's finale) while they're open;
@@ -27,6 +28,7 @@
   import { WiiController } from './wii/controller.svelte.ts';
   import { keyCommand } from './logic/keys.ts';
   import { sendDefault } from './logic/default-action.ts';
+  import { nowPanels } from './logic/now-line.ts';
   import { keepScreenOn } from '../../packages/ui/client/wake-lock.ts';
   import { S } from './strings.ts';
   import AfterPanel from './components/AfterPanel.svelte';
@@ -89,6 +91,7 @@
   }
   const snap = $derived(model.show.state);
   const flow = $derived(model.show.flow);
+  const panels = $derived(snap ? nowPanels(snap, flow.scene) : null);
   const board = $derived(model.pad ? 'pad' : model.finalePad ? 'finalePad' : snap !== null && flow.scene === 'check' ? 'check' : 'play');
   const openPad = () => model.openPad();
   let menuOpen = $state(false);
@@ -138,8 +141,8 @@
     </main>
   {:else}
     <main class="console__main" data-scene={flow.scene}>
-      {#if snap?.intervalMusic}<IntervalMusic />{/if}
-      {#if snap && (flow.scene === 'before' || flow.scene === 'play' || flow.scene === 'celebration')}<NowPlaying />{/if}
+      {#if panels?.music}<IntervalMusic />{/if}
+      {#if panels?.song}<NowPlaying />{/if}
       <PausePanel />
       {#if !snap}
         <p class="console__waiting">{S.alerts.waiting}</p>

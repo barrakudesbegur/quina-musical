@@ -3,7 +3,9 @@
   logic/now-ring.ts): the auto-advance countdown, a Spin, a Suspense, "press Següent", or why the show waits.
   Under the artist, a chip says that state in words (with how long a Hold or pause has lasted), and who
   started the last Spin (this device's label names it). While Hold music (or a failed Check's error music)
-  plays instead of the song, the panel names that music instead.
+  plays instead of the song, the panel names that music instead. While a throw song plays with no song and no playlist
+  under it (at the doors, D138: IntervalMusic names it when a playlist plays), the panel names the throw song, with its
+  chip beside «Ara sona», as IntervalMusic does in a break.
 -->
 <script lang="ts">
   import { CONSOLE } from '../config.ts';
@@ -11,10 +13,12 @@
   import { getConsole } from '../context.ts';
   import { elapsedSec } from '../logic/countdown.ts';
   import { nowRing } from '../logic/now-ring.ts';
+  import { soloThrow } from '../logic/now-line.ts';
   import { S } from '../strings.ts';
   import SongTile from '../../../packages/ui/components/SongTile.svelte';
   import Icon from './Icon.svelte';
   import NowRing from './NowRing.svelte';
+  import ThrowChip from './ThrowChip.svelte';
   import { registerMorphRoot } from '../morph.ts';
 
   const model = getConsole();
@@ -28,6 +32,8 @@
   const ring = $derived(snap ? nowRing({ state: snap, flow: model.show.flow, nowMs: model.show.now, lastSec: CONSOLE.ringLastSec }) : null);
   /** The music playing instead of the song, if any. */
   const music = $derived(!ring?.holdMusic ? null : ring.state === 'checkFailed' ? 'error' : ring.state === 'paused' ? 'pause' : 'hold');
+  /** A throw song playing on its own (no song, no music instead, no playlist under it: IntervalMusic names that one). */
+  const thrown = $derived(snap ? soloThrow(snap, music) : null);
   const since = $derived(ring?.sinceMs != null ? formatCountdown(elapsedSec(ring.sinceMs, model.show.now)) : '0:00');
   const chip = $derived.by(() => {
     if (!ring) return null;
@@ -59,7 +65,7 @@
 </script>
 
 {#if snap && ring}
-  {@const name = music ? (music === 'error' ? S.nowPlaying.errorMusic : music === 'pause' ? S.intervalMusic.sets.pausa : S.nowPlaying.holdMusic) : (snap.current?.title ?? S.nowPlaying.nothing)}
+  {@const name = music ? (music === 'error' ? S.nowPlaying.errorMusic : music === 'pause' ? S.intervalMusic.sets.pausa : S.nowPlaying.holdMusic) : (snap.current?.title ?? thrown?.title ?? S.nowPlaying.nothing)}
   <section bind:this={root} class="panel now-playing" data-testid="now-playing" data-song-id={snap.current?.songId ?? ''} data-state={snap.status} data-ring-state={ring.state} aria-labelledby="{uid}-title">
     <!-- The design system's SongTile, `feature` (D5): a long title stops at two lines (#81). Hold or error music shows
          the note on its tile instead of a cover. -->
@@ -68,11 +74,12 @@
       class="now-playing__tile"
       songId={music ? null : (snap.current?.songId ?? null)}
       title={name}
-      artist={music ? null : (snap.current?.artist ?? null)}
+      artist={music ? null : (snap.current?.artist ?? thrown?.artist ?? null)}
       morph={!music && snap.current !== null}
       data-music={music ?? undefined}
+      data-throw={thrown ? 'playing' : undefined}
     >
-      {#snippet head()}<h2 class="panel__label" id="{uid}-title">{S.nowPlaying.title}</h2>{/snippet}
+      {#snippet head()}<h2 class="panel__label" id="{uid}-title">{S.nowPlaying.title}{#if thrown}<ThrowChip song={thrown.song} />{/if}</h2>{/snippet}
       {#snippet meta()}
         {#if chip}
           <p class="now-playing__chip" data-state={ring.state}>

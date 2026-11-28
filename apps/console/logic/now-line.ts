@@ -39,3 +39,20 @@ function nowSound(state: ShowState, instead: InsteadMusic | null): NowSound {
   if (state.current) return { kind: 'song', songId: state.current.songId, title: state.current.title, artist: state.current.artist };
   return { kind: 'none' };
 }
+
+/**
+ * Which full «Ara sona» panels open the column (App.svelte, D196): IntervalMusic while a playlist plays (`intervalMusic`),
+ * NowPlaying in play and a Celebration, and at the doors only while no playlist plays, so the doors never show two
+ * «Ara sona» (one of them «No sona cap cançó»). In play before the first Spin both show: NowPlaying holds the ring.
+ */
+export function nowPanels(state: ShowState, scene: ShowScene): { music: boolean; song: boolean } {
+  const music = state.intervalMusic != null;
+  return { music, song: scene === 'play' || scene === 'celebration' || (scene === 'before' && !music) };
+}
+
+/** The throw song NowPlaying names (D138): one playing with no song, no music instead and no playlist under it (at the
+ *  doors; IntervalMusic names one over a playlist). */
+export function soloThrow(state: ShowState, instead: InsteadMusic | 'pause' | null): ShowState['throwSong'] {
+  const thrown = state.throwSong;
+  return thrown?.playing && !state.current && !instead && state.intervalMusic == null ? thrown : null;
+}

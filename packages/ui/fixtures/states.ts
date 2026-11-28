@@ -650,6 +650,18 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
   },
   /** Before, with the plan's start time 25 minutes away (fixtures/plan.ts › demoPlan): the countdown and the clock. */
   beforeStart: (now) => FIXTURES.before(now),
+  /** At the doors, «Llançament» playing (D138), 42 s in, with no music under it: «Ara sona» names it. */
+  beforeThrow: (now) => {
+    const s = FIXTURES.before(now).state as FullState;
+    const track = FIXTURE_THROW_SONGS.throw;
+    return { state: { ...s, throwSong: { ...track, song: 'throw', playing: true, sinceMs: now - 42000, posSec: track.startSec } } };
+  },
+  /** At the doors with a playlist playing (the breaks' set, U97: the doors' own is still open): one «Ara sona», the
+   *  music's (IntervalMusic), never NowPlaying's «No sona cap cançó» beside it. */
+  beforeMusic: (now) => {
+    const s = FIXTURES.before(now).state as FullState;
+    return { state: { ...s, status: 'playing', intervalMusic: { set: 'breaks', track: { title: 'All I Want for Christmas Is You', artist: 'Mariah Carey', index: 1, count: 24, sinceMs: now - 50000 } } } };
+  },
   roundStart: (now) => {
     const s = baseState(now);
     return {

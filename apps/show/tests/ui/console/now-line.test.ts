@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { FIXTURES } from '../../../../../packages/ui/fixtures/states.ts';
 import { flowOf } from '../../../../../packages/ui/flow.ts';
-import { nowLine } from '../../../../console/logic/now-line.ts';
+import { nowLine, nowPanels, soloThrow } from '../../../../console/logic/now-line.ts';
 import { S } from '../../../../console/strings.ts';
 
 const NOW = 1_800_000_000_000;
@@ -37,4 +37,25 @@ test('the playlist is named once its track is known; before that, what plays ins
   assert.deepEqual(lineOf('after').sound, { kind: 'none' });
   assert.deepEqual(lineOf('stay', 'hold').sound, { kind: 'music', music: 'hold' });
   assert.deepEqual(lineOf('checkFailed', 'error').sound, { kind: 'music', music: 'error' });
+});
+
+const panelsOf = (name: string) => {
+  const state = FIXTURES[name](NOW).state;
+  return nowPanels(state, flowOf(state).scene);
+};
+
+test('one «Ara sona» at the doors: the playlist\'s when one plays, else NowPlaying', () => {
+  assert.deepEqual(panelsOf('before'), { music: false, song: true });
+  assert.deepEqual(panelsOf('beforeMusic'), { music: true, song: false }, 'never «No sona cap cançó» beside the music');
+  assert.deepEqual(panelsOf('interval'), { music: true, song: false });
+  assert.deepEqual(panelsOf('play'), { music: false, song: true });
+});
+
+test('at the doors NowPlaying names «Llançament» playing on its own; over a playlist IntervalMusic does', () => {
+  const doors = FIXTURES.beforeThrow(NOW).state;
+  assert.equal(soloThrow(doors, null)?.title, doors.throwSong!.title);
+  assert.equal(soloThrow(FIXTURES.intervalThrow(NOW).state, null), null);
+  assert.equal(soloThrow(FIXTURES.before(NOW).state, null), null, 'nothing thrown');
+  assert.equal(soloThrow(doors, 'hold'), null, 'hold music names itself');
+  assert.equal(soloThrow({ ...doors, throwSong: { ...doors.throwSong!, playing: false } }, null), null, 'stopped: nothing plays');
 });
