@@ -27,6 +27,10 @@ export default defineConfig({
         '--disable-renderer-backgrounding',
         '--disable-backgrounding-occluded-windows',
         '--disable-features=IntensiveWakeUpThrottling',
+        // A fake audio sink: the engine's clock is the AudioContext's, and on 28 Nov this Mac's CoreAudio stopped
+        // pulling Chrome's audio (currentTime moved 0.005 s in 2 s), so every run hung before the first landing. The
+        // test checks the show's logic, never the sound, so its clock must not depend on the machine's output device.
+        '--disable-audio-output',
       ],
     },
     trace: 'retain-on-failure',
