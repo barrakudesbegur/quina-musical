@@ -484,8 +484,8 @@ export const S = {
       revealing: 'Destapant…',
       revealingHeld: 'mentre mantens A, fins al senyal',
       revealingNote: 'fins al senyal · toca: atura-les',
-      /** Its strip: holding A reveals in a row. */
-      strip: 'Mantén: seguides',
+      /** Its strip: holding A reveals in a row. No «mantén» on a play button (D91): the remote's A shows held. */
+      strip: 'Seguides',
       celebrate: 'Celebrem!',
       celebrateNote: 'prem quan acabeu de parlar',
       celebrateFor: (ids: readonly number[]) => `${listing(ids.map((id) => `el #${id}`))} ${ids.length === 1 ? 'ha' : 'han'} guanyat · prem quan acabeu de parlar`,
