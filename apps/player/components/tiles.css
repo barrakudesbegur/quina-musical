@@ -113,18 +113,25 @@
   outline: none;
 }
 
-/* The peek's closing countdown (`tile-peek`): a ring that empties over the hold, and «Es tanca». */
+/* The peek's closing countdown (`tile-peek`): a ring that empties over the hold, and «Es tanca», on its own pill
+   attached under the card (a gap of 10 px), so it never reads as one with what lies dimmed behind the backdrop. */
 .card-pop__countdown {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 0.5rem;
-  margin: 0.875rem 0 0;
+  width: fit-content;
+  margin: 0.625rem auto 0;
+  padding: 0.3125rem 0.875rem 0.3125rem 0.4375rem;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-night);
+  box-shadow: var(--shadow-piece-sm);
   font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
   color: var(--color-paper);
-  text-shadow: 0 2px 0 var(--color-shadow);
   animation: card-pop-countdown-in 200ms var(--ease-out) var(--peek-delay, 0ms) both;
 }
 
