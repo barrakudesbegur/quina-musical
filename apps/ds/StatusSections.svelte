@@ -33,6 +33,7 @@
   import { SponsorStrip } from '../stage/render/parts.ts';
   import { QrBlock } from '../stage/render/qr.ts';
   import HeatGarland from './sections/HeatGarland.svelte';
+  import ConsoleFinale from './sections/ConsoleFinale.svelte';
 
   let { density }: { density: 'console' | 'phone' | 'projector' } = $props();
   const mode = untrack(() => density);
@@ -313,6 +314,9 @@
       {@render cell('«+ Afegir» while editing', e3)}
     </div>
   </section>
+
+  <!-- ---- F2 · the finale's Dempeus row (sections/ConsoleFinale.svelte) ------------------------------------------ -->
+  <ConsoleFinale />
 {/if}
 
 <!-- ---- G1 · StickerTitle, G2 · Plate ---------------------------------------------------------------------------- -->

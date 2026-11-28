@@ -22,6 +22,7 @@
   import ControlsGallery from './ControlsGallery.svelte';
   import ConsoleMenu from './sections/ConsoleMenu.svelte';
   import Tokens from './sections/Tokens.svelte';
+  import ConsoleNow from './sections/ConsoleNow.svelte';
 
   let { density, theme }: { density: 'console' | 'phone' | 'projector'; theme: 'light' | 'dark' } = $props();
 
@@ -284,4 +285,5 @@
   <StatusSections {density} />
   {#if !projector}<ControlsGallery {phone} />{/if}
   {#if !phone && !projector}<ConsoleMenu {cell} />{/if}
+  {#if !phone && !projector}<ConsoleNow />{/if}
 </div>
