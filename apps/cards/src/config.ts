@@ -5,22 +5,21 @@
 // (`?c=123` links), and the player app keeps each player's cards per edition. Keep EDITION equal to the
 // Game plan's `edition` (Admin).
 //
-// 2026 (the user, 25–27 Nov): the title «QUINA QUINA!» (D254), last year's types and amounts (399 normal, 300 especial:
+// 2026 (the user, 25–28 Nov): the title «QUINA QUINA!» (D254), last year's types and amounts (399 normal, 300 especial:
 // a card's first digit tells its type, D264) and prices (1.50 € a regular round for a normal card, 5 € for the especial
-// card), printed in colour on last year's coloured paper (blue normal, pink especial, D267), duplex. Cards are sold only
+// card), the A4 card in black and white on last year's coloured paper (blue normal, pink especial, D267, D295), duplex. Cards are sold only
 // on the night and print in a few hours (D71). The songs come from a repertoire (repertoire.ts), chosen on the command
 // line; each side of a card is drawn from its own pool of it (sides.ts).
 import type { PrintedCardTypeSpec } from './card-types';
 import type { CardLayoutId } from './print/layouts';
 
 /**
- * The printed layout (D262, U212): the organizers choose between
- * - `'a3-6'`, option A: A3 portrait, 6 cards a sheet (148.5 × 140 mm), each song's cover in colour above its title;
- * - `'a4-3'`, option B: A4 portrait, 3 cards a sheet (210 × 99 mm), no covers, black and white.
- * A until they pick (the user: "assume we do a. and you can code both so i decide the final later"); then the other
- * one is deleted from print/layouts.ts. `--layout <id>` on the command line proofs the other one without changing this.
+ * The printed layout (print/layouts.ts). The organizers picked «Apaïsat sense portades» (D295): `'a4-3'`, A4
+ * portrait, 3 cards a sheet (210 × 99 mm), no covers, black and white on last year's coloured paper. The other one,
+ * `'a3-6'` (A3 portrait, 6 cards a sheet, 148.5 × 140 mm, each song's cover in colour above its title), stays for the
+ * user's A3 test sheets (D295, D306) and still prints a whole run with `--layout a3-6`.
  */
-export const CARD_LAYOUT: CardLayoutId = 'a3-6';
+export const CARD_LAYOUT: CardLayoutId = 'a4-3';
 
 /** The year tag, two digits, as in the cards' links and the Game plan. */
 export const EDITION = '26';
@@ -33,10 +32,10 @@ export function cardUrl(cardId: number, edition: string = EDITION): string {
   return new URL(`/${encodeURIComponent(edition)}/${cardId}`, SITE_URL).toString();
 }
 
-/** The game's title (D254, no «3»): the branding's first line on layout B, and card-types.json's `title`. */
+/** The game's title (D254, no «3»): the branding's first line on the A4 card, and card-types.json's `title`. */
 export const CARD_TITLE = 'QUINA QUINA!';
 
-/** The branding's second line, under the title (layout B). */
+/** The branding's second line, under the title (the A4 card). */
 export const BRAND_SUBTITLE = `BARRAKUDES · 20${EDITION}`;
 
 /** The page background colour: white, as the cards print on coloured paper (D267). The QR keeps its own white
@@ -88,7 +87,8 @@ export const CARD_TYPES = [
 export type CardTypeId = (typeof CARD_TYPES)[number]['type'];
 
 /** How many cards of each type to print, numbered in this order from 1 (normal 1–399, then especial 400–699, so a
- * card's first digit tells its type, D264). Any amount: the places it leaves empty on a type's last sheets print
+ * card's first digit tells its type, D264). On the A4 card, three a sheet, both fill whole sheets (133 + 100, D295).
+ * Any amount: the places it leaves empty on a type's last sheets (the A3 layout's 399 normal cards leave 3) print
  * «MOSTRA» samples (print/sheets.ts), which aren't cards. */
 export const CARD_AMOUNTS = [
   { type: 'normal', amount: 399 },

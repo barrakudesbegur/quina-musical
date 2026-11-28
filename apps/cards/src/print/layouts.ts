@@ -1,14 +1,13 @@
-// The two printed layouts the organizers choose between (D262, U212), and the geometry of one card in each, in PDF
-// points (1 mm = 2.835 pt). Everything the two share is here once; a layout only says its sheet, its grid, its header,
-// whether it has covers and its largest title. Once the organizers pick, the other layout is deleted. Pure and
-// self-contained (no imports), so the tests run it as it is.
+// The two printed layouts (D262, U212, D295), and the geometry of one card in each, in PDF points (1 mm = 2.835 pt).
+// Everything the two share is here once; a layout only says its sheet, its grid, its header, whether it has covers and
+// its largest title. Pure and self-contained (no imports), so the tests run it as it is.
 //
-// - `a3-6` (option A, the default): A3 portrait cut into 2 × 3 cards of 148.5 × 140 mm; each song's cover in colour
-//   above its title; header C: the GOMET circle and the Barrakudes figure, the heading centred in the space between,
-//   «CARTRÓ #n» next to the QR.
-// - `a4-3` (option B): A4 portrait cut into 1 × 3 cards of 210 × 99 mm, black and white without covers; the branding
-//   («QUINA QUINA!», «BARRAKUDES · 2026») top left, the heading centred on the card, then the GOMET circle, the number
-//   and the QR; titles up to last year's 16 pt.
+// - `a4-3` (the 2026 card, the organizers' «Apaïsat sense portades», D295): A4 portrait cut into 1 × 3 cards of
+//   210 × 99 mm, black and white without covers; the branding («QUINA QUINA!», «BARRAKUDES · 2026») top left, the
+//   heading centred on the card, then the GOMET circle, the number and the QR; titles up to last year's 16 pt.
+// - `a3-6` (the user's A3 test sheets, D295, D306; a whole run with `--layout a3-6`): A3 portrait cut into 2 × 3
+//   cards of 148.5 × 140 mm; each song's cover in colour above its title; header C (D259): the GOMET circle and the
+//   Barrakudes figure, the heading centred in the space between, «CARTRÓ #n» next to the QR.
 
 export const CARD_LAYOUT_IDS = ['a3-6', 'a4-3'] as const;
 export type CardLayoutId = (typeof CARD_LAYOUT_IDS)[number];
@@ -49,8 +48,8 @@ export interface CardLayout {
 
 export const CARD_LAYOUTS: Record<CardLayoutId, CardLayout> = {
   // Covers 17 mm (the user, 28 Nov: "make the cover a little smaller on the square version"; the cell allows 18.6 mm).
-  'a3-6': { id: 'a3-6', name: 'A3 · 6 a sheet, covers in colour (option A)', sheet: SHEETS.A3, cols: 2, rows: 3, header: 'gometFigure', covers: true, coverSize: 17 * (72 / 25.4), titleMax: 16 },
-  'a4-3': { id: 'a4-3', name: 'A4 · 3 a sheet, no covers (option B)', sheet: SHEETS.A4, cols: 1, rows: 3, header: 'brand', covers: false, titleMax: 16 },
+  'a3-6': { id: 'a3-6', name: 'A3 · 6 a sheet, covers in colour', sheet: SHEETS.A3, cols: 2, rows: 3, header: 'gometFigure', covers: true, coverSize: 17 * (72 / 25.4), titleMax: 16 },
+  'a4-3': { id: 'a4-3', name: 'A4 · 3 a sheet, no covers, black and white', sheet: SHEETS.A4, cols: 1, rows: 3, header: 'brand', covers: false, titleMax: 16 },
 };
 
 // ── What every card shares, in points ──
@@ -77,9 +76,9 @@ export const GRID_FRAME = 4;
  */
 export const STAMP = { maxSize: 70, widthShare: 0.17, bottom: 22, right: 6, yearSize: 18, yearRightInset: 5 } as const;
 
-/** The branding (layout B): the figure 0.055 × its drawing (512 × 683), two lines of text, in a 170 pt block. */
+/** The branding (the A4 card): the figure 0.055 × its drawing (512 × 683), two lines of text, in a 170 pt block. */
 export const BRAND = { figureScale: 0.055, width: 170, gap: 6, topSize: 18, bottomSize: 11, letterSpacing: 1.08, lineGap: 9 } as const;
-/** The figure on its own (layout A, header C), as tall as the header's number block. */
+/** The figure on its own (the A3 card, header C), as tall as the header's number block. */
 export const FIGURE_HEIGHT = 38;
 export const FIGURE_WIDTH = (FIGURE_HEIGHT * 512) / 683;
 
@@ -150,7 +149,7 @@ export function headingProblems(g: CardGeometry, headings: readonly { text: stri
     .map(({ text }) => `layout ${g.layout.id}: the heading «${text}» doesn't fit its header at ${HEADING_SIZE} pt (${g.headingRoom.toFixed(0)} pt of room)`);
 }
 
-/** `--layout <id>` or `--layout=<id>` from the command line (to proof the other option), else `fallback`. */
+/** `--layout <id>` or `--layout=<id>` from the command line (a whole run in the other layout), else `fallback`. */
 export function layoutIdFrom(argv: readonly string[], fallback: CardLayoutId): CardLayoutId {
   const i = argv.findIndex((a) => a === '--layout' || a.startsWith('--layout='));
   if (i < 0) return fallback;

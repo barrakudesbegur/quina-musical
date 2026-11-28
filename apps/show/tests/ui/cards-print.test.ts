@@ -44,6 +44,15 @@ test('more empty places than cards: the samples go round the cards again; no car
   assert.throws(() => sheetSlots(-1, 6), /amount/);
 });
 
+test('the A4 card is the default (D295): both amounts fill whole A4 sheets, 133 + 100, so no samples', () => {
+  assert.equal(CARD_LAYOUT, 'a4-3');
+  const perSheet = CARD_LAYOUTS[CARD_LAYOUT].cols * CARD_LAYOUTS[CARD_LAYOUT].rows;
+  assert.deepEqual(CARD_AMOUNTS.map((a) => sheetSlots(a.amount, perSheet).length), [133, 100]);
+  assert.deepEqual(CARD_AMOUNTS.map((a) => sampleCount(sheetSlots(a.amount, perSheet))), [0, 0]);
+  // The A3 layout still prints a whole run, with its own samples (#397–399 on the normal run's last sheets).
+  assert.equal(sampleCount(sheetSlots(399, 6)), 3);
+});
+
 test("a back page's rows are mirrored, so each card's side 2 is printed behind its side 1 (long-edge duplex)", () => {
   const places = ['a', 'b', 'c', 'd', 'e', 'f'];
   assert.deepEqual(sideRows(places, 2, 1), [['a', 'b'], ['c', 'd'], ['e', 'f']]);
@@ -92,7 +101,7 @@ test("a song that can't fit at 7 pt is reported as not fitting (the check stops 
 test("both layouts keep the hard rules: a 45 pt QR, 38 pt headings, the A3 · 6 and A4 · 3 card sizes", () => {
   assert.equal(QR_SIZE, 45, 'never smaller than 16 mm');
   assert.equal(HEADING_SIZE, 38);
-  assert.equal(CARD_LAYOUT, 'a3-6', 'option A until the organizers choose');
+  assert.equal(CARD_LAYOUT, 'a4-3', "the organizers' pick (D295)");
   const mm = (pt: number) => Math.round((pt / 72) * 25.4 * 10) / 10;
   const a = cardGeometry(CARD_LAYOUTS['a3-6']);
   assert.deepEqual([mm(a.card.width), mm(a.card.height)], [148.5, 140]);
@@ -121,7 +130,7 @@ test('a heading too wide for its header at 38 pt is a problem (it never shrinks)
   assert.equal(headingProblems(g, [{ text: 'X', side: 2 }], almost).length, 1, 'in its black box, the padding tips it over');
 });
 
-test('--layout proofs the other option; anything else is refused', () => {
+test('--layout prints a whole run in the other layout; anything else is refused', () => {
   assert.equal(layoutIdFrom([], 'a3-6'), 'a3-6');
   assert.equal(layoutIdFrom(['--layout', 'a4-3'], 'a3-6'), 'a4-3');
   assert.equal(layoutIdFrom(['--check', '--layout=a4-3'], 'a3-6'), 'a4-3');

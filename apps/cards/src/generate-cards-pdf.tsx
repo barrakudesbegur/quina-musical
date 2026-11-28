@@ -1,10 +1,10 @@
-// The printed cards as a PDF, one per card type: the 2026 design (D250–D267, tools/card-mockup), in the layout config.ts
-// picks (print/layouts.ts). Last year's card kept as it was (the Barrakudes figure, Londrina Solid, the double-bordered
+// The printed cards as a PDF, one per card type: the 2026 design (D250–D267, D295, tools/card-mockup), in the layout
+// config.ts picks (print/layouts.ts). Last year's card kept as it was (the Barrakudes figure, Londrina Solid, the double-bordered
 // 3 × 4 grid, black ink, the faint logo stamp) with only what 2026 needs:
 //
 // - the header: the side's heading at 38 pt (side 2's white on a black box), the GOMET circle (a sticker goes there,
-//   D253, D265), «CARTRÓ #n» next to its QR (45 pt, never smaller), and the figure (layout A) or the branding (B);
-// - each song: its cover above it in colour (layout A), its print name in capitals, fitted to its cell and never
+//   D253, D265), «CARTRÓ #n» next to its QR (45 pt, never smaller), and the figure (A3) or the branding (A4);
+// - each song: its cover above it in colour (A3), its print name in capitals, fitted to its cell and never
 //   hyphenated (print/fit.ts), its artist under it;
 // - the faint logo stamp with the year above it (D263), and on a sample, a big faint diagonal «MOSTRA» (D264).
 //
@@ -98,7 +98,7 @@ const Figure: React.FC<{ height: number; width: number }> = ({ height, width }) 
   </Svg>
 );
 
-/** The branding (layout B): the figure, the title and «BARRAKUDES · 2026». */
+/** The branding (the A4 card): the figure, the title and «BARRAKUDES · 2026». */
 const Brand: React.FC = () => (
   <View style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: BRAND.gap }}>
     <Figure height={683 * BRAND.figureScale} width={512 * BRAND.figureScale} />
