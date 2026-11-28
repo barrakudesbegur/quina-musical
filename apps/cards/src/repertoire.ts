@@ -3,7 +3,7 @@
 // and its `cardsJson` is where cards.json goes (card-types.json and the PDFs go next to it, which is the folder the
 // relay serves at /cards/). Its `coversDir` holds the songs' album covers (`<id>.jpg`) for the cards with covers.
 // So this year's cards come from this year's repertoire, the same way the audio does:
-// `npm start -- --repertoire <name>`. Paths in a repertoire file are relative to the repo root. Pure apart from
+// `npm start -- --repertoire <name>` (required: no default). Paths in a repertoire file are relative to the repo root. Pure apart from
 // reading the repertoire file. ("Pool" is Pool 1 and Pool 2: the songs a card side is printed from.)
 import { readFileSync } from 'fs';
 import path from 'path';
@@ -44,13 +44,16 @@ export function printName(song: Pick<RepertoireSong, 'title' | 'artist' | 'print
   return { title: song.printTitle ?? song.title, artist: song.printArtist ?? song.artist };
 }
 
-export const DEFAULT_REPERTOIRE = 'default';
 const NAME_RE = /^[a-z0-9][a-z0-9_-]*$/i;
 
-/** `--repertoire <name>` or `--repertoire=<name>` from the command line (the relay's flag), else the default one. */
+/** What a run without `--repertoire` says: there is no default, so a stray run never overwrites a repertoire's cards. */
+export const REPERTOIRE_REQUIRED =
+  '--repertoire <name> is required (data/repertoires/<name>.json): there is no default, so a run never overwrites a repertoire\'s cards by accident. The night\'s: npm start -- --repertoire 2026';
+
+/** `--repertoire <name>` or `--repertoire=<name>` from the command line (the relay's flag); required, with no default. */
 export function repertoireNameFrom(argv: readonly string[]): string {
   const i = argv.findIndex((a) => a === '--repertoire' || a.startsWith('--repertoire='));
-  if (i < 0) return DEFAULT_REPERTOIRE;
+  if (i < 0) throw new Error(REPERTOIRE_REQUIRED);
   const name = argv[i].includes('=') ? argv[i].slice('--repertoire='.length) : argv[i + 1];
   if (!name || !NAME_RE.test(name)) throw new Error(`--repertoire needs a name, as in data/repertoires/<name>.json (got "${name ?? ''}")`);
   return name;

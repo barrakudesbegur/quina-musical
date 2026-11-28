@@ -13,8 +13,13 @@ the temporary ones, `data/media/2026/cards-TEMPORARY-not-for-print/`, which the 
 [`dist`](./dist) is **last year's test cards**, not output: the `default` repertoire's `cardsJson` is
 `apps/cards/dist/cards.json`, and the show's tests, the UI fixtures and the e2e read `dist/cards.json` and
 `dist/card-types.json` directly. So it stays committed as it is (its PDFs are last year's one-sided cards, with #398
-and #492 as they were; `card-types.json` was rewritten from `CARD_TYPES` on 28 Nov). Never run the generator on the
-`default` repertoire without `--out`: it would overwrite them.
+and #492 as they were; `card-types.json` was rewritten from `CARD_TYPES` on 28 Nov). Never run the generator with
+`--repertoire default` without `--out`: it would overwrite them.
+
+**`--repertoire <name>` is required.** There is no default repertoire: a run without it stops before reading or writing
+anything (`❌ --repertoire <name> is required … The night's: npm start -- --repertoire 2026`), so once the cards are
+printed a stray `npm start` can't overwrite a repertoire's cards. Last year's test cards are `--repertoire default`,
+said out loud.
 
 The JSON files are written before the PDF renderer loads, so `cards.json` and `card-types.json` are written even when
 the native `canvas` module is missing (the run then fails at the PDF step).
@@ -162,8 +167,8 @@ its line says, on its own paper (four jobs), and check
    fit its cell even at 7 pt** (shorten its `printTitle` / `printArtist`), a heading too wide for its header at 38 pt,
    a repertoire too small to draw every card without repeating a card or a line).
 4. Generate: `npm start -- --repertoire <name>` (`--test-sheets` for the A3 test sheets, `--proof` for the proof,
-   `--out <dir>` to write elsewhere). Without `--repertoire` it uses `default` (last year's 77 songs, written into
-   `dist/`: don't). The build copies `src/assets` (the Londrina fonts the PDF uses) into `build/`. It prints each PDF's
+   `--out <dir>` to write elsewhere). `--repertoire` is required: without it the run stops and writes nothing
+   (`--repertoire default` is last year's 77 songs, written into `dist/`: don't, without `--out`). The build copies `src/assets` (the Londrina fonts the PDF uses) into `build/`. It prints each PDF's
    sheets, pages, samples, size and time: with repertoire 2026's 135 songs (28 Nov), the A4 layout takes about 37 s and
    18 MB for the normal cards (266 pages) and 25 s and 13 MB for the especial cards (200 pages); each A3 test sheet about
    1 s and 2.5 MB; the proof about 10 s a type. A whole A3 run (27 Nov, 136 songs) took about 33 s and 22 MB, and 25 s
@@ -237,4 +242,6 @@ the types' checks, no repeated card or line) are tested from the show's UI suite
 
 1. Install node (I recommend using [nvm](https://github.com/nvm-sh/nvm)).
 1. Run `npm install` to install the dependencies.
-1. Run `npm run dev` to start the development server. (Watch mode)
+1. Run `npm run dev -- --repertoire <name> --check` to re-check on every change (watch mode, nodemon passes the
+   arguments on). `--repertoire` is required here too; leave `--check` off only with an `--out` in `temp/`, or each
+   change rewrites the repertoire's cards.

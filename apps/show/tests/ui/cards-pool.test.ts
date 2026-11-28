@@ -3,15 +3,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { DEFAULT_REPERTOIRE, parseRepertoire, repertoireNameFrom, songProblems } from '../../../cards/src/repertoire.ts';
+import { parseRepertoire, repertoireNameFrom, songProblems } from '../../../cards/src/repertoire.ts';
 
-test('the repertoire comes from --repertoire (the relay\'s flag), else the default one', () => {
-  assert.equal(repertoireNameFrom([]), DEFAULT_REPERTOIRE);
+test('the repertoire comes from --repertoire (the relay\'s flag), with no default: a stray run never overwrites cards', () => {
+  assert.throws(() => repertoireNameFrom([]), /--repertoire <name> is required.*npm start -- --repertoire 2026/);
   assert.equal(repertoireNameFrom(['--repertoire', 'nadal26']), 'nadal26');
   assert.equal(repertoireNameFrom(['--check', '--repertoire=nadal26']), 'nadal26');
   assert.throws(() => repertoireNameFrom(['--repertoire']), /needs a name/);
   assert.throws(() => repertoireNameFrom(['--repertoire', '../etc']), /needs a name/);
-  assert.equal(repertoireNameFrom(['--pool', 'nadal26']), DEFAULT_REPERTOIRE, 'the old flag is gone');
+  assert.throws(() => repertoireNameFrom(['--pool', 'nadal26']), /is required/, 'the old flag is gone');
 });
 
 test("a repertoire's paths are made absolute against the repo; a file that isn't one is refused", () => {

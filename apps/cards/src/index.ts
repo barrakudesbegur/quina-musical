@@ -3,7 +3,8 @@
 // side is drawn from its pool's songs (sides.ts); a pool with none is drawn from the whole repertoire, with a warning.
 // The PDFs are in config.ts's CARD_LAYOUT (print/layouts.ts): the A4 card (D295).
 //
-//   npm start -- --repertoire <name>                 write them next to the repertoire's cardsJson (default: "default")
+//   npm start -- --repertoire <name>                 write them next to the repertoire's cardsJson; --repertoire is
+//                                                    required (no default, so a stray run never overwrites cards)
 //   npm start -- --repertoire <name> --check         check the repertoire, the types, the amounts, that the cards repeat
 //                                                    no card or line, and that every song fits its cell; write nothing
 //   npm start -- --repertoire <name> --layout a3-6   the whole run in the other layout (the A3 card with covers)
@@ -34,7 +35,16 @@ import type { PrintedCardTypeSpec } from './card-types';
 
 const SONGS_PER_CARD = 12;
 const argv = process.argv.slice(2);
-const repertoire = loadRepertoire(repertoireNameFrom(argv));
+/** The repertoire's name, or the run stops here, before anything is read or written. */
+const repertoireName = ((): string => {
+  try {
+    return repertoireNameFrom(argv);
+  } catch (error) {
+    console.error(`❌ ${(error as Error).message}`);
+    process.exit(1);
+  }
+})();
+const repertoire = loadRepertoire(repertoireName);
 const layout = CARD_LAYOUTS[layoutIdFrom(argv, CARD_LAYOUT)];
 const testLayout = CARD_LAYOUTS[TEST_SHEET_LAYOUT];
 const proof = argv.includes('--proof');
