@@ -15,7 +15,6 @@ const NOW = 1_700_000_000_000;
 const SECRET = {
   nextSong: 987_001,
   target: 987_002,
-  drumTarget: 987_003,
   possibleLine: 987_004,
   possibleBingo: 987_005,
   completeSince: 987_006,
@@ -33,7 +32,9 @@ const SECRET = {
   hook: 'SECRET-HOOK',
 };
 const SECRET_VALUES = new Set<unknown>(Object.values(SECRET));
-const FORBIDDEN_KEYS = ['next', 'to', 'targetId', 'drum', 'queue', 'possibleWinners', 'phase', 'warnings', 'completeSince', 'outcome', 'steps', 'revealed', 'markedCard', 'revealUntil', 'cueNext', 'total', 'name', 'notes', 'claims', 'history', 'game', 'cards', 'pace', 'hold', 'current'];
+/** The Spin's landing song: public from its start since D277 (U206), as PublicSpin.targetId only. */
+const PUBLIC_TARGET = 33;
+const FORBIDDEN_KEYS = ['next', 'to', 'drum', 'queue', 'possibleWinners', 'phase', 'warnings', 'completeSince', 'outcome', 'steps', 'revealed', 'markedCard', 'revealUntil', 'cueNext', 'total', 'name', 'notes', 'claims', 'history', 'game', 'cards', 'pace', 'hold', 'current'];
 
 /** The play fixture with every private field filled with sentinels. */
 function secretState(): ShowState {
@@ -142,7 +143,7 @@ test('no private value or key ever comes out', () => {
     durationMs: 7000,
     hookId: SECRET.hook,
     bpm: 120,
-    drum: { removeId: null, targetId: SECRET.drumTarget, minLaps: 3 },
+    drum: { removeId: SECRET.historySong, targetId: PUBLIC_TARGET, minLaps: 3 },
   } as unknown as IncomingEvent;
   const journal = { v: PROTOCOL_VERSION, type: 'journal.entry', entry: { kind: 'round.started', queue: [SECRET.journalSong] } } as unknown as IncomingEvent;
   const out = projected([scheduled, journal]);
@@ -151,6 +152,9 @@ test('no private value or key ever comes out', () => {
   for (const k of FORBIDDEN_KEYS) assert.ok(!keys.has(k), `leaked key "${k}"`);
   assert.ok(!values.has('notSold') && !values.has('complete') && !values.has('final'), 'no warning, engine outcome or Phase');
   assert.ok(!JSON.stringify(out).includes('SECRET'));
+  // The landing song is public since D277 (U206), only as the Spin's targetId.
+  assert.equal(out.spin?.targetId, PUBLIC_TARGET);
+  assert.deepEqual(Object.keys(out.spin ?? {}).sort(), ['landAtMs', 'startAtMs', 'targetId']);
 });
 
 test('the public state has exactly the contract keys', () => {
@@ -170,7 +174,7 @@ test('the public state has exactly the contract keys', () => {
 test('the Spin carries only its timing; the exact start comes from the Spin event', () => {
   const out = projected();
   assert.deepEqual(out.spin, { startAtMs: NOW, landAtMs: NOW + 5000 });
-  const withEvent = projected([{ v: PROTOCOL_VERSION, type: 'suspense.started', id: 'tr-secret', reqId: null, from: 7, to: SECRET.target, position: 17, phase: 'final', spinStartAtMs: NOW - 3000, exitAtMs: NOW, autoReleaseAtMs: NOW + 9000, drum: { removeId: null, targetId: SECRET.drumTarget } } as unknown as IncomingEvent]);
+  const withEvent = projected([{ v: PROTOCOL_VERSION, type: 'suspense.started', id: 'tr-secret', reqId: null, from: 7, to: SECRET.target, position: 17, phase: 'final', spinStartAtMs: NOW - 3000, exitAtMs: NOW, autoReleaseAtMs: NOW + 9000, drum: { removeId: null, targetId: PUBLIC_TARGET } } as unknown as IncomingEvent]);
   assert.equal(withEvent.spin?.startAtMs, NOW - 3000);
 });
 
@@ -178,16 +182,19 @@ test("the drum's public seeds (D237), as the cloud projects them: a Spin's spinS
   const scheduled = (spinSeed: number | undefined) => ({
     v: PROTOCOL_VERSION, type: 'transition.scheduled', id: 'tr-secret', reqId: null, from: 7, to: SECRET.target, position: 17, phase: 'final',
     recipe: 'R7', recipeName: 'x', exit: null, shape: 'S1', spinStartAtMs: NOW - 2000, exitAtMs: NOW, landAtMs: NOW + 5000, durationMs: 7000,
-    hookId: 'h', bpm: 120, drum: { removeId: null, targetId: SECRET.drumTarget, minLaps: 1 }, ...(spinSeed !== undefined ? { spinSeed } : {}),
+    hookId: 'h', bpm: 120, drum: { removeId: null, targetId: PUBLIC_TARGET, minLaps: 1 }, ...(spinSeed !== undefined ? { spinSeed } : {}),
   }) as unknown as IncomingEvent;
-  assert.deepEqual(projected([scheduled(4_294_967_295)]).spin, { startAtMs: NOW - 2000, landAtMs: NOW + 5000, spinSeed: 4_294_967_295 });
+  assert.deepEqual(projected([scheduled(4_294_967_295)]).spin, { startAtMs: NOW - 2000, landAtMs: NOW + 5000, spinSeed: 4_294_967_295, targetId: PUBLIC_TARGET });
   assert.deepEqual(projected([scheduled(0)]).spin?.spinSeed, 0);
   assert.ok(!('spinSeed' in (projected([scheduled(undefined)]).spin ?? {})), 'an older engine: none');
-  // A held Suspense has no landing, so no seed.
+  // A held Suspense has no landing, so no seed and no target.
   const p = new PublicProjector(() => 0.5);
   p.ingest(scheduled(9), NOW);
   p.ingest({ ...secretState(), transition: null, suspense: { id: 'tr-secret' } } as unknown as ShowState, NOW);
   assert.ok(!('spinSeed' in (p.project(ctx).spin ?? {})));
+  assert.ok(!('targetId' in (p.project(ctx).spin ?? {})));
+  // The engine's state alone (the Spin's event not seen): its timing, nothing of its target.
+  assert.ok(!('targetId' in (projected().spin ?? {})), 'transition.to is never read');
   // drumSeed: where the projector is given it (the demos), or from the engine's state.
   const q = new PublicProjector(() => 0.5);
   q.seedRound(1, 'normal', NOW - 60_000, false, [], 'normal', 1, 77);

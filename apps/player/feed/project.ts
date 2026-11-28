@@ -6,7 +6,7 @@
 //
 // STRICT WHITELIST. Every output field is built here one by one from named inputs; nothing from the engine
 // is spread or copied whole. It never reads, so can never leak:
-//   state.next, state.queue (beyond the last counted position), transition.to, drum.targetId, possibleWinners,
+//   state.next, state.queue (beyond the last counted position), transition.to, possibleWinners,
 //   phase, the raw Heat, claims' outcome/warnings/completeSince, a Check's steps, winners' names and notes,
 //   the journal, the plan's cheat sheet and its locked rounds' prizes (the plan goes out as publicPlan, like
 //   the cloud's).
@@ -14,6 +14,8 @@
 // while a Suspense is held), and a round's `drumSeed` from the engine's state (`state.round.drumSeed`, the same value
 // the journal has on `round.started`) or where this projector is given it (`seedRound`, `setDrumSeed`: the demos). Only an
 // older engine's state has none: the phone then orders the drum by the round's number (logic/drum.ts).
+// A Spin's landing song (`targetId`, D277: U206 answered, public from the Spin's start; the phones reveal it only at
+// landAtMs) from its `transition.scheduled`'s `drum.targetId`, as the cloud's: never while a Suspense is held.
 // tests/ui/player/project.test.ts feeds it a fixture full of private values and checks none come out.
 import { DEFAULT_SIDE, PROTOCOL_VERSION, defaultCardType, isRoundKind, type IncomingEvent, type RoundKind, type ShowState } from '@quina/protocol';
 import { flowOf, type FlowFields } from '../../../packages/ui/flow.ts';
@@ -63,6 +65,8 @@ export class PublicProjector {
   private readonly spinStarts = new Map<string, number>();
   /** Each Spin's public seed (D237), from its `transition.scheduled`. */
   private readonly spinSeeds = new Map<string, number>();
+  /** Each Spin's landing song (D277), from its `transition.scheduled`. */
+  private readonly spinTargets = new Map<string, number>();
   private readonly heat: HeatSmoother;
 
   constructor(random: () => number = Math.random) {
@@ -76,9 +80,10 @@ export class PublicProjector {
         this.ingestState(event, nowMs);
         break;
       case 'transition.scheduled':
-        // Only the Spin's public timing and seed; never `to` or `drum`.
+        // Only the Spin's public timing, seed and landing song (drum.targetId, D277); never `to` or the rest of `drum`.
         this.noteSpin(event.id, event.spinStartAtMs);
         if (Number.isInteger(event.spinSeed)) this.spinSeeds.set(event.id, event.spinSeed);
+        if (Number.isInteger(event.drum?.targetId)) this.spinTargets.set(event.id, event.drum.targetId);
         break;
       case 'suspense.started':
         this.noteSpin(event.id, event.spinStartAtMs);
@@ -198,6 +203,7 @@ export class PublicProjector {
     this.spinStarts.set(id, atMs);
     while (this.spinStarts.size > SPIN_MEMORY) this.spinStarts.delete(this.spinStarts.keys().next().value as string);
     while (this.spinSeeds.size > SPIN_MEMORY) this.spinSeeds.delete(this.spinSeeds.keys().next().value as string);
+    while (this.spinTargets.size > SPIN_MEMORY) this.spinTargets.delete(this.spinTargets.keys().next().value as string);
   }
 
   private projectSpin(s: ShowState | null, nowMs: number): PublicSpin | null {
@@ -205,7 +211,13 @@ export class PublicProjector {
     if (s.suspense) return { startAtMs: this.spinStarts.get(s.suspense.id) ?? nowMs, landAtMs: null };
     if (s.transition) {
       const spinSeed = this.spinSeeds.get(s.transition.id);
-      return { startAtMs: this.spinStarts.get(s.transition.id) ?? nowMs, landAtMs: s.transition.landAtMs, ...(spinSeed !== undefined ? { spinSeed } : {}) };
+      const targetId = this.spinTargets.get(s.transition.id);
+      return {
+        startAtMs: this.spinStarts.get(s.transition.id) ?? nowMs,
+        landAtMs: s.transition.landAtMs,
+        ...(spinSeed !== undefined ? { spinSeed } : {}),
+        ...(targetId !== undefined ? { targetId } : {}),
+      };
     }
     return null;
   }
