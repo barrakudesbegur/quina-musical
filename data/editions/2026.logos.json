@@ -64,7 +64,7 @@
     {"id": "begur-dive", "name": "Begur Dive", "file": "search:begur-dive/facebook-profile.jpg", "background": "edges", "note": "their Facebook picture, twice last file's size; still small: ask them for the original"},
     {"id": "esplai-autentic", "name": "Esplai Autèntic", "file": "drive:Esplai Autèntic (1).jpg", "background": "edges"},
     {"id": "fundacio-esportiva", "name": "Fundació Esportiva", "file": "drive:fundació esportiva begur.JPG", "background": "edges"},
-    {"id": "motos-v-roses", "name": "Motos V. Roses", "file": "drive:Motos V. Roses", "background": "edges", "holes": 0, "note": "white letters outlined in purple: every enclosed white kept (the user: M, T, S came out hollow)"},
+    {"id": "motos-v-roses", "name": "Motos V. Roses", "file": "drive:Motos V. Roses", "background": "edges", "keepWhite": [[0.22, 0.3, 0.64, 0.46]], "note": "MOTOS is white letters outlined in purple (their white kept); ROSÉS purple letters (their holes cleared)"},
     {"id": "padel-indians", "name": "Pàdel Indians", "file": "drive:padel-indians.JPEG", "background": "all"},
     {"id": "perduts-begur", "name": "Perduts Begur", "file": "drive:els-perduts.jpg", "background": "edges"},
     {"id": "bravos-crossbox", "name": "Bravos Crossbox", "file": "drive:Bravos.jpg", "background": "all", "ink": {"color": "box"}},
@@ -74,9 +74,9 @@
     {"id": "la-bionda", "name": "La Bionda", "file": "drive:La Bionda.jpg", "background": "all"},
     {"id": "brava-social-media", "name": "Brava Social Media", "file": "drive:Brava Social Media.PNG", "background": "all", "ink": {"color": "box"}},
     {"id": "recutrans", "name": "Recutrans", "file": "drive:recutrans.png", "background": "edges"},
-    {"id": "installacions-poch", "name": "Instal·lacions Poch", "file": "found:poch.jpeg", "background": "edges", "note": "the better file found on 28 Nov"},
+    {"id": "installacions-poch", "name": "Instal·lacions Poch", "file": "found:poch.jpeg", "background": "all", "note": "the better file found on 28 Nov; no white in the design: every white removed"},
     {"id": "do2", "name": "DO2", "file": "drive:DO2.jpg", "crop": [0.05, 0.05, 0.95, 0.58], "background": "light-ink", "luma": [170, 235], "ink": {"color": "box"}, "note": "only the name: the card's slogan, services, names and phone numbers cropped off"},
-    {"id": "ricard-cuadrado", "name": "Ricard Cuadrado Construccions i Reformes", "file": "drive:Ricard Cuadrado CiR.jpg", "background": "edges"},
+    {"id": "ricard-cuadrado", "name": "Ricard Cuadrado Construccions i Reformes", "file": "drive:Ricard Cuadrado CiR.jpg", "background": "all", "note": "no white in the design: every white removed"},
     {"id": "construccions-bolivar", "name": "Construccions Bolívar", "file": "drive:Construccions Bolívar.jpg", "background": "edges"},
     {"id": "galeria-mas-comangau", "name": "Mas Comangau", "file": "drive:Galena Mas Comangau.png", "background": "edges", "sticker": {"reach": 0.18}}
   ]

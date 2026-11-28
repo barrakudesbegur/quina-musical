@@ -20,7 +20,8 @@
     "test:tools": "tsc -p tools/git/tsconfig.json && tsc -p tools/edition/tsconfig.json && node --test \"tools/git/*.test.ts\" \"tools/edition/*.test.ts\" \"tools/e2e/css-order/*.test.ts\"",
     "setup:laptop": "node tools/laptop/setup.ts",
     "sync-main": "node tools/git/sync-main.ts",
-    "edition": "node tools/edition/main.ts"
+    "edition": "node tools/edition/main.ts",
+    "logos": "tools/logos/.venv/bin/python -I tools/logos/prepare.py"
   },
   "engines": {
     "node": ">=23.6"

@@ -31,6 +31,9 @@ How a logo is cleaned (its manifest entry; every field but `id` and `name` is op
 - `color`: the background colour as "#rrggbb", if the border's median isn't it.
 - `tolerance`: how far from the background colour still counts as background (0–1 of the channel range; default .1).
 - `holes`: the biggest enclosed patch "edges" clears, as a share of the image (default .02; 0 keeps every one).
+- `keepWhite`: [[left, top, right, bottom], …], fractions of the (cropped) image: enclosed patches centred in a box
+  always stay. For a logo whose letters are white outlined in a colour in one part only (Motos V. Roses: MOTOS is
+  white letters, ROSÉS purple ones whose holes go).
 - `ink`: recolours the logo once it's cut out (the user, 28 Nov: logos printed in white on a box are cut out and
   recoloured, so they read on the sticker's white): {"color": "#rrggbb" | "box", "pixels": "all" | "light"}.
   "box" is the removed background's colour, darkened only as far as it needs to read on white (contrast 4.5:1, its
@@ -74,6 +77,7 @@ STICKER_RIM = 20  # px, round every sticker: 5 % of √STICKER_AREA
 STICKER_ELONGATION = 0.25  # a logo n times longer than it's tall gets n^this times the area
 SMALL_SIDE = 400  # a source whose longer side is under this is reported as small
 INK_CONTRAST = 4.5  # a recoloured box colour is darkened until it reads on white at least this well (WCAG AA)
+NEAR_WHITE = 0.94  # a background at least this light in every channel is taken as pure white
 HOLES = 0.02  # "edges" also clears enclosed background patches up to this share of the image (letters' counters)
 
 
@@ -88,6 +92,7 @@ class Logo:
     color: str | None = None
     tolerance: float = TOLERANCE
     holes: float = HOLES
+    keepWhite: list[list[float]] | None = None
     luma: list[float] = field(default_factory=lambda: [60.0, 160.0])
     ink: dict | None = None
     sticker: dict | None = None
@@ -144,7 +149,7 @@ def over_bg(rgb: np.ndarray, bg: np.ndarray, alpha: np.ndarray) -> np.ndarray:
     return np.clip(bg + (rgb - bg) / safe, 0, 1)
 
 
-def counters(near: np.ndarray, outside: np.ndarray, holes: float) -> np.ndarray:
+def counters(near: np.ndarray, outside: np.ndarray, holes: float, keep: list[list[float]] | None = None) -> np.ndarray:
     """The background-coloured holes inside letters (the counters of D, A, B, O, P, R…): each enclosed patch of the
     background colour smaller than `holes` of the image, whose surrounding ink also touches the outside. A bigger
     patch (a badge's band, a drawing's fill) stays, and so do the counters of letters drawn on such a fill."""
@@ -163,6 +168,10 @@ def counters(near: np.ndarray, outside: np.ndarray, holes: float) -> np.ndarray:
         patch = patches[grown] == i
         if patch.sum() > floor:
             continue
+        cy = (box[0].start + box[0].stop) / 2 / near.shape[0]
+        cx = (box[1].start + box[1].stop) / 2 / near.shape[1]
+        if any(l <= cx <= r and t <= cy <= b for l, t, r, b in keep or []):
+            continue
         ring = ndimage.binary_dilation(patch, iterations=2) & ~patch
         around = ink_labels[grown][ring]
         around = around[around > 0]
@@ -172,7 +181,8 @@ def counters(near: np.ndarray, outside: np.ndarray, holes: float) -> np.ndarray:
     return out
 
 
-def remove_color(px: np.ndarray, bg: np.ndarray, tolerance: float, everywhere: bool, holes: float = HOLES) -> np.ndarray:
+def remove_color(px: np.ndarray, bg: np.ndarray, tolerance: float, everywhere: bool, holes: float = HOLES,
+                 keep: list[list[float]] | None = None) -> np.ndarray:
     rgb, alpha0 = px[..., :3], px[..., 3]
     # Everywhere, the tolerance is the noise floor: a box's JPEG noise and texture go, not only its exact colour.
     opacity = ramp(unblend(rgb, bg), max(NOISE[0], tolerance) if everywhere else NOISE[0], NOISE[1])
@@ -183,7 +193,7 @@ def remove_color(px: np.ndarray, bg: np.ndarray, tolerance: float, everywhere: b
         labels, _ = ndimage.label(near)
         touching = np.unique(border_of(labels))
         region = np.isin(labels, touching[touching > 0])
-        region |= counters(near, region, holes)
+        region |= counters(near, region, holes, keep)
         band = max(2, round(max(px.shape[:2]) * EDGE_BAND))
         edge = ndimage.binary_dilation(region, iterations=band) & ~region
         alpha = np.where(region, 0.0, np.where(edge, opacity, 1.0))
@@ -280,8 +290,11 @@ def clean(logo: Logo, path: Path, done: Done) -> np.ndarray | None:
         background = "keep" if (border[:, 3] < 0.1).mean() > 0.5 else "edges"
     done.background = background
     bg = hex_rgb(logo.color) if logo.color else border_color(px)
+    if not logo.color and bg.min() > NEAR_WHITE:
+        # A JPEG's "white" (#fdfdfd): unblending from it would turn every brighter speck of noise opaque.
+        bg = np.ones(3)
     if background in ("edges", "all"):
-        px = remove_color(px, bg, logo.tolerance, everywhere=background == "all", holes=logo.holes)
+        px = remove_color(px, bg, logo.tolerance, everywhere=background == "all", holes=logo.holes, keep=logo.keepWhite)
         done.notes.append(f"background {rgb_hex(bg)} removed ({'everywhere' if background == 'all' else 'from the edges'})")
     elif background in ("light-ink", "dark-ink"):
         px = key_luma(px, logo.luma[0], logo.luma[1], light=background == "light-ink")

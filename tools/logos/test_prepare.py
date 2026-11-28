@@ -63,6 +63,17 @@ class RemoveColour(unittest.TestCase):
         self.assertEqual(out[100, 100, 3], 1)  # the frame's fill
         self.assertEqual(out[135, 135, 3], 1)  # the counter of the "O" on the fill
 
+    def test_keep_white_keeps_the_patches_in_its_box_only(self):
+        # Two "O"s on white: the left one's counter is in the keep box and stays; the right one's goes.
+        px = canvas(200, 200, WHITE)
+        y, x = np.mgrid[0:200, 0:200]
+        for cx in (40, 160):
+            r = np.hypot(x - cx, y - 100)
+            px[(r > 5) & (r < 9), :3] = 0
+        out = remove_color(px, WHITE, 0.1, everywhere=False, keep=[[0.0, 0.0, 0.5, 1.0]])
+        self.assertEqual(out[100, 40, 3], 1)
+        self.assertEqual(out[100, 160, 3], 0)
+
     def test_holes_zero_keeps_every_counter(self):
         px = canvas(200, 200, WHITE)
         y, x = np.mgrid[0:200, 0:200]
