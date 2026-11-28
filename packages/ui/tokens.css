@@ -147,7 +147,7 @@
   /* Type */
   --font-display: 'Londrina Solid', system-ui, sans-serif;
   --font-body: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-hand: 'Caveat Brush', 'Londrina Solid', cursive; /* the scribble's handwriting (D289), nothing else */
+  --font-hand: 'Caveat Brush', cursive; /* the scribble's handwriting (D289), nothing else */
   --font-weight-body: 700;
   --font-weight-strong: 900;
   --text-xs: 0.8125rem;
