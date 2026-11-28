@@ -98,6 +98,8 @@ export const STAGE = Object.freeze({
   shuffle: Object.freeze({
     /** Where the grid of covers lies, in the box (px). */
     area: Object.freeze({ x: 40, y: 40, width: 1360, height: 1000 }),
+    /** With reduced motion, the area's bottom left to the «Barrejant…» caption, so it never sits on the last row. */
+    captionRoom: 80,
     /** Share of the Shuffle window for each step: grid appears, jiggles, covers fly, the drum settles. */
     split: Object.freeze({ appear: 1, jiggle: 2, fly: 5, settle: 1 }),
     /** One cover's flight into the drum. */

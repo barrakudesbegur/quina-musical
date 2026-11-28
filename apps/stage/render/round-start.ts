@@ -80,7 +80,10 @@ export class RoundStartScene implements SceneRenderer<RoundStartView> {
     const ids: (number | null)[] = body.tiles.length ? body.tiles : Array.from({ length: STAGE.shuffle.fallbackTiles }, () => null);
     const band = STAGE.drumBand;
     const target = { x: STAGE.box.width / 2, y: band.top + band.height / 2 };
-    const layout = shuffleLayout(ids.length, STAGE.shuffle.area, target);
+    // Reduced motion shows the «Barrejant…» caption under the grid: the grid leaves it its strip.
+    const area = STAGE.shuffle.area;
+    const room = this.env.reducedMotion() ? STAGE.shuffle.captionRoom : 0;
+    const layout = shuffleLayout(ids.length, { ...area, height: area.height - room }, target);
     this.flights = coverFlights(shuffle, shuffleSequence(ids.length, this.env.random), STAGE.shuffle.perCoverMs);
     setVar(this.grid, '--appear-ms', `${Math.round(shuffle.jiggleAtMs - shuffle.startAtMs)}ms`);
     this.tiles = layout.map((t, i) => {
