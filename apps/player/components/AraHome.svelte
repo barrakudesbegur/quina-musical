@@ -325,6 +325,8 @@
   /** A view has just changed: a pick waiting for Cartrons scrolls now; the hint looks again. */
   function afterChange(): void {
     requestAnimationFrame(() => {
+      // The views sit lower or higher by the drum's room on Historial (`strip-fade`'s line is measured from them).
+      measure();
       if (pendingPick && shown === 'cartrons') scrollToHolder();
       pendingPick = false;
       updateHint();
