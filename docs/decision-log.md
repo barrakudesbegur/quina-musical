@@ -826,7 +826,7 @@ A Celebration closes the Premis, Horari and Ajustos drawers, but not the add-car
 By: the user. Source: open-questions.md › Answered (U41). Amends: D73, D74. Lives in: requirements/screens.md › Player app; packages/ui/ANIMATIONS.md.
 
 ### D91 · The console's Wii badges and holds look like the real remote · 2026-11-25 · Active
-The console's Wii badges look like the remote's own buttons: A a big circle, B a rectangular trigger, HOME round with a house, and −, +, 1 and 2 each their own round key, never merged ("−/+", "1/2"). The play buttons carry no "mantén" word: a hold shows as a pressed-in key (1 2 on Enrere, B on Aguanta, − + on the Pausa strip) or a pressed-in strip (Pausa, Suspens), and tap keys stay raised. Designs only; the built console still has the old badges (boards first, D-entry for the record).
+The console's Wii badges look like the remote's own buttons: A a big circle, B a rectangular trigger, HOME round with a house, and −, +, 1 and 2 each their own round key, never merged ("−/+", "1/2"). The play buttons carry no "mantén" word: a hold shows as a pressed-in key (1 2 on Enrere, B on Aguanta, − + on the Pausa strip) or a pressed-in strip (Pausa, Suspens), and tap keys stay raised. Designs first; the built console has them in part (Frontend, 28 Nov).
 By: the user via canvas (comments of 24 Nov, sent to Claude on 25 Nov). Source: the "Quina Musical look" canvas v55, "Consola · en joc". Lives in: requirements/screens.md › Console, Wii remote.
 
 ### D92 · Every remote-triggered control shows its button · 2026-11-25 · Active

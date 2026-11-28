@@ -162,6 +162,27 @@ A browser can't accept connections, so with no internet the devices on the hotsp
 - (a) The tablet must still control the show: one device runs a local server (the laptop or the Mac app), and the others join it over the hotspot as plain web pages.
 - (b) Losing the tablet until 5G returns is acceptable: the music keeps going, and the Wii remote or the laptop drives it. This is what makes "just a website" possible.
 
+### U222 · The Desgraciat's standing Check when no finale was started
+D166: the finale replaces the Desgraciat's public Check. But the built console still offers one: with one card left standing and no finale started, Dempeus «Comprovar #N» (or the Wii remote's A) sends a standing Check. «Començar final» needs at least 2 finalists, so in that case the Check is the only way to confirm the winner.
+- (a) Remove it: the finale is the only way, and the presenters start it while at least 2 stand. As D166 reads.
+- (b) Keep it only for that case: one card left and no finale started. As built.
+
+### U223 · The edition's name
+D22 (the user on the canvas, 24 Nov): "This year «Quina Quina 3»", and the docs and GLOSSARY say so. The 2026 plan (data/editions/2026.plan.json, from the organizers' sheet) says «Quina Musical», and the organizers' 2026 documents say «QUINA MUSICAL» and «QUINA MUSICAL DE NADAL».
+- (a) «Quina Quina 3», as D22.
+- (b) «Quina Musical».
+- (c) Another name.
+
+### U224 · The console's Efectes tab on the tablet
+At 1194 × 834 the Efectes tab doesn't fit without scrolling.
+- (a) Six columns of smaller pads, so every effect fits on one screen. Frontend's proposal.
+- (b) The pads keep their size, and the tab scrolls.
+
+### U225 · The ✗ in the Check's cells
+S1's verdict ✗ is thick. The Check cells' ✗ are thinner.
+- (a) The thick ✗ on every surface.
+- (b) As today.
+
 ### U221 · Where the laptop sits, and how the distance is bridged
 The user wants the laptop free of the projector and the mixer. ADR-0002's split mode (the audio on another device) is recorded but not built (docs/research/reports/browser-only-show.md). The distances in metres aren't recorded yet: the user is asked for them.
 - (a) The laptop at the stage, next to the mixer and the Wii remote, with a fibre HDMI cable to the projector (about 150–210 USD for 50 m, no delay). Also fixes the remote's range.
