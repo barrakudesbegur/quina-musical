@@ -37,6 +37,10 @@ export const PAGES: readonly CheckPage[] = [
   player('before', 'demo=before'),
   player('historial', 'demo=play&view=historial'),
   player('cartrons', 'demo=play&view=cartrons'),
+  // The collapsed cards (D289): «LÍNIA!» and «QUINA!» on a tile, the scribble in the empty cell, the resting headers.
+  player('tiles-line', 'demo=lineDone&view=cartrons'),
+  player('tiles-quina', 'demo=cardFull&view=cartrons'),
+  player('tiles-scribble', 'demo=play&view=cartrons&teach=scribble&cards=123,57,101,412'),
   player('premis', 'demo=play&open=premis'),
   player('horari', 'demo=play&open=horari'),
   player('ajustos', 'demo=play&open=ajustos'),

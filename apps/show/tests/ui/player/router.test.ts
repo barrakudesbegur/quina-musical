@@ -80,7 +80,6 @@ test('review hints: the home screen\'s view, a drawer to open and demo cards', (
   assert.equal(devHints('?install=steps').install, 'steps');
   assert.equal(devHints('?install=prompt&open=install').open, 'install');
   assert.equal(devHints('?install=yes').install, null);
-<<<<<<< HEAD
   // `mark-bob`'s demo beat (main.ts honours it only in development and demos).
   assert.equal(devHints('?demo=play&bpm=120').bpm, 120);
   assert.equal(devHints('?bpm=98.5').bpm, 98.5);
@@ -88,12 +87,10 @@ test('review hints: the home screen\'s view, a drawer to open and demo cards', (
   assert.equal(devHints('?bpm=20').bpm, null, 'below 40');
   assert.equal(devHints('?bpm=400').bpm, null, 'above 240');
   assert.equal(devHints('?view=cartrons').bpm, null);
-=======
   // a demo phone not yet shown that a tile opens (T3, D289)
   assert.equal(devHints('?teach=peek').teach, 'peek');
   assert.equal(devHints('?teach=scribble').teach, 'scribble');
   assert.equal(devHints('?teach=yes').teach, null);
->>>>>>> 7815a65a (Collapsed cards (D289, option A): CardTile and Scribble in the design system, the phone's tiles, the card opened over the home (native modal dialog), «LÍNIA!»/«QUINA!» in the map's place, the peek with its closing countdown, the scribble until a tile is tapped, Caveat Brush self-hosted (26 KB), the frameless sticker rosette on the full card too, the resting cards as headers three to a row, demos for every state)
   // strip-fade's comparison (28 Nov): only `under`, the 27 Nov look
   assert.equal(devHints('?demo=play&mask=under').mask, 'under');
   assert.equal(devHints('?mask=fade').mask, null);

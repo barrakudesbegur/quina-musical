@@ -45,9 +45,4 @@
   width: 11rem;
   min-height: 12rem;
 }
-
-.ds-gallery__scribble .card-tile__mark,
-.ds-gallery__grid--tiles .card-tile__mark {
-  transform: rotate(var(--tilt, 0deg));
-}
 }

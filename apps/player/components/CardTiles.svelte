@@ -154,13 +154,13 @@
           {#snippet mark()}<Swatch color={v.saved.color} />{/snippet}
           {#snippet cellMark(c: number)}
             {@const songId = tile.songs[c]}
+            <!-- The tilt on the kernel's box, the beat's bob (`mark-bob`, its `rotate`) on the HTML box inside it, as CardGrid. -->
             <span
               class="card-tile__mark"
-              data-bob
               data-anim={app.freshMarks.has(`${v.saved.id}:${songId}`) ? 'mark-in' : undefined}
               style:--tilt="{kernelTilt(v.saved.id, songId)}deg"
               style:--stagger="{i * PLAYER_CONFIG.markStaggerMs}ms"
-            ><CardMark identity={v.saved.color} decorative /></span>
+            ><span class="card-tile__bob" data-bob><CardMark identity={v.saved.color} decorative /></span></span>
           {/snippet}
         </CardTile>
       </li>

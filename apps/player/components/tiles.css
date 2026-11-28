@@ -43,10 +43,22 @@
   height: var(--tile-mark-size);
 }
 
-/* A mark on a tile's map: tilted as the full card's kernel (its own tilt per song), dropping in as it lands
-   (`mark-in`). The beat's bob (wt-beat) moves it by `rotate` through [data-bob]; the tilt stays on `transform`. */
+/* A mark on a tile's map: tilted as the full card's kernel (its own tilt per song, on `transform`), dropping in as it
+   lands (`mark-in`). Inside it, the beat's bob (`mark-bob`) turns an HTML box the size of the mark (its pivot near the
+   drawing's bottom), as CardGrid's `.card-grid__bob`. */
 .card-tile__mark {
   transform: rotate(var(--tilt, 0deg));
+}
+
+.card-tile__bob {
+  position: absolute;
+  inset: 0;
+  display: grid;
+}
+
+.card-tile__bob > svg {
+  width: 100%;
+  height: 100%;
 }
 
 @media (prefers-reduced-motion: no-preference) {

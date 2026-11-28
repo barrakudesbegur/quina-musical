@@ -9,6 +9,7 @@
   import CardTile, { type TileCell } from '../../../packages/ui/components/CardTile.svelte';
   import Scribble from '../../../packages/ui/components/Scribble.svelte';
   import CardMark from '../../player/components/CardMark.svelte';
+  import '../../player/components/tiles.css';
   import './tiles-section.css';
 
   let { cell }: { cell: Snippet<[string, Snippet]> } = $props();
@@ -20,7 +21,7 @@
 </script>
 
 {#snippet chip(identity: number)}<span class="swatch"><CardMark {identity} decorative /></span>{/snippet}
-{#snippet kernel(identity: number, i: number)}<span class="card-tile__mark" data-bob style:--tilt="{TILT[i]}deg"><CardMark {identity} decorative /></span>{/snippet}
+{#snippet kernel(identity: number, i: number)}<span class="card-tile__mark" style:--tilt="{TILT[i]}deg"><span class="card-tile__bob" data-bob><CardMark {identity} decorative /></span></span>{/snippet}
 
 <section class="ds-gallery__section" aria-labelledby="tiles">
   <h2 id="tiles">Collapsed cards (D7 · CardTile, D8 · Scribble; D289)</h2>
