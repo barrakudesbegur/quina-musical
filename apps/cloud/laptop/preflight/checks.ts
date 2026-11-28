@@ -495,15 +495,57 @@ export function audioClockCheck(
     `Last resort: restart the Mac and follow "The laptop crashes" (night runbook, "When something goes wrong": "The Shuffle never ends, or the drum freezes")`);
 }
 
+/** An entry of `os.networkInterfaces()`, as far as the LAN address goes (`family` was the number 4 in early Node 18). */
+export interface InterfaceLike {
+  address: string;
+  family: string | number;
+  internal: boolean;
+}
+
+/** This laptop's address on the hotspot, the interface it's on, and its other addresses (to try when the hotspot is on another). */
+export interface LanAddress {
+  address: string;
+  iface: string;
+  others: { address: string; iface: string }[];
+}
+
+/** A VPN's tunnel (macOS names them utun, ipsec or ppp): a tablet on the hotspot can't reach the laptop through it. */
+export const isVpnInterface = (iface: string): boolean => /^(utun|ipsec|ppp)/.test(iface);
+
+/** The default route's interface from `route -n get default` (macOS: a line `interface: en0`), or null. */
+export function defaultRouteInterface(routeOutput: string | null): string | null {
+  return routeOutput?.match(/^\s*interface:\s*(\S+)\s*$/m)?.[1] ?? null;
+}
+
+/**
+ * The address the tablet opens the console on: the default route's interface's IPv4 (a VPN or an earlier network
+ * can leave other addresses first in the list, and the tablet can't reach those). Without a default route, or none
+ * with an IPv4, the first non-internal IPv4.
+ */
+export function lanAddressFrom(routeOutput: string | null, interfaces: Readonly<Record<string, readonly InterfaceLike[] | undefined>>): LanAddress | null {
+  const all = Object.entries(interfaces).flatMap(([iface, list]) =>
+    (list ?? []).filter((i) => (i.family === 'IPv4' || i.family === 4) && !i.internal).map((i) => ({ address: i.address, iface })));
+  const routed = defaultRouteInterface(routeOutput);
+  const chosen = all.find((a) => a.iface === routed) ?? all[0];
+  if (!chosen) return null;
+  return { ...chosen, others: all.filter((a) => a !== chosen) };
+}
+
 /**
  * The tablet's way in: the console's LAN address. With `laptopOnly` (the presenters don't use the tablet, and the
- * tech drives from the laptop's own screen) it isn't needed, so a missing one only warns.
+ * tech drives from the laptop's own screen) it isn't needed, so a missing one only warns. A VPN on the address's
+ * interface warns whatever the answer: the tablet can't come in through the tunnel.
  */
-export function lanCheck(url: string | null, reachable: boolean, laptopOnly = false): Check {
+export function lanCheck(url: string | null, reachable: boolean, laptopOnly = false, lan?: LanAddress | null): Check {
   if (!url) return check('Network', 'Console on the LAN', 'warn', 'no network: join the phone hotspot (USB tethering alone gives the tablet no way in)');
+  const others = lan?.others.length ? ` (this laptop's other addresses: ${lan.others.map((o) => `${o.address} on ${o.iface}`).join(', ')})` : '';
+  if (lan && isVpnInterface(lan.iface)) {
+    return check('Network', 'Console on the LAN', 'warn',
+      `a VPN is on (${lan.iface}): the tablet can't reach the console through it at ${url}. Turn the VPN off for the night, or the tablet uses the cloud console${others}`);
+  }
   if (!reachable && laptopOnly) return check('Network', 'Console on the LAN', 'warn', `${url} doesn't answer: fine without the tablet, but start the relay with "npm start -- --lan" if the tech's phone should reach the console`);
   if (!reachable) return check('Network', 'Console on the LAN', 'fail', `${url} doesn't answer: start the relay with "npm start -- --lan" (it listens only on this laptop otherwise), and check the firewall`);
-  return check('Network', 'Console on the LAN', 'pass', `${url} (if the tablet can't open it, the hotspot isolates its clients: see the runbook)`);
+  return check('Network', 'Console on the LAN', 'pass', `${url} (if the tablet can't open it, the hotspot isolates its clients: see the runbook)${others}`);
 }
 
 /**

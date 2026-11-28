@@ -413,6 +413,54 @@ test('without the tablet: a console must be open on the laptop, and the LAN addr
   assert.equal(c.lanCheck('http://172.20.10.2:5174/console/', false, true).status, 'warn');
 });
 
+test("the console's LAN address: the default route's interface, not an earlier VPN or network; a VPN on the default route warns", () => {
+  // `route -n get default` on macOS.
+  const route = (iface: string) => [
+    '   route to: default', 'destination: default', '       mask: default', '    gateway: 192.168.10.1', `  interface: ${iface}`,
+    '      flags: <UP,GATEWAY,DONE,STATIC,PRCLONING,GLOBAL>', ' recvpipe  sendpipe  ssthresh  rtt,msec    rttvar  hopcount      mtu     expire',
+    '       0         0         0         0         0         0      1500         0 ', '',
+  ].join('\n');
+  const v4 = (address: string, internal = false) => ({ address, family: 'IPv4', internal });
+  const interfaces = {
+    lo0: [v4('127.0.0.1', true), { address: '::1', family: 'IPv6', internal: true }],
+    utun4: [v4('172.26.205.80')],
+    en0: [{ address: 'fe80::1', family: 'IPv6', internal: false }, v4('192.168.10.153')],
+  };
+  assert.equal(c.defaultRouteInterface(route('en0')), 'en0');
+  assert.equal(c.defaultRouteInterface(''), null);
+  assert.equal(c.defaultRouteInterface('route: writing to routing socket: not in table'), null);
+  assert.equal(c.defaultRouteInterface(null), null);
+
+  // The default route's en0, over a utun listed first (the 28 Nov relay printed 172.26.205.80; the tablet needed 192.168.10.153).
+  const lan = c.lanAddressFrom(route('en0'), interfaces);
+  assert.deepEqual(lan, { address: '192.168.10.153', iface: 'en0', others: [{ address: '172.26.205.80', iface: 'utun4' }] });
+  assert.equal(c.lanAddressFrom(route('en5'), { en0: [v4('10.0.0.4')], en5: [v4('172.20.10.2')] })?.address, '172.20.10.2', 'over an earlier network');
+  // No route, garbage, or a default interface without an IPv4: the first non-internal IPv4, as before.
+  for (const output of [null, '', 'garbage\n', route('en9')]) assert.equal(c.lanAddressFrom(output, interfaces)?.address, '172.26.205.80');
+  assert.equal(c.lanAddressFrom(route('en0'), { lo0: [v4('127.0.0.1', true)] }), null);
+  assert.equal(c.lanAddressFrom(null, { en0: [{ address: '10.0.0.4', family: 4, internal: false }] })?.address, '10.0.0.4', "early Node 18's numeric family");
+
+  // A VPN on the default route: never a silent PASS, reachable or not, and the other addresses are named.
+  const vpn = c.lanAddressFrom(route('utun4'), interfaces);
+  assert.equal(vpn?.address, '172.26.205.80');
+  for (const [reachable, laptopOnly] of [[true, false], [false, false], [false, true]] as const) {
+    const v = c.lanCheck('http://172.26.205.80:5174/console/', reachable, laptopOnly, vpn);
+    assert.equal(v.status, 'warn');
+    assert.match(v.detail, /VPN is on \(utun4\).*172\.26\.205\.80.*turn the VPN off.*cloud console.*192\.168\.10\.153 on en0/i);
+  }
+  for (const iface of ['utun0', 'ipsec0', 'ppp0']) assert.ok(c.isVpnInterface(iface), iface);
+  for (const iface of ['en0', 'en5', 'bridge100']) assert.ok(!c.isVpnInterface(iface), iface);
+
+  // Not a VPN: as before, with the other addresses named on a PASS.
+  const pass = c.lanCheck('http://192.168.10.153:5174/console/', true, false, lan);
+  assert.equal(pass.status, 'pass');
+  assert.match(pass.detail, /172\.26\.205\.80 on utun4/);
+  assert.equal(c.lanCheck('http://192.168.10.153:5174/console/', false, false, lan).status, 'fail');
+  assert.equal(c.lanCheck('http://192.168.10.153:5174/console/', false, true, lan).status, 'warn');
+  assert.equal(c.lanCheck('http://192.168.10.153:5174/console/', true).detail, "http://192.168.10.153:5174/console/ (if the tablet can't open it, the hotspot isolates its clients: see the runbook)");
+  assert.equal(c.lanCheck(null, false, false, null).status, 'warn');
+});
+
 test('the projector: connected, and never mirroring the laptop when the console is on its screen', () => {
   const display = (name: string, internal: boolean, mirror = false, main = false) => ({
     _name: name,

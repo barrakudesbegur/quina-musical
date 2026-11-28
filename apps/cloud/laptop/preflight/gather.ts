@@ -114,10 +114,15 @@ function relayView(relay: string): Promise<{ clients: { role: string }[]; remote
   });
 }
 
-/** This laptop's address on the hotspot, if it has one. */
-function lanAddress(): string | null {
-  for (const list of Object.values(os.networkInterfaces())) for (const i of list ?? []) if (i.family === 'IPv4' && !i.internal) return i.address;
-  return null;
+/** This laptop's address on the hotspot, if it has one: the default route's interface's (checks.lanAddressFrom). */
+async function lanAddress(): Promise<checks.LanAddress | null> {
+  let route: string | null = null;
+  try {
+    route = (await run('route', ['-n', 'get', 'default'], { timeout: 2000 })).stdout;
+  } catch {
+    // no default route, or no `route`: the first address
+  }
+  return checks.lanAddressFrom(route, os.networkInterfaces());
 }
 
 export async function runPreflight(o: PreflightOptions): Promise<checks.Check[]> {
@@ -221,11 +226,11 @@ async function networkChecks(o: PreflightOptions, repertoireName: string): Promi
   const audioClock = checks.audioClockCheck(view?.clients ?? null, view?.state ?? null, Date.now());
   if (audioClock) out.push(audioClock);
   if (view) out.push(checks.wiiRemoteCheck(view.remote, Date.now()));
-  const lan = lanAddress();
+  const lan = await lanAddress();
   const port = new URL(o.relay).port || '80';
-  const lanUrl = lan ? `http://${lan}:${port}/console/` : null;
+  const lanUrl = lan ? `http://${lan.address}:${port}/console/` : null;
   const lanAnswer = lanUrl ? await getJson(lanUrl, {}, 3000) : null;
-  out.push(checks.lanCheck(lanUrl, Boolean(lanAnswer?.ok), o.laptopOnly === true));
+  out.push(checks.lanCheck(lanUrl, Boolean(lanAnswer?.ok), o.laptopOnly === true, lan));
   return out;
 }
 
