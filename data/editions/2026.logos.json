@@ -13,7 +13,7 @@
     {"id": "can-kai", "name": "Can Kai", "file": "drive:can-kai.png"},
     {"id": "can-pere", "name": "Can Pere", "file": "drive:Logo Can Pere.png", "background": "edges"},
     {"id": "can-pol", "name": "Can Pol", "file": "drive:Can Pol.jpg", "background": "light-ink", "luma": [110, 190], "ink": {"color": "box"}},
-    {"id": "can-ruben", "name": "Can Ruben", "file": "drive:Can Ruben.jpg", "background": "edges"},
+    {"id": "can-ruben", "name": "Can Ruben", "file": "drive:Can Ruben.jpg", "background": "edges", "sticker": {"reach": 0.35}},
     {"id": "carbo", "name": "Carbó", "file": "search:carbo/facebook-profile.jpg", "background": "edges", "note": "their Facebook picture"},
     {"id": "de-begur", "name": "De Begur", "file": "drive:DeBegur.png"},
     {"id": "farolillo", "name": "Farolillo", "file": "drive:el-farolillo.png", "crop": [0.004, 0.2, 0.996, 0.68], "background": "all", "ink": {"color": "box"}, "note": "without the image's lighter edge columns (the user: two lines not in the logo)"},
