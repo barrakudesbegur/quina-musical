@@ -14,6 +14,7 @@
   import { S } from '../strings.ts';
   import AddCardPrompt from './AddCardPrompt.svelte';
   import Countdown from './Countdown.svelte';
+  import ClockText from './ClockText.svelte';
   import PrizeLines from './PrizeLines.svelte';
   import Reel from './Reel.svelte';
   import RoundMark from './RoundMark.svelte';
@@ -82,7 +83,7 @@
         {#if startAtMs - app.cloudNow > 0 && startAtMs - app.cloudNow < HOUR}
           <Countdown atMs={startAtMs} nowMs={app.cloudNow} label={(t) => `${S.startsAround(formatClock(startAtMs))} (${t})`} doneLabel={S.startsAround(formatClock(startAtMs))} />
         {:else}
-          {S.startsAround(formatClock(startAtMs))}
+          <ClockText text={S.startsAround(formatClock(startAtMs))} />
         {/if}
       </p>
     {/if}

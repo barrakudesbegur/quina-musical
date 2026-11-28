@@ -3,7 +3,7 @@
 // words under it; a guide only, since rounds start by hand), the meditating and the dancing ninos either
 // side, and the sponsors' logos. No winning card numbers, no QR, and none of the next round's prizes (they
 // are revealed at its intro).
-import { formatClock } from '../../../packages/rules/time.ts';
+import { clockParts, type ClockParts } from '../../../packages/rules/time.ts';
 import { STAGE } from '../config.ts';
 import type { AnimDetail } from '../model/moments.ts';
 import { ringLeft, roughCountdown, sameCountdown, type RoughCountdown } from '../model/timing.ts';
@@ -18,11 +18,13 @@ import { setNino } from '../../../packages/ui/components/nino-dom.ts';
 import { RingElement } from '../../../packages/ui/components/ring-dom.ts';
 import { sceneRoot, type SceneRenderer } from './scene.ts';
 
-/** What the ring's face says: the rough minutes, "<1" under a minute, or the clock time when it's far off. */
-function ringFace(at: RoughCountdown, clock: (ms: number) => string): { value: string; unit: string } {
+/** What the ring's face says: the rough minutes, "<1" under a minute, or the clock time when it's far off, its am/pm
+ * as the unit so Londrina's capitals leave it lowercase (D114). */
+function ringFace(at: RoughCountdown, clock: (ms: number) => ClockParts | null): { value: string; unit: string } {
   if (at.kind === 'minutes') return { value: String(at.minutes), unit: STAGE_TEXT.minutesUnit };
   if (at.kind === 'soon') return { value: STAGE_TEXT.ringSoon, unit: STAGE_TEXT.minutesUnit };
-  return { value: clock(at.atMs), unit: '' };
+  const parts = clock(at.atMs);
+  return parts ? { value: parts.time, unit: parts.period } : { value: '—', unit: '' };
 }
 
 /** The Interval's countdown: the generic Ring (E1), framed, in cyan, emptying linearly towards the guide end, with the
@@ -36,7 +38,7 @@ class CountdownRing {
     this.root.setAttribute('aria-hidden', 'true');
   }
 
-  update(at: RoughCountdown | null, left: number | null, clock: (ms: number) => string): void {
+  update(at: RoughCountdown | null, left: number | null, clock: (ms: number) => ClockParts | null): void {
     setHidden(this.root, at === null);
     if (left !== null) this.ring.setProgress(left);
     if (!at || sameCountdown(at, this.last)) return;
@@ -109,7 +111,7 @@ export class IntervalScene implements SceneRenderer<IntervalView> {
     const body = this.body;
     if (!body) return;
     const at = roughCountdown(body.guideEndMs, nowMs, STAGE.countdown);
-    this.ring.update(at, ringLeft(body.sinceMs, body.guideEndMs, nowMs), formatClock);
+    this.ring.update(at, ringLeft(body.sinceMs, body.guideEndMs, nowMs), clockParts);
     this.words.update(body.guideEndMs, nowMs);
     this.sponsors.tick(nowMs);
   }
