@@ -33,6 +33,10 @@ How a logo is cleaned (its manifest entry; every field but `id` and `name` is op
   recoloured, so they read on the sticker's white): {"color": "#rrggbb" | "box", "pixels": "all" | "light"}.
   "box" is the removed background's colour, darkened only as far as it needs to read on white (contrast 4.5:1, its
   hue kept); "light" recolours only the whitish pixels and keeps the coloured ones.
+- `sticker`: {"shape": "convex"}: the white backing fills the cut's convex hull, so the outline follows the logo's
+  overall shape instead of every dip (the user, 28 Nov: Zig Zag's open circle "has like a bite", Cambra Clinic's top
+  "a big dip", La Petite "feels like a T and i preffer a V"). Only these files have it so far: the screens cut every
+  logo the plain way until die-cut.ts takes the same option.
 """
 
 from __future__ import annotations
@@ -49,6 +53,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageOps
 from scipy import ndimage
+from scipy.spatial import ConvexHull
 
 REPO = Path(__file__).resolve().parent.parent.parent
 DIE_CUT_CLI = Path(__file__).resolve().parent / "die-cut-cli.ts"
@@ -73,6 +78,7 @@ class Logo:
     tolerance: float = TOLERANCE
     luma: list[float] = field(default_factory=lambda: [60.0, 160.0])
     ink: dict | None = None
+    sticker: dict | None = None
     note: str | None = None
 
 
@@ -261,6 +267,20 @@ def clean(logo: Logo, path: Path, done: Done) -> np.ndarray | None:
     return px
 
 
+def convex_backing(stuck: Image.Image, supersample: int = 4) -> Image.Image:
+    """The sticker with its white backing filling the cut's convex hull (antialiased), the logo untouched on top."""
+    solid = np.asarray(stuck)[..., 3] > 127
+    ys, xs = np.nonzero(solid)
+    points = np.column_stack([xs, ys]).astype(np.float64) + 0.5
+    hull = points[ConvexHull(points).vertices]
+    big = Image.new("L", (stuck.width * supersample, stuck.height * supersample), 0)
+    ImageDraw.Draw(big).polygon([tuple(p * supersample) for p in hull], fill=255)
+    alpha = big.resize(stuck.size, Image.Resampling.LANCZOS)
+    backing = Image.new("RGBA", stuck.size, (255, 255, 255, 0))
+    backing.putalpha(alpha)
+    return Image.alpha_composite(backing, stuck)
+
+
 def sticker(transparent: Image.Image, work: Path) -> Image.Image:
     """The die-cut from packages/ui/components/die-cut.ts, at STICKER_SIDE."""
     k = STICKER_SIDE / max(transparent.size)
@@ -398,6 +418,12 @@ def main() -> int:
                         transparent = to_image(px)
                         transparent.save(out / "transparent" / f"{logo.id}.png", optimize=True)
                         stuck = sticker(transparent, Path(tmp))
+                        shape = (logo.sticker or {}).get("shape")
+                        if shape == "convex":
+                            stuck = convex_backing(stuck)
+                            done.notes.append("convex sticker")
+                        elif shape is not None:
+                            raise ValueError(f"{logo.id}: unknown sticker shape {shape!r}")
                         stuck.save(out / "sticker" / f"{logo.id}.png", optimize=True)
                         upload.append({"id": logo.id, "logoFile": f"{logo.id}.png"})
             else:
