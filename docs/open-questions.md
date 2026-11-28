@@ -157,6 +157,12 @@ The user (28 Nov): "just a website … a PWA that works offline … the show pag
 - (a) The direction for after 27 Dec. This year the laptop stays the only playback device, with the cheap pieces: the start app (U215), the cloud Console as the main path, and the Wii remote fixes.
 - (b) This year: reopens R2-Q26, and the rehearsals run on the new setup.
 
+### U226 · What to buy to test the presenters' remote
+The research (docs/research/reports/presenter-remote.md): "move the radio, not the remote". Any link from the stage to the table through a full tent is a gamble, so the receiver goes within 1–3 m of the presenter: the tablet on stage, or a USB receiver on an active USB extension along the audio cables to the stage edge (two 5 m cables give 10 m). The laptop stays at the table. Nothing was tried on hardware; the home test plan is in the report.
+- (a) The full kit, about 90–120 €: a 2.4 GHz presenter remote with a USB receiver (a Logitech R400 or similar), the 8BitDo USB Wireless Adapter 2 for the genuine Wii remote (about 20 €; pairs with SYNC, no MacWiiPair, but no rumble or shake), two 5 m active USB extensions, and optionally an 8BitDo Micro for the tablet. It tests both paths against the Wii remote at once.
+- (b) Only the Wii remote's path: the 8BitDo adapter (or a DolphinBar, unconfirmed on a Mac) and the extensions.
+- (c) Only the presenter remote and the extensions.
+
 ### U222 · The Desgraciat's standing Check when no finale was started
 D166: the finale replaces the Desgraciat's public Check. But the built console still offers one: with one card left standing and no finale started, Dempeus «Comprovar #N» (or the Wii remote's A) sends a standing Check. «Començar final» needs at least 2 finalists, so in that case the Check is the only way to confirm the winner.
 - (a) Remove it: the finale is the only way, and the presenters start it while at least 2 stand. As D166 reads.
