@@ -313,6 +313,7 @@ On the audition page: about 2 minutes a song, so about 3 hours for 90 songs, and
 
 ### U16 · Upload the logo library in Admin
 It needs your Google login: Admin → "Pujar logos a la biblioteca" with the cleaned logos in `temp/logos-clean/`, then "Triar de la biblioteca" per sponsor. Two logos are small sources; ask those sponsors for bigger ones.
+Two sponsors have no logo file at all in the organizers' list: s-and-s and peixos-arnau (Backend, 28 Nov); ask the organizers for them. Verdures Andreu's was doubled; Backend cropped it and put it in the plan (49352964).
 
 ### U18 · The night's plan in Admin · before the first rehearsal
 Rounds in order, a card type and side per round, prize bundles, sponsors, the doors' time and the throws. Since D116 it goes in through the edition file (U68–U75).
