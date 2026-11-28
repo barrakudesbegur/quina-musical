@@ -9,21 +9,23 @@
 //   npm start -- --repertoire <name> --layout a3-6   the whole run in the other layout (the A3 card with covers)
 //   npm start -- --repertoire <name> --test-sheets   also the A3 test sheets (D306): cards-<type>-test-a3.pdf, each
 //                                                    type's last cards (config.ts › TEST_SHEETS), the same cards
-//   npm start -- --repertoire <name> --proof         only the proof for the print shop (D267): proof-<type>.pdf, the
-//                                                    type's first sheet and its A3 test sheet; no JSON, no full PDFs
+//   npm start -- --repertoire <name> --proof         only the proof for the print shop (D267): proof-<type>-a4.pdf (the
+//                                                    type's first sheet) and proof-<type>-a3.pdf (its A3 test sheet),
+//                                                    one file per paper size; no JSON, no full PDFs
 //   … --out <dir>                                    write into <dir> instead of the cardsJson folder
 import { readFileSync, statSync } from 'fs';
 import { mkdir } from 'fs/promises';
 import path from 'path';
 import { sumBy } from 'lodash';
 import { generateCardsJson } from './generate-cards-json';
-import { CARD_AMOUNTS, CARD_LAYOUT, CARD_TYPES, SEED, TEST_SHEET_LAYOUT, TEST_SHEETS } from './config';
+import { CARD_AMOUNTS, CARD_LAYOUT, CARD_TYPES, PRINT_PAPER, SEED, TEST_SHEET_LAYOUT, TEST_SHEETS } from './config';
 import { assertCardTypes, cardTypeProblems, printedTypeProblems } from './card-types';
 import { DrawnByPool, repeatedCards, repeatedLines } from './uniqueness';
 import { loadRepertoire, outDirFrom, repertoireNameFrom, repoRoot, songProblems, type RepertoireSong } from './repertoire';
 import { poolCounts, poolProblems, sideSources, sidesByPool, songPools, sourceWarnings } from './sides';
 import { checkPrint } from './print/check';
 import { CARD_LAYOUTS, layoutIdFrom } from './print/layouts';
+import { proofFiles, type ProofPart } from './print/proof';
 import { sheetSlots, testSheetCards } from './print/sheets';
 import { saveJsonToFile } from './utils/files';
 import type { Card } from './generate-cards-json';
@@ -150,15 +152,28 @@ async function generate(): Promise<void> {
       ? `${testLayout.sheet.name} test ${testCards.length > testPerSheet ? 'sheets' : 'sheet'}, ${numbers(testCards)} (keep the ${layout.sheet.name} cards ${numbers(testCards)} off sale, D306)`
       : '';
     if (proof) {
+      // One file per paper size (a shop's machine may not switch size inside one duplex job), each saying how to print.
       const first = sheetSlots(cards.length, layout.cols * layout.rows)[0].map((s) => cards[s.cardIndex]);
-      const pages = `\n   pages 1–2: the first ${layout.sheet.name} sheet, ${first.map((c) => `#${c.id}`).join(', ')}` + (testCards.length ? `; pages 3–${2 + 2 * Math.ceil(testCards.length / testPerSheet)}: the ${testWords}` : '');
-      await write(spec, [{ layout, cards, firstSheets: 1 }, ...testRun], path.join(outDir, `proof-${type}.pdf`), pages);
+      const parts: ProofPart<PrintRun>[] = [
+        { layout, what: `the first ${layout.sheet.name} sheet, ${first.map((c) => `#${c.id}`).join(', ')}`, sheets: 1, run: { layout, cards, firstSheets: 1 } },
+        ...testRun.map((run) => ({ layout: testLayout, what: `the ${testWords}`, sheets: Math.ceil(testCards.length / testPerSheet), run })),
+      ];
+      for (const file of proofFiles(type, PRINT_PAPER[type], parts)) {
+        let page = 1;
+        const pages = file.parts.map((part) => {
+          const last = page + 2 * part.sheets - 1;
+          const words = `\n   pages ${page}–${last}: ${part.what}`;
+          page = last + 1;
+          return words;
+        });
+        await write(spec, file.parts.map((p) => p.run), path.join(outDir, file.file), `${pages.join('')}\n   print: ${file.print}`);
+      }
       continue;
     }
     await write(spec, [{ layout, cards }], path.join(outDir, `cards-${type}.pdf`), '');
     if (withTestSheets && testRun.length) await write(spec, testRun, path.join(outDir, `cards-${type}-test-${testLayout.sheet.name.toLowerCase()}.pdf`), `: the ${testWords}`);
   }
-  console.log(proof ? '✅ Proof written (--proof): print each file duplex, long edge («dúplex, vora llarga»), at 100 %.' : '✅ Cards generated successfully!');
+  console.log(proof ? '✅ Proof written (--proof): one file per type and paper size, each printed as its «print:» line says.' : '✅ Cards generated successfully!');
 }
 generate().catch((error) => {
   console.error('❌ Error generating cards:', error);

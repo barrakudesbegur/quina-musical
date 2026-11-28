@@ -114,15 +114,28 @@ who hands a known buyer of two cards one or the other and tracks who holds them.
 [`src/config.ts`](./src/config.ts) says how many sheets per type: one each, since each type prints on its own paper
 colour (normal #394–399, especial #694–699). The run prints which numbers they hold.
 
-**The proof (D267):** `--proof` writes only `proof-<type>.pdf` (no JSON, no full PDFs): the type's first A4 sheet (#1,
-#134, #267; #400, #500, #600) and its A3 test sheet, both sides, four pages. One file per type, because each type goes on
-its own paper colour. At the print shop, before the real run: print each duplex, long edge, at 100 %, and check
+**The proof (D267):** `--proof` writes only the proof (no JSON, no full PDFs), **one file per type and paper size**,
+because each type goes on its own paper colour and a shop's machine may not switch paper size inside one duplex job:
+
+| File | Holds (both sides, 2 pages) | Print on |
+|---|---|---|
+| `proof-normal-a4.pdf` | the first A4 sheet, #1, #134, #267 | A4, blue paper, black and white |
+| `proof-normal-a3.pdf` | the A3 test sheet, #394–399 | A3, blue paper, colour |
+| `proof-especial-a4.pdf` | the first A4 sheet, #400, #500, #600 | A4, pink paper, black and white |
+| `proof-especial-a3.pdf` | the A3 test sheet, #694–699 | A3, pink paper, colour |
+
+Every file prints duplex, long edge («dúplex, vora llarga»), at 100 %. The run prints, under each file, its pages and a
+`print:` line with all of that (`A4, blue paper, black and white, duplex long edge («dúplex, vora llarga»), at 100 %`);
+the paper colours are `PRINT_PAPER` in [`src/config.ts`](./src/config.ts). (A run in one paper size, `--layout a3-6
+--proof`, writes one file per type, `proof-<type>-a3.pdf`.) At the print shop, before the real run: print each file as
+its line says, on its own paper (four jobs), and check
 - the duplex alignment on their machine: held up to the light, each back's grid falls on its front's, and nothing is
   cut off (every element 5 mm inside the cut edges);
 - a QR scanned from paper (a phone opens `quina.barrakudesbegur.org/26/1` and shows card #1);
 - the colour: black on the blue and pink paper (the GOMET word and the artists are grey, the stamp 9 % ink), and the
   A3 covers in colour, #100's nearly white one above all;
-- the cut: 21 × 9.9 cm on A4, 14.85 × 14 cm on A3.
+- the cut: 21 × 9.9 cm on A4, 14.85 × 14 cm on A3;
+- each sheet on the right paper: the A4 files in black and white, the A3 files in colour, each type on its colour.
 `--out <dir>` writes into another folder (relative to where the command runs): the proof goes to the repo's `temp/`
 (`npm start -- --repertoire 2026 --proof --out ../../temp/cards-proof-2026`), never into the folder the screens read.
 
@@ -209,7 +222,8 @@ deploy-plan.md, 27–28 Nov).
    `npm run media -- prune` (a dry run) and, only if it lists blobs no manifest names, `npm run media -- prune --yes`.
    The other laptop: `npm run media -- pull --repertoire 2026`.
 8. **Print:** the shop gets `cards-normal.pdf` on blue A4 and `cards-especial.pdf` on pink A4, duplex, long edge, at
-   100 % (D88), and the two A3 test sheets. The A4 cards #394–399 and #694–699 stay off sale, with the user (D306).
+   100 % (D88), and the two A3 test sheets in colour, `cards-normal-test-a3.pdf` on blue A3 and
+   `cards-especial-test-a3.pdf` on pink A3, duplex, long edge, at 100 %: each file its own job, as with the proof. The A4 cards #394–399 and #694–699 stay off sale, with the user (D306).
 9. The temporary folder stays until nothing serves it any more; then it can go.
 
 ## Tests

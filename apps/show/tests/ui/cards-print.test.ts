@@ -9,7 +9,8 @@ import { fitSong, lineCount, TITLE_MIN, type SongMeasures } from '../../../cards
 import { CARD_LAYOUTS, CARD_LAYOUT_IDS, HEADING_SIZE, QR_SIZE, cardGeometry, headingProblems, layoutIdFrom } from '../../../cards/src/print/layouts.ts';
 import { inPool, poolCounts, poolProblems, sideSources, songPools } from '../../../cards/src/sides.ts';
 import { cardTypeProblems, printedTypeProblems } from '../../../cards/src/card-types.ts';
-import { CARD_AMOUNTS, CARD_LAYOUT, CARD_TITLE, CARD_TYPES, TEST_SHEET_LAYOUT, TEST_SHEETS, cardUrl } from '../../../cards/src/config.ts';
+import { CARD_AMOUNTS, CARD_LAYOUT, CARD_TITLE, CARD_TYPES, PRINT_PAPER, TEST_SHEET_LAYOUT, TEST_SHEETS, cardUrl } from '../../../cards/src/config.ts';
+import { proofFiles } from '../../../cards/src/print/proof.ts';
 import { outDirFrom, parseRepertoire, printName, songProblems } from '../../../cards/src/repertoire.ts';
 
 // ---- the sheets: page order, samples, duplex
@@ -264,4 +265,20 @@ test('a Check label or heading, when given, must be text; the generator requires
   assert.deepEqual(cardTypeProblems([type]), [], 'a card-types.json from before them is still valid');
   assert.deepEqual(cardTypeProblems([{ ...type, sides: [{ side: 1, pool: '1', checkLabel: ' ' }] }]), ['card type "normal", side 1: the checkLabel must be text, or left out']);
   assert.deepEqual(printedTypeProblems([type]), ['card type "normal", side 1: no checkLabel', 'card type "normal", side 1: no heading']);
+});
+
+test('the proof (D267) is one file per type and paper size, each saying how the shop prints it', () => {
+  const a4 = CARD_LAYOUTS[CARD_LAYOUT];
+  const a3 = CARD_LAYOUTS[TEST_SHEET_LAYOUT];
+  assert.deepEqual(PRINT_PAPER, { normal: 'blue', especial: 'pink' });
+  const parts = [
+    { layout: a4, what: 'the first A4 sheet', sheets: 1, run: 'a4' },
+    { layout: a3, what: 'the A3 test sheet', sheets: 1, run: 'a3' },
+  ];
+  const files = proofFiles('especial', PRINT_PAPER.especial, parts);
+  assert.deepEqual(files.map((f) => [f.file, f.sheet, f.parts.map((p) => p.run)]), [['proof-especial-a4.pdf', 'A4', ['a4']], ['proof-especial-a3.pdf', 'A3', ['a3']]]);
+  assert.equal(files[0].print, 'A4, pink paper, black and white, duplex long edge («dúplex, vora llarga»), at 100 %');
+  assert.equal(files[1].print, 'A3, pink paper, colour, duplex long edge («dúplex, vora llarga»), at 100 %');
+  // A whole run in the A3 layout (--layout a3-6): one paper size, so one file.
+  assert.deepEqual(proofFiles('normal', 'blue', [{ ...parts[0], layout: a3 }, parts[1]]).map((f) => [f.file, f.parts.length]), [['proof-normal-a3.pdf', 2]]);
 });

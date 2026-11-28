@@ -57,6 +57,9 @@ export const BRAND_SUBTITLE = `BARRAKUDES · 20${EDITION}`;
  * background so it always scans. */
 export const PAPER_COLOR = '#ffffff';
 
+/** The colour of paper each type prints on (last year's, D267), as the proof tells the print shop (`--proof`). */
+export const PRINT_PAPER = { normal: 'blue', especial: 'pink' } as const satisfies Record<CardTypeId, string>;
+
 /** The year printed faint above the logo stamp on every card, as on last year's card (D263). */
 export const VERSION_STAMP = `20${EDITION}`;
 
