@@ -2,8 +2,8 @@
   C3 · Sheet: the phone's stacked drawers and the console's menu (components-v2.md § 4, with the 27 Nov comments' D-n:
   #67, #68). The native <dialog> shown modal, so the browser keeps focus inside, makes the page (and the sheets under
   this one) inert, sends Esc and the phone's back gesture as `cancel`, and returns the focus on close. `dismiss='any'`
-  also closes it on a tap outside (`closedby`, with lightDismiss() where Safari lacks it); 'closerequest' only on Esc
-  (the console's menu, U188 open).
+  also closes it on a tap outside (`closedby`, with lightDismiss() where Safari lacks it: the drawers and the console's
+  menu); 'closerequest' only on Esc.
 
   Motion (ANIMATIONS.md `drawer-open`, `drawer-drag`, `drawer-close`, `drawer-stack`, `menu-sheet`): it rises out of
   `origin` by a transition from @starting-style; it follows the finger on its title bar, or on its content pulled

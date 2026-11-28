@@ -14,7 +14,8 @@
   (VolumeSliders; D139).
   Panic and "Acabar la nit" sit apart at the bottom, in a danger zone under a hazard stripe.
   The design system's Sheet (packages/ui/components, C3) from the right edge (origin side-right, hook menu-sheet): ✕
-  «Tanca» and Esc close it, a tap outside doesn't (U188 open); it slides back out as it closes.
+  «Tanca», Esc and a tap on the dimmed console outside it close it (light dismiss, the user's call of 28 Nov; the Wii
+  dialog still doesn't, U188); it slides back out as it closes.
 -->
 <script lang="ts">
   import MiniButton from '../../../packages/ui/components/MiniButton.svelte';
@@ -94,7 +95,7 @@
   title={S.menu.title}
   {subtitle}
   origin="side-right"
-  dismiss="closerequest"
+  dismiss="any"
   closeLabel={S.menu.close}
   closeText
   closeSound={null}

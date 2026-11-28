@@ -141,7 +141,7 @@
       {@render cell('drag="stiff": a form (pull it: it resists, and closes only past half its height)', s6)}
     {:else}
       {#snippet s5()}<Button color="grey" size="s" label="Obre el menú" onclick={() => (sheet = 'side-right')} />{/snippet}
-      {@render cell('origin side-right: the console’s menu (✕ with its label; Esc; no drag, no tap outside: U188)', s5)}
+      {@render cell('origin side-right: the console’s menu (✕ with its label, Esc or a tap outside; no drag)', s5)}
     {/if}
   </div>
 </section>
@@ -152,7 +152,7 @@
     subtitle={sheet === 'side-right' ? 'Tauleta · Quina 3 de 8' : null}
     origin={sheet}
     depth={stacked ? 'under' : 'top'}
-    dismiss={sheet === 'side-right' ? 'closerequest' : 'any'}
+    dismiss="any"
     closeLabel="Tanca"
     closeText={sheet === 'side-right'}
     class={phone ? 'drawer' : undefined}
