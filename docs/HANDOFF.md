@@ -39,7 +39,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 
 **To model, design and build after Frontend's current work (the user, 28 Nov: "dont make him lose focus now"): the night's opening, from the doors to the first round.** In today's production test the show jumped straight into the round, without the doors' card-selling state and its music, and the round's intro music (Zelda's «Parasail Minigame», show-and-music.md › Each round's intro) played while the presenters talked over the intro. To model: the doors phase (card sales, its music, the doors voices, U97); the intro music's span (U99); maybe a special audio for the presenters coming on stage ("i dont know what yet"); D291's Enrere on the first song (undo the round's start); and "the start event should not be shown in the presenter screen, it belongs to the console" (asked the user which screen and which event). Don't brief Frontend before it finishes its list.
 
-**D292's «Proves» section** (Sound engine's `--test` and jumps, Frontend's console section, Backend's cloud refusal and deploy): when it lands, add to the runbook that the night never uses `--test`, which is for rehearsals and test runs.
+**D292's «Proves» section** (Sound engine's `--test` and jumps; Frontend's console card is pushed, 95177485, hidden without `--test`; Backend's cloud refusal and deploy): when it lands, add to the runbook that the night never uses `--test`, which is for rehearsals and test runs.
 
 **The sessions:**
 - **Sound engine:** important tasks only. Done today: the README's Chrome profile (9c5ef734), split mode marked a nice-to-have (9d1cb3ac), D277's public Spin target and the Pausa volume fix (a2d0b4af).
