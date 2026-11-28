@@ -445,6 +445,7 @@ test('celebration: the shout kind and the round prize, never the winning card nu
     scene: 'celebration',
     key: `3:bingo@${NOW - 1500}`,
     kind: 'bingo',
+    round: { number: 3, special: false, desgraciat: false, label: 'Quina 3' },
     prize: { kind: 'bingo', title: 'Pernil', detail: null, sponsor: '[Patrocinador 1]', more: 16 },
   });
   assert.ok(!/\b(57|301)\b/.test(JSON.stringify(view)), 'no winning card number');
@@ -457,6 +458,15 @@ test("a Line's Celebration shows no prize panel for now (D242), revealed or not"
   assert.equal(view.body.kind, 'line');
   assert.equal(view.body.prize, null);
   assert.ok(!JSON.stringify(view).includes('Ampolla de vi blanc'), "the Line's prize stays off the projector");
+});
+
+test("every Celebration names its round for the gold plate (U175 item 7): «Quina 3», «Quina del Desgraciat»", () => {
+  for (const [name, label] of [['celebration', 'Quina 3'], ['celebrationStanding', 'Quina del Desgraciat']] as const) {
+    const state = FIXTURES[name](NOW).state;
+    const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
+    if (view.body.scene !== 'celebration') return assert.fail(`${name}: not celebration`);
+    assert.equal(view.body.round.label, label, name);
+  }
 });
 
 test('no winning card number on the projector after a win: Celebration, Interval and the end of the night', () => {

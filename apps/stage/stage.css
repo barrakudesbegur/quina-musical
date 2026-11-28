@@ -2720,17 +2720,19 @@
   rotate: -5deg;
 }
 
+/* The round's name on the gold plate under the shout (U175 item 7; board Projector-Linia: «QUINA 3»); «Quina del
+   Desgraciat» sits a little higher and smaller under «QUINA POTRA!». */
 .celebration__round {
   --plate-tilt: 2deg;
   --plate-pad: 8px 40px 16px;
   --plate-radius: 1.75rem;
   position: absolute;
   left: 50%;
-  top: 420px;
+  top: 486px;
   translate: -50% 0;
   font-family: var(--font-display);
   font-weight: var(--font-weight-strong);
-  font-size: 5.5rem;
+  font-size: 6rem;
   line-height: 1;
   color: #fff;
   text-transform: uppercase;
@@ -2738,6 +2740,11 @@
   -webkit-text-stroke: var(--stage-text-stroke) var(--color-line);
   paint-order: stroke fill;
   text-shadow: 0 var(--stage-text-drop) 0 var(--color-line);
+}
+
+.celebration[data-kind='standing'] .celebration__round {
+  top: 420px;
+  font-size: 5.5rem;
 }
 
 .celebration[data-kind='standing'] .celebration__prize {
@@ -2776,30 +2783,70 @@
   height: 100%;
 }
 
+/* The ninos at the corners (`celebrate` ⑥): a Line's and a Quina's four as board Projector-Linia draws them;
+   «QUINA POTRA!»'s three a little closer in. */
 .celebration__sticker {
   position: absolute;
   width: auto;
 }
 
 .celebration__sticker--topLeft {
-  left: 2.5rem;
-  top: 5.625rem;
-  height: 14.375rem;
+  left: 2.75rem;
+  top: 6rem;
+  height: 14.75rem;
   rotate: -8deg;
 }
 
 .celebration__sticker--topRight {
-  right: 3.5rem;
+  right: 3.25rem;
   top: 6.25rem;
+  height: 14.375rem;
+  rotate: 9deg;
+}
+
+.celebration__sticker--bottomLeft {
+  left: 4.5rem;
+  bottom: 2.75rem;
+  height: 18.125rem;
+  rotate: -4deg;
+}
+
+.celebration__sticker--bottomRight {
+  right: 4rem;
+  bottom: 2.5rem;
+  height: 18.75rem;
+  rotate: 5deg;
+}
+
+/* A Quina's prize panel sits between the bottom two: a wide nino keeps its height's box and shrinks to fit beside it. */
+.celebration[data-kind='bingo'] :is(.celebration__sticker--bottomLeft, .celebration__sticker--bottomRight) {
+  max-width: 13.75rem;
+  object-fit: contain;
+}
+
+.celebration[data-kind='bingo'] .celebration__sticker--bottomLeft {
+  object-position: left bottom;
+}
+
+.celebration[data-kind='bingo'] .celebration__sticker--bottomRight {
+  object-position: right bottom;
+}
+
+.celebration[data-kind='standing'] .celebration__sticker--topLeft {
+  left: 2.5rem;
+  top: 5.625rem;
+  height: 14.375rem;
+}
+
+.celebration[data-kind='standing'] .celebration__sticker--topRight {
+  right: 3.5rem;
   height: 13.75rem;
   rotate: 10deg;
 }
 
-.celebration__sticker--bottomLeft {
+.celebration[data-kind='standing'] .celebration__sticker--bottomLeft {
   left: 4.375rem;
   bottom: 2.5rem;
-  height: 18.125rem;
-  rotate: -4deg;
 }
 
 .celebration[data-anim='celebrate'] .celebration__sticker {
@@ -2850,6 +2897,14 @@
   line-height: 0.9;
   color: var(--color-accent);
   text-shadow: 0 var(--space-3) 0 var(--color-line);
+}
+
+/* «LÍNIA!» and «QUINA!» rest tilted with the ink outline (board Projector-Linia; «QUINA POTRA!» has its own above). */
+.celebration .shout {
+  -webkit-text-stroke: 1rem var(--color-line);
+  paint-order: stroke fill;
+  text-shadow: 0 0.875rem 0 var(--color-line);
+  rotate: -5deg;
 }
 
 .celebration__prize {
@@ -3257,7 +3312,7 @@
   .shuffle__tile.is-flying,
   .shuffle__tile.is-flying .shuffle__lift,
   .shuffle__tile.is-flying .shuffle__spin,
-  .celebration[data-anim='celebrate'].is-entering :is(.shout, .celebration__prize) {
+  .celebration[data-anim='celebrate'].is-entering :is(.shout, .celebration__prize, .celebration__sticker) {
     transform: none;
   }
 

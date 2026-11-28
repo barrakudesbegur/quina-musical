@@ -89,12 +89,13 @@ export interface CheckSceneView {
   check: CheckView;
 }
 
-/** No winning card numbers: the shout, and the round's prize once revealed (a Quina's or the last card standing's; a
- * Line's shows none for now, D242). */
+/** No winning card numbers: the shout, the round's name on its gold plate (U175 item 7), and the round's prize once
+ * revealed (a Quina's or the last card standing's; a Line's shows none for now, D242). */
 export interface CelebrationView {
   scene: 'celebration';
   key: string;
   kind: WinKind;
+  round: RoundView;
   prize: PrizeView | null;
 }
 
@@ -285,7 +286,8 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
       // D242 (the user's canvas comment S5, 27 Nov): no prize panel in a Line's Celebration for now; how a Celebration
       // shows its prize waits for the proposals (board Projector-Celebracio-Premi-Propostes).
       const prize = c.kind === 'line' ? null : (prizesOf(plan, c.round, open).find((p) => p.kind === c.kind) ?? null);
-      return { scene, key: `${c.round}:${c.kind}@${c.sinceMs}`, kind: c.kind, prize };
+      const round = roundView(roundOf(c.round, plan, state, c.kind === 'standing' ? 'desgraciat' : null) ?? { number: c.round, kind: 'normal' }, plan);
+      return { scene, key: `${c.round}:${c.kind}@${c.sinceMs}`, kind: c.kind, round, prize };
     }
     case 'interval': {
       const i = flow.interval;

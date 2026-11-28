@@ -1,9 +1,10 @@
-// The Celebration: "LÍNIA!" or "QUINA!" huge over the drum's victory lap (never the winning card numbers), the
-// round's prize and sponsor (a Quina's only: a Line's shows none for now, D242), a flash, rays and the slow paper confetti
-// raining (D185; ANIMATIONS.md `celebrate`). The
-// Desgraciat round's last one standing gets «QUINA POTRA!» (D186, amending D62; board Projector-Desgraciat-Dempeus):
-// the green title tilted, the gold «Quina del Desgraciat» plate under it, the prize on paper, green rays and three
-// ninos around it. The scene itself moves on to play (Line) or the Interval (Bingo, last standing) when the engine's
+// The Celebration: "LÍNIA!" or "QUINA!" huge and tilted over the drum's victory lap (never the winning card numbers),
+// the round's name on its gold plate under it (U175 item 7), the round's prize and sponsor (a Quina's only: a Line's
+// shows none for now, D242), a flash, rays, the slow paper confetti raining (D185) and four ninos bouncing in at the
+// corners (ANIMATIONS.md `celebrate`; board Projector-Linia). The Desgraciat round's last one standing gets «QUINA
+// POTRA!» (D186, amending D62; board Projector-Desgraciat-Potra): the green title, the gold «Quina del Desgraciat»
+// plate under it, the prize on paper, green rays and three ninos around it. Each kind's ninos come from its own pool
+// (`STAGE.stickers.celebration`). The scene itself moves on to play (Line) or the Interval (Bingo, last standing) when the engine's
 // scene changes. The Heat garland comes along across the top in the `win` pattern: the party colours, a burst of light
 // running along the string, flames when very hot (#84, D-t; ANIMATIONS.md `celebrate` ⑦).
 import { STAGE } from '../config.ts';
@@ -11,6 +12,7 @@ import type { GarlandLook } from '../model/garland.ts';
 import type { AnimDetail } from '../model/moments.ts';
 import { runPaperConfetti } from '../../../packages/ui/motion/paper-confetti.ts';
 import { STAGE_TEXT } from '../strings.ts';
+import type { WinKind } from '../../../packages/ui/flow.ts';
 import type { CelebrationView } from '../view.ts';
 import { h, playAnim, setData, setHidden, setText } from './dom.ts';
 import { Garland } from './garland.ts';
@@ -20,6 +22,14 @@ import '../../../packages/ui/components/particles.css';
 import { ninosFor } from '../../../packages/ui/concepts.ts';
 import { setNino } from '../../../packages/ui/components/nino-dom.ts';
 import { sceneRoot, type SceneEnv, type SceneRenderer } from './scene.ts';
+
+/** The corners the ninos stand in, by kind («QUINA POTRA!»'s prize takes the bottom right). */
+const SPOTS = ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'] as const;
+const SPOTS_OF: Record<WinKind, readonly (typeof SPOTS)[number][]> = {
+  line: SPOTS,
+  bingo: SPOTS,
+  standing: ['topLeft', 'topRight', 'bottomLeft'],
+};
 
 /** A small number from a string key, the same for the same key. */
 function seedOf(key: string): number {
@@ -40,10 +50,10 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
   /** G3's rays: gold, the Desgraciat's last one standing in live green. */
   private readonly rays = h('div', { class: 'ds-rays celebration__rays', data: { color: 'gold' }, attrs: { 'aria-hidden': 'true' } });
   private readonly shout: HTMLElement;
-  /** «Quina del Desgraciat», under «QUINA POTRA!». */
+  /** The round's name under the shout: «QUINA 3», «QUINA DEL DESGRACIAT». */
   private readonly roundPlate: HTMLElement;
   private readonly prize = new PrizeBlock('celebration__prize');
-  /** The last one standing's ninos around the title (left out when the stage has no sticker for a spot). */
+  /** The ninos at the corners, one per spot, each shown when its kind stands there and has a pool. */
   private readonly stickers: HTMLImageElement[];
   private key: string | null = null;
 
@@ -53,12 +63,12 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
     this.paper = h('canvas', { class: 'celebration__paper', attrs: { 'aria-hidden': 'true' } });
     this.shout = h('h1', 'shout');
     // G2's plate, gold: the round's name is always gold (U175 item 7; it was orange).
-    this.roundPlate = h('p', { class: 'plate celebration__round', hidden: true, data: { color: 'gold' } }, STAGE_TEXT.desgraciatRoundName);
-    const moment = STAGE.finale.celebration.stickers;
-    this.stickers = (['topLeft', 'topRight', 'bottomLeft'] as const).flatMap((spot) => {
-      const img = stickerImage(moment, `celebration__sticker celebration__sticker--${spot}`);
-      if (img) img.hidden = true;
-      return img ? [img] : [];
+    this.roundPlate = h('p', { class: 'plate celebration__round', data: { color: 'gold' } });
+    this.stickers = SPOTS.map((spot) => {
+      const img = stickerImage('lineCelebration', `celebration__sticker celebration__sticker--${spot}`) as HTMLImageElement;
+      img.dataset.spot = spot;
+      img.hidden = true;
+      return img;
     });
     this.stagePanel = h(
       'div',
@@ -76,19 +86,20 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
   }
 
   render(body: CelebrationView): void {
-    const standing = body.kind === 'standing';
     setData(this.stagePanel, 'kind', body.kind);
     setData(this.rays, 'color', body.kind === 'standing' ? 'live' : 'gold');
     const shout = STAGE_TEXT.shout[body.kind];
     setText(this.shout, shout ?? '');
     setHidden(this.shout, shout === null);
-    setHidden(this.roundPlate, !standing);
-    for (const sticker of this.stickers) setHidden(sticker, !standing);
-    const moment = STAGE.finale.celebration.stickers;
-    if (standing && moment) {
-      // Three different ninos round the title, a different set each night's key (NINO_FOR.lastStanding).
-      const poses = ninosFor(moment, seedOf(body.key), this.stickers.length);
-      this.stickers.forEach((img, i) => setNino(img, { pose: poses[i % poses.length] }));
+    setText(this.roundPlate, body.round.label);
+    // The kind's ninos at its corners, different ones each Celebration (its key); none without a pool.
+    const moment = STAGE.stickers.celebration[body.kind];
+    const spots = moment ? this.stickers.filter((img) => SPOTS_OF[body.kind].includes(img.dataset.spot as (typeof SPOTS)[number])) : [];
+    const poses = moment ? ninosFor(moment, seedOf(body.key), spots.length) : [];
+    for (const img of this.stickers) {
+      const i = spots.indexOf(img);
+      setHidden(img, i < 0 || i >= poses.length);
+      if (i >= 0 && i < poses.length) setNino(img, { pose: poses[i] });
     }
     this.prize.set(body.prize);
     if (body.key !== this.key) {

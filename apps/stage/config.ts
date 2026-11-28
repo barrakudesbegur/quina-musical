@@ -3,6 +3,7 @@
 // values (colours, type, durations of CSS motion) are not here: they are CSS custom properties in
 // ui/tokens.css and stage/stage.css. Timings here are the ones the pure timing logic needs.
 import type { NinoMoment } from '../../packages/ui/concepts.ts';
+import type { WinKind } from '../../packages/ui/flow.ts';
 import type { NinoPose } from '../../packages/ui/ninos.ts';
 
 export const STAGE = Object.freeze({
@@ -53,10 +54,13 @@ export const STAGE = Object.freeze({
    * - `before`: the sitting nino on the QR's top-right corner before the Game.
    * - `interval`: the two ninos either side of the Interval's countdown, by the coming round.
    * - The Desgraciat round: `standUp`, a hands-up nino beside the round's name at its intro ("everyone stand up"; its
-   *   Celebration's ninos are `finale.celebration`); `checkFallen`, the sitting nino beside a fallen card's big ✗
+   *   Celebration's ninos are `celebration.standing`); `checkFallen`, the sitting nino beside a fallen card's big ✗
    *   (`check-fallen`: the card sat down).
    * - `pause`: the meditating nino over «Tornem de seguida» while the presenters' Pausa is on; it breathes
    *   (ANIMATIONS.md › pause).
+   * - `celebration`: the Celebration's ninos at the sides (ANIMATIONS.md `celebrate` ⑥; board Projector-Linia), a pool
+   *   per kind: a Line's and a Quina's one in each corner, «QUINA POTRA!»'s three (top left, top right, bottom left), a
+   *   different set for each Celebration.
    */
   stickers: Object.freeze({
     checkFailed: 'failedCheck' as NinoMoment | null,
@@ -65,6 +69,7 @@ export const STAGE = Object.freeze({
     before: 'before' as NinoMoment | null,
     interval: 'break' as NinoMoment | null,
     pause: 'pause' as NinoMoment | null,
+    celebration: Object.freeze({ line: 'lineCelebration', bingo: 'bingoCelebration', standing: 'lastStanding' } as Record<WinKind, NinoMoment | null>),
   }),
   /**
    * The Desgraciat's finale on stage (board Projector-Desgraciat-Final; ANIMATIONS.md › The finale on stage):
@@ -72,14 +77,13 @@ export const STAGE = Object.freeze({
    *   follows `--stage-band-*`);
    * - each finalist's nino is their pose (packages/rules/finale.ts `FINALE_POSES`), tinted by its hue; the winner wears
    *   `winner`, the party nino;
-   * - `confetti`: «Salvats!»'s slow paper confetti (D185), from the ribbon, in the look of `STAGE.paper`;
-   * - `celebration`: the «QUINA POTRA!» Celebration's three stickers, from the moment's pool by round.
+   * - `confetti`: «Salvats!»'s slow paper confetti (D185), from the ribbon, in the look of `STAGE.paper`.
+   *   («QUINA POTRA!»'s three stickers are `stickers.celebration.standing`.)
    */
   finale: Object.freeze({
     band: Object.freeze({ top: 70, height: 330 }),
     winner: 'confeti' as NinoPose,
     confetti: Object.freeze({ count: 180, durationMs: 9000, origin: Object.freeze({ x: 0.5, y: 0.56 }), spread: 0.5 }),
-    celebration: Object.freeze({ stickers: 'lastStanding' as NinoMoment | null }),
   }),
   /**
    * The sponsor strip before the Game and in the Break (G4; the user's canvas comments #88 and S4, which has a follow-up
