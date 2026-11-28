@@ -1,0 +1,158 @@
+/* The collapsed cards (D289; CardTiles, CardPopover; ANIMATIONS.md `collapsed-grid`, `tile-open`, `tile-peek`,
+   `tile-scribble`, `line-card`, `quina-card`): the tiles two to a row, the scribble's three places, the marks on a
+   tile's map, the opened card over the dimmed home and the peek's countdown, the resting cards' headers three to a
+   row. The tile itself is the design system's CardTile (packages/ui/components/card-tile.css). Moving parts only under
+   no-preference and the phone's full motion (D209 principle 5); the fades run either way. */
+
+@layer app {
+/* ---- the tiles: two columns, the player's order; the scribble in the empty last cell, or a row above or under ---- */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.tiles__list {
+  display: contents;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.tiles__note {
+  display: grid;
+  min-width: 0;
+}
+
+.tiles__note:is([data-slot='above'], [data-slot='under']) {
+  grid-column: 1 / -1;
+}
+
+.tiles__note[data-slot='above'] {
+  min-height: 4.5rem;
+}
+
+.tiles__note[data-slot='under'] {
+  min-height: 5.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* The header's mark chip takes the tile's size (the app's .swatch is the full card's). */
+.card-tile__header > .swatch {
+  width: var(--tile-mark-size);
+  height: var(--tile-mark-size);
+}
+
+/* A mark on a tile's map: tilted as the full card's kernel (its own tilt per song), dropping in as it lands
+   (`mark-in`). The beat's bob (wt-beat) moves it by `rotate` through [data-bob]; the tilt stays on `transform`. */
+.card-tile__mark {
+  transform: rotate(var(--tilt, 0deg));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) .card-tile__mark[data-anim='mark-in'] {
+    animation: player-kernel-drop var(--dur-mark-in) var(--ease-out) var(--stagger, 0ms) both;
+  }
+}
+
+/* ---- the opened card (`tile-open`): the whole card over the dimmed home, centred (its weight beats the page's
+   `.player__main section > *` spacing, as it sits in the cards' section) ---------------------------------------- */
+.player .card-pop {
+  position: fixed;
+  inset: 0;
+  width: min(100% - 1.5rem, 28rem);
+  height: fit-content;
+  max-width: none;
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 0;
+  overflow: visible;
+  border: 0;
+  background: none;
+  color: inherit;
+}
+
+.card-pop::backdrop {
+  background: rgb(10 14 38 / 0.62);
+  opacity: 1;
+  transition: opacity 200ms var(--ease-out);
+}
+
+@starting-style {
+  .card-pop[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+.card-pop[data-state='closing']::backdrop {
+  opacity: 0;
+}
+
+.card-pop__card {
+  transform-origin: 0 0;
+}
+
+.card-pop__card:focus-visible {
+  outline: none;
+}
+
+/* The peek's closing countdown (`tile-peek`): a ring that empties over the hold, and «Es tanca». */
+.card-pop__countdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0.875rem 0 0;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--color-paper);
+  text-shadow: 0 2px 0 var(--color-shadow);
+  animation: card-pop-countdown-in 200ms var(--ease-out) var(--peek-delay, 0ms) both;
+}
+
+.card-pop__arc {
+  width: 1.625rem;
+  height: 1.625rem;
+  rotate: -90deg;
+  overflow: visible;
+}
+
+.card-pop__arc circle {
+  fill: none;
+  stroke-width: 3.5;
+}
+
+.card-pop__arc-track {
+  stroke: rgb(255 246 229 / 0.25);
+}
+
+.card-pop__arc-left {
+  stroke: var(--color-gold);
+  stroke-linecap: round;
+  stroke-dasharray: 100 100;
+  animation: card-pop-arc var(--peek-hold, 2.4s) linear var(--peek-delay, 0ms) both;
+}
+
+@keyframes card-pop-arc {
+  to {
+    stroke-dashoffset: 100;
+  }
+}
+
+@keyframes card-pop-countdown-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---- the resting cards: their headers alone, three to a row, nothing at the end (the user, 28 Nov) ------------- */
+.cards__resting-tiles {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.625rem;
+}
+}

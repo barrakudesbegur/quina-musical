@@ -108,6 +108,9 @@
      the starry night sky (the "Quina Musical look" boards). */
   --shadow-piece: 0 6px 0 var(--color-shadow);
   --shadow-piece-sm: 0 4px 0 var(--color-shadow);
+  /* An icon alone with no frame, as a subtle sticker (28 Nov, the count's rosette): a thin white rim, a small drop. */
+  --sticker-rim: drop-shadow(1px 0 0 #fff) drop-shadow(-1px 0 0 #fff) drop-shadow(0 1px 0 #fff) drop-shadow(0 -1px 0 #fff)
+    drop-shadow(0 1.5px 1px rgb(23 19 43 / 0.45));
   --edge-piece: inset 0 -8px 0 rgb(0 0 0 / 0.22), inset 0 5px 0 rgb(255 255 255 / 0.35); /* a button's 3D edge */
   --edge-piece-sm: inset 0 -5px 0 rgb(0 0 0 / 0.22), inset 0 3px 0 rgb(255 255 255 / 0.3);
   --shine-panel: inset 0 4px 0 rgb(255 255 255 / 0.1); /* a panel's top highlight */
@@ -144,6 +147,7 @@
   /* Type */
   --font-display: 'Londrina Solid', system-ui, sans-serif;
   --font-body: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-hand: 'Caveat Brush', 'Londrina Solid', cursive; /* the scribble's handwriting (D289), nothing else */
   --font-weight-body: 700;
   --font-weight-strong: 900;
   --text-xs: 0.8125rem;

@@ -120,6 +120,9 @@ export interface DevHints {
   /** `&bpm=120`: a beat for `mark-bob` while the feed has none (a 4-beat bar from the latest landing; main.ts honours it
    *  only in development and demos). 40–240, else null. */
   bpm: number | null;
+  /** `&teach=peek|scribble`: a demo phone that hasn't been shown yet that a tile opens (T3, D289): `peek` opens the card
+   *  by itself, `scribble` shows the note at once. Without it a demo phone has been shown (no peek, no scribble). */
+  teach: 'peek' | 'scribble' | null;
 }
 
 /** Review hints in the query (development and demos). */
@@ -134,6 +137,7 @@ export function devHints(search: string): DevHints {
     bpm: Number.isFinite(bpm) && bpm >= 40 && bpm <= 240 ? bpm : null,
     install: isInstallOffer(install) ? install : null,
     mask: params.get('mask') === 'under' ? 'under' : null,
+    teach: params.get('teach') === 'peek' ? 'peek' : params.get('teach') === 'scribble' ? 'scribble' : null,
     view: isAraView(view) ? view : null,
     open: isOpenable(open) ? open : null,
     cards: cards === null ? null : cards.split(/\D+/).map(cardId).filter((id): id is number => id !== null),

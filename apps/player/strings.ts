@@ -121,6 +121,16 @@ export const S = {
   removeNo: 'Mantén el cartró',
   /** The remaining-songs pill's words (#72; the pill itself shows only the number, or the rosette at 0). */
   remaining: (n: number) => (n === 0 ? 'No en falta cap' : n === 1 ? 'En falta 1' : `En falten ${n}`),
+  /** The collapsed cards (D289): a tile's big word in its map's place, and what a tile says to a screen reader. */
+  bigLine: 'Línia!',
+  bigQuina: 'Quina!',
+  tile: (card: string, count: string | null, playing: boolean, big: string | null) =>
+    [card, count, playing ? 'té la cançó que sona' : null, big].filter(Boolean).join('. ') + '. Obre el cartró',
+  /** T3 (D289): the scribble that shows a tile opens, and the peek's closing countdown. */
+  tileHint: 'Toca per veure’l!',
+  peekClosing: 'Es tanca',
+  /** The opened card's way out, for screen readers (a tap outside, Esc or Back close it too). */
+  closeCard: 'Tancar el cartró',
   cell: (title: string, marked: boolean, playing = false) => `${title}${marked ? `: ${CA.landed.toLowerCase()}` : ''}${playing ? ', sona ara' : ''}`,
   markLabel: (mark: string) =>
     (({ corn: 'Gra de blat de moro', shootingStar: 'Estel fugaç', bauble: 'Bola de Nadal', tree: 'Arbre de Nadal', heart: 'Cor', crown: 'Corona de rei', grapes: "Raïm de Cap d'Any", snowflake: 'Floc de neu', topHat: 'Barret de copa', poop: 'Caca del Tió' }) as Record<string, string>)[mark] ?? mark,

@@ -41,6 +41,9 @@ export const DEMO_CARDS: readonly { id: number; name: string | null }[] = [
   { id: 412, name: null },
 ];
 
+/** The presenters' setting off: the phones' tiles announce no Line or Quina (D289, `announceWins`). */
+const quiet = (s: ShowState): ShowState => ({ ...s, game: { ...s.game, announceWins: false } });
+
 /** The presenters' verdict on the Check's claim. */
 const decided = (status: 'valid' | 'invalid') => (s: ShowState): ShowState => {
   const flow = s as ShowState & Partial<FlowFields>;
@@ -101,6 +104,20 @@ export const PLAYER_DEMOS: Record<string, PlayerDemo> = {
    * a regular round, then 20 is on #57 again. `lineDone` opens on one of your songs already playing (no flash). */
   yourSong: { fixture: 'play', cards: 'default', live: true, liveFirst: [69, 64, 74, 20] },
   special: { fixture: 'play', cards: 'default', patch: (s) => ({ ...s, round: { ...s.round, kind: 'special' } }) },
+  // The collapsed cards (D289; boards Mobil-Plegats): the default cards collapse (#123 and #57 play, #412 rests). `lineDone`
+  // and `cardFull` above show «LÍNIA!» and «QUINA!» on Àvia's tile; these the rest of A's states.
+  /** «Waka Waka» (64) is on both playing tiles: each marks it with the running dashes, in step; no Line. */
+  tilesBoth: { fixture: 'play', cards: 'default', extraLanded: [64] },
+  /** As `lineDone` with the presenters' setting off (`announceWins`): the Line is marked as usual, nothing announced. */
+  lineQuiet: { fixture: 'play', cards: 'default', extraLanded: [69], patch: quiet },
+  /** A song after Àvia's Line, unclaimed: «LÍNIA!» has gone (the winning song passed). */
+  linePassed: { fixture: 'play', cards: 'default', extraLanded: [69, 50] },
+  /** As `cardFull` with the setting off: twelve marks and the rosette, nothing more. */
+  cardFullQuiet: { fixture: 'play', cards: 'default', extraLanded: [69, 11, 64, 55, 66], patch: (s) => quiet({ ...s, round: { ...s.round, lineConfirmed: true } }) },
+  /** A song after Àvia's Quina, unclaimed: «QUINA!» has gone, her header keeps its stripes until it is validated. */
+  quinaPassed: { fixture: 'play', cards: 'default', extraLanded: [69, 11, 64, 55, 66, 50], patch: (s) => ({ ...s, round: { ...s.round, lineConfirmed: true } }) },
+  /** The Quina Especial with two especial cards (#412, #405) as tiles; the normal ones rest as headers. */
+  specialTiles: { fixture: 'play', cards: [412, 405, 123, 57], patch: (s) => ({ ...s, round: { ...s.round, kind: 'special', cardType: 'especial', side: 2 } }) },
   // The garland at each Heat level (ANIMATIONS.md "The garland's lights"): cool, warm, hot, very hot (flames).
   heatCold: { fixture: 'playCold', cards: 'default' },
   heatWarm: { fixture: 'playWarm', cards: 'default' },

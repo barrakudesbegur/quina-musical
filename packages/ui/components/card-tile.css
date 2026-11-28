@@ -1,0 +1,378 @@
+/*
+ * D7 · CardTile (CardTile.svelte; components-v2.md § 5, D289): a card drawn small, the phone's collapsed card. Built on
+ * the design resources (../ds/resources.css): the press (R4: the <button> is the static part, `.card-tile__piece` the
+ * piece that sinks), the on pattern (R3: the header's stripes), the dashed ring of CardCell (`cell-playing`). Every
+ * size is a custom property in :where(), so the app's layout tunes it (the phone's two columns).
+ *
+ *   --tile-pad        the map's margin, the same on all four sides    --tile-gap        between the map's cells
+ *   --tile-label-size the header's words                               --tile-mark-size  the header's mark
+ *   --tile-cell-line  a cell's outline   --tile-cell-radius its corner --tile-ring-w / -gap the playing cell's dashes
+ *
+ * Motion (ANIMATIONS.md `line-card`, `quina-card`, `collapsed-grid`): the stamp pops in where the map was (the map
+ * folds away) and leaves the reverse way; moving parts only with motion allowed (the phone's [data-motion='full']).
+ */
+
+@layer components {
+:where(.card-tile) {
+  --ds-radius: 1.125rem;
+  --ds-border: var(--line-width-bold);
+  --ds-drop: 5px;
+  --ds-edge: 0px;
+  --ds-shine: 0px;
+  --tile-pad: 0.625rem;
+  --tile-gap: 5px;
+  --tile-label-size: 1.3125rem;
+  --tile-mark-size: 1.875rem;
+  --tile-cell-line: 2.5px;
+  --tile-cell-radius: 7px;
+  --tile-ring-w: 3px;
+  --tile-ring-gap: 1.5px;
+  --tile-count-height: 1.875rem;
+  --tile-count-size: 1.25rem;
+  --tile-stamp-in: 500ms; /* the stamp waits for the landing's mark to drop in (mark-in) */
+}
+
+/* The resting header (compact): smaller, three to a row. */
+:where(.card-tile[data-compact]) {
+  --ds-radius: 0.875rem;
+  --tile-label-size: 1rem;
+  --tile-mark-size: 1.25rem;
+}
+
+.card-tile {
+  width: 100%;
+  text-align: start;
+}
+
+.card-tile[data-compact] {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  border-radius: var(--ds-radius);
+  box-shadow: 0 var(--ds-drop) 0 var(--color-shadow);
+}
+
+.card-tile__piece {
+  display: grid;
+  min-width: 0;
+  overflow: hidden;
+  border: var(--ds-border) solid var(--color-line);
+  border-radius: var(--ds-radius);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  box-shadow: none;
+}
+
+/* The glow round the whole tile: in the card's own colour (it holds the song playing now), or gold (the card just
+   added, D241). A layer under the piece, faded in and out (opacity). */
+.card-tile__glow {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: var(--ds-drop);
+  left: 0;
+  border-radius: var(--ds-radius);
+  box-shadow:
+    0 0 0 var(--line-width-bold) var(--card-color),
+    0 0 1.5rem 0.375rem color-mix(in srgb, var(--card-color) 70%, transparent);
+  pointer-events: none;
+  animation: card-tile-glow-in 300ms var(--ease-out);
+}
+
+.card-tile[data-compact] > .card-tile__glow {
+  bottom: 0;
+}
+
+.card-tile[data-glow='gold'] > .card-tile__glow {
+  box-shadow:
+    0 0 0 var(--line-width-bold) var(--color-gold),
+    0 0 1.75rem 0.5rem rgb(255 197 49 / 0.7);
+}
+
+@keyframes card-tile-glow-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---- the header band: the mark, the words, the count ---------------------------------------------------------- */
+.card-tile__header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  min-height: 2.75rem;
+  box-sizing: border-box;
+  padding: 0.375rem 0.4375rem 0.375rem 0.5rem;
+  background: var(--card-color);
+  border-bottom: var(--ds-border) solid var(--color-line);
+}
+
+.card-tile[data-compact] .card-tile__header {
+  gap: 0.25rem;
+  padding: 0.25rem 0.3125rem;
+  border-bottom: 0;
+}
+
+/* The stripes fill the band edge to edge (the piece clips the corners). */
+.card-tile__header > .ds-pattern {
+  border-radius: 0;
+}
+
+/* The mark the app puts first (its CardMark, in a chip). */
+.card-tile__header > :not(.ds-pattern, .card-tile__label, .card-tile__count) {
+  position: relative;
+  flex: none;
+  width: var(--tile-mark-size);
+  height: var(--tile-mark-size);
+}
+
+.card-tile__label {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  /* room inside the clip for the outline and the drop */
+  padding: 0.125rem 0.125rem 0.1875rem;
+  margin: -0.125rem 0 -0.1875rem -0.125rem;
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: var(--tile-label-size);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.05;
+  text-transform: uppercase;
+  letter-spacing: var(--title-tracking-sm);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-paper);
+  -webkit-text-stroke: var(--title-stroke-sm) var(--color-line);
+  paint-order: stroke fill;
+  text-shadow: var(--title-drop-sm);
+}
+
+/* The count (#72), as PlayerCard's: figures in a paper pill; orange with white figures while the card holds the song
+   playing now (`card-playing`, with no ring on a tile: the user, 28 Nov), its paper halo on the warm colours. */
+.card-tile__count {
+  position: relative;
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+  min-width: 2rem;
+  height: var(--tile-count-height);
+  padding: 0 0.4375rem;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: var(--radius-pill);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-display);
+  font-size: var(--tile-count-size);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 0 var(--color-line);
+}
+
+.card-tile__count[data-color] {
+  background: var(--palette-solid);
+  color: var(--color-white);
+  -webkit-text-stroke: var(--title-stroke-sm, 0) var(--color-line);
+  paint-order: stroke fill;
+}
+
+.card-tile:is([data-identity='1'], [data-identity='3'], [data-identity='5'], [data-identity='6']) .card-tile__count[data-color='orange'] {
+  box-shadow:
+    0 0 0 3px var(--color-paper),
+    0 2px 0 3px var(--color-line);
+}
+
+/* The rosette alone has no pill to halo. */
+.card-tile[data-identity] .card-tile__count[data-icon-only][data-color] {
+  box-shadow: none;
+}
+
+/* An icon alone (the rosette at 0) has no frame (the user, 28 Nov: "just show the icon without the frame … a sticker
+   effect, more subtle"): the rosette filled gold (orange while the song plays), a thin white rim and a small drop. */
+.card-tile__count[data-icon-only] {
+  min-width: 0;
+  width: auto;
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+}
+
+.card-tile__count[data-icon-only] .icon {
+  width: var(--tile-count-height);
+  height: var(--tile-count-height);
+  color: var(--color-line);
+  filter: var(--sticker-rim);
+}
+
+.card-tile__count[data-icon-only] .icon path:first-of-type {
+  fill: var(--palette-solid, var(--color-gold));
+}
+
+.card-tile__count[data-icon-only][data-color] .icon path:first-of-type {
+  fill: var(--palette-solid);
+}
+
+/* ---- the map: 4 × 3, the same margin on every side ------------------------------------------------------------ */
+.card-tile__body {
+  position: relative;
+  display: block;
+  padding: var(--tile-pad);
+  container-type: inline-size;
+}
+
+.card-tile__map {
+  display: grid;
+  grid-template-columns: repeat(var(--tile-columns, 4), minmax(0, 1fr));
+  gap: var(--tile-gap);
+  transition:
+    opacity 200ms var(--ease-out),
+    scale 200ms var(--ease-out);
+}
+
+.card-tile__cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  box-sizing: border-box;
+  border: var(--tile-cell-line) solid var(--color-line);
+  border-radius: var(--tile-cell-radius);
+  background: var(--color-white);
+}
+
+.card-tile__cell[data-marked] {
+  background: color-mix(in srgb, var(--card-color) 45%, var(--color-white));
+}
+
+/* What the app draws on a marked cell (its card's mark), centred with a hard drop, as the full card's kernel. */
+.card-tile__cell > :not(.card-tile__ring) {
+  position: absolute;
+  inset: 6%;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 1.5px 0 rgb(23 19 43 / 0.5));
+}
+
+.card-tile__cell > :not(.card-tile__ring) > svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* The song playing now: CardCell's ring (`cell-playing`): orange dashes, slightly see-through, with its glow, running
+   round in step with the full cards' (one period per --dur-cell-run). */
+.card-tile__ring {
+  position: absolute;
+  z-index: 1;
+  inset: calc(-1 * (var(--tile-cell-line) + var(--tile-ring-gap) + var(--tile-ring-w)));
+  width: calc(100% + 2 * (var(--tile-cell-line) + var(--tile-ring-gap) + var(--tile-ring-w)));
+  height: calc(100% + 2 * (var(--tile-cell-line) + var(--tile-ring-gap) + var(--tile-ring-w)));
+  overflow: visible;
+  opacity: 0.85;
+  filter: drop-shadow(0 0 calc(var(--tile-ring-w) * 2) color-mix(in oklab, var(--color-orange) 75%, transparent));
+  pointer-events: none;
+}
+
+.card-tile__ring rect {
+  x: calc(var(--tile-ring-w) / 2);
+  y: calc(var(--tile-ring-w) / 2);
+  width: calc(100% - var(--tile-ring-w));
+  height: calc(100% - var(--tile-ring-w));
+  rx: calc(var(--tile-cell-radius) + var(--tile-cell-line) + var(--tile-ring-gap) + var(--tile-ring-w) / 2);
+  fill: none;
+  stroke: var(--color-orange);
+  stroke-width: var(--tile-ring-w);
+  stroke-dasharray: 6 4;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-motion='full']) .card-tile__ring rect {
+    animation: card-tile-run var(--dur-cell-run, 1.6s) linear infinite;
+  }
+}
+
+@keyframes card-tile-run {
+  to {
+    stroke-dashoffset: -10;
+  }
+}
+
+/* ---- the stamp: «LÍNIA!», «QUINA!» in the map's footprint (the Celebration's gold rays and tilted word) ---------- */
+.card-tile__stamp {
+  position: absolute;
+  inset: var(--tile-pad);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  box-sizing: border-box;
+  border: var(--line-width) solid var(--color-line);
+  border-radius: calc(var(--tile-cell-radius) + 4px);
+  background: var(--color-gold);
+  box-shadow: inset 0 4px 0 rgb(255 255 255 / 0.4);
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 200ms var(--ease-out),
+    scale 200ms var(--ease-out),
+    visibility 0s linear 200ms;
+}
+
+.card-tile__rays {
+  position: absolute;
+  inset: -40%;
+  background: repeating-conic-gradient(from 0deg, rgb(255 255 255 / 0.34) 0deg 10deg, transparent 10deg 24deg);
+}
+
+.card-tile__word {
+  position: relative;
+  rotate: -7deg;
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 25cqi, 3.25rem);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  color: var(--color-paper);
+  -webkit-text-stroke: 0.18em var(--color-line);
+  paint-order: stroke fill;
+  text-shadow: 0 0.1em 0 var(--color-line);
+}
+
+.card-tile[data-stamped] .card-tile__stamp {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 150ms linear var(--tile-stamp-in),
+    scale 400ms var(--ease-bounce) var(--tile-stamp-in),
+    visibility 0s linear var(--tile-stamp-in);
+}
+
+.card-tile[data-stamped] .card-tile__map {
+  opacity: 0;
+  transition:
+    opacity 200ms var(--ease-out) calc(var(--tile-stamp-in) - 100ms),
+    scale 200ms var(--ease-out) calc(var(--tile-stamp-in) - 100ms);
+}
+
+/* Moving: the map folds away (scale 0.9) and the stamp pops in from 0.6; reduced, they only crossfade. */
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-motion='full']) .card-tile__stamp {
+    scale: 0.6;
+  }
+
+  :where([data-motion='full']) .card-tile[data-stamped] .card-tile__stamp {
+    scale: 1;
+  }
+
+  :where([data-motion='full']) .card-tile[data-stamped] .card-tile__map {
+    scale: 0.9;
+  }
+}
+}

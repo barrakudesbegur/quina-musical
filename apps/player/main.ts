@@ -20,7 +20,7 @@ import { DEFAULT_CLEANUP, browserCleanupEnv, cleanupLegacy } from './logic/clean
 import { watchUpdates } from './device/updates.ts';
 import { InstallState } from './device/install.svelte.ts';
 import { devHints, homePath, parseRoute, settledHref, type DevHints } from './logic/router.ts';
-import { MemoryStorage, PlayerStorage, addCard, documentCookies, emptyData, renameCard, type StorageLike } from './logic/storage.ts';
+import { MemoryStorage, PlayerStorage, addCard, documentCookies, emptyData, renameCard, setTilesTaught, type StorageLike } from './logic/storage.ts';
 import { loadBootState } from './logic/boot-cache.ts';
 
 const edition = PLAYER_CONFIG.edition;
@@ -68,6 +68,8 @@ async function demoStorage(name: string, hints: DevHints): Promise<PlayerStorage
     const name = DEMO_CARDS.find((c) => c.id === id)?.name;
     if (name) data = renameCard(data, id, name);
   }
+  // A demo phone has seen the tiles open (no peek, no scribble) unless `&teach=` asks for them (T3, D289).
+  if (hints.teach !== 'peek') data = setTilesTaught(data, hints.teach === 'scribble' ? 'peeked' : 'tapped');
   storage.save(data);
   return storage;
 }

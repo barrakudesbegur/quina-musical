@@ -70,16 +70,17 @@ test('the app settles on this year’s home before it reads the cards, the root 
 });
 
 test('review hints: the home screen\'s view, a drawer to open and demo cards', () => {
-  assert.deepEqual(devHints('?open=pad&cards=123,57'), { view: null, open: 'pad', cards: [123, 57], install: null, mask: null, bpm: null });
-  assert.deepEqual(devHints('?open=horari'), { view: null, open: 'horari', cards: null, install: null, mask: null, bpm: null });
-  assert.deepEqual(devHints('?open=ajustos&view=cartrons'), { view: 'cartrons', open: 'ajustos', cards: null, install: null, mask: null, bpm: null });
-  assert.deepEqual(devHints('?view=historial'), { view: 'historial', open: null, cards: null, install: null, mask: null, bpm: null });
-  assert.deepEqual(devHints('?open=menu&tab=premis'), { view: null, open: null, cards: null, install: null, mask: null, bpm: null }, 'the tabs and the menu are gone (no fallback, D84)');
-  assert.deepEqual(devHints('?cards='), { view: null, open: null, cards: [], install: null, mask: null, bpm: null });
+  assert.deepEqual(devHints('?open=pad&cards=123,57'), { view: null, open: 'pad', cards: [123, 57], install: null, mask: null, bpm: null, teach: null });
+  assert.deepEqual(devHints('?open=horari'), { view: null, open: 'horari', cards: null, install: null, mask: null, bpm: null, teach: null });
+  assert.deepEqual(devHints('?open=ajustos&view=cartrons'), { view: 'cartrons', open: 'ajustos', cards: null, install: null, mask: null, bpm: null, teach: null });
+  assert.deepEqual(devHints('?view=historial'), { view: 'historial', open: null, cards: null, install: null, mask: null, bpm: null, teach: null });
+  assert.deepEqual(devHints('?open=menu&tab=premis'), { view: null, open: null, cards: null, install: null, mask: null, bpm: null, teach: null }, 'the tabs and the menu are gone (no fallback, D84)');
+  assert.deepEqual(devHints('?cards='), { view: null, open: null, cards: [], install: null, mask: null, bpm: null, teach: null });
   // what installing the app offers (D221), for reviewing its screens
   assert.equal(devHints('?install=steps').install, 'steps');
   assert.equal(devHints('?install=prompt&open=install').open, 'install');
   assert.equal(devHints('?install=yes').install, null);
+<<<<<<< HEAD
   // `mark-bob`'s demo beat (main.ts honours it only in development and demos).
   assert.equal(devHints('?demo=play&bpm=120').bpm, 120);
   assert.equal(devHints('?bpm=98.5').bpm, 98.5);
@@ -87,6 +88,12 @@ test('review hints: the home screen\'s view, a drawer to open and demo cards', (
   assert.equal(devHints('?bpm=20').bpm, null, 'below 40');
   assert.equal(devHints('?bpm=400').bpm, null, 'above 240');
   assert.equal(devHints('?view=cartrons').bpm, null);
+=======
+  // a demo phone not yet shown that a tile opens (T3, D289)
+  assert.equal(devHints('?teach=peek').teach, 'peek');
+  assert.equal(devHints('?teach=scribble').teach, 'scribble');
+  assert.equal(devHints('?teach=yes').teach, null);
+>>>>>>> 7815a65a (Collapsed cards (D289, option A): CardTile and Scribble in the design system, the phone's tiles, the card opened over the home (native modal dialog), «LÍNIA!»/«QUINA!» in the map's place, the peek with its closing countdown, the scribble until a tile is tapped, Caveat Brush self-hosted (26 KB), the frameless sticker rosette on the full card too, the resting cards as headers three to a row, demos for every state)
   // strip-fade's comparison (28 Nov): only `under`, the 27 Nov look
   assert.equal(devHints('?demo=play&mask=under').mask, 'under');
   assert.equal(devHints('?mask=fade').mask, null);

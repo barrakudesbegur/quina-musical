@@ -1,10 +1,24 @@
 /*
- * The game look's two typefaces, self-hosted (Fontsource, SIL Open Font License) so the projector and the
+ * The game look's typefaces, self-hosted (Fontsource, SIL Open Font License) so the projector and the
  * LAN console have them with no internet at the venue: Londrina Solid for titles (the outlined game text) and
  * Nunito for everything else. Latin only (it covers Catalan: à, ç, l·l…), and only the weights in use.
+ * Caveat Brush (28 Nov, D289) is the phone's handwriting, only for the collapsed cards' scribble («Toca per veure'l!»,
+ * `tile-scribble`): Fontsource's latin 400 cut down to Basic Latin and the Catalan and Spanish letters (à ç é è í ï ò ó ú
+ * ü ñ, l·l's ·, ’ « » …) with kerning only, 26 KB (assets/fonts/, its licence beside it). It loads only where it is
+ * drawn.
  */
 @import '@fontsource/londrina-solid/latin-900.css' layer(tokens);
 @import '@fontsource/nunito/latin-600.css' layer(tokens);
 @import '@fontsource/nunito/latin-700.css' layer(tokens);
 @import '@fontsource/nunito/latin-800.css' layer(tokens);
 @import '@fontsource/nunito/latin-900.css' layer(tokens);
+
+@layer tokens {
+@font-face {
+  font-family: 'Caveat Brush';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('./assets/fonts/caveat-brush-latin-400.woff2') format('woff2');
+}
+}

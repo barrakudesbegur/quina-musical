@@ -1,0 +1,136 @@
+/*
+ * D8 · Scribble (Scribble.svelte; components-v2.md § 5, D289): a marker note with an arrow, in the handwriting face
+ * (--font-hand, Caveat Brush). Its box is the room the app gives it (under the tiles, above them, or an empty cell);
+ * the arrow's tip lands three quarters across (up, down) or at the left edge (left), a few px inside the box, so it
+ * never touches what it points at.
+ *
+ *   --scribble-size   the words' size        --scribble-color   the words and the arrow
+ *
+ * Motion (ANIMATIONS.md `tile-scribble`): the line draws itself on (600 ms), the head (200 ms), the words fade in
+ * (200 ms); the whole note fades in either way.
+ */
+
+@layer components {
+:where(.scribble) {
+  --scribble-size: 1.75rem;
+  --scribble-color: var(--color-gold);
+  --scribble-drop: drop-shadow(0 2px 0 rgb(10 14 38 / 0.8));
+  --scribble-shadow: 0 2px 0 var(--color-shadow), 0 0 10px rgb(10 14 38 / 0.6);
+}
+
+:where(.scribble[data-color='ink']) {
+  --scribble-color: var(--color-line);
+  --scribble-drop: none;
+  --scribble-shadow: 0 1px 0 rgb(255 255 255 / 0.35);
+}
+
+.scribble {
+  display: flex;
+  min-width: 0;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  animation: scribble-in 200ms var(--ease-out) both;
+}
+
+/* Up and down: the words on the left, the arrow from their end to three quarters across (the right column's middle). */
+.scribble:is([data-point='up'], [data-point='down']) {
+  justify-content: flex-end;
+  padding-right: calc(25% - 20px);
+}
+
+.scribble[data-point='up'] {
+  align-items: flex-end;
+}
+
+.scribble[data-point='down'] {
+  align-items: center;
+}
+
+/* Left: the words above, the arrow under them to the box's left edge (the tile beside it). */
+.scribble[data-point='left'] {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.125rem;
+}
+
+.scribble__words {
+  flex: 0 1 auto;
+  min-width: 0;
+  font-family: var(--font-hand);
+  font-size: var(--scribble-size);
+  font-weight: 400;
+  line-height: 0.95;
+  white-space: nowrap;
+  color: var(--scribble-color);
+  text-shadow: var(--scribble-shadow);
+  rotate: -5deg;
+}
+
+.scribble[data-point='up'] .scribble__words {
+  margin: 0 -0.125rem 0.375rem 0;
+}
+
+.scribble[data-point='down'] .scribble__words {
+  margin: 0.75rem -0.125rem 0 0;
+}
+
+.scribble[data-point='left'] .scribble__words {
+  align-self: center;
+  margin-left: 1.25rem;
+  white-space: normal;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.scribble__arrow {
+  flex: none;
+  overflow: visible;
+  filter: var(--scribble-drop);
+}
+
+.scribble[data-point='left'] .scribble__arrow {
+  margin-left: 0.125rem;
+}
+
+.scribble__line,
+.scribble__head {
+  fill: none;
+  stroke: var(--scribble-color);
+  stroke-width: 4.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+@keyframes scribble-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-motion='full']) .scribble__line,
+  :where([data-motion='full']) .scribble__head {
+    stroke-dasharray: 100 100;
+  }
+
+  :where([data-motion='full']) .scribble__line {
+    animation: scribble-draw 600ms var(--ease-out) both;
+  }
+
+  :where([data-motion='full']) .scribble__head {
+    animation: scribble-draw 200ms var(--ease-out) 600ms both;
+  }
+
+  :where([data-motion='full']) .scribble__words {
+    animation: scribble-in 200ms var(--ease-out) 800ms both;
+  }
+}
+
+@keyframes scribble-draw {
+  from {
+    stroke-dashoffset: 100;
+  }
+}
+}

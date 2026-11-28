@@ -51,6 +51,14 @@ export const PLAYER_CONFIG = Object.freeze({
   standUpStaggerMs: 80,
   /** How long a fresh cell, fall or stand-up keeps its animation hook (longer than the longest of them). */
   freshMs: 2000,
+  /** The collapsed cards (D289, ANIMATIONS.md `tile-open`, `tile-peek`): the card opens out of its tile and closes
+   * back into it; the first time tiles show, it opens by itself `peekDelayMs` after the home is uncovered and closes
+   * after `peekHoldMs`, its countdown emptying meanwhile. The scribble needs this much room under the tiles. */
+  tileOpenMs: 320,
+  tileCloseMs: 240,
+  peekDelayMs: 600,
+  peekHoldMs: 2400,
+  scribbleUnderPx: 96,
 
   /** The Heat garland across the top: its shape, in px of the 390 px design width (it stretches to the screen).
    * Its lights play the patterns of packages/ui/motion/garland.ts: one animated lamp per bulb (13), or 3 groups in

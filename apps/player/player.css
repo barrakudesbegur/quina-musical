@@ -760,7 +760,6 @@
 .add-prompt,
 .shuffle,
 .now__summary,
-.cards__resting-item,
 .legacy-notice {
   background: var(--color-surface);
   color: var(--color-text);
@@ -1435,8 +1434,7 @@
 }
 
 .schedule__rounds,
-.cards__list,
-.cards__resting-list {
+.cards__list {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -2080,19 +2078,6 @@
   box-shadow:
     0 0 0 5px var(--color-accent),
     0 6px 0 5px var(--color-shadow);
-}
-
-.cards__resting-item {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  align-items: center;
-  padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
-}
-
-.cards__resting-label {
-  flex: 1;
-  font-weight: var(--font-weight-strong);
 }
 
 /* ---- Historial ----------------------------------------------------------------------------------------- */
@@ -3253,8 +3238,7 @@
 
 /* The card just added (or the pad's "Veure'l"): a gold ring and glow for a moment, still (board "afegir cartró:
    casos especials", the third frame). */
-.cards__item[data-highlight] .player-card,
-.cards__resting-item[data-highlight] {
+.cards__item[data-highlight] .player-card {
   box-shadow:
     0 0 0 var(--line-width-bold) var(--color-accent),
     0 0 1.75rem 0.5rem rgb(255 197 49 / 0.7),
