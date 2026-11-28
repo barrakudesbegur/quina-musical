@@ -2,7 +2,21 @@
 
 The single place to resume Platform's work from. Sessions get cleared, so keep it current at each milestone.
 
-## Now (2026-11-27)
+## Now (2026-11-28, the user's prod test)
+
+- **Running on this Mac for the user's test** (from the detached worktree `…/792339b0-…/scratchpad/wt-fix` at `f54eb5f8`): caffeinate, the relay `npm start -- --lan --repertoire 2026 --test`, the link, the show page in kiosk (profile `~/Library/Application Support/Quina/chrome-show`), the laptop's console (`chrome-console`). The plan's start is 12:20 Begur time (`--start`, D288).
+- **When the user says the test is done:**
+  1. stop the relay, the link and caffeinate, and quit both Chrome profiles;
+  2. `npm run edition -- upload data/editions/2026.plan.json --repertoire 2026` (preview), then `--yes`, to restore 27 Dec 17:00/18:00, and tell the Orchestrator;
+  3. remove my scratchpad worktrees after unlinking their links (`wt-guard`, `wt-e2e`; `wt-fix` is the previous session's).
+- **After the test:**
+  - push the 2026 media to R2: the preflight FAILs "Media files" because Sound engine renamed the stems (`bass.0.flac`); preview first, and tell Sound engine and the user before pushing;
+  - add a test and a README note that `/media/*` stays same-origin with the screens (a canvas reads logo pixels, D287);
+  - propose to Sound engine that checkGamePlan take only `/media/<hash>.(png|jpg)` logos (stored plans go through that check on load, so carefully);
+  - suggest Frontend a lint: no `animation-timeline` outside `@supports`. Playwright's WebKit is newer than Safari 18, so the e2e can't catch it, and this Mac's simulators are iOS 27 only.
+- **Found today:** a 27 Nov kiosk (profile `/tmp/quina-show`) was still running and reconnected to a new relay as a second show page; I quit it. Reloading a `fresh=1` tab started a new Game (now one-shot, `11948775`). The Mac switches networks (172.26.205.80, 192.168.10.153, 192.168.10.31), so the relay now prints its address again when it changes.
+
+## Before (2026-11-27)
 
 - **D227 and D235, the realistic run in production (27 Nov):**
   - **The edition tool's shared parts** (tools/edition, `npm run edition`): `check`, `upload` (preview, then `--yes` saves the cloud's plan to `data/link/backups/` and PUTs; `--start "YYYY-MM-DD HH:MM"` moves the start, Begur's time, and the doors an hour before, for a test, without touching the file), and `logos` (sips to the 300 KB limit, POST /api/media, paths written into the plan). The laptop's service token may now save the plan and upload images (a separate agent token is U63). `build 2026` assembles the plan source, the repertoire's songs (Sound engine's `editionSongs`) and its cards (song ids) into `data/editions/2026.json`, checked with the protocol's `checkEdition` (628 KB; committing it waits on U75).
@@ -81,6 +95,9 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `a4bcdd18` (`95580b6`, repertoire 2026): D284's console banner for `audioStalled` (so D284 is complete: the engine's watchdog, the consoles' banner, my preflight FAIL), «Cartró #57» on the console and in Admin.
     - `e28ec4f8` (`449ccb2`, repertoire 2026): the phone fixes from the user's phone test (edge to edge with safe-area insets, the `strip-fade` mask, no empty scroll after the last card).
     - `8b5489e5` (`baafcdc`, repertoire 2026): the phone's slim Check strip under the drum, full-circle count pills, the one-line card header, the playing pill's halo on warm card colours.
+    - `885de668` (`ac3b54d2`, repertoire 2026): the prod test's build (D288): `state.beat` and `announceWins` to phones (my `f8f40194`), the collapsed cards and the beat bob (D289).
+    - `958a0fd2` (`20c8423e`, repertoire 2026): the iOS 18 fix (strip-fade's mask behind `@supports`), the test tools (D292) and the «Proves» card; my `116f6cc9` keeps them off the cloud.
+    - `b57a3eb6` (`e6d95db1`, repertoire 2026): the Safari 18 follow-up, one-shot `fresh=1`, the relay's and the preflight's LAN address on the default route (`2f69f56c`).
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
