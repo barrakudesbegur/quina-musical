@@ -21,13 +21,23 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
   - the UI code rules (D215);
   - web UI work loads modern-web-guidance first.
 
-## In flight (28 Nov, early)
+## In flight (28 Nov, evening)
+
+**Resume first: the laptop and its devices (the user's next topic).** The user paused it on 28 Nov: "we will resume this conversation about the mac app, rubber band on web asembly, the remote backup and each device location and connections in another session". Logged so far, all open to revisit with the user:
+- D273: a 5G drop isn't a design concern; congestion is the one real risk, so the built offline paths stay.
+- D274: no projector stick; the audio on another device (split mode) only a nice-to-have; the presenters' remote is the real problem (eyes on the public, not a screen).
+- D275: the genuine Wii remote stays, paired by MacWiiPair (System Settings can't pair it; 2025's WiimotePair fails on macOS 26/27); the user buys a backup. U220 is the user's test of it.
+- D276: a second projector, if found: inside, about 12–14 m from the stage, angled to the back tables, the same image from an HDMI splitter; the scenes support 4:3, 16:10 and 16:9.
+- D281: the laptop and the mixer at the tech's table by the projector, 6–7 m from the stage; the backup remote is the user's pick (a presenter remote or a mini gamepad). My objection, made once: the Wii remote then links over 6–7 m through people, as in 2025.
+- D282: a Mac app with a control page runs one `npm run night`. **Backend and Frontend are on hold for it** until the user resumes. Backend's design note for then: the `npm run night` supervisor itself serves the control page and its status API on 127.0.0.1 (the relay can't, since stopping it would kill the page), runs the relay, link, caffeinate and Chrome as children, and the .app is an osacompile or shell .app built in the repo (no quarantine). U218 was closed as moot, but the user wants to talk about Rubber Band in WebAssembly (the browser Blend).
+- The research: docs/research/reports/laptop-app.md, android-show-app.md, wii-remote-mac.md, browser-only-show.md, presenter-remote.md, two-projectors.md.
+- **How to ask (the user, 28 Nov):** a stated preference is an answer; never re-ask it, and never turn the user's own purchases into questions (memory: feedback-stated-preference-is-an-answer).
 
 **The sessions:**
-- **Sound engine:** important tasks only (the user, 27 Nov). Idle; D268 is complete (d6bb94ae, membership is `pools` only).
-- **Frontend:** at most two agents in parallel. It's working through the user's comment list (temp/design-canvas/ds/comments-27nov.md §8, §11), the projector's end screen (board Projector-Final, waiting for the user's OK), and the Celebration-prize proposals (D242).
-- **Backend:** cleared and resumed on 27 Nov. Its queue is empty; it waits for U204's time.
-- **The card design session (quina-musical-d1):** its work is done except U212. Its handoff is tools/card-mockup/HANDOFF.md, the spec tools/card-mockup/README.md, the canvas https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392. The generator with both layouts is on main (7092e216, acd8f1a9, 4e4c0fe2), and apps/cards is Frontend's again. Decisions D250–D272.
+- **Sound engine:** important tasks only. Done today: the README's Chrome profile (9c5ef734), split mode marked a nice-to-have (9d1cb3ac), D277's public Spin target and the Pausa volume fix (a2d0b4af).
+- **Frontend:** at most two agents in parallel. Working on: D277's phone drum, drawing every undrawn screen (D236), U225 re-asked with a picture, 16:10 on the projector (D276), D278's near-win sound, D279's items. The canvas redraw is done (v117, v118).
+- **Backend:** queue empty apart from D277's feed (Frontend's request) and the held D282; it waits for U204's time. Done today: the Chrome profiles out of /tmp (f63af09f), the plan's title «Quina Quina! 3» uploaded (D280).
+- **The card design session (quina-musical-d1):** its work is done except U212. Its handoff is tools/card-mockup/HANDOFF.md, the spec tools/card-mockup/README.md, the canvas https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392. Decisions D250–D272.
 
 **Live (last deploy 3e96560a = 90f45de9, 28 Nov: the Line and «QUINA!» Celebrations, offline covers; before it 84998894 = 855935c0, the redraw's bug fixes; 9516f6be, D266's labels; 3aa936b9, the phone's jank pass; b488bafa: the renumbered 2026 repertoire, 135 songs, 70/70 with 5 shared, the remade temporary cards and covers):**
 - the realistic run's plan on quina-dev: D192's order, 96 example prizes from the organizers' sheet (temp/wip prizes/2026-example-bundles.json), 58 sponsors and 55 logos, with the 27 Dec times;
@@ -38,22 +48,20 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 - the console items: D228, D229, D234's sold cards and the two-level lock (engine-enforced, cloud consoles told apart), D237's switches;
 - «Quina del Desgraciat» (D251).
 
-**To run the show on the laptop:** `cd apps/show && npm start -- --lan --repertoire 2026` (it builds first and refuses a stale build), `cd apps/cloud && npm run link`, then `npm run preflight`.
+**To run the show on the laptop:** docs/night-runbook.md: `caffeinate -dis`, `cd apps/show && npm start -- --lan --repertoire 2026` (it builds first and refuses a stale build), `cd apps/cloud && npm run link`, the show page and the laptop's Console in Chrome with their profiles in ~/Library/Application Support/Quina (rerun `npm run setup:laptop` once to create them), then `npm run preflight`.
 
 **Waiting on the user (open-questions.md › Decisions), most useful first:**
 - U204: the realistic run's start time today, or 27 Dec (Backend uploads the plan with `--start` when it's relayed);
-- U212: the organizers pick the card, «Quadrat amb portades» (the default, A3 six a sheet) or «Apaïsat sense portades» (A4 three a page). The generator makes both (`--layout a4-3`); the cards are made on 4–5 Dec, after a proof sheet;
-- U225: the thick ✗ (Frontend re-asks with a picture); U222–U224, U216, U217, U206, U208 answered (D277–D280);
-- Answered today and logged: D273–D282 (5G, the projector stick, the Wii remote, a second projector, the Spin's target, the near-win sound, the Check's labels, «Quina Quina! 3», the laptop at the tech's table, the Mac app). **Next to brief:** D282's Mac app (Backend: `npm run night` + the app; Frontend: the control page's board first). For the runbook: film the displayOffsetMs calibration from mid-tent (done, step 10);
-- U216, U217: the Check's side label on a wrong-type card, and «Desgraciat» twice in the Desgraciat's Check header (Frontend, 28 Nov);
+- U212: the organizers pick the card, «Quadrat amb portades» (the default) or «Apaïsat sense portades»; the cards are made on 4–5 Dec, after a proof sheet;
+- U225: the thick ✗ (Frontend re-asks with a picture); U188: only the Wii dialog's tap outside is left;
 - U214: the grill format only in a card design session (the default), or plain questions there too;
-- U205 (Parlem's 40 s Hold music), U206 (the drum's landing public 2.5 s early), U207 (✕ in a stack), U208 (the near-win sounds);
+- U205 (Parlem's 40 s Hold music), U207 (✕ in a stack);
 - U194 (push), U196 (App Clip), U197 (TWA): the research says pass; U195 (uncollected prizes);
-- U202, U203: the console's in-game admin and second-console sync;
+- U202, U203: the console's in-game admin and second-console sync (they matter more now: the tech drives from a phone at the table, D281);
 - U55 (old song data on the laptop), U56 (faster hook approval) and U14 (approving the hooks), before the rehearsals;
 - U68–U75: the edition file's details (built and passing; not committed until U75);
-- older ones: U157–U160, U163, U166, U168, U169, U173, U176–U179, U181, U188, U193, U36–U39, U12, U50, U79, U97/U99, U103–U114, U128, U129, U136–U139, U150, U85, U89.
-- User tasks: U191 (ask the presenters about the notebook), U19 (the real-device checks, now with the iPad icon and Android scans), U126, U65, U64, U16, U18, U20, U13.
+- older ones: U157–U160, U163, U166, U168, U169, U173, U176–U179, U181, U193, U36–U39, U12, U50, U79, U97/U99, U103–U114, U128, U129, U136–U139, U150, U85, U89.
+- User tasks: U220 (try the Wii remote with MacWiiPair, and the Chrome restart check), U191 (ask the presenters about the notebook), U19 (the real-device checks), U126, U65, U64, U16, U18, U20, U13. Also: the canvas's old versions still hold a WhatsApp paragraph pasted by mistake (never in git); only the user can check who the canvas is shared with.
 
 **Sound engine's later item:** the Pausa, break and Hold music into the repertoire (D268's part C), designed with Backend before the rehearsals.
 
@@ -66,5 +74,5 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 ## Where things are
 
 - **The design canvas:** "Quina Musical look", https://claude.ai/artifact/Rs66YhT4XyRe8zQ84YUPSv (= code/artifact/c959a819…). Frontend owns it, and comments are read only when the user says so.
-- **The 2025 night in data:** `docs/research/reports/night-2025-data.md`. **The research of 27 Nov:** docs/research/reports/ (push-notifications.md, ios-install-and-app-clip.md, android-twa-and-install.md).
+- **The 2025 night in data:** `docs/research/reports/night-2025-data.md`. **The research of 27 Nov:** docs/research/reports/ (push-notifications.md, ios-install-and-app-clip.md, android-twa-and-install.md); of 28 Nov: the six laptop and device reports listed above.
 - **Cards:** made on 4–5 Dec with `npm start -- --repertoire 2026` in apps/cards, from the final design.
