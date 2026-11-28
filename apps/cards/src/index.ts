@@ -20,7 +20,7 @@ import { generateCardsJson } from './generate-cards-json';
 import { CARD_AMOUNTS, CARD_LAYOUT, CARD_TYPES, SEED, TEST_SHEET_LAYOUT, TEST_SHEETS } from './config';
 import { assertCardTypes, cardTypeProblems, printedTypeProblems } from './card-types';
 import { DrawnByPool, repeatedCards, repeatedLines } from './uniqueness';
-import { loadRepertoire, outDirFrom, repertoireNameFrom, songProblems, type RepertoireSong } from './repertoire';
+import { loadRepertoire, outDirFrom, repertoireNameFrom, repoRoot, songProblems, type RepertoireSong } from './repertoire';
 import { poolCounts, poolProblems, sideSources, sidesByPool, songPools, sourceWarnings } from './sides';
 import { checkPrint } from './print/check';
 import { CARD_LAYOUTS, layoutIdFrom } from './print/layouts';
@@ -57,12 +57,18 @@ if (problems.length) {
   process.exit(1);
 }
 const songs = songsJson as RepertoireSong[];
+/** A path as the run prints it: from the repo's root when it's in the repo, else whole. */
+const rel = (file: string): string => {
+  const r = path.relative(repoRoot(), file);
+  return r.startsWith('..') ? file : r || '.';
+};
+
 const outDir = outDirFrom(argv, path.dirname(repertoire.cardsJson), process.env.INIT_CWD ?? process.cwd());
 const cardsJsonOut = path.join(outDir, path.basename(repertoire.cardsJson));
 const total = sumBy(CARD_AMOUNTS, 'amount');
 const pools = [...poolCounts(songs)].map(([pool, n]) => `pool ${pool}: ${n}`);
 const shared = songs.filter((s) => songPools(s).length > 1).length;
-console.log(`Repertoire "${repertoire.name}": ${songs.length} songs (${pools.join(', ')}${shared ? `; ${shared} in several pools` : ''}) → ${total} cards (${CARD_AMOUNTS.map((a) => `${a.amount} ${a.type}`).join(', ')}), into ${path.relative(process.cwd(), outDir) || '.'}`);
+console.log(`Repertoire "${repertoire.name}": ${songs.length} songs (${pools.join(', ')}${shared ? `; ${shared} in several pools` : ''}) → ${total} cards (${CARD_AMOUNTS.map((a) => `${a.amount} ${a.type}`).join(', ')}), into ${rel(outDir)}`);
 // On paper: every song fits its cell, every heading its header; a missing cover is said out loud.
 const testPerSheet = testLayout.cols * testLayout.rows;
 const testSheetsOf = (type: string): number => TEST_SHEETS.find((t) => t.type === type)?.sheets ?? 0;
@@ -115,10 +121,6 @@ const numbers = (cards: readonly Card[]): string => {
   return run && ids.length > 1 ? `#${ids[0]}–${ids[ids.length - 1]}` : ids.map((id) => `#${id}`).join(', ');
 };
 const plural = (n: number, word: string): string => `${n} ${word}${n === 1 ? '' : 's'}`;
-const rel = (file: string): string => {
-  const r = path.relative(process.cwd(), file);
-  return r.startsWith('..') ? file : r || '.';
-};
 // The JSON is written (awaited) before the PDF renderer loads: it needs the native canvas module, which a --check run
 // can do without, and a renderer that fails to load must not lose the JSON the screens read. A proof writes no JSON:
 // its cards are the run's, and the screens' cards.json stays as it is.
