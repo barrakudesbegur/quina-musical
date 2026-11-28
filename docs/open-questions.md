@@ -117,7 +117,7 @@ Inside a Check, "Enrere" on the tablet, or a single press of 1 or 2 on the remot
 - **U114 · Paused time and the night's end:** (a) the round's target end moves by the paused time, so the show doesn't rush afterwards; (b) it counts as time lost, and the Pace speeds up to catch up, as today.
 
 ### U85 · The music under a Check, between reveals
-Today the song or Hold music drops very low (−32 dB) for the whole Check, under the snippets. With the presenters pacing it, they'll talk between presses.
+Today the song or Hold music drops very low (−32 dB) for the whole Check. **Changed by D314 (28 Nov):** the revealed song now plays on at its level until the next reveal, so the question is the level of what plays between reveals while the presenters talk.
 - (a) Very low for the whole Check, as now.
 - (b) At the claim's level, under the presenters' voices, dipping further only while a snippet plays.
 

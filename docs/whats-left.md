@@ -62,6 +62,7 @@ After the tech rehearsal comes the code freeze (timeline.md), so P1 must be done
 | 3.3 | P1 | **The other scenes: built to the board the user picks** (before the night D297, the Check D303, the Line D302, the finale D301, the Break D308, «QUINA POTRA!» D310; every sponsor a sticker, D309), with the agreed look's starfield and ink-stroked titles | V, F | Frontend, after the answers |
 | 3.4 | P1 | Wrong whatever the board: the Check's «CARTRÓ #N» grey from the first reveal (orange until a fail on both boards); the type badge's ✓ an empty disc from the second Check; the failed ✗ half size and low; «Cartró correcte!» never shown for the last card (the engine goes straight to the Celebration); a round total «de 12» shown (D305: none on any screen); the intro's drum shows the last round's song; an empty lower half between the Shuffle and the first Spin; a «?» and a blank cover in the grid; no rough countdown before the night | V, F | Frontend; Sound engine for «Cartró correcte!» |
 | 3.6 | P1 | **No prizes on the projector for now (D311):** take them out of a round's intro (the Especial's and the Desgraciat's too), the Quina's Celebration and «QUINA POTRA!»; D311 lists every place, as the starting point for later | the user | Frontend |
+| 3.7 | P1 | The projector's "playing" mark per reveal still lasts 2.5 s, while the revealed song now plays on (D314) | f5 | Frontend |
 | 3.5 | P2 | At 16:9 the sponsor strips and end credits stay in a centred 4:3 box; the end roll has small logos, text-only sponsors and 10–15 s of empty screen between loops (Projector-Final draws a big static grid); 9 finalists' plates touch; the Shuffle's and the finale's sound cues aren't played | V, F | Frontend, Sound engine |
 | — | — | Not a go to build: the sponsor sticker collage (D287), fireworks C (D285) | F | — |
 
@@ -99,6 +100,8 @@ What works, seen live on the production path: the QR link, the pad, the scan, th
 | 5.6 | P1 | All 23 voices are placeholders; the welcome's `start` cue never plays | S | Sound engine, the user |
 | 5.7 | P1 | Phrase landings count bars from provisional hooks; FADE (the plain fade the user rejected) is still the last fallback; "call and response" is only a weighting; one hook per song | S | Sound engine |
 | 5.8 | P1 | The Blend renders live, one pair at a time; never checked on the show laptop under load; the relay crashes if tools/prep/.venv is missing | S, F | Sound engine |
+
+**Built since (28 Nov, quina-musical-f5):** no silence in a Check, Aguanta always loops, songs hand over before their silent tails (D314). Not heard by ear yet; the ✗ case waits on the user.
 
 ## 6. Setup, startup and Plan B
 
