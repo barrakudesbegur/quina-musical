@@ -51,6 +51,7 @@ After the tech rehearsal comes the code freeze (timeline.md), so P1 must be done
 | 2.9 | P1 | Sizes: at 1194×834 the doors, Celebration and Pausa pages overflow (header and cluster scroll away); on a 390 px phone the cluster takes a third of the screen and the Check's buttons fall off it | V, F | Frontend |
 | 2.10 | P1 | Not built: the remote's drawing (Comandament, D93), the voices and drum roll (Veus-Redoble, D198), Horari in the menu, D291 | V, F | Frontend, Sound engine |
 | 2.11 | P2 | The menu's «Xuleta del pla B» can't close; generic «ara no es pot fer»; the header keeps the finished round; tablet-portrait header clipping; «Llançament» after every round; Pace messages before the night | V, F | Frontend |
+| 2.12 | P1 | **The Heat meter (the thermometer) didn't work** in the user's realistic test: to reproduce first | the user | Frontend, Sound engine |
 
 ## 3. The projector
 
@@ -58,7 +59,7 @@ After the tech rehearsal comes the code freeze (timeline.md), so P1 must be done
 |---|---|---|---|---|
 | 3.1 | P0 | **The public Shuffle shows all 135 covers of the repertoire, not the round's 70:** half the covers flying into the drum can never come up (fairness: event.md › Fairness) | V, F | Sound engine and Frontend |
 | 3.2 | P1 | **In play, and the Desgraciat's play: not the agreed look (D294, `Abans-28nov-Projector-Joc`).** Live: three huge flat covers, a thin window, a small «QUINA 1» over the left cover, a plain title and lilac artist, the current song plus two earlier. Agreed: about 9 covers on a curved drum with a floor shadow, a thick glowing gold window and ink pointer, the gold «QUINA N» plate, an ink-stroked title with a gold artist, the oval-lamp garland, the starfield, the three earlier songs | V, F | Frontend |
-| 3.3 | P1 | **The other scenes: built to the board the user picks** (U231–U236), with the agreed look's starfield and ink-stroked titles | V, F | Frontend, after the answers |
+| 3.3 | P1 | **The other scenes: built to the board the user picks** (before the night: D297; U232–U236), with the agreed look's starfield and ink-stroked titles | V, F | Frontend, after the answers |
 | 3.4 | P1 | Wrong whatever the board: intro prize cards cut off at the bottom (Desgraciat, Especial) at both ratios; the Check's «CARTRÓ #N» grey from the first reveal (orange until a fail on both boards); the type badge's ✓ an empty disc from the second Check; the failed ✗ half size and low; «Cartró correcte!» never shown for the last card (the engine goes straight to the Celebration); «QUINA POTRA!» shows a prize card with «Gentilesa de», against D285; «Quina 6 de 12» for the 7th round (U163); the intro's drum shows the last round's song; an empty lower half between the Shuffle and the first Spin; a «?» and a blank cover in the grid; no rough countdown before the night; intros show only the headline prize, no sponsors (screens.md) | V, F | Frontend; Sound engine for «Cartró correcte!» |
 | 3.5 | P2 | At 16:9 the sponsor strips and end credits stay in a centred 4:3 box; the end roll has small logos, text-only sponsors and 10–15 s of empty screen between loops (Projector-Final draws a big static grid); 9 finalists' plates touch; the Shuffle's and the finale's sound cues aren't played | V, F | Frontend, Sound engine |
 | — | — | Not a go to build: the sponsor sticker collage (D287), fireworks C (D285) | F | — |
@@ -83,6 +84,8 @@ What works, seen live on the production path: the QR link, the pad, the scan, th
 
 ## 5. Transitions and music (the user's ears; no agent can check these)
 
+**Waiting (D298):** "i will take care of transitions latter, when the app works better". Nothing in this section starts until the night's start, the console and the projector work; then the listening reel and the user's session.
+
 | # | P | What's wrong | Source | Owner |
 |---|---|---|---|---|
 | 5.1 | P1 | **Nothing has been tuned by ear on the 2026 songs** (U13 never happened on this sound). First a listening reel (the night's transitions rendered and labelled by recipe and Phase), then the user's listening session, then the tuning | S | Sound engine, then the user |
@@ -102,6 +105,8 @@ What works, seen live on the production path: the QR link, the pad, the scan, th
 | 6.2 | P0 | **The runbook:** never says how to start the night or when to enter the sold cards; its "press Next" after a relaunch is wrong (the click lands a song); its "laptop lost its Game" row is a dead end (autostart disables «Recuperar al portàtil», and the resume is refused until the sold cards are entered again, with a half-English message); Admin wants only the code, not "the code and the song" | V | Backend; Frontend for Admin's message |
 | 6.3 | P0 | The preflight says "no Game on this laptop yet" with round 1 playing, and passes a stale second show page | V, B | Backend |
 | 6.4 | P1 | **A cold start is 4 terminals, about 10 commands, about 770 characters typed on the laptop and 53 on the tablet, about 11 clicks,** and a «START SHOW» click on the projector's own screen that no console can do. D282 (a Mac app, one start button) is on hold until the user resumes it | V, F, B | Backend, Frontend (D282) |
+| 6.4b | P0 | **The projector's «Start show» click** (D299): nothing on the projector starts the event; the click goes unless the audio can't start without it | V, the user | The user's setup session |
+| 6.4c | P1 | **The projector screen from a website** (D300), for a second projector on another computer and network | the user | The user's setup session |
 | 6.5 | P1 | Port 5174 is hard-coded in about 15 places; the first tablet pairing is always typed (the console's QR shows only on a console already on a LAN address) | V, B | Backend, Frontend |
 | 6.6 | P1 | Never done for real: a spare-laptop takeover, the laptop-only rehearsal, Admin's manual resume by a person, `setup:laptop` end to end since D248 | B | Backend, with the user at a rehearsal |
 
@@ -155,8 +160,8 @@ The generator works today: the final cards in both layouts from repertoire 2026,
 Sessions keep their lanes (team.md) and their limits on parallel agents (Frontend: at most two). Each works through its items in the order below.
 
 **Phase A, now to 3 Dec: P0.**
-- **Sound engine:** 1.1 (the engine side), 1.2, 1.6, 2.4, 2.3 (the engine side), 3.1 (with Frontend), 8.2 (the repertoire's `cardsJson`); then the listening reel (5.1) and the Signatures re-cut (5.4).
-- **Backend:** 1.1 (the runbook and the launch command), 6.1, 6.2, 6.3, 6.5's port; then the end-to-end night (11).
+- **Sound engine:** 1.1 (the engine side), 1.2, 1.6, 2.4, 2.3 (the engine side), 3.1 (with Frontend), 8.2 (the repertoire's `cardsJson`). No transition work yet (D298).
+- **Backend, or the user's setup session for the start and the screens (D282, D299, D300):** 1.1 (the runbook and the launch command), 6.1, 6.2, 6.3, 6.4b, 6.5's port; then the end-to-end night (11).
 - **Frontend:** 8.1 and 8.2 first (small, and the cards depend on them), then 7.1, 2.1, 2.2, 2.3 (the console side), 1.3 (after U173); then the in-play projector (3.2).
 - **The orchestrator:** checks each pushed item; models the night's opening (1.5) with the user (U97, U99, U173, D291), so it's ready to build in phase C.
 
@@ -164,12 +169,12 @@ Sessions keep their lanes (team.md) and their limits on parallel agents (Fronten
 
 **Phase C, from 6 Dec to the tech rehearsal: P1.**
 - **Frontend:** the projector's scenes (3.2–3.4, as the user picks), the console's P1 (2.5–2.10), the phone's P1 (4.1–4.9), the cheat sheet (7.2), the screenshot comparisons (11).
-- **Sound engine:** the user's listening session and the tuning (5.1–5.3, 5.7), the doors music and the night's opening (1.4, 1.5), Hold music and voices (5.5, 5.6), the quick hook review (U56) before the user's approval pass (9.1).
+- **Sound engine:** once the app works better (D298), the user's listening session and the tuning (5.1–5.3, 5.7); the doors music and the night's opening (1.4, 1.5), Hold music and voices (5.5, 5.6), the quick hook review (U56) before the user's approval pass (9.1).
 - **Backend:** the feed's heartbeat (4.2), the relay's plan for phones (4.10), the load test and the usage counter (10.1, 10.2), the Plan B drills (6.6), D282 when the user resumes it.
 
 **Phase D:** the tech rehearsal when the user says; then the code freeze; P2 only if there's time.
 
 **What needs the user, by phase:**
-- A: U231–U239 (the answers below), U173, U163, the go for this plan.
+- A: U232–U239 (U231 answered: D297), U173, U163, the go for this plan.
 - B: the proof sheet and the print.
 - C: the listening session (a couple of hours), the hook approval (about 4.5 h, U14), vetting the Signatures, the voices and Hold music (U20), D282's conversation, the real-device checks (U19), the organizers' plan in Admin (U18).

@@ -1808,7 +1808,7 @@ By: the user. Source: the user's message of 28 Nov. Amends: ADR-0002. Lives in: 
 Answers U226: "i want the wii remote but using the mac software is fine, we dont need the adapter. and as a backup i think i will buy a presenter remote, or maybe a mini gamepad so i can use it for something else." The genuine Wii remote stays the presenters' main control, paired with the Mac by MacWiiPair (U220) and read by the Console's WebHID driver, as built. No 8BitDo adapter. The user buys a backup: a presenter remote or a mini gamepad (U229).
 By: the user. Source: the user's message of 28 Nov, after docs/research/reports/presenter-remote.md. Lives in: requirements/operations.md › Fallbacks.
 
-### D276 · A second projector, if one is found: inside for the back tables, the same image · 2026-11-28 · Active
+### D276 · A second projector, if one is found: inside for the back tables, the same image · 2026-11-28 · Amended by D300
 - Answers U227 with (a): inside the tent, about 12–14 m from the stage, on the long wall away from the open area, angled 30–45° to the back tables.
 - Answers U228 with (a): the same image as the first screen, from a 1-in, 2-out HDMI splitter on the laptop. No new code.
 - **The projector scenes support the most common projector formats:** "we should support most frequent vendor formats": 4:3, 16:10 and 16:9. With a splitter both projectors get one signal, so it's set to suit both (a 4:3 signal keeps the text's size on a 16:9 projector).
@@ -1927,3 +1927,19 @@ By: the user (the organizers' pick; keeping the A3 layout is the user's). Source
 ### D296 · The organizers confirm the playlists are final; unchanged since D269 · 2026-11-28 · Active
 The user: "they told me the playlist is final now, check if it changed from last time i fetched". The orchestrator's check at 5:58 pm compared both Spotify playlists with D269's fetch (data/media/2026/pool{1,2}/output/playlist-raw.json, just after midnight on 28 Nov) and with the prepared data/repertoires/2026/songs.json: the same Spotify revision ids, the same 70 + 70 tracks in the same order, the same 5 shared songs (#5, #44, #46, #54, #62). No download, prep, R2 push or new cards needed. The check reads Spotify's data only, not the audio in data/.
 By: the organizers, through the user. Source: the user's message of 28 Nov; the orchestrator's read-only fetch. Lives in: event.md › The songs; timeline.md.
+
+### D297 · The projector before the night: the pre-redraw board · 2026-11-28 · Active
+Answers U231 with (a): `Abans-28nov-Projector-Abans`, with the blue-bulb garland across the top, is the agreed look before the night; the Desgraciat's sad face has no circle (D23). Frontend puts it back on the canvas's Projector page as the agreed look and archives the current board as as-built, as for D294.
+By: the user. Source: the user's message of 28 Nov. Lives in: requirements/screens.md › Projector; the canvas's Projector page.
+
+### D298 · The transitions wait until the app works better · 2026-11-28 · Active
+"i will take care of transitions latter, when the app works better". The listening session (U13), the listening reel and the transitions' tuning come after the night's start, the console and the projector work. Until then Sound engine works on the engine's start and the presenter actions, not on transitions.
+By: the user. Source: the user's message of 28 Nov. Lives in: whats-left.md › 5; timeline.md.
+
+### D299 · The night starts from the console; the projector's «Start show» goes unless something needs it · 2026-11-28 · Active
+"the start button in the projector screen is confusing, it seems it is used to start the event. if it starts the event should be in console. only keep it if it is needed for something to work. otherwise i think it is an unecesary step." The show page's «START SHOW» overlay is the browser's audio unlock: with the night's launch flag (`--autoplay-policy=no-user-gesture-required`) it shouldn't be needed, yet it always shows (verified 28 Nov), and with the runbook's `autostart=1` its click also starts round 1. So nothing on the projector starts the event; the night starts only from the console (U173 settles where). The click stays only if the audio can't start without it, and then it never starts anything. The user's setup session designs it, with D282.
+By: the user. Source: the user's message of 28 Nov. Lives in: requirements/operations.md › Setting up; screens.md › Projector.
+
+### D300 · The projector screen can also open from a website · 2026-11-28 · Active; the design with the user's setup session
+"the projector screen should also be able to be opened via a website (not in the same hotspot), (because i may want to add a second projector)". Besides the laptop's own show page, a projector screen can open from the cloud's address, on another computer on another network. Amends D276 (a second projector from an HDMI splitter, "no new code"). To settle in the design: such a screen has no audio and follows the cloud like the phones, so its landings must still meet the PA's sound (the phones' drum does it with D277's target from the Spin's start), and it gets only what the projector shows, never the Queue.
+By: the user. Source: the user's message of 28 Nov. Amends: D276. Lives in: requirements/screens.md › Projector; requirements/operations.md.

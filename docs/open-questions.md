@@ -8,11 +8,6 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
-### U231 · The projector before the night: which board (D294)
-The 28 Nov redraw replaced agreed boards with as-built ones. Before the night: the pre-redraw `Abans-28nov-Projector-Abans` has a blue-bulb garland across the top; the current `Projector-Abans` (and the live screen) has none. Both otherwise the same; the Desgraciat's sad face has no circle either way (D23).
-- (a) The pre-redraw board, with the garland (the orchestrator's recommendation: the agreed in-play look has a garland too).
-- (b) The current board, no garland.
-
 ### U232 · The projector's Check: which boards (D294)
 For `Comprovacio`, `Comprovacio-Fallida` and `Comprovacio-Revisio`. D283's thick centred marks and D117's reveals stopping at the ✗ live only in the current boards.
 - (a) The current boards: thick centred ✓s, the playing song with the running dashed ring and ▷ (as on the phones), the falling nino; drawn on the agreed look's starfield and ink-stroked type (the recommendation: they already hold D283 and D117).
@@ -371,6 +366,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U231 · The projector before the night** (2026-11-28) → D297: (a), the pre-redraw board with the garland.
 - **U212 · Which card** (2026-11-28) → D295: the organizers chose «Apaïsat sense portades», the 21 × 9.9 cm card without covers, three to an A4 page.
 - **U193 · Where the install button goes** (2026-11-28): replaced by U230, since D290 removed the spot it relied on.
 - **U204 · The realistic run's times** (2026-11-28) → D288: today's test starts 30 minutes after the deploy and the laptop setup are live; 27 Dec's times go back afterwards.
