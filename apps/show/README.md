@@ -186,4 +186,4 @@ For a projector without the click: `open -na "Google Chrome" --args --user-data-
 - **Listening.** Last year's songs are only test material, so they get listened to only as far as testing the effects and transitions needs. `data/out/report.md` lists what the audition pass would cover. This year's repertoire gets the full pass once its playlist is final.
 - **The flash-and-click check on the real projector.** Film `test.html` with a phone and set the display offset.
 - **Tuning by ear:** effect levels, riser and roll lengths, impact choice and Signature levels are first guesses.
-- **Next:** the next song looped under the current one, split-device mode (ADR 0002), and a 2-hour soak test. Suspense needs an ear check: its loop levels are first guesses. This year's repertoire still has to be prepared once its playlist is final.
+- **Next:** the next song looped under the current one, and a 2-hour soak test. Split-device mode (ADR 0002) is only a nice-to-have since D274: "the mixing table can be placed almost anywhere". Suspense needs an ear check: its loop levels are first guesses. This year's repertoire still has to be prepared once its playlist is final.
