@@ -166,10 +166,6 @@ Today every console already shares the show's state live: songs, Holds, claims, 
 - (a) The show's state only, as today, plus the hold locks. Each console keeps its own tabs and pads, so the tech can look something up without moving the presenters' screen.
 - (b) Mirror the screen too.
 
-### U204 · The realistic run's times (D235)
-- (a) The real night's times: doors at 5 pm, the start at 6 pm on 27 Dec. The Horari and the doors voices won't count down today.
-- (b) The same schedule, moved so it starts at a time today the user gives. The countdowns and the doors voices run for real, and it's put back to 27 Dec afterwards.
-
 ### U193 · Where the install button goes on the phone's home (D221)
 The user: "where we put the add card button, when he doesn't have any, we could put the install button there (only would show if can install and +card button is not showing)". The reading: when a player has no cards, the cards list shows its big add-card button. Once they have cards, the floating «+ Cartró» takes over adding (D218, D220), and that same spot in the list shows the install button instead, only when the browser can install the app and it isn't installed yet. Never on iPhones (Ajustos only).
 - (a) Yes, that.
@@ -336,6 +332,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U204 · The realistic run's times** (2026-11-28) → D288: today's test starts 30 minutes after the deploy and the laptop setup are live; 27 Dec's times go back afterwards.
 - **U225 · The ✗ in the Check's cells** (2026-11-28) → D283: thick on the projector's Check; the console's stay.
 - **U221 · Where the laptop sits; U229 · the backup remote** (2026-11-28) → D281: at the tech's table with the mixer; the user's pick of backup.
 - **U215 · The night's start; U218 · the browser-only setup** (2026-11-28) → D282: a Mac app with a control page; U218 moot.
