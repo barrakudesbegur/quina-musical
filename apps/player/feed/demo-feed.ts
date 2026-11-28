@@ -7,7 +7,7 @@ import { PROTOCOL_VERSION, type EventOf, type LandingInfo, type ShowState } from
 import { DESGRACIAT_LANDED, FIXTURES, FIXTURE_LANDED, FIXTURE_SONGS } from '../../../packages/ui/fixtures/states.ts';
 import { SAMPLE_PLAN, demoPlan } from '../../../packages/ui/fixtures/plan.ts';
 import type { FlowFields } from '../../../packages/ui/flow.ts';
-import type { GamePlan } from '../../../packages/ui/plan.ts';
+import type { GamePlan, PublicPlan } from '../../../packages/ui/plan.ts';
 import type { FeedUpdate, PlayerFeed } from './feed.ts';
 import { ProjectedFeedCore } from './projected-feed.ts';
 import type { PublicLink } from './public.ts';
@@ -32,6 +32,11 @@ export interface PlayerDemo {
   dropFeed?: { afterMs: number; forMs: number };
   /** The Game plan the demo publishes (else SAMPLE_PLAN). */
   plan?: GamePlan;
+  /**
+   * Made-up sponsors' logos, by sponsor id, put on the plan the view gets after the phone's own checks (`dressPlan`).
+   * They never enter the published plan: a real logo is an upload's path (LOGO_PATH_RE), and these are data URLs.
+   */
+  logos?: Readonly<Record<string, string>>;
 }
 
 /** The demo phone's cards: card 123 (named) and 57 are each 1 song from a Line in the fixture story; 412 is a special card. */
@@ -53,8 +58,9 @@ const decided = (status: 'valid' | 'invalid') => (s: ShowState): ShowState => {
 };
 
 /**
- * A made-up wordmark for the prizes demos (the Premis drawer, D244): an SVG data URL, short enough for the plan's
- * 500-character logo field. Real sponsors' names and logos never live in this repo.
+ * A made-up wordmark for the prizes demos (the Premis drawer, D244): an SVG data URL. The plan's checks turn any logo
+ * that isn't an upload's path into null, so the demo puts these on after them (`PlayerDemo.logos`). Real sponsors'
+ * names and logos never live in this repo.
  */
 const demoLogo = (w: number, h: number, fill: string, text: string): string =>
   `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}"><rect width="${w}" height="${h}" rx="${h / 5}" fill="${fill}"/><text x="50%" y="64%" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="${Math.round(Math.min(h / 2.6, (w * 1.4) / text.length))}" fill="#fff">${text}</text></svg>`)}`;
@@ -76,9 +82,6 @@ const DEMO_LOGOS: Readonly<Record<string, string>> = {
   'botiga-esports': demoLogo(140, 140, '#2D5FC4', 'ESPORTS'),
   'restaurant-port': demoLogo(100, 140, '#0F6E8C', 'PORT'),
 };
-
-/** The sample plan with those logos. */
-const PLAN_WITH_LOGOS: GamePlan = { ...SAMPLE_PLAN, sponsors: SAMPLE_PLAN.sponsors.map((s) => ({ ...s, logo: DEMO_LOGOS[s.id] ?? s.logo })) };
 
 /** Every player state, by demo name. The README lists the URLs. */
 export const PLAYER_DEMOS: Record<string, PlayerDemo> = {
@@ -158,11 +161,11 @@ export const PLAYER_DEMOS: Record<string, PlayerDemo> = {
   prizes: {
     fixture: 'play',
     cards: 'default',
-    plan: PLAN_WITH_LOGOS,
+    logos: DEMO_LOGOS,
     patch: (s) => ({ ...s, winners: (s as ShowState & Partial<FlowFields>).winners?.map((w) => (w.round === 2 && w.kind === 'line' ? { ...w, cardId: 57 } : w)) }) as ShowState,
   },
   /** The same in the Interval before Quina 4 (its prizes still locked): «La següent» on the selector. */
-  prizesInterval: { fixture: 'interval', cards: 'default', plan: PLAN_WITH_LOGOS },
+  prizesInterval: { fixture: 'interval', cards: 'default', logos: DEMO_LOGOS },
   /** Every prize kept secret until the presenters reveal it (GamePlan.prizeReveal 'allSecret'): Premis shows the
    * "Secrets" lock on every round not revealed yet. */
   prizesSecret: { fixture: 'play', cards: 'default', plan: { ...SAMPLE_PLAN, prizeReveal: 'allSecret' } },
@@ -304,6 +307,13 @@ export class DemoFeed implements PlayerFeed {
 
   subscribe(listener: (update: FeedUpdate) => void): () => void {
     return this.core.subscribe(listener);
+  }
+
+  /** The demo's made-up logos on the checked plan, by sponsor id (PlayerDemo.logos); other sponsors as they are. */
+  dressPlan(plan: PublicPlan): PublicPlan {
+    const logos = this.demo.logos;
+    if (!logos) return plan;
+    return { ...plan, sponsors: plan.sponsors.map((s) => (logos[s.id] ? { ...s, logo: logos[s.id] } : s)) };
   }
 
   private later(ms: number, fn: () => void): void {

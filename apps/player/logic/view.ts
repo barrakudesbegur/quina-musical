@@ -7,6 +7,7 @@ import { cardMarks, cardsForRound, type CardMarks, type PlayerCard } from '../..
 import { standOf, type CardStand } from './desgraciat.ts';
 import { remainingSongs } from './remaining.ts';
 import { defaultCardType, roundSide, type PublicLanding, type PublicRound, type PublicState, type PublicWinKind, type RoundKind } from '../feed/public.ts';
+import type { PlayerFeed } from '../feed/feed.ts';
 import type { SavedCard } from './storage.ts';
 
 /** The round being played or last played: the last of `rounds`. */
@@ -80,6 +81,12 @@ export function planOf(state: PublicState | null): PublicPlan | null {
     cheatSheet: { claimRules: [], specialRoundRules: [] },
   });
   return check.ok ? publicPlan(check.plan, revealed.filter((n): n is number => typeof n === 'number')) : null;
+}
+
+/** The plan the screens get: planOf's, then the feed's `dressPlan` when it has one (DemoFeed only: its made-up logos). */
+export function viewPlan(state: PublicState | null, feed: Pick<PlayerFeed, 'dressPlan'>): PublicPlan | null {
+  const plan = planOf(state);
+  return plan && feed.dressPlan ? feed.dressPlan(plan) : plan;
 }
 
 export interface CardView {

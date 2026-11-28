@@ -42,7 +42,7 @@ import {
 import { saveBootState } from './logic/boot-cache.ts';
 import { araViewFor, type AraView } from './logic/tabs.ts';
 import { songBeat } from './logic/beat.ts';
-import { celebrationOf, cardViews, currentRound, focusRoundNumber, latestLanding, markKeys, planOf, roundKindOf } from './logic/view.ts';
+import { celebrationOf, cardViews, currentRound, focusRoundNumber, latestLanding, markKeys, roundKindOf, viewPlan } from './logic/view.ts';
 import { songsOnCards, yourSongOf } from './logic/your-song.ts';
 import { S } from './strings.ts';
 
@@ -112,7 +112,7 @@ export class PlayerApp {
   banner = $state.raw<BannerState>(NO_BANNER);
 
   // ---- derived ------------------------------------------------------------------------------------------
-  plan = $derived(planOf(this.state));
+  plan = $derived(viewPlan(this.state, this.feed));
   round = $derived(currentRound(this.state));
   scene = $derived(this.state?.scene ?? 'before');
   focusRound = $derived(focusRoundNumber(this.state));

@@ -3,11 +3,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { emptyPublicState, type PublicState } from '../../../../player/feed/public.ts';
-import { demoFor } from '../../../../player/feed/demo-feed.ts';
+import { DemoFeed } from '../../../../player/feed/demo-feed.ts';
 import { bundleView, prizesStartRound, stepRound } from '../../../../player/logic/prizes.ts';
-import { planOf, prizeRounds } from '../../../../player/logic/view.ts';
+import { planOf, prizeRounds, viewPlan } from '../../../../player/logic/view.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
-import { checkGamePlan, publicPlan } from '../../../../../packages/ui/plan.ts';
+import { publicPlan } from '../../../../../packages/ui/plan.ts';
 import { S } from '../../../../player/strings.ts';
 
 const playing = (patch: Partial<PublicState> = {}): PublicState => ({
@@ -62,13 +62,29 @@ test('a prize carries its sponsor\'s logo; a locked round carries nothing of its
   assert.deepEqual(rounds[4].lines.map((l) => bundleView(l).count), [0], 'a locked round: not even how many');
 });
 
-test('the prizes demo\'s made-up logos fit the plan\'s rules, so phones read its plan', () => {
-  const plan = demoFor('prizes').plan;
-  assert.ok(plan, 'the demo publishes its own plan');
-  const check = checkGamePlan(plan);
-  assert.ok(check.ok, check.ok ? '' : check.errors.join('; '));
-  assert.ok(plan.sponsors.filter((s) => s.logo).length >= 10, 'most sponsors have a logo');
-  assert.ok(plan.sponsors.some((s) => !s.logo), 'and some none, as on the night');
-  const state = playing({ plan: publicPlan(plan, [1, 2, 3]) } as Partial<PublicState>);
-  assert.equal(planOf(state)?.sponsors.length, plan.sponsors.length, 'the public plan checks on the phone');
+test('the prizes demos show their made-up logos on the view\'s plan, after the phone\'s checks', async () => {
+  for (const name of ['prizes', 'prizesInterval']) {
+    const feed = new DemoFeed(name);
+    let state: PublicState | null = null;
+    const stop = feed.subscribe((u) => (state = u.state));
+    feed.start();
+    await new Promise((r) => setTimeout(r, 120));
+    feed.stop();
+    stop();
+    const checked = planOf(state);
+    assert.ok(checked, `${name}: the published plan checks on the phone`);
+    assert.ok(checked.sponsors.every((s) => s.logo === null), `${name}: no made-up logo goes through the checks`);
+    const plan = viewPlan(state, feed);
+    assert.equal(plan?.sponsors.length, SAMPLE_PLAN.sponsors.length, `${name}: every sponsor`);
+    const logos = plan?.sponsors.filter((s) => s.logo) ?? [];
+    assert.ok(logos.length >= 10, `${name}: most sponsors have a logo on the view's plan (${logos.length})`);
+    assert.ok(logos.every((s) => s.logo?.startsWith('data:image/svg+xml,')), `${name}: the demo's own wordmarks`);
+    assert.ok(plan?.sponsors.some((s) => !s.logo), `${name}: and some none, as on the night`);
+  }
+});
+
+test('a feed without dressPlan hands the view planOf\'s plan as it is (the cloud and the relay)', () => {
+  const state = playing({ plan: PUBLIC } as Partial<PublicState>);
+  assert.deepEqual(viewPlan(state, {}), planOf(state));
+  assert.equal(viewPlan(playing(), {}), null);
 });

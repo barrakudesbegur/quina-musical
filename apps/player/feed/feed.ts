@@ -3,6 +3,7 @@
 // - DevRelayFeed: development only, the relay's engine events projected into PublicState;
 // - DemoFeed: `?demo=<fixture>`, the shared fixtures projected the same way.
 // Also the pure choice of adapter from the page's URL.
+import type { PublicPlan } from '../../../packages/ui/plan.ts';
 import type { PublicState } from './public.ts';
 
 export type FeedKind = 'cloud' | 'relay' | 'demo';
@@ -31,6 +32,11 @@ export interface PlayerFeed {
   setCards(ids: readonly number[]): void;
   /** Called with every change, and once right away. Returns an unsubscribe function. */
   subscribe(listener: (update: FeedUpdate) => void): () => void;
+  /**
+   * DemoFeed only: change the plan the view gets, after the phone's checks (planOf). The prizes demo puts its made-up
+   * logos on here, which the checks would drop. The cloud and relay feeds have none: the view gets planOf's plan.
+   */
+  dressPlan?(plan: PublicPlan): PublicPlan;
 }
 
 /** Tracks a feed's connection for the FeedConnection it reports. */
