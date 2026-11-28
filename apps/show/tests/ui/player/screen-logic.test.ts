@@ -115,6 +115,7 @@ const snap = (patch: Partial<FeedbackSnapshot> = {}): FeedbackSnapshot => ({
   round: 3,
   landings: 5,
   marks: [],
+  near: [],
   celebration: null,
   desgraciat: false,
   standing: [],
@@ -129,10 +130,17 @@ test('the first update and a new round are quiet', () => {
   assert.deepEqual(feedbackFor(snap(), snap({ round: 4, landings: 1, marks: ['1:2'] })), quiet);
 });
 
-test('one cue at a time, the most important: celebrate > mark > landing', () => {
+test('one cue at a time, the most important: celebrate > near-win > mark > landing', () => {
   assert.equal(feedbackFor(snap(), snap({ landings: 6 })).cue, 'landing');
   assert.deepEqual(feedbackFor(snap({ marks: ['1:2'] }), snap({ landings: 6, marks: ['1:2', '1:3', '4:3'] })), { ...quiet, cue: 'mark', freshMarks: ['1:3', '4:3'] });
-  assert.equal(feedbackFor(snap(), snap({ landings: 6, marks: ['1:3'], celebration: 'celebration:3:line' })).cue, 'celebrate');
+  assert.equal(feedbackFor(snap(), snap({ landings: 6, marks: ['1:3'], near: ['1:9'] })).cue, 'nearWin', 'the chime wins over the tock (28 Nov)');
+  assert.equal(feedbackFor(snap(), snap({ landings: 6, marks: ['1:3'], near: ['1:9'], celebration: 'celebration:3:line' })).cue, 'celebrate');
+});
+
+test('the near-win chime only when the cards first come to one song from a win, after none', () => {
+  assert.equal(feedbackFor(snap({ near: ['1:9'] }), snap({ landings: 6, near: ['1:9', '2:4'] })).cue, 'landing', 'a second card near: no chime');
+  assert.equal(feedbackFor(snap({ near: ['1:9'] }), snap({ near: [] })).cue, null, 'a near-win gone: quiet');
+  assert.equal(feedbackFor(null, snap({ near: ['1:9'] })).cue, null, 'opening the app on a near-win: quiet');
 });
 
 // ---- views ------------------------------------------------------------------------------------------------

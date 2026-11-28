@@ -60,6 +60,8 @@ export const PLAYER_CONFIG = Object.freeze({
 
   /** Sounds: −24 dBFS peak, one at a time. */
   soundPeakGain: 0.063,
+  /** A card comes to one song from a Line or the Quina (`near-win`; Android only; nothing depends on it). */
+  vibrateNearWin: [30, 40, 30] as readonly number[],
   /** The Desgraciat round: one of the player's cards sat down (Android only; nothing depends on it). */
   vibrateFall: [60] as readonly number[],
   /** A song lands on one of the phone's cards (§8 Y1): a da-dum, longer than a touch's 10 ms. */

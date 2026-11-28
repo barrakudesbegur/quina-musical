@@ -95,6 +95,7 @@ const snapOf = (r: PublicRound | null, patch: Partial<FeedbackSnapshot> = {}): F
     round: r?.number ?? null,
     landings: r?.landings.length ?? 0,
     marks: markKeys(views),
+    near: [],
     celebration: null,
     desgraciat: isDesgraciat(r),
     standing: standingIds(stands),

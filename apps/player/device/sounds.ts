@@ -38,6 +38,11 @@ const BLIPS: Record<Blip, Note[]> = {
     [784, 0, 0.07],
     [1175, 0.07, 0.11],
   ],
+  /** A card comes to one song from a Line or the Quina (`near-win`, 28 Nov): a soft rising two-note chime (190 ms). */
+  nearWin: [
+    [660, 0, 0.08],
+    [990, 0.09, 0.1],
+  ],
   /** The Desgraciat's fall: a short descending two-note "bloop", each note sagging a little (180 ms in all). */
   fall: [
     [587, 0, 0.08, 'sine', 523],

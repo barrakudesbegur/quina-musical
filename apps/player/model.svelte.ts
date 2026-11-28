@@ -14,6 +14,7 @@ import type { FeedConnection, FeedUpdate, PlayerFeed } from './feed/feed.ts';
 import type { PublicHeat, PublicState } from './feed/public.ts';
 import { budgetMarks, fallStagger, fallenKeys, isDesgraciat, standingIds } from './logic/desgraciat.ts';
 import { buzzFor, feedbackFor, type FeedbackSnapshot } from './logic/feedback.ts';
+import { nearKeys } from './logic/remaining.ts';
 import { drawersOnCelebration, popDrawer, pushDrawer, type Drawer } from './logic/drawers.ts';
 import type { Route } from './logic/router.ts';
 import { NO_BANNER, nextBanner, pauseOn, type BannerState } from './logic/status.ts';
@@ -435,7 +436,7 @@ export class PlayerApp {
       this.standUpTimer = setTimeout(() => (this.standUp = false), PLAYER_CONFIG.freshMs);
     }
     const buzz = buzzFor({ cue, freshMarks }, next.desgraciat);
-    if (buzz) vibrate(buzz === 'fall' ? PLAYER_CONFIG.vibrateFall : PLAYER_CONFIG.vibrateYourSong);
+    if (buzz) vibrate(buzz === 'fall' ? PLAYER_CONFIG.vibrateFall : buzz === 'nearWin' ? PLAYER_CONFIG.vibrateNearWin : PLAYER_CONFIG.vibrateYourSong);
     if (!cue) return;
     this.sounds.play(cue);
   }
@@ -446,6 +447,7 @@ export class PlayerApp {
       round: this.round?.number ?? null,
       landings: this.round?.landings.length ?? 0,
       marks: markKeys(this.views),
+      near: nearKeys(this.playingViews.map((v) => ({ cardId: v.saved.id, card: v.card, marks: v.marks })), this.round),
       celebration: this.celebration?.key ?? null,
       desgraciat: this.desgraciat,
       standing: standingIds(stands),
