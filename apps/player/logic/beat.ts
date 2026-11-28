@@ -9,7 +9,7 @@ export type { PublicBeat };
 
 export const BOB = {
   /** A side never comes faster than this (per minute): above it a side takes two beats (or a bar in 3/4). */
-  maxSidesPerMinute: 135,
+  maxSidesPerMinute: 140,
   /** Re-set the CSS only when the phase moves more than this (the clock's offset wobbles by a millisecond a tick). */
   toleranceMs: 4,
   /** The keyframes' name (player.css), whose animations device/bob.ts pins. */
@@ -90,13 +90,16 @@ export function bobTiming(beat: PublicBeat | null, clock: BobClock): BobTiming |
 
 const round = (ms: number) => Math.round(ms * 10) / 10;
 
-/** Keep the timing on screen unless the new one differs: another period, the downbeat no longer ahead, or a phase
- *  more than `toleranceMs` away (on the cycle). */
+/** Keep the timing on screen unless the new one differs: another period, the downbeat no longer ahead, or sides that
+ *  start more than `toleranceMs` away from the shown ones. A new downbeat whose sides start on the same beats changes
+ *  nothing, even half a cycle away (the engine re-sends its latest downbeat: in 3/4 a bar later is half a cycle, and
+ *  the swing would jump to the other side). */
 export function keepTiming(shown: BobTiming | null, next: BobTiming | null, toleranceMs: number = BOB.toleranceMs): BobTiming | null {
   if (!shown || !next) return next;
   if (shown.periodMs !== next.periodMs || shown.ahead !== next.ahead) return next;
-  const d = mod(next.delayMs - shown.delayMs, next.periodMs);
-  return Math.min(d, next.periodMs - d) > toleranceMs ? next : shown;
+  const side = next.periodMs / 2;
+  const d = mod(next.delayMs - shown.delayMs, side);
+  return Math.min(d, side - d) > toleranceMs ? next : shown;
 }
 
 /** The CSS custom properties for a timing. */

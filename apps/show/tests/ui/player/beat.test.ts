@@ -28,7 +28,9 @@ test("a demo's &bpm= builds a 4-beat bar from the latest landing; the feed's own
 
 test('one side per beat; a fast pulse takes two beats a side (a bar in 3/4), never off the beat', () => {
   assert.equal(beatsPerSide(120, 4), 1);
-  assert.equal(beatsPerSide(135, 4), 1);
+  assert.equal(beatsPerSide(136.19, 4), 1, 'a 136 bpm dance song: still every beat');
+  assert.equal(beatsPerSide(140, 4), 1);
+  assert.equal(beatsPerSide(141, 4), 2);
   assert.equal(beatsPerSide(171, 4), 2, 'the fast pulse many songs are analysed at: half time');
   assert.equal(beatsPerSide(171, 3), 3, 'a 3/4 bar: one side per bar, never a half bar (off the beat)');
   assert.equal(beatsPerSide(171, 2), 2);
@@ -87,6 +89,8 @@ test('the timing on screen stays through a millisecond of wobble, changes past t
   assert.equal(keepTiming(shown, tempo), tempo);
   const landed = { ...shown, ahead: true };
   assert.equal(keepTiming(shown, landed), landed);
+  assert.equal(keepTiming(shown, { ...shown, delayMs: -1 }), shown, 'half a cycle away: the sides start on the same beats, the swing keeps its side');
+  assert.equal(keepTiming(shown, { ...shown, delayMs: -250 }).delayMs, -250, 'a quarter cycle: half a side off the beats');
   assert.equal(keepTiming(shown, null), null);
   assert.equal(keepTiming(null, shown), shown);
 });
