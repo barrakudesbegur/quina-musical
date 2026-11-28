@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D283**, **U230**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D284**, **U230**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -35,7 +35,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 
 **The sessions:**
 - **Sound engine:** important tasks only. Done today: the README's Chrome profile (9c5ef734), split mode marked a nice-to-have (9d1cb3ac), D277's public Spin target and the Pausa volume fix (a2d0b4af).
-- **Frontend:** at most two agents in parallel. Working on: D277's phone drum, drawing every undrawn screen (D236), U225 re-asked with a picture, 16:10 on the projector (D276), D278's near-win sound, D279's items. The canvas redraw is done (v117, v118).
+- **Frontend:** at most two agents in parallel. Working on: D277's phone drum, drawing every undrawn screen (D236), D283's thick Check marks on the projector, 16:10 on the projector (D276), D278's near-win sound, D279's items. The canvas redraw is done (v117, v118).
 - **Backend:** queue empty apart from D277's feed (Frontend's request) and the held D282; it waits for U204's time. Done today: the Chrome profiles out of /tmp (f63af09f), the plan's title «Quina Quina! 3» uploaded (D280).
 - **The card design session (quina-musical-d1):** its work is done except U212. Its handoff is tools/card-mockup/HANDOFF.md, the spec tools/card-mockup/README.md, the canvas https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392. Decisions D250–D272.
 
@@ -53,7 +53,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 **Waiting on the user (open-questions.md › Decisions), most useful first:**
 - U204: the realistic run's start time today, or 27 Dec (Backend uploads the plan with `--start` when it's relayed);
 - U212: the organizers pick the card, «Quadrat amb portades» (the default) or «Apaïsat sense portades»; the cards are made on 4–5 Dec, after a proof sheet;
-- U225: the thick ✗ (Frontend re-asks with a picture); U188: only the Wii dialog's tap outside is left;
+- U188: only the Wii dialog's tap outside is left (U225 answered: D283, thick marks on the projector's Check);
 - U214: the grill format only in a card design session (the default), or plain questions there too;
 - U205 (Parlem's 40 s Hold music), U207 (✕ in a stack);
 - U194 (push), U196 (App Clip), U197 (TWA): the research says pass; U195 (uncollected prizes);
