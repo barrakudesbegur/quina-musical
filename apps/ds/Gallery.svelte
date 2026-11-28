@@ -1,6 +1,6 @@
 <!--
   The design system's gallery (development only; main.ts). Captions are English with GLOSSARY.md's terms; the buttons'
-  words are UI content, so they're Catalan. Sections: the palette slots, A1 · Button in every variant, size and state,
+  words are UI content, so they're Catalan. Sections: the palette slots, the tokens (read from the loaded stylesheets), A1 · Button in every variant, size and state,
   then the design resources (R1–R11 of the user's 27 Nov comments). Each family the next helpers build adds a section.
 -->
 <script lang="ts">
@@ -21,6 +21,7 @@
   import IconsSection from './sections/Icons.svelte';
   import ControlsGallery from './ControlsGallery.svelte';
   import ConsoleMenu from './sections/ConsoleMenu.svelte';
+  import Tokens from './sections/Tokens.svelte';
 
   let { density, theme }: { density: 'console' | 'phone' | 'projector'; theme: 'light' | 'dark' } = $props();
 
@@ -117,6 +118,8 @@
       </table>
     </div>
   </section>
+
+  <Tokens {density} />
 
   <section class="ds-gallery__section" aria-labelledby="a1">
     <h2 id="a1">A1 · Button</h2>

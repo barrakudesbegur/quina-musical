@@ -1,0 +1,433 @@
+/* The gallery's Tokens section (development only): its specimens' frames. Every value a specimen shows comes from the
+   token it names (inline, from the CSSOM); these rules only lay them out. */
+
+@layer app {
+.ds-tok {
+  --ds-tok-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+.ds-tok__grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+  gap: var(--space-5);
+}
+
+.ds-tok__grid--wide {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 24rem), 1fr));
+}
+
+.ds-tok__grid--cards {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+}
+
+.ds-tok__grid--one {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ds-tok__grid .ds-gallery__cell[data-wide] {
+  grid-column: 1 / -1;
+}
+
+.ds-tok__stage {
+  gap: var(--space-2);
+  align-content: start;
+  min-width: 0;
+}
+
+.ds-tok__name {
+  font-family: var(--ds-tok-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.ds-tok__value {
+  color: var(--color-text-muted);
+  font-family: var(--ds-tok-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* ---- swatches ---- */
+.ds-tok__swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: var(--space-3);
+}
+
+.ds-tok__swatch {
+  display: grid;
+  gap: 2px;
+  align-content: start;
+}
+
+.ds-tok__chip {
+  display: block;
+  block-size: 3rem;
+  margin-block-end: var(--space-1);
+  border: var(--line-width-thin, 2px) solid var(--color-line);
+  border-radius: var(--radius-sm);
+}
+
+/* R2: the fill's own dark shade as its bottom edge */
+.ds-tok__chip[data-edge] {
+  box-shadow: inset 0 -0.5rem 0 var(--edge);
+}
+
+.ds-tok__dot {
+  display: inline-block;
+  inline-size: 1em;
+  block-size: 1em;
+  margin-inline-end: 0.35em;
+  vertical-align: -0.15em;
+  border: 1.5px solid var(--color-line);
+  border-radius: 50%;
+}
+
+.ds-tok__dot--big {
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  flex: none;
+  margin: 0;
+  border-radius: var(--radius-sm);
+}
+
+/* ---- the cards ---- */
+.ds-tok__identity {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.ds-tok__mark {
+  display: grid;
+  place-items: center;
+  inline-size: 4rem;
+  block-size: 4rem;
+  border-radius: var(--radius-md);
+  background: var(--color-night);
+}
+
+.ds-tok__mark .card-mark {
+  inline-size: 3rem;
+  block-size: 3rem;
+}
+
+.ds-tok__types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+/* ---- tables ---- */
+.ds-tok__table-wrap {
+  overflow-x: auto;
+  max-inline-size: 100%;
+}
+
+.ds-tok__table-wrap:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.ds-tok__table {
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  text-align: start;
+
+  & :is(th, td) {
+    padding: var(--space-1) var(--space-3) var(--space-1) 0;
+    border-block-end: 1px solid color-mix(in oklab, var(--color-text-muted) 35%, transparent);
+    text-align: start;
+    vertical-align: middle;
+  }
+
+  & .ds-tok__name {
+    overflow-wrap: normal;
+    white-space: nowrap;
+  }
+
+  & thead th {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+  }
+}
+
+.ds-tok__themes {
+  inline-size: 100%;
+
+  & td {
+    inline-size: 38%;
+  }
+}
+
+.ds-tok__cellvalue {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+/* ---- name + value rows ---- */
+.ds-tok__rows {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  gap: var(--space-1) var(--space-5);
+  margin: 0;
+
+  & > div {
+    display: grid;
+    grid-template-columns: minmax(10rem, 0.9fr) minmax(0, 1.1fr);
+    gap: var(--space-2);
+    align-items: baseline;
+    padding-block: 3px;
+    border-block-end: 1px solid color-mix(in oklab, var(--color-text-muted) 25%, transparent);
+  }
+
+  & dd {
+    margin: 0;
+  }
+}
+
+/* ---- type ---- */
+.ds-tok__sample {
+  margin: 0;
+  font-size: var(--text-xl);
+  line-height: 1.2;
+}
+
+.ds-tok__ramp {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2) var(--space-5);
+  align-items: baseline;
+
+  & p {
+    margin: 0;
+    font-family: var(--font-body);
+    font-weight: 800;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+}
+
+.ds-tok__ramp--stage {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 var(--space-5);
+
+  & p {
+    white-space: normal;
+    text-wrap: balance;
+  }
+
+  & .ds-tok__value {
+    margin-block-end: var(--space-3);
+  }
+}
+
+.ds-tok__night {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-night);
+}
+
+/* The app's outlined titles, built from the title tokens alone: the ink stroke under the fill, then the hard drop */
+.ds-tok__londrina {
+  margin: 0;
+  padding: var(--space-3) var(--space-5) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-night);
+  color: var(--color-white);
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  letter-spacing: var(--title-tracking);
+  text-transform: uppercase;
+  -webkit-text-stroke: var(--title-stroke) var(--color-ink);
+  paint-order: stroke fill;
+  text-shadow: var(--title-drop);
+  --color-line: var(--color-ink);
+}
+
+.ds-tok__londrina--sm {
+  font-size: var(--text-xl);
+  letter-spacing: var(--title-tracking-sm);
+  -webkit-text-stroke-width: var(--title-stroke-sm);
+  text-shadow: var(--title-drop-sm);
+}
+
+.ds-tok__nunito {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-2xl);
+  font-weight: var(--font-weight-strong);
+  line-height: 1.1;
+}
+
+/* ---- space, radius, lines, tap ---- */
+.ds-tok__measures {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+}
+
+.ds-tok__space {
+  display: block;
+  block-size: 0.75rem;
+  border-radius: 2px;
+  background: var(--color-primary);
+}
+
+.ds-tok__line {
+  display: block;
+  inline-size: 100%;
+  border-block-start: 0 solid var(--color-ink);
+}
+
+.ds-tok__boxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: end;
+}
+
+.ds-tok__boxcell {
+  display: grid;
+  gap: 2px;
+  justify-items: start;
+}
+
+.ds-tok__radius {
+  display: block;
+  inline-size: 5rem;
+  block-size: 3.5rem;
+  margin-block-end: var(--space-1);
+  border: var(--line-width) solid var(--color-ink);
+  background: var(--color-snow);
+}
+
+.ds-tok__tap {
+  display: block;
+  margin-block-end: var(--space-1);
+  border: 2px dashed var(--color-text-muted);
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklab, var(--color-cyan) 30%, transparent);
+}
+
+/* ---- shadows and edges ---- */
+.ds-tok__pieces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  padding-block: var(--space-2) var(--space-4);
+}
+
+.ds-tok__paper {
+  display: block;
+  inline-size: 5.5rem;
+  block-size: 3.5rem;
+  border: var(--line-width) solid var(--color-ink);
+  border-radius: var(--radius-md);
+  background: var(--color-snow);
+}
+
+.ds-tok__paper--orange {
+  background: var(--color-orange);
+}
+
+.ds-tok__paper--palette {
+  background: var(--palette-solid);
+}
+
+.ds-tok__sky {
+  display: block;
+  block-size: 7rem;
+  border-radius: var(--radius-md);
+  background-color: var(--color-night);
+}
+
+/* ---- motion ---- */
+.ds-tok__bars {
+  display: grid;
+  grid-template-columns: max-content minmax(8rem, 1fr) max-content;
+  gap: 3px var(--space-3);
+  align-items: center;
+}
+
+/* The log scale's decades: 10 ms, 100 ms, 1 s, 10 s */
+.ds-tok__ticks {
+  position: relative;
+  display: block;
+  block-size: 1.25em;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 800;
+
+  & > span {
+    position: absolute;
+    inset-inline-start: calc(var(--at) * 100%);
+    translate: calc(var(--at) * -100%) 0;
+    white-space: nowrap;
+  }
+}
+
+.ds-tok__track {
+  position: relative;
+  display: block;
+  block-size: 0.875rem;
+  border-radius: 3px;
+  background:
+    linear-gradient(to right, color-mix(in oklab, var(--color-text-muted) 45%, transparent) 1px, transparent 1px) 0 0 / calc(100% / 3 - 0.34px) 100%,
+    color-mix(in oklab, var(--color-text-muted) 12%, transparent);
+}
+
+.ds-tok__bar {
+  position: absolute;
+  inset-block: 2px;
+  inset-inline-start: 0;
+  inline-size: calc(var(--share) * 100%);
+  border-radius: 2px;
+  background: var(--color-primary);
+}
+
+.ds-tok__curve {
+  inline-size: 100%;
+  max-inline-size: 14rem;
+  overflow: visible;
+}
+
+.ds-tok__curve-box {
+  fill: none;
+  stroke: var(--color-text-muted);
+  stroke-dasharray: 3 3;
+  stroke-width: 1;
+}
+
+.ds-tok__curve-line {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+/* ---- layers ---- */
+.ds-tok__layers {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 800;
+  text-wrap: balance;
+
+  & code {
+    font-family: var(--ds-tok-mono);
+  }
+}
+}
