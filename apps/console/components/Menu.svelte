@@ -4,7 +4,7 @@
   - this device (label, theme), the connections, the Wii remote (its status, Connectar, and the Comandament
     dialog), a QR to open the console on another phone;
   - the night (rounds in total, the night's expected end with its drift, start the night), the game (the
-    technical pause, which is the Pausa, auto-advance in the final phase, a Phase override), the tools (a Line
+    technical pause, which is the Pausa, auto-advance in the final phase, the phones' «LÍNIA!»/«QUINA!» announce (D289), a Phase override), the tools (a Line
     confirmed without a Check);
   - the Game's Winners, plan B resume, and the Plan B cheat sheet (the laptop's keys and the setup
     checklist) behind a disclosure.
@@ -41,6 +41,7 @@
   import CardsAdd from './CardsAdd.svelte';
   import SoundTest from './SoundTest.svelte';
   import { autoSoundsNow } from '../logic/auto-sounds.ts';
+  import { announceWinsArgs, announceWinsNow } from '../logic/announce-wins.ts';
   import { getConsoleSounds } from '../context.ts';
   import { touchPress, touchRelease } from '../../../packages/ui/sounds/touch.ts';
   import Sheet from '../../../packages/ui/components/Sheet.svelte';
@@ -179,6 +180,7 @@
           <h3 class="menu-group__title" id="{uid}-game"><Icon name="gauge" />{S.menu.game}</h3>
           <Switch label={S.menu.pause} note={S.menu.pauseNote} checked={flow.pause !== null} disabled={!model.can('pause')} onchange={(on) => model.act('pause', { on })} />
           <Switch label={S.pace.autoFinal} checked={snap.game.autoAdvanceFinal} disabled={!model.can('setGame')} onchange={(autoAdvanceFinal) => model.act('setGame', { autoAdvanceFinal })} />
+          <Switch label={S.menu.announceWins} note={S.menu.announceWinsNote} checked={announceWinsNow(snap.game)} disabled={!model.can('setGame')} data-testid="announce-wins" onchange={(on) => model.act('setGame', announceWinsArgs(on))} />
           <span class="menu-group__field" id="{uid}-phase">{S.menu.phase}</span>
           <div class="choice-group" role="group" aria-labelledby="{uid}-phase">
             <MiniButton size="s" label={S.menu.phaseAuto} pressed={snap.game.phaseOverride === null} disabled={!model.can('setGame')} onclick={() => setPhase(null)} />

@@ -845,6 +845,9 @@ export const S = {
     game: 'Joc',
     pause: 'Pausa',
     pauseNote: 'Projector i mòbils: «Tornem de seguida»',
+    /** The phones' «LÍNIA!»/«QUINA!» over a card that completes one (D289; logic/announce-wins.ts), on by default. */
+    announceWins: 'Anunciar Línia i Quina als mòbils',
+    announceWinsNote: `Encès, el mòbil mostra «${CA.shout.line}» o «${CA.shout.bingo}» sobre el cartró que la fa. Apagat, el cartró només queda marcat.`,
     phase: 'Fase',
     phaseAuto: 'Automàtica',
     winners: CA.winners,
