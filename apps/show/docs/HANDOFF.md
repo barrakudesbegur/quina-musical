@@ -11,6 +11,8 @@ The single place to resume the sound engine's work from. It was first written wh
 
 ## Now (kept current at each milestone)
 
+- **28 Nov, evening: the sponsor-logo rule (Backend's proposal, agreed with the Orchestrator, for D287's stickers), committed in the worktree, NOT pushed.** `LOGO_PATH_RE` (`/media/<32 hex>.png|jpg`) in packages/protocol/plan.ts; `checkGamePlan(json)` reads any other logo as null, `{ write: true }` refuses it (the relay's local save uses it; Backend: PUT /api/plan, link.plan, the edition tool). Waits on Frontend's fixture in `tests/ui/admin/cloud-store.test.ts` (its fake upload path `/media/abc.png` → a 32-hex key): then rebase, test, push, send both the sha.
+
 - **28 Nov, late: Frontend's two phone requests (the collapsed cards, D286 follow-up, approved by the user; the Orchestrator logs it). Shapes agreed with Frontend; Backend told.**
   - `game.announceWins?: boolean` (default true, `setGame { announceWins }`, journaled with the settings like remoteShake): phones show «LÍNIA!»/«QUINA!» over a card's map until the next song lands; presenters can switch it off.
   - `state.beat?: BeatInfo | null` (PUBLIC, live state only, not journaled): `{ bpm (as heard), beatsPerBar, downbeatAtMs }` for the marks to bob in time. From A's exit start it is B's with `downbeatAtMs = landAtMs`; re-sent on a landing, a loop re-cue, a Pausa resume, a cancelled Spin, or a drift over ~30 ms (rate-limited); null when no song is heard (Hold music, beds, Pausa, a Check's reveals, no grid).
