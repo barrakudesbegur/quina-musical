@@ -68,10 +68,11 @@ test("the Wii Remote's status stays on the laptop: never forwarded, never a link
   assert.deepEqual(projectEvent(emptyPublicState('26'), status as never, { toCloudMs: (ms) => ms }), []);
 });
 
-test('the test tools stay on the laptop: relay.mode is never forwarded, testReset is laptop-only', () => {
+test('the test tools stay on the laptop: relay.mode is never forwarded, testReset and testJump are laptop-only', () => {
   assert.equal(shouldForward('relay.mode', 0), false);
   assert.equal(shouldForward('relay.mode', 3), false, 'not even with consoles listening through the cloud');
   assert.equal(isLaptopOnlyCommand({ v: 1, type: 'cmd', cmd: 'testReset', reqId: 'r-1' }), true);
-  for (const cmd of ['next', 'hold', 'getState', 'testreset', 'test']) assert.equal(isLaptopOnlyCommand({ v: 1, type: 'cmd', cmd, reqId: 'r-1' }), false, cmd);
+  assert.equal(isLaptopOnlyCommand({ v: 1, type: 'cmd', cmd: 'testJump', reqId: 'r-2', round: 3, songs: 5 }), true);
+  for (const cmd of ['next', 'hold', 'getState', 'testreset', 'test', 'roundIntro', 'resumeAt']) assert.equal(isLaptopOnlyCommand({ v: 1, type: 'cmd', cmd, reqId: 'r-1' }), false, cmd);
   for (const message of [null, undefined, 'testReset', 42, [], { cmd: 7 }]) assert.equal(isLaptopOnlyCommand(message), false, JSON.stringify(message));
 });

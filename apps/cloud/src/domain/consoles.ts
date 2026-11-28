@@ -12,10 +12,11 @@ import { FORWARDED_EVENT_TYPES } from './projection.ts';
 export const NEVER_FORWARDED = ['journal.entry', 'journal.entries', 'engine.health', 'relay.plan', 'remote.status', 'relay.mode'] as const;
 
 /**
- * Commands the cloud never relays: the test tools (the console's «Proves») reset the show page, so only the laptop's
- * consoles may send them, and the relay also drops them unless it runs with `--test`. Matched by name, as plain strings.
+ * Commands the cloud never relays: the test tools (the console's «Proves») reset the show page or jump it to a round,
+ * so only the laptop's consoles may send them, and the relay also drops them unless it runs with `--test`. Matched by
+ * name, as plain strings.
  */
-export const LAPTOP_ONLY_COMMANDS = ['testReset'] as const;
+export const LAPTOP_ONLY_COMMANDS = ['testReset', 'testJump'] as const;
 
 /** Is this parsed message a command only the laptop's consoles may send? */
 export function isLaptopOnlyCommand(message: unknown): boolean {
