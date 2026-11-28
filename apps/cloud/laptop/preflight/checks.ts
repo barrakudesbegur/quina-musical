@@ -420,6 +420,9 @@ export function browserCheck(processes: readonly string[]): Check {
   if (!show) return check('Laptop', 'Browser', 'warn', "Chrome runs, but not the show's: open the show page with the kiosk command (night runbook)");
   const missing = SHOW_CHROME_FLAGS.filter((f) => !show.includes(f));
   if (missing.length) return check('Laptop', 'Browser', 'fail', `the show's Chrome runs without ${missing.join(' ')}: a covered or minimised window would stall the show. Quit it and start it with the kiosk command (night runbook)`);
+  if (/[?&]autostart=1\b/.test(show)) {
+    return check('Laptop', 'Browser', 'fail', "the show page was opened with autostart=1, an old command: its click on the projector's screen would land round 1's first song. Quit it (⌘Q) and open it with step 5's command (night runbook)");
+  }
   if (!show.includes(AUTOPLAY_FLAG)) {
     return check('Laptop', 'Browser', 'warn', `the show's Chrome runs without ${AUTOPLAY_FLAG}: the show page needs a click before it plays`);
   }

@@ -52,7 +52,15 @@ test('power, disk and the browser', () => {
   assert.equal(c.browserCheck([without('--autoplay-policy=no-user-gesture-required')]).status, 'warn');
   // Found by its profile alone (the address typed in later), and last year's /tmp command by its address.
   assert.equal(c.browserCheck([`${CHROME} --user-data-dir=/Users/tech/Library/Application Support/Quina/chrome-show --autoplay-policy=no-user-gesture-required ${SHOW_CHROME_FLAGS.join(' ')}`]).status, 'pass');
-  assert.equal(c.browserCheck([`${CHROME} --user-data-dir=/tmp/quina-show --autoplay-policy=no-user-gesture-required ${SHOW_CHROME_FLAGS.join(' ')} --kiosk http://localhost:5174/show/?autostart=1`]).status, 'pass');
+  const tmpShow = `${CHROME} --user-data-dir=/tmp/quina-show --autoplay-policy=no-user-gesture-required ${SHOW_CHROME_FLAGS.join(' ')} --kiosk http://localhost:5174/show/`;
+  assert.equal(c.browserCheck([tmpShow]).status, 'pass');
+  // The night's command never has autostart=1 (D299: its click would land round 1's first song); an old one fails.
+  assert.doesNotMatch(RUNBOOK_COMMANDS.show, /autostart/);
+  const autostart = c.browserCheck([`${tmpShow}?autostart=1`]);
+  assert.equal(autostart.status, 'fail');
+  assert.match(autostart.detail, /autostart=1.*round 1's first song.*step 5/);
+  assert.equal(c.browserCheck([`${tmpShow}?fresh=1&autostart=1`]).status, 'fail');
+  assert.equal(c.browserCheck([`${tmpShow}?autostart=0`]).status, 'pass');
   // A profile merely named like it is not the show's.
   assert.equal(c.browserCheck([`${CHROME} --user-data-dir=/Users/tech/chrome-show-old`]).status, 'warn');
   // Only someone's everyday Chrome, the console, a helper or a headless tool: not the show's.

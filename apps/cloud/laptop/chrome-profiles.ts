@@ -32,9 +32,14 @@ export const SHOW_CHROME_FLAGS = ['--disable-background-timer-throttling', '--di
 /** The show page plays without a click. */
 export const AUTOPLAY_FLAG = '--autoplay-policy=no-user-gesture-required';
 
-/** The runbook's commands, as typed in a terminal (`$HOME` in double quotes: zsh expands neither `~` after `=` nor across a space). */
+/**
+ * The runbook's commands, as typed in a terminal (`$HOME` in double quotes: zsh expands neither `~` after `=` nor across
+ * a space). The show page opens on its Game as it is, never with `autostart=1`: that sends Next with the click on the
+ * projector's screen, which lands round 1's first song with no doors, intro or Shuffle (D299). The night starts from
+ * the console (D304).
+ */
 export const RUNBOOK_COMMANDS: Record<ChromeWindow, string> = {
-  show: `open -na "Google Chrome" --args --user-data-dir="$HOME/${PROFILES_DIR}/chrome-show" ${FIRST_RUN_FLAGS.join(' ')} ${AUTOPLAY_FLAG} ${SHOW_CHROME_FLAGS.join(' ')} --kiosk "http://localhost:5174/show/?autostart=1"`,
+  show: `open -na "Google Chrome" --args --user-data-dir="$HOME/${PROFILES_DIR}/chrome-show" ${FIRST_RUN_FLAGS.join(' ')} ${AUTOPLAY_FLAG} ${SHOW_CHROME_FLAGS.join(' ')} --kiosk "http://localhost:5174/show/"`,
   console: `open -na "Google Chrome" --args --user-data-dir="$HOME/${PROFILES_DIR}/chrome-console" ${FIRST_RUN_FLAGS.join(' ')} --app=http://localhost:5174/console/`,
 };
 
