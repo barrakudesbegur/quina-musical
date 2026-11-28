@@ -2,7 +2,7 @@
 // come from ui/i18n/ca.ts; everything Admin-specific lives here, never inline in markup.
 import type { ShowStatus, WinKind } from '@quina/protocol';
 import { CA } from '../../packages/ui/i18n/ca.ts';
-import { roundTitle, roundTitleOf, type CheatSheet, type PrizeReveal } from '../../packages/ui/plan.ts';
+import { roundTitle, type CheatSheet, type PrizeReveal } from '../../packages/ui/plan.ts';
 import type { CheatSheetCopy } from './logic/cheatsheet.ts';
 import type { Route } from './logic/route.ts';
 import type { StoreKind } from './data/admin-plan-store.ts';
@@ -22,8 +22,6 @@ export const S = {
   headingUnsaved: '(sense desar)',
   /** A round's name: "Quina 4" by its Quina number, "Quina Especial", "Quina del Desgraciat" (plan.ts roundTitle). */
   round: roundTitle,
-  /** With the night's total: "Quina 4 de 8" (what the total counts is pending U163); a special round has none. */
-  roundOf: roundTitleOf,
 
   nav: {
     label: 'Seccions',

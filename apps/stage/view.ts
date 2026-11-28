@@ -91,7 +91,7 @@ export interface IntervalView {
   scene: 'interval';
   /** The round about to start (named `nextRound`: `next` is the private next song everywhere else). */
   nextRound: RoundView;
-  /** "Següent: Quina 4 de 8" (strings.ts nextRoundLabel). */
+  /** "Següent: Quina 4" (strings.ts nextRoundLabel; no total, D305). */
   plate: string;
   sinceMs: number;
   guideEndMs: number | null;
@@ -243,8 +243,7 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
       return {
         scene,
         nextRound: roundView(next, plan),
-        // The plan's round count, else the engine's (what the total counts is pending U163).
-        plate: nextRoundLabel(next, plan, plan?.rounds.length || state?.game.roundsTotal || null),
+        plate: nextRoundLabel(next, plan),
         sinceMs: i?.sinceMs ?? 0,
         guideEndMs: i?.guideEndMs ?? null,
         sponsors: sponsorsOf(plan),

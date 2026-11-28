@@ -74,12 +74,6 @@ export function roundShortTitle(round: RoundRef, plan: RoundsOf | null): string 
   return round.kind === 'desgraciat' ? CA.desgraciatShort : roundTitle(round, plan);
 }
 
-/** roundTitle with the night's total after a normal round's number, "Quina 4 de 8" (what the total counts is pending
- * U163); a special round keeps its bare name, and no total (null or 0) gives roundTitle's. */
-export function roundTitleOf(round: RoundRef, plan: RoundsOf | null, total: number | null): string {
-  return round.kind === 'normal' && total ? CA.roundOf(quinaOf(round, plan), total) : roundTitle(round, plan);
-}
-
 /** A round a screen knows by its number only, with its kind from the plan (`known` when the plan lacks it: a normal
  * round unless said). */
 export function roundAt(plan: RoundsOf | null, number: number, known: RoundKind = 'normal'): RoundRef {

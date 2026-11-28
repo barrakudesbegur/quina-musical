@@ -308,7 +308,7 @@ test('a missing plan hides the sponsors', () => {
   assert.equal(view.body.scene, 'interval');
   if (view.body.scene !== 'interval') return;
   assert.deepEqual(view.body.sponsors, []);
-  assert.equal(view.body.plate, 'Següent: Quina 4 de 8', "the total falls back to the engine setting, the number to the plan's");
+  assert.equal(view.body.plate, 'Següent: Quina 4', 'the number from the plan number; no total (D305)');
 });
 
 test('check: the card grid from the catalog, the Line row, the songs revealed so far', () => {
@@ -557,7 +557,7 @@ test('interval: the next round, the count and the countdown guide; no winners, n
   assert.deepEqual(view.body, {
     scene: 'interval',
     nextRound: { number: 4, special: false, desgraciat: false, label: 'Quina 4' },
-    plate: 'Següent: Quina 4 de 8',
+    plate: 'Següent: Quina 4',
     sinceMs: NOW - 40_000,
     guideEndMs: NOW + 140_000,
     sponsors: SAMPLE_PLAN.sponsors.map((s) => ({ label: s.name, logo: s.logo })),
@@ -647,7 +647,7 @@ test('a normal round after a special one is named by its Quina number, everywher
   const before8: FlowState = { ...interval, interval: interval.interval && { ...interval.interval, nextRound: 8 } };
   const next = stageView(before8, flowOf(before8), SAMPLE_PLAN, null);
   assert.ok(next.body.scene === 'interval');
-  assert.equal(next.body.plate, 'Següent: Quina 6 de 8', 'the total stays the plan\'s round count (pending U163)');
+  assert.equal(next.body.plate, 'Següent: Quina 6', 'its name alone: no round total (D305)');
   // Without the plan the stage can't count the specials: a normal round keeps its plan number.
   const bare = stageView(last, flowOf(last), null, null);
   assert.ok(bare.body.scene === 'play' && bare.body.round?.label === 'Quina 8');

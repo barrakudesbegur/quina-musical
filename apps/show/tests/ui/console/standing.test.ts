@@ -175,10 +175,10 @@ test('Futur in the Desgraciat round: the songs until one card stands, and the co
 
 test('the round named, its intro and resume sending its kind, its one prize', () => {
   assert.deepEqual(roundIntroFields(SAMPLE_PLAN, 5), { number: 5, kind: 'desgraciat', cardType: defaultCardType('desgraciat'), side: 1 });
-  // SAMPLE_PLAN: the Desgraciat round is round 5 (no number, no total), so round 6 is Quina 5; the total stays (U163).
-  assert.equal(S.roundOf(roundAt(SAMPLE_PLAN, 5), SAMPLE_PLAN, 8), 'Quina del Desgraciat');
-  assert.equal(S.roundOf(roundAt(SAMPLE_PLAN, 4), SAMPLE_PLAN, 8), 'Quina 4 de 8');
-  assert.equal(S.roundOf(roundAt(SAMPLE_PLAN, 6), SAMPLE_PLAN, 8), 'Quina 5 de 8');
+  // SAMPLE_PLAN: the Desgraciat round is round 5 (no number), so round 6 is Quina 5; no total on any screen (D305).
+  assert.equal(S.round(roundAt(SAMPLE_PLAN, 5), SAMPLE_PLAN), 'Quina del Desgraciat');
+  assert.equal(S.round(roundAt(SAMPLE_PLAN, 4), SAMPLE_PLAN), 'Quina 4');
+  assert.equal(S.round(roundAt(SAMPLE_PLAN, 6), SAMPLE_PLAN), 'Quina 5');
   assert.equal(resumeCommand({ round: 5, kind: 'desgraciat', shuffleSeed: 7, position: 3, lineConfirmedFrom: null, lastSongId: 11, shuffleAttempts: 1, cardType: 'normal' }).kind, 'desgraciat');
   const prizes = roundPrizes(SAMPLE_PLAN, 5);
   assert.ok(prizes.status === 'ok');

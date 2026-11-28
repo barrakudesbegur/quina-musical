@@ -2,7 +2,7 @@
 // problem with its path, never throws; and the screens' bundle helpers (headline prizes first).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bundleSummary, checkGamePlan, prizeRuns, publicPlan, roundAt, roundPlan, roundShortTitle, roundTitle, roundTitleOf, splitBundle, sponsorOf } from '../../../../packages/ui/plan.ts';
+import { bundleSummary, checkGamePlan, prizeRuns, publicPlan, roundAt, roundPlan, roundShortTitle, roundTitle, splitBundle, sponsorOf } from '../../../../packages/ui/plan.ts';
 import { SAMPLE_PLAN } from '../../../../packages/ui/fixtures/plan.ts';
 
 const prize = (title: string, headline: boolean, sponsorId: string | null = null) => ({ title, detail: null, sponsorId, image: null, headline });
@@ -159,12 +159,6 @@ test('the sample plan: the Desgraciat round 5 and the Especial round 7 have no n
   // The public plan names them the same way (the phones').
   const shown = publicPlan(SAMPLE_PLAN, []);
   assert.equal(roundTitle(shown.rounds[5], shown), 'Quina 5');
-  // The total after a normal round's number stays the night's count (pending U163); a special round has neither.
-  assert.equal(roundTitleOf(SAMPLE_PLAN.rounds[5], SAMPLE_PLAN, 8), 'Quina 5 de 8');
-  assert.equal(roundTitleOf(SAMPLE_PLAN.rounds[6], SAMPLE_PLAN, 8), 'Quina Especial');
-  assert.equal(roundTitleOf(SAMPLE_PLAN.rounds[4], SAMPLE_PLAN, 8), 'Quina del Desgraciat');
-  assert.equal(roundTitleOf(SAMPLE_PLAN.rounds[5], SAMPLE_PLAN, null), 'Quina 5', 'no total');
-  assert.equal(roundTitleOf(SAMPLE_PLAN.rounds[5], SAMPLE_PLAN, 0), 'Quina 5', 'an engine that counts none');
 });
 
 test('a round known by its number only takes its kind from the plan', () => {
@@ -179,7 +173,6 @@ test('without the plan, or with one that lacks the round, a normal round keeps i
   assert.equal(roundTitle({ number: 12, kind: 'normal' }, SAMPLE_PLAN), 'Quina 12', 'an old snapshot past the plan');
   assert.equal(roundTitle({ number: 7, kind: 'special' }, null), 'Quina Especial');
   assert.equal(roundTitle({ number: 5, kind: 'desgraciat' }, null), 'Quina del Desgraciat');
-  assert.equal(roundTitleOf({ number: 6, kind: 'normal' }, null, 8), 'Quina 6 de 8');
 });
 
 test('D251: the Quina del Desgraciat is "Desgraciat" where space is short; every other round keeps its name', () => {

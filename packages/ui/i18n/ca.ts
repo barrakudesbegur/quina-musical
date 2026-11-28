@@ -10,7 +10,6 @@ export const CA = {
   gameTitle: 'Quina Musical',
   /** A normal round by its Quina number, not the plan's: screens name a round with plan.ts roundTitle. */
   round: (n: number) => `Quina ${n}`,
-  roundOf: (n: number, total: number) => `Quina ${n} de ${total}`,
   specialRound: 'Quina Especial',
   desgraciatRound: 'Quina del Desgraciat',
   /** The Desgraciat round's name where space is short (D251): the console's header, the Check's chip. */

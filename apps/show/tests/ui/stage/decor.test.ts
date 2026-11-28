@@ -49,10 +49,9 @@ test('card prices: whole euros, or with cents', () => {
   assert.equal(priceLabel(-1), null);
 });
 
-test('the Interval\'s plate names the next round, with the total when known', () => {
+test('the Interval\'s plate names the next round by its name alone: no round total on any screen (D305)', () => {
   const plan = { rounds: [{ number: 1, kind: 'normal' as const }, { number: 2, kind: 'special' as const }, { number: 3, kind: 'normal' as const }] };
-  assert.equal(nextRoundLabel({ number: 1, kind: 'normal' }, plan, 8), 'Següent: Quina 1 de 8');
-  assert.equal(nextRoundLabel({ number: 1, kind: 'normal' }, plan, null), 'Següent: Quina 1');
-  assert.equal(nextRoundLabel({ number: 2, kind: 'special' }, plan, 8), 'Següent: Quina Especial', 'the special round has no number, nor a total');
-  assert.equal(nextRoundLabel({ number: 3, kind: 'normal' }, plan, 8), 'Següent: Quina 2 de 8', 'the special round before it does not count');
+  assert.equal(nextRoundLabel({ number: 1, kind: 'normal' }, plan), 'Següent: Quina 1');
+  assert.equal(nextRoundLabel({ number: 2, kind: 'special' }, plan), 'Següent: Quina Especial', 'the special round has no number');
+  assert.equal(nextRoundLabel({ number: 3, kind: 'normal' }, plan), 'Següent: Quina 2', 'the special round before it does not count');
 });

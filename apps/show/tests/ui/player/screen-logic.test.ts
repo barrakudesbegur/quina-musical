@@ -18,7 +18,6 @@ import {
   plannedStarts,
   planOf,
   prizeRounds,
-  progress,
   roundRule,
 } from '../../../../player/logic/view.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
@@ -245,7 +244,7 @@ test("which cards a round counts, in the phone's words: the type by name; only a
 /** The sample plan as phones get it with rounds 1 to 3 revealed. */
 const PUBLIC = publicPlan(SAMPLE_PLAN, [1, 2, 3]);
 
-test('prizes, progress and the planned times come from the plan and the winners', () => {
+test('prizes and the planned times come from the plan and the winners', () => {
   const state = playing({ winners: [{ round: 3, kind: 'line', cardIds: [123, 57] }] });
   const rounds = prizeRounds(PUBLIC, state);
   assert.equal(rounds.length, SAMPLE_PLAN.rounds.length);
@@ -258,7 +257,6 @@ test('prizes, progress and the planned times come from the plan and the winners'
   assert.equal(rounds[2].lines[0].others.length, 3, 'the rest of the bundle, after the headline prize');
   assert.equal(rounds[2].lines[1].others.length, 16, "the rest of the Quina's hamper");
   assert.equal(rounds[6].kind, 'special');
-  assert.deepEqual(progress(PUBLIC, state), { current: 3, total: 8 });
   const interval = playing({ scene: 'interval', interval: { nextRound: 4, guideEndMs: T } });
   assert.equal(focusRoundNumber(interval), 4);
   assert.equal(prizeRounds(PUBLIC, interval)[3].state, 'next');

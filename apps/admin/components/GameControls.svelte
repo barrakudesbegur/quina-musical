@@ -39,7 +39,7 @@
       <div>
         <dt>{S.night.round}</dt>
         <!-- The engine's round count (what the total counts is pending U163). -->
-        <dd>{snapshot.round.number > 0 ? S.roundOf(snapshot.round, plan, snapshot.game.roundsTotal) : '—'}</dd>
+        <dd>{snapshot.round.number > 0 ? S.round(snapshot.round, plan) : '—'}</dd>
       </div>
       {#if show.flow.pause}<div><dt>{CA.pause}</dt><dd>✓</dd></div>{/if}
     </dl>

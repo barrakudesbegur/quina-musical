@@ -152,7 +152,7 @@
 {#if sheet}
   <Sheet
     title={sheet === 'side-right' ? 'Menú' : stiff ? 'Afegir cartró' : 'Horari'}
-    subtitle={sheet === 'side-right' ? 'Tauleta · Quina 3 de 8' : null}
+    subtitle={sheet === 'side-right' ? 'Tauleta · Quina 3' : null}
     origin={sheet}
     depth={stacked ? 'under' : 'top'}
     dismiss="any"

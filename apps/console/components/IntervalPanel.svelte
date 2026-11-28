@@ -15,15 +15,13 @@
   const model = getConsole();
   const uid = $props.id();
   const interval = $derived(model.show.flow.interval);
-  // The engine's round count (what the total counts is pending U163).
-  const total = $derived(model.show.state?.game.roundsTotal ?? 0);
   const guide = $derived(guideCountdown(interval, model.show.now));
 </script>
 
 {#if interval}
   <section class="panel interval-panel" aria-labelledby="{uid}-title">
     <h2 class="panel__title" id="{uid}-title">{S.interval.title}</h2>
-    <p class="interval-panel__next">{S.roundOf(roundAt(model.plan, interval.nextRound), model.plan, total)}</p>
+    <p class="interval-panel__next">{S.round(roundAt(model.plan, interval.nextRound), model.plan)}</p>
 
     {#if guide}
       <p class="interval-panel__guide" data-state={guide.done ? 'over' : 'running'}>

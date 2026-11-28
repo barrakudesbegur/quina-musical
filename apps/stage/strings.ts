@@ -1,7 +1,7 @@
 // The projector's words, in Catalan. Shared terms (Quina N, Línia, QUINA!, the check results…) come from
 // ui/i18n/ca.ts; this file holds what only the projector says. Pure, so the formatting is tested.
 import { CA } from '../../packages/ui/i18n/ca.ts';
-import { roundTitleOf, type GamePlan, type RoundPlan } from '../../packages/ui/plan.ts';
+import { roundTitle, type GamePlan, type RoundPlan } from '../../packages/ui/plan.ts';
 import type { CheckVerdict } from './model/check.ts';
 
 /** Kept on one line (no-break spaces) when the plaque's second line wraps. */
@@ -34,10 +34,10 @@ export function priceLabel(cents: number | null): string | null {
   return rest ? `${whole},${String(rest).padStart(2, '0')} €` : `${whole} €`;
 }
 
-/** The Interval's plate: "Següent: Quina 4 de 8" by its Quina number, "Següent: Quina 4" without a total, "Següent:
- * Quina Especial", "Següent: Quina del Desgraciat" (plan.ts roundTitleOf; what the total counts is pending U163). */
-export function nextRoundLabel(round: Pick<RoundPlan, 'number' | 'kind'>, plan: Pick<GamePlan, 'rounds'> | null, total: number | null): string {
-  return CA.nextRound(roundTitleOf(round, plan, total));
+/** The Interval's plate: "Següent: Quina 4" by its Quina number, "Següent: Quina Especial", "Següent: Quina del
+ * Desgraciat" (plan.ts roundTitle). No round total on any screen (D305). */
+export function nextRoundLabel(round: Pick<RoundPlan, 'number' | 'kind'>, plan: Pick<GamePlan, 'rounds'> | null): string {
+  return CA.nextRound(roundTitle(round, plan));
 }
 
 /** What a rough countdown says. `start`: before the Game; `back`: the Interval. */

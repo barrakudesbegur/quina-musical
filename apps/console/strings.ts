@@ -5,7 +5,7 @@
 // every known value has its own text.
 import type { AutoSound, BreakSet, HoldReason, MusicSet, PhaseName, RejectReason, ShowStatus, SoundName, SoundTestKind, ThrowSong, VolumeKey } from '@quina/protocol';
 import { CA } from '../../packages/ui/i18n/ca.ts';
-import { roundShortTitle, roundTitle, roundTitleOf } from '../../packages/ui/plan.ts';
+import { roundShortTitle, roundTitle } from '../../packages/ui/plan.ts';
 import type { AnyCommandName, CelebrationMusic, ClaimStatus, WinKind } from '../../packages/ui/flow.ts';
 import type { HeaderChip, LinkName, LinkState } from './logic/status.ts';
 import type { RecoveryNotice } from './logic/pace-panel.ts';
@@ -31,8 +31,6 @@ export const S = {
   round: roundTitle,
   /** A round's name where space is short, the header's (D251): "Desgraciat" for the Desgraciat round. */
   roundShort: roundShortTitle,
-  /** With the night's total: "Quina 4 de 8" (what the total counts is pending U163); a special round has none. */
-  roundOf: roundTitleOf,
 
   header: {
     label: 'Estat del show',
@@ -820,7 +818,7 @@ export const S = {
 
   menu: {
     title: 'Menú',
-    /** Under the title: this device and the round ("Tauleta · Quina 3 de 8": S.roundOf). */
+    /** Under the title: this device and the round, by its name alone ("Tauleta · Quina 3": S.round; no total, D305). */
     subtitle: (label: string | null, round: string | null) => [label, round].filter(Boolean).join(' · '),
     close: 'Tanca',
     device: 'Aquest dispositiu',

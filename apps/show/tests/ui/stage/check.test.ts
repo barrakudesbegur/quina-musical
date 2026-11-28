@@ -309,9 +309,9 @@ test("a fallen card's ✗ lands over the half of the card away from the song tha
 });
 
 test('the round names: "Quina del Desgraciat", never with a number; the normal rounds after it count one less', () => {
-  assert.equal(nextRoundLabel({ number: 5, kind: 'desgraciat' }, SAMPLE_PLAN, 8), 'Següent: Quina del Desgraciat');
-  assert.equal(nextRoundLabel({ number: 5, kind: 'normal' }, null, 8), 'Següent: Quina 5 de 8', 'no plan: the plan number');
-  assert.equal(nextRoundLabel({ number: 6, kind: 'normal' }, SAMPLE_PLAN, 8), 'Següent: Quina 5 de 8');
+  assert.equal(nextRoundLabel({ number: 5, kind: 'desgraciat' }, SAMPLE_PLAN), 'Següent: Quina del Desgraciat');
+  assert.equal(nextRoundLabel({ number: 5, kind: 'normal' }, null), 'Següent: Quina 5', 'no plan: the plan number');
+  assert.equal(nextRoundLabel({ number: 6, kind: 'normal' }, SAMPLE_PLAN), 'Següent: Quina 5');
 });
 
 // ---- what the stage keeps between snapshots: odd snapshots, the last card's fail, a discard

@@ -271,13 +271,6 @@ export function prizeRounds(plan: PublicPlan | null, state: PublicState | null, 
 /** What the schedule views need of a plan (public or whole). */
 type ScheduleOf = { rounds: readonly { number: number }[]; schedule: SchedulePlan };
 
-/** "Quina 4 de 12": the round in focus and how many are planned (null without a plan or a round). */
-export function progress(plan: ScheduleOf | null, state: PublicState | null): { current: number; total: number } | null {
-  const total = plan?.rounds.length ?? 0;
-  const current = focusRoundNumber(state);
-  return total && current ? { current, total } : null;
-}
-
 /**
  * Each planned round's rough start time from the schedule, or null when the schedule has no start: each round before
  * it, and each break before it (an Interval, or a planned Throw's break in its place: packages/ui/plan.ts breakMinutes).

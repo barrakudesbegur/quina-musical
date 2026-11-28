@@ -62,7 +62,7 @@
   const links = $derived(linksOf(model.show.connected, model.show.showOnline, wii.linkStatus));
   const THEMES: readonly Theme[] = ['light', 'dark'];
   // The engine's round count (what the total counts is pending U163).
-  const subtitle = $derived(S.menu.subtitle(model.label, snap && snap.round.number >= 1 ? S.roundOf(snap.round, model.plan, snap.game.roundsTotal) : null));
+  const subtitle = $derived(S.menu.subtitle(model.label, snap && snap.round.number >= 1 ? S.round(snap.round, model.plan) : null));
   const startable = $derived(flow.scene === 'before' && model.can('roundIntro'));
 
   // Opening: fresh fields, and `menu-sheet`'s sound (☰ played its press, its release gives way to this).
