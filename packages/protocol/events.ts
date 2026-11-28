@@ -1067,12 +1067,8 @@ export function withCloudConsoles(clients: RelayClients['clients'], cloudIds: re
   return [...clients, ...cloudIds.map((clientId) => ({ role: 'console' as const, clientId }))];
 }
 
-/**
- * What a remote receives: the engine's events plus the relay's client list and the Game plan. The relay's test mode
- * (`relay.mode`, test runs only) comes too, and `isEvent` lets it through, but it stays out of this union for now, so
- * what is built on it keeps compiling (the cloud's forwarded events would take it in): read it with `isRelayMode`.
- */
-export type IncomingEvent = ShowEvent | RelayClients | RelayPlan;
+/** What a remote receives: the engine's events plus the relay's client list, the Game plan and its test mode. */
+export type IncomingEvent = ShowEvent | RelayClients | RelayPlan | RelayMode;
 
 type Unversioned<E> = E extends unknown ? Omit<E, 'v'> : never;
 /** An event as the engine builds it, before `makeEvent` stamps the version. */
@@ -1085,8 +1081,7 @@ export function makeEvent<E extends ShowEventBody>(event: E): E & { v: ProtocolV
 
 /**
  * Accept a message on a remote: right version and a known event type. It trusts the engine for the
- * fields; a remote must still ignore event types it does not handle (additions stay v1). It also lets the relay's
- * `relay.mode` through, which IncomingEvent leaves out for now: `isRelayMode` reads it.
+ * fields; a remote must still ignore event types it does not handle (additions stay v1).
  */
 export function isEvent(message: unknown): message is IncomingEvent {
   if (!message || typeof message !== 'object') return false;
