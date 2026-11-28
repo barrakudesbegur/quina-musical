@@ -82,7 +82,7 @@ What works, seen live on the production path: the QR link, the pad, the scan, th
 | 4.9 | P1 | The iPhone install steps describe iOS 26 Safari, not the Safari 18 floor (D293) (read, not seen on a device) | V | Frontend |
 | 4.10 | P1 | The relay's own feed has no plan: laptop-only rehearsals show «0 premis»; phones have no LAN fallback | F, B | Backend |
 | 4.12 | P1 | **The phone during a Break isn't designed** (the user, 28 Nov); a hand-drawn board existed before the redraw (Abans-28nov-Mobil-MitjaPart, a countdown ring) and the build shows text. Boards side by side, with U237's Check and Celebration flow | the user | Frontend |
-| 4.13 | P1 | Every sponsor as a sticker on the phones too (D309): the Premis drawer, the end of the night | the user | Frontend, with the logos session |
+| 4.13 | P1 | Every sponsor as a sticker on the phones too (D309): the Premis drawer, the end of the night; a Celebration shows only the stickers of the sponsors who gave its prize (D312) | the user | Frontend, with the logos session |
 | 4.11 | P2 | The Check ribbon truncates at 390 and 320 px; the end pill wraps; «Encara no ha sonat cap cançó» twice; at 320×640 the last tiles sit behind the corner buttons; a one-card phone never gets «LÍNIA!»/«QUINA!» (D289); the last-year drawer is a dead end; the floating «+ Cartró» covers the tab switch; the link opens scrolled; agreed phone designs dropped in the redraw (the Shuffle's «Ara comença la», «El teu premi d'aquesta nit», the three-level QR stack) | V, F | Frontend |
 
 ## 5. Transitions and music (the user's ears; no agent can check these)
@@ -183,6 +183,6 @@ Sessions keep their lanes (team.md) and their limits on parallel agents (Fronten
 **Phase D:** the tech rehearsal when the user says; then the code freeze; P2 only if there's time.
 
 **What needs the user, by phase:**
-- A: U237 (after Frontend's boards), U238's conclusion, U240, the go for this plan (answered: D297, D301–D306, D308–D311).
+- A: U237 (the user's change logged, confirmation pending), U238's conclusion, U241, the go for this plan (answered: D297, D301–D306, D308–D311).
 - B: the proof sheet and the print.
 - C: the listening session (a couple of hours), the hook approval (about 4.5 h, U14), vetting the Signatures, the voices and Hold music (U20), D282's conversation, the real-device checks (U19), the organizers' plan in Admin (U18).

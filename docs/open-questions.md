@@ -10,13 +10,17 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ### U237 · Do phones follow the projector through the Check and the Celebration?
 The user (28 Nov): "i think i dont want to show celebration screens, nor quina nor linea. but it depens on if we show check screen on phones. if we show the celebration screens, the only info we shoudl show is just the celebration title, no prize, no card. we can make a diferent celebration effect basedon if he won or someone else won (wich in practice is that he lost, so he celebrates but also is a bit desapointed). we could make a pool of consolation sentences based on the number of songs he had left by ranges. but this depends on if we decide to have check + celebrate, or not. having it is nice because it follows the projector, and also lets us smoothly transition to the next screen of pause." Today every phone shows the full Celebration with its prize. Frontend draws both as boards, side by side, with the phone's Break screens (not designed yet), before the user picks.
-- (a) Phones follow the projector: a Check screen, then a Celebration screen for every win, then on into the next screen. The winner's phone celebrates fully; every other phone shows only the Celebration's title (no prize, no card), with a "celebrates but a bit disappointed" effect and a consolation sentence picked by how many songs that phone's best card still needed, by ranges. (The orchestrator's recommendation, from the user's own reason: it follows the projector and moves smoothly into the next screen.)
+- (a) Phones follow the projector: a Check screen, then a Celebration screen for every win, then on into the next screen. Every phone shows the Celebration's title (no prize, no card), with a "celebrates but a bit disappointed" effect and a consolation sentence picked by how many songs that phone's best card still needed, by ranges. (The orchestrator's recommendation, from the user's own reason: it follows the projector and moves smoothly into the next screen.)
+  - **The user's change to (a), 28 Nov:** "no "The winner's phone celebrates fully", it celebrates the same as others but it just has a different animation and text contents, and maybe ninos, but the overall layout is the same." So the winner's phone has the same layout, with its own animation, words and maybe ninos.
+  - **Not confirmed yet:** "before i confirm, what is already implemented?" The orchestrator answered with screenshots on the page (U237, "What the phones do today"): the Check is a ribbon over the home; every win is a full-screen Celebration on every phone, with the prize on a Quina; your own win shows your card.
 - (b) No Check or Celebration screens on the phones; only the winner's phone celebrates.
 
-### U240 · The sponsors in a round's intro and its Celebrations, now that no prize shows
-D311 removes the prizes from the projector. D285 had the Celebrations show the stickers of the sponsors whose gifts make up the prize, with no prize text, and the intro showed its prizes' sponsors.
-- (a) Keep those sponsors as stickers in the intro and the Celebrations (D309): they're thanked when their gift is played for and won, and no prize design shows (the recommendation).
-- (b) No sponsors there either, until the prizes' design is done.
+### U241 · Where the money-only sponsors show (D312)
+Sponsors who gave money and no gift are spread through the rounds (D312). Where in a round:
+- (a) In that round's Celebrations, beside the stickers of the sponsors who gave its prize (the recommendation: the user's words came with the Celebration pages, and every Celebration then thanks someone).
+- (b) In that round's intro.
+- (c) Both.
+They're spread evenly in plan order by default; Admin shows the result.
 
 ### U238 · Four songs flagged for quality, before the cards
 No decision is recorded for #90 and #117 (low bitrate: 117 and 114 kbps) or #18 and #83 (remix titles; data/out/repertoires/2026/quality.json). #73 and #133 were kept. A swap needs a download, prep, an R2 push and new cards before 4 Dec.
@@ -334,6 +338,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U240 · The sponsors in a round's intro and its Celebrations** (2026-11-28) → D312: only the stickers of the sponsors who gave that prize; money sponsors spread through the rounds (U241).
 - **U235 · The projector's Break** (2026-11-28) → D308: (a), with a timeline of the night, the price beside the countdown, stickers.
 - **U236 · «QUINA POTRA!»** (2026-11-28) → D310: (a), as the Line's (D302).
 - **U232 · The projector's Check** (2026-11-28) → D303: (a), with (b)'s squashed nino and its new head drawing.
