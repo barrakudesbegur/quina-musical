@@ -8,6 +8,7 @@
 // The transforms are pure; PlayerStorage is the thin I/O wrapper around a Storage and the cookie.
 import { PLAYER_CONFIG } from '../config.ts';
 import { cardCookieClear, cardCookieWrite, readCardCookie, type CookieScope } from './card-cookie.ts';
+import { isTilesTaught, type TilesTaught } from './collapsed.ts';
 import { isAraView, type AraView } from './tabs.ts';
 
 export const DATA_VERSION = 1;
@@ -32,6 +33,11 @@ export interface PlayerData {
    * Added within version 1: older data simply has no choice yet (an additive field needs no new version).
    */
   araView: AraView | null;
+  /**
+   * How far this phone has been shown that a collapsed card's tile opens (T3: the peek, then the scribble until a tile
+   * is tapped; logic/collapsed.ts `teachStep`); null until the peek. Added within version 1, as `araView`.
+   */
+  tilesTaught: TilesTaught | null;
   /** The Game the round view belongs to. */
   gameId: string | null;
   /** Round view: one-off screens already closed in this Game (for example 'celebration:3:line'). */
@@ -42,7 +48,7 @@ export interface PlayerData {
  *  as its icon's (the user, 27 Nov): the icon is shown beside it, not read as its name. */
 export const cardLabel = (card: Pick<SavedCard, 'id' | 'name'>): string => card.name ?? `#${card.id}`;
 
-export const emptyData = (edition: string): PlayerData => ({ v: DATA_VERSION, edition, cards: [], sounds: null, araView: null, gameId: null, dismissed: [] });
+export const emptyData = (edition: string): PlayerData => ({ v: DATA_VERSION, edition, cards: [], sounds: null, araView: null, tilesTaught: null, gameId: null, dismissed: [] });
 
 /** `restored`: localStorage was empty, and the cards came back from the cookie's copy (an iPhone's Home Screen app). */
 export type LoadOutcome = 'fresh' | 'kept' | 'restored' | 'otherEdition' | 'corrupt';
@@ -83,6 +89,7 @@ export function readData(raw: string | null, edition: string): { data: PlayerDat
       cards,
       sounds: typeof json.sounds === 'boolean' ? json.sounds : null,
       araView: isAraView(json.araView) ? json.araView : null,
+      tilesTaught: isTilesTaught(json.tilesTaught) ? json.tilesTaught : null,
       gameId: typeof json.gameId === 'string' ? json.gameId : null,
       dismissed: Array.isArray(json.dismissed) ? json.dismissed.filter((k): k is string => typeof k === 'string').slice(-50) : [],
     },
@@ -164,6 +171,10 @@ export const renameCard = (data: PlayerData, id: number, name: string): PlayerDa
 export const setSounds = (data: PlayerData, on: boolean): PlayerData => ({ ...data, sounds: on });
 
 export const setAraView = (data: PlayerData, view: AraView): PlayerData => (data.araView === view ? data : { ...data, araView: view });
+
+/** The phone has been shown that a tile opens this far (never back: `tapped` stays). */
+export const setTilesTaught = (data: PlayerData, taught: TilesTaught): PlayerData =>
+  data.tilesTaught === taught || data.tilesTaught === 'tapped' ? data : { ...data, tilesTaught: taught };
 
 /** Interface sounds: the player's choice wins over Admin's default. */
 export const soundsOn = (data: PlayerData, adminDefault: boolean): boolean => data.sounds ?? adminDefault;

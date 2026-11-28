@@ -18,6 +18,7 @@ import {
   renameCard,
   renumberCard,
   setIdentity,
+  setTilesTaught,
   setSounds,
   soundsOn,
   type PlayerData,
@@ -217,4 +218,17 @@ test('the edit drawer gives a card another number: it keeps its place, name and 
   assert.deepEqual(renumberCard(data, 12, 0), { ok: false, reason: 'invalid' });
   assert.deepEqual(renumberCard(data, 12, 124, new Set([123])), { ok: false, reason: 'unknown' });
   assert.ok(renumberCard(data, 12, 12).ok);
+});
+
+test('the tiles’ teaching (T3): kept on the phone, never going back, unreadable values ignored', () => {
+  const data = emptyData('26');
+  assert.equal(data.tilesTaught, null);
+  const peeked = setTilesTaught(data, 'peeked');
+  assert.equal(peeked.tilesTaught, 'peeked');
+  const tapped = setTilesTaught(peeked, 'tapped');
+  assert.equal(setTilesTaught(tapped, 'peeked'), tapped, 'a tapped phone is never shown again');
+  assert.equal(readData(JSON.stringify(tapped), '26').data.tilesTaught, 'tapped');
+  assert.equal(readData(JSON.stringify({ ...tapped, tilesTaught: 'maybe' }), '26').data.tilesTaught, null);
+  const { tilesTaught: _, ...older } = tapped;
+  assert.equal(readData(JSON.stringify(older), '26').data.tilesTaught, null, 'older data has none yet');
 });
