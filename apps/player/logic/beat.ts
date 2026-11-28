@@ -1,24 +1,11 @@
 // The beat of the song heard now, for `mark-bob` (ANIMATIONS.md, the user, 28 Nov: the card marks bob like a head on
-// the beat). Sound engine publishes `PublicState.beat` (Backend's names, 28 Nov): the tempo as heard, the bar's length,
-// and a bar's first beat on the cloud's clock (the one the phone already offsets for the drum); null when no song is
-// heard. Until that field is in @quina/protocol it is typed here (`PublicBeat`), read by `songBeat` alone: the only
-// place in the app that knows the field. Pure: the browser's side (pinning each bob, bobbing only what shows) is
-// device/bob.ts.
-import type { PublicLanding, PublicState } from '../feed/public.ts';
+// the beat). The feed's `PublicState.beat` (Sound engine's BeatInfo, projected by the cloud): the tempo as heard, the
+// bar's length, and a bar's first beat on the cloud's clock (the one the phone already offsets for the drum); null when
+// no song is heard. `songBeat` is the only place in the app that reads it. Pure: the browser's side (pinning each bob,
+// bobbing only what shows) is device/bob.ts.
+import type { PublicBeat, PublicLanding, PublicState } from '../feed/public.ts';
 
-/** The beat as the feed sends it (`PublicState.beat`; local until the protocol has it). */
-export interface PublicBeat {
-  /** Beats per minute, as heard (the song's local tempo × its playback rate). */
-  bpm: number;
-  /** 4 for most songs; 3 and 2 for a few. */
-  beatsPerBar: number;
-  /** A bar's first beat, epoch ms on the cloud's clock. In the past as a song plays; ahead only for a Spin's landing
-   *  (then it is `landAtMs`, and nothing moves before it). */
-  downbeatAtMs: number;
-}
-
-/** `PublicState` with the beat, as Backend's projection sends it (optional until the protocol sha is on main). */
-export type StateWithBeat = PublicState & { beat?: PublicBeat | null };
+export type { PublicBeat };
 
 export const BOB = {
   /** A side never comes faster than this (per minute): above it a side takes two beats (or a bar in 3/4). */
@@ -48,7 +35,7 @@ function checked(beat: unknown): PublicBeat | null {
  * whose downbeat is the latest landing, so it goes through the same path.
  */
 export function songBeat(state: PublicState | null, latest: PublicLanding | null, demoBpm: number | null = null): PublicBeat | null {
-  const sent = checked((state as StateWithBeat | null)?.beat);
+  const sent = checked(state?.beat);
   if (sent) return sent;
   if (demoBpm === null || !latest) return null;
   return checked({ bpm: demoBpm, beatsPerBar: BOB.demoBeatsPerBar, downbeatAtMs: latest.atMs });

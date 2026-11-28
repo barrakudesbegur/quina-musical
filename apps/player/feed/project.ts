@@ -16,15 +16,14 @@
 // older engine's state has none: the phone then orders the drum by the round's number (logic/drum.ts).
 // A Spin's landing song (`targetId`, D277: U206 answered, public from the Spin's start; the phones reveal it only at
 // landAtMs) from its `transition.scheduled`'s `drum.targetId`, as the cloud's: never while a Suspense is held.
-// The beat of the song heard now (`state.beat`, Sound engine's; `mark-bob`), its three numbers built one by one, as
-// the cloud projects `PublicState.beat`; null when the engine sends none. Typed here until the protocol has it.
+// The beat of the song heard now (`state.beat`, Sound engine's BeatInfo; `mark-bob`), its three numbers built one by
+// one, as the cloud projects `PublicState.beat`; null when the engine sends none (an older engine has no field).
 // tests/ui/player/project.test.ts feeds it a fixture full of private values and checks none come out.
 import { DEFAULT_SIDE, PROTOCOL_VERSION, defaultCardType, isRoundKind, type IncomingEvent, type RoundKind, type ShowState } from '@quina/protocol';
 import { flowOf, type FlowFields } from '../../../packages/ui/flow.ts';
 import { publicPlan, revealedRounds, type GamePlan } from '../../../packages/ui/plan.ts';
 import { HeatSmoother } from '../../../packages/rules/heat.ts';
-import type { PublicBeat, StateWithBeat } from '../logic/beat.ts';
-import { roundGameEnd, type PublicCheck, type PublicHeat, type PublicLanding, type PublicLink, type PublicRound, type PublicShuffle, type PublicSnapshot, type PublicSpin, type PublicWinner } from './public.ts';
+import { roundGameEnd, type PublicBeat, type PublicCheck, type PublicHeat, type PublicLanding, type PublicLink, type PublicRound, type PublicShuffle, type PublicSnapshot, type PublicSpin, type PublicState, type PublicWinner } from './public.ts';
 
 /** What the projection needs besides the engine's events. */
 export interface ProjectionContext {
@@ -58,12 +57,9 @@ interface RoundLog {
 /** The round being introduced, as newer engines send it (`state.intro`); older ones don't. */
 type MaybeIntro = { intro?: { round: number; kind: RoundKind; cardType?: string; side?: number } | null };
 
-/** The engine's beat, as Sound engine sends it (`state.beat`); older engines don't. */
-type MaybeBeat = { beat?: { bpm?: unknown; beatsPerBar?: unknown; downbeatAtMs?: unknown } | null };
-
-/** The public beat: the three numbers, each checked; anything else (or none) is null. */
+/** The public beat: the engine's three numbers, each checked and copied one by one; anything else (or none) is null. */
 function projectBeat(s: ShowState | null): PublicBeat | null {
-  const b = s ? (s as MaybeBeat).beat : null;
+  const b = s?.beat;
   if (!b) return null;
   const { bpm, beatsPerBar, downbeatAtMs } = b;
   const num = (x: unknown): x is number => typeof x === 'number' && Number.isFinite(x);
@@ -132,7 +128,7 @@ export class PublicProjector {
   }
 
   /** The public state for now. */
-  project(ctx: ProjectionContext): StateWithBeat {
+  project(ctx: ProjectionContext): PublicState {
     const s = this.state;
     const flow = flowOf(s);
     const currentNumber = s && s.round.number >= 1 ? s.round.number : null;
