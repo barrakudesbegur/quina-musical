@@ -265,6 +265,8 @@
     {@render cell('ok: green ring + ✓', t2)}
     {#snippet t3()}<TypeSideLabel label="Especial" customColor={ESPECIAL} star ring="red" badge="close" />{/snippet}
     {@render cell('wrong type: red ring + ✗', t3)}
+    {#snippet t4()}<TypeSideLabel label="Desgraciat" customColor={ESPECIAL} star />{/snippet}
+    {@render cell('the especial card’s other side: its printed checkLabel «Desgraciat» (D266)', t4)}
   </div>
 
   <h3>D4 · Cover</h3>
