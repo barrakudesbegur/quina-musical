@@ -23,7 +23,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 
 ## Now (28 Nov, late night): Phase A under way
 
-- **Pushed:** the cards (d97d1f3e, 1156ba15: the A4 default, the A3 test sheets, the proof in temp/cards-proof-2026/, verified); the setup (7dc3ec0a: the night's repertoire by default, the preflight, no autostart, the runbook); Admin's blank-plan fix and plan history (52341dd7, verified; **deployed** from e2250cd6 as version 8e301c84, which also carries f5's D318/D319 journal change); the console's false winners (1b5b803a).
+- **Pushed:** the cards (d97d1f3e, 1156ba15: the A4 default, the A3 test sheets, the proof in temp/cards-proof-2026/, verified); the setup (7dc3ec0a: the night's repertoire by default, the preflight, no autostart, the runbook); Admin's blank-plan fix and plan history (52341dd7, verified; **deployed**; last deploy 0c6478a8 from 1db48b1b, 28 Nov night: E2's round count needs this cloud's journal check); the console's false winners (1b5b803a).
 - **Being built:** the engine's night start (1.1's engine side, D304, 2.5, 3.1, 1.6, newRound, the Plan B resume) and the round count, no totals, Parlem's display, 2.4, «Cartró correcte!» (1.2, D305, 2.3). Verifying: the setup, Admin.
 - **With the user:** the boards page for D302, D303, D308, D310, D315/D316 and the console's no-cards warning: https://claude.ai/code/artifact/392d0bf3-eee6-42d7-b647-4b66b9840fe8; U244 (the Phase without cards), U245 (the claim pad), U238.
 - **Other sessions:** quina-musical-79 (setup: D324–D326 logged; D300's design), quina-musical-f5 (pushed D318/D319 as cf1c13e9; the 14 Hold-music-outside-Pausa paths are with the user), quina-musical-e0 (logos: D320–D323 logged; U16).
