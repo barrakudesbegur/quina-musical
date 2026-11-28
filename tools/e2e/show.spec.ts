@@ -280,10 +280,11 @@ test('one whole show, every screen following', async ({ browser }) => {
   // What the phones got, all show long: a gap-free feed with nothing private in it. Not the Queue or the next
   // song, not possible winners or the Futur (nor the Desgraciat round's standing cards and curve), no Check
   // outcome before the verdict, no private seeds (the drum's are public, D237) or resume codes, no Spin's drum
-  // (its landing song is public from its start, D277, U206: the targetId), no cheat sheet, no Wii status.
+  // (its landing song is public from its start, D277, U206: the targetId), no cheat sheet, no Wii status, no
+  // stalled audio clock (D284).
   expect(phone.gaps, 'the feed never had to resync').toBe(0);
   const all = phone.everything();
-  for (const secret of ['"queue"', '"next":', '"possibleWinners"', '"future"', '"standing":', '"lastStandingAt"', '"standingCurve"', '"fellLast"', '"outcome"', '"slip"', '"shuffleSeed"', '"phaseSeed"', '"resume"', '"drum":', '"removeId"', 'cheatSheet', 'remote.status', '"claims"', '"markedCard"', '"revealUntil"', '"cueNext"', '"reviewing"', '"manual":', '"finale":', '"byHand"']) {
+  for (const secret of ['"queue"', '"next":', '"possibleWinners"', '"future"', '"standing":', '"lastStandingAt"', '"standingCurve"', '"fellLast"', '"outcome"', '"slip"', '"shuffleSeed"', '"phaseSeed"', '"resume"', '"drum":', '"removeId"', 'cheatSheet', 'remote.status', '"claims"', '"markedCard"', '"revealUntil"', '"cueNext"', '"reviewing"', '"manual":', '"finale":', '"byHand"', '"audioStalled"']) {
     expect(all, `phones never get ${secret}`).not.toContain(secret);
   }
 });

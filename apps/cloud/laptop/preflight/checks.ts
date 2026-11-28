@@ -3,7 +3,7 @@
 // whoever sets the laptop up.
 import {
   DEFAULT_CARD_TYPE, DEFAULT_SIDE, VOICE_CUES, cardTypeSides, checkGamePlan, defaultCardType, isCardTypeId, isPoolId, roundCardPrice, sideWarnings,
-  type CardTypePrice, type CardTypeSides, type RemoteStatus,
+  type CardTypePrice, type CardTypeSides, type RemoteStatus, type ShowState,
 } from '@quina/protocol';
 import path from 'node:path';
 import { readPrintedCardTypes, UNKNOWN_CARD_TYPE_COLOR } from '../../../../packages/ui/data/card-types.ts';
@@ -468,6 +468,31 @@ export function showPageCheck(clients: readonly { role: string }[] | null): Chec
   if (!clients.some((c) => c.role === 'show')) return check('Network', 'Show page', 'warn', 'the show page is not open (or not connected to the relay)');
   const others = clients.filter((c) => c.role !== 'show').map((c) => c.role);
   return check('Network', 'Show page', 'pass', `connected${others.length ? `; also on the relay: ${others.join(', ')}` : ''}`);
+}
+
+/** The show page's `state` as far as the preflight reads it (ShowState's `audioStalled`, D284). */
+export type ShowStateLike = Pick<ShowState, 'audioStalled'>;
+
+/**
+ * The show page's audio clock (D284): its engine runs on the audio clock, so a context "running" whose time stands
+ * still stops the show silently. The show page reports it in its private state (`audioStalled`, `sinceMs` on this
+ * laptop's wall clock, so against `nowMs`). Only with a show page connected and its state on the relay: otherwise
+ * the relay and show page checks already speak (null). The relay keeps the last state after the page goes, so a
+ * state without a connected show page says nothing.
+ */
+export function audioClockCheck(
+  clients: readonly { role: string }[] | null,
+  state: ShowStateLike | null,
+  nowMs: number,
+): Check | null {
+  if (!clients?.some((c) => c.role === 'show') || !state) return null;
+  const stalled = state.audioStalled;
+  if (!stalled) return check('Network', 'Audio clock', 'pass', "the show page's audio clock is advancing");
+  const seconds = Math.max(0, Math.round((nowMs - stalled.sinceMs) / 1000));
+  return check('Network', 'Audio clock', 'fail',
+    `the show page's audio clock has been stalled for ${seconds} s (Chrome says "running" but its time barely moves): the drum and the Shuffle stay frozen and Next never lands. ` +
+    `Quit every Chrome window (⌘Q in each, including the show and the console), then start them again with steps 5 and 7. If it's still frozen, run \`sudo killall coreaudiod\` in a terminal, then start Chrome again. ` +
+    `Last resort: restart the Mac and follow "The laptop crashes" (night runbook, "When something goes wrong": "The Shuffle never ends, or the drum freezes")`);
 }
 
 /**

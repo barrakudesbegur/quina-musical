@@ -25,7 +25,7 @@ function project(entries: readonly JournalEntry[], start = emptyPublicState('26'
 
 /** Keys that must never appear anywhere in what phones get. A Spin's `targetId` may (D277); `drum`'s other fields never. The paced Check's (D108–D123): the whole marked card,
  * how far its Check will reveal, whether the next press is the cue, a Review (U79) and a decision by hand (D121). */
-const FORBIDDEN_KEYS = new Set(['queue', 'next', 'possibleWinners', 'future', 'standing', 'lastStandingAt', 'standingCurve', 'fellLast', 'outcome', 'slip', 'phase', 'phaseSeed', 'shuffleSeed', 'name', 'notes', 'steps', 'completeSince', 'warnings', 'to', 'drum', 'removeId', 'minLaps', 'roundEndMs', 'cardsInPlay', 'claims', 'settings', 'markedCard', 'revealUntil', 'cueNext', 'reviewing', 'manual', 'finale', 'byHand']);
+const FORBIDDEN_KEYS = new Set(['queue', 'next', 'possibleWinners', 'future', 'standing', 'lastStandingAt', 'standingCurve', 'fellLast', 'outcome', 'slip', 'phase', 'phaseSeed', 'shuffleSeed', 'name', 'notes', 'steps', 'completeSince', 'warnings', 'to', 'drum', 'removeId', 'minLaps', 'roundEndMs', 'cardsInPlay', 'claims', 'settings', 'markedCard', 'revealUntil', 'cueNext', 'reviewing', 'manual', 'finale', 'byHand', 'audioStalled']);
 function forbiddenKeys(value: unknown, path = ''): string[] {
   if (Array.isArray(value)) return value.flatMap((v, i) => forbiddenKeys(v, `${path}[${i}]`));
   if (!value || typeof value !== 'object') return [];
@@ -384,6 +384,8 @@ test("from the engine's state only the pause, the Interval and the rounded Game 
     future: { lastStandingAt: 40, standingCurve: [10, 5, 2, 1] },
     phase: 'final',
     heat: 0.93,
+    // A stalled audio clock (D284) is for the consoles and the preflight only.
+    audioStalled: { sinceMs: 4000 },
     pause: { sinceMs: 5000, overlay: true },
     interval: { sinceMs: 0, nextRound: 4, guideEndMs: 600_000 },
     schedule: { roundEndMs: 123_456, gameEndMs: 10 * step + 0.4 * step - OFFSET, roundDriftSec: 3, gameDriftSec: 1 },

@@ -453,6 +453,23 @@ test('the Wii remote: optional, so it only warns; connected, battery, and when i
   assert.match(c.wiiRemoteCheck(null, now).detail, /Pair it once with MacWiiPair and its SYNC button, then on this laptop's console: Comandament → Connectar/);
 });
 
+test('audio clock (D284): a stalled one fails with the runbook\'s fix; a clock that advances passes; no show page says nothing', () => {
+  const now = 1_800_000_000_000;
+  const show = [{ role: 'show' }, { role: 'tablet' }];
+  const stalled = c.audioClockCheck(show, { audioStalled: { sinceMs: now - 42_000 } }, now);
+  assert.equal(stalled?.status, 'fail');
+  assert.equal(stalled?.group, 'Network');
+  assert.match(stalled?.detail ?? '', /stalled for 42 s/);
+  assert.match(stalled?.detail ?? '', /the drum and the Shuffle stay frozen and Next never lands/);
+  assert.match(stalled?.detail ?? '', /Quit every Chrome window.*sudo killall coreaudiod.*restart the Mac/);
+  assert.match(stalled?.detail ?? '', /night runbook, "When something goes wrong"/);
+  assert.equal(c.audioClockCheck(show, { audioStalled: null }, now)?.status, 'pass');
+  assert.equal(c.audioClockCheck(show, {}, now)?.status, 'pass', 'a show page from before D284 sends no field');
+  assert.equal(c.audioClockCheck(show, null, now), null, 'no state yet: the show page check speaks');
+  assert.equal(c.audioClockCheck(null, null, now), null, 'no relay: the relay check speaks');
+  assert.equal(c.audioClockCheck([{ role: 'tablet' }], { audioStalled: { sinceMs: now } }, now), null, "the relay's last state from a show page that has gone");
+});
+
 test('card prices (U5): every card type a round plays has a price and a known rule', () => {
   const types = [
     { type: 'normal', name: 'Cartró normal', priceCents: 300 },

@@ -75,14 +75,15 @@ async function getJson(url: string, headers: Record<string, string> = {}, timeou
 
 /**
  * Who is on the relay, and the Wii remote's last status: connect briefly as an admin remote. The relay answers the
- * hello with its client list and replays each remote host's last `remote.status`; wait a moment after the list
- * for those.
+ * hello with its client list, replays each remote host's last `remote.status`, and sends the show page's last
+ * `state` (the private one: an admin hears it, as every console does); wait a moment after the list for those.
  */
-function relayView(relay: string): Promise<{ clients: { role: string }[]; remote: RemoteStatus | null } | null> {
+function relayView(relay: string): Promise<{ clients: { role: string }[]; remote: RemoteStatus | null; state: checks.ShowStateLike | null } | null> {
   return new Promise((resolve) => {
     const ws = new WebSocket(`${relay.replace(/^http/, 'ws')}/ws`);
     let clients: { role: string }[] | null = null;
     const remotes: RemoteStatus[] = [];
+    let state: checks.ShowStateLike | null = null;
     const done = () => {
       clearTimeout(timer);
       clearTimeout(settle);
@@ -94,13 +95,14 @@ function relayView(relay: string): Promise<{ clients: { role: string }[]; remote
       const remote: RemoteStatus | null = chosen && counted.length
         ? { ...chosen, drops: counted.reduce((sum, r) => sum + (r.drops ?? 0), 0), lastDropMs: dropTimes.length ? Math.max(...dropTimes) : null }
         : chosen;
-      resolve(clients ? { clients, remote } : null);
+      resolve(clients ? { clients, remote, state } : null);
     };
     const timer = setTimeout(done, 3000);
     let settle: NodeJS.Timeout | undefined;
     ws.on('open', () => ws.send(JSON.stringify({ v: PROTOCOL_VERSION, type: 'hello', role: 'admin', clientId: 'preflight' })));
     ws.on('message', (data) => {
       const m = JSON.parse(String(data)) as { type?: string; clients?: { role: string; clientId: string }[] };
+      if (m.type === 'state') state = m as checks.ShowStateLike;
       const remote = readRemoteStatus(m);
       if (remote) remotes.push(remote);
       if (m.type === 'relay.clients' && Array.isArray(m.clients)) {
@@ -216,6 +218,8 @@ async function networkChecks(o: PreflightOptions, repertoireName: string): Promi
   const view = relayAnswer.ok ? await relayView(o.relay) : null;
   out.push(checks.showPageCheck(view?.clients ?? null));
   out.push(checks.consoleCheck(view?.clients ?? null, o.laptopOnly === true));
+  const audioClock = checks.audioClockCheck(view?.clients ?? null, view?.state ?? null, Date.now());
+  if (audioClock) out.push(audioClock);
   if (view) out.push(checks.wiiRemoteCheck(view.remote, Date.now()));
   const lan = lanAddress();
   const port = new URL(o.relay).port || '80';
