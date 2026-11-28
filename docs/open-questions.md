@@ -8,12 +8,15 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
-### U237 · Do phones follow the projector through the Check and the Celebration?
-The user (28 Nov): "i think i dont want to show celebration screens, nor quina nor linea. but it depens on if we show check screen on phones. if we show the celebration screens, the only info we shoudl show is just the celebration title, no prize, no card. we can make a diferent celebration effect basedon if he won or someone else won (wich in practice is that he lost, so he celebrates but also is a bit desapointed). we could make a pool of consolation sentences based on the number of songs he had left by ranges. but this depends on if we decide to have check + celebrate, or not. having it is nice because it follows the projector, and also lets us smoothly transition to the next screen of pause." Today every phone shows the full Celebration with its prize. Frontend draws both as boards, side by side, with the phone's Break screens (not designed yet), before the user picks.
-- (a) Phones follow the projector: a Check screen, then a Celebration screen for every win, then on into the next screen. Every phone shows the Celebration's title (no prize, no card), with a "celebrates but a bit disappointed" effect and a consolation sentence picked by how many songs that phone's best card still needed, by ranges. (The orchestrator's recommendation, from the user's own reason: it follows the projector and moves smoothly into the next screen.)
-  - **The user's change to (a), 28 Nov:** "no "The winner's phone celebrates fully", it celebrates the same as others but it just has a different animation and text contents, and maybe ninos, but the overall layout is the same." So the winner's phone has the same layout, with its own animation, words and maybe ninos.
-  - **Not confirmed yet:** "before i confirm, what is already implemented?" The orchestrator answered with screenshots on the page (U237, "What the phones do today"): the Check is a ribbon over the home; every win is a full-screen Celebration on every phone, with the prize on a Quina; your own win shows your card.
-- (b) No Check or Celebration screens on the phones; only the winner's phone celebrates.
+### U242 · The winner's own phone, with no Celebration screen (D315)
+Every phone gets the same green «Línia correcta!» or «Quina correcta!» ribbon with the card number. Earlier the user wanted the winner's phone to differ only in "animation and text contents, and maybe ninos".
+- (a) The winner's phone gets the same ribbon as everyone.
+- (b) The same ribbon, and the winning card itself is marked on that phone (its tile glows gold, as with your song) (the recommendation: the winner still finds their own moment without a screen).
+
+### U243 · The end of the Desgraciat on the phones (D315)
+The Desgraciat has no public Check: its finale on stage decides it (D166), and today the winner's phone shows «QUINA POTRA!» as a Celebration screen.
+- (a) A green «Quina potra!» ribbon with the card number on every phone, until the screen changes to the Break (the recommendation: the same as a correct Quina).
+- (b) Nothing beyond each card's sitting down.
 
 ### U241 · Where the money-only sponsors show (D312)
 Sponsors who gave money and no gift are spread through the rounds (D312). Where in a round:
@@ -338,6 +341,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U237 · The phones in a Check and a Celebration** (2026-11-28) → D315: no Celebration screen; the Check's ribbon shows the result (U242, U243 follow).
 - **U240 · The sponsors in a round's intro and its Celebrations** (2026-11-28) → D312: only the stickers of the sponsors who gave that prize; money sponsors spread through the rounds (U241).
 - **U235 · The projector's Break** (2026-11-28) → D308: (a), with a timeline of the night, the price beside the countdown, stickers.
 - **U236 · «QUINA POTRA!»** (2026-11-28) → D310: (a), as the Line's (D302).

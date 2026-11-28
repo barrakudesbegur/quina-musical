@@ -590,7 +590,7 @@ By: the user via canvas (proposal). Source: canvas 2026-11-24T13:31Z, 15:48Z, 15
 Each Line and Quina has many prizes, usually with one or two headline ones. Screens show the bundle, headline prizes first, never a single prize.
 By: the user via canvas. Source: canvas 2026-11-24T16:40Z; show-ui-and-platform-decisions.md › Changes. Amends: R1-Q23, R2-Q16. Lives in: requirements/game-rules.md › Prizes and bundles.
 
-### D32 · No winning card numbers; no QR in the Interval · 2026-11-24 · Active
+### D32 · No winning card numbers; no QR in the Interval · 2026-11-24 · Active; amended by D315
 "People don't care who won unless it's them": no winning card numbers on the projector or phones. They aren't secret (the Check shows the card), so the feed keeps them, and a phone celebrates when a confirmed winner is one of its own cards. No QR in the Interval: by then everyone has the app open.
 By: the user via canvas. Source: canvas 2026-11-24T16:42Z, 16:53Z. Amends: R2-Q15, R2-Q24, R2-Q25. Lives in: requirements/screens.md › Projector, Player app; requirements/game-rules.md › Winners.
 
@@ -1275,7 +1275,7 @@ By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in:
 The user: "buttons should not be fully round unless they are floating". A design-system rule for every screen: pills only for floating buttons, rounded rectangles otherwise. It was made on a phone board and stated generally, so it applies to the phones, the console, the projector and Admin. Frontend lists the boards and components that still have non-floating pills, then fixes the boards and the code after the finale and tab builds.
 By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in: requirements/screens.md › Every screen.
 
-### D190 · The Desgraciat's winner phone says "Quina potra!" · 2026-11-26 · Active
+### D190 · The Desgraciat's winner phone says "Quina potra!" · 2026-11-26 · Active; amended by D315
 The phone holding the last standing card says "Quina potra!" too, like the projector (D186), with the glowing card, the nino and the confetti. The user: "i dont care. a seems fine". Answers U165 with (a).
 By: the user. Source: open-questions.md › Answered (U165). Amends: D62 (the phone's part). Lives in: requirements/screens.md › Player app.
 
@@ -1634,7 +1634,7 @@ By: the user (to Backend). Source: Backend's report of 27 Nov. Lives in: docs/te
 The user asked for the "add another card" flow to be researched and redone (D237). Frontend followed government "add another" patterns: after «Desar», the drawer shows the card's mark with a ✓, «Cartró #N afegit!», the phone's cards, and «Vols afegir un altre cartró?» with «+ Un altre» (a fresh form) and «Fet» (closes, and rings the new card on the home), with a quiet cue and haptics. It replaces D200's banner over the cards list, so U174 is moot. Built in 3e3cb154, with the drawers' and forms' other fixes.
 By: Frontend, as the user asked (D237). Source: Frontend's report of 27 Nov. Supersedes: D200. Lives in: requirements/screens.md › Player app.
 
-### D242 · No prize panel in a Line's Celebration, for now · 2026-11-27 · Active; amended by D285, D311
+### D242 · No prize panel in a Line's Celebration, for now · 2026-11-27 · Active; amended by D285, D311, D315
 On the canvas: the projector's and the phones' Line Celebration lose their prize panel («Premis de línia · Entrada al spa…»). Frontend draws proposals for how a Celebration shows its prize, for the user to pick.
 By: the user via canvas. Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md › Projector, Player app.
 
@@ -1854,7 +1854,7 @@ By: the user (to Frontend). Source: Frontend's report of 28 Nov. Lives in: requi
 On 28 Nov this Mac's Chrome audio clock stopped: an `AudioContext` "running" whose time moved 0.005 s in 2 s, so a Shuffle never ended and no Spin started, with nothing on screen to say why. It's the only failure that stops the whole show silently. The show page checks every second that the audio clock advances; if it moves under half of wall time for 2 s while running, it tries `resume()` once, then reports `audioStalled { sinceMs }` in the private state (not journaled, not public), which clears when the clock recovers. The consoles show it in their existing alert banner, with the runbook's steps (quit Chrome, then `sudo killall coreaudiod`, then a reboot), and the preflight FAILs on it. Nothing shows on the projector: it's the public screen. Backend's e2e runs Chrome with `--disable-audio-output` (057ff2a), so it no longer depends on the Mac's audio.
 By: the orchestrator, on Sound engine's proposal (Sound engine: the check and the state; Frontend: the banner and its board; Backend: the preflight). Source: Sound engine's report of 28 Nov. Lives in: requirements/operations.md › What must never fail; docs/night-runbook.md › When something goes wrong.
 
-### D285 · A Celebration shows its prize's sponsors as logos; the Quina's fireworks · 2026-11-28 · Active; amended by D287, D309, D312, D311; the boards Pending
+### D285 · A Celebration shows its prize's sponsors as logos; the Quina's fireworks · 2026-11-28 · Active; amended by D287, D309, D312, D311, D315; the boards Pending
 - **How a Celebration shows its prize (D242):** none of the proposals A–D. Taking D's idea, the Line's and the Quina's Celebrations show only the logos of the sponsors whose gifts make up that prize: no prize text and no «Gentilesa de» label. Logos as stickers: not now. Frontend draws examples first (boards only). Until the board is approved, "no prize panel for now" stays on the projector and the phones. The prize model does: each round keeps its Line and Quina prize lists, and every prize has its own sponsor; a Celebration's logos are that list's distinct sponsors, in plan order, and a prize with no sponsor brings none. Consequences, not questions: an unrevealed round's Celebration shows no logos (D27, R2-Q35); «QUINA POTRA!» takes the logos too, as it shows its bundle like a Quina today (a default the user can overrule); the phones change with the projector (D242). Left for the user, on the board: a bundle with no sponsor at all shows nothing or the gift sticker.
 - **The Quina Celebration's fireworks** (ANIMATIONS.md `celebrate`, board Projector-Focs-Propostes): C, shells going off behind «QUINA!», and animated. An animated board first, then the ANIMATIONS.md row; not a go to build yet.
 - **Not decided:** the phone's collapsed cards (§8 Y2). A leads, but the user wants more variants first: a card with 1 song left, with all, with none; a card with a Line, before and after the prize is given; cards that don't match the round's type (Especial). The user thinks the remaining-songs counts on the proposals are wrong, and worries players won't know they can tap a card. Frontend draws affordance options. No code.
@@ -1874,7 +1874,7 @@ Boards only; not a go to build. A (§8 Y2) is polished before the final decision
 - **Canvas fixes, in code now:** the phone's Check ribbon moves off the now-playing card and gets smaller; the winner's «Quina potra!» card header fits on one line.
 By: the user (to Frontend, on canvas v123). Source: Frontend's report of 28 Nov. Lives in: requirements/screens.md › Player app.
 
-### D287 · The sponsor logos are stickers, packed around «QUINA!» · 2026-11-28 · Active; amended by D309, D312; not a go to build
+### D287 · The sponsor logos are stickers, packed around «QUINA!» · 2026-11-28 · Active; amended by D309, D312, D315; not a go to build
 After seeing the board: "i really like the sponsor stickers, and they should also show in the player app. would be nice you use some kind of library/algorythm that places them together dynamically based on their sizes and space available (including around the QUINA! in the projector, not just under it), and within some rotation and size thresholds". So a Celebration's sponsor logos are die-cut stickers, on the projector and the phones, packed as a collage by a layout algorithm that uses the free space (around «QUINA!» on the projector, not only under it), within rotation and size limits. Frontend builds a shared, tested packing module and boards rendered from it, and plans how stickers are made from the real logos (it may touch Admin's logo import or Backend's storage: owners reported, nothing wired). Not wired into the live Celebrations until the user says build. Still open: a bundle with no sponsor at all shows nothing or the gift sticker. Amends D285 ("logos as stickers: not now").
 By: the user (to Frontend, on the canvas). Source: Frontend's report of 28 Nov. Lives in: requirements/screens.md › Projector, Player app.
 
@@ -2007,7 +2007,7 @@ By: the user. Source: the user's message of 28 Nov. Lives in: requirements/scree
 - **Later task (the user):** how to show prizes, on the projector and wherever else it makes sense.
 By: the user. Source: the user's message of 28 Nov. Amends: D242, D285. Lives in: requirements/screens.md › Projector; whats-left.md.
 
-### D312 · A Celebration shows only the stickers of the sponsors who gave its prize; money sponsors spread through the rounds · 2026-11-28 · Active; where the money sponsors show Pending (U241)
+### D312 · A Celebration shows only the stickers of the sponsors who gave its prize; money sponsors spread through the rounds · 2026-11-28 · Active; amended by D315; where the money sponsors show Pending (U241)
 Answers U240 with (a): "i think i asked a session to make a design where the sponsor sticker logos were used in the celebration pages, including player app. i like that idea more than the entire prize, only the sponsors that participated. the sponsors that just gave money we spread them throug the rounds." That's D287's sticker collage: a Celebration, on the projector and the phones, shows as stickers only the sponsors whose gifts make up that prize, with no prize. Sponsors who only gave money (a sponsor with no gift in the plan) are spread through the rounds; where they show is U241.
 By: the user. Source: the user's message of 28 Nov. Amends: D285, D287. Lives in: requirements/screens.md › Projector, Player app.
 
@@ -2025,3 +2025,15 @@ After the realistic test: "in the test i did, i noticed that during the card che
 - **Pending the user:** the ✗ case: "it should have the same vehaveour, it should simply play in loop". The session's reading, not confirmed: the needle scratch plays once, then the record keeps skipping in a loop until the cue. Not built.
 - **For Frontend:** the projector's "playing" mark per reveal still lasts 2.5 s, while the song now plays on. **To listen for:** `LOOP.tailDropDb` (−12 dB under the hook) marks some soft endings as dead, so those songs hand over or auto-advance up to 20 s early (Viva La Vida).
 By: the user (to quina-musical-f5). Source: its report of 28 Nov. Lives in: requirements/show-and-music.md › The Check, The presenters' actions.
+
+### D315 · No Celebration screen on the phones; the Check's ribbon shows the result · 2026-11-28 · Active; the winner's phone and the Desgraciat Pending (U242, U243)
+Answers U237, after the screenshots of what's built: "the text comprovant el cartro can simply be comprobant #332. okay so i think we should not have a celebration screen. and in the ribbon when check fails we should change the color and content to "Quina incorrecte!" quina/linea in red bg and the card number on the right, and the ribon goes away when the next spin starts. if the line is correct, we do like the fail but with green and correcte. and it it is a quina correcte, we do like the line correct, but it goes away when the screen changes to the interval or break or whatever."
+- **No Celebration screen on any phone**, for a Line or a Quina, whoever won.
+- **The Check's ribbon:** «Comprovant #332» while the card is checked (was «Comprovant el cartró #332»).
+- **A failed Check:** the ribbon turns red, reads «Línia incorrecta!» or «Quina incorrecta!» with the card number on the right, and goes when the next Spin starts.
+- **A correct Line:** the same, green, «Línia correcta!»; it goes when the next Spin starts.
+- **A correct Quina:** green, «Quina correcta!»; it stays until the screen changes to the Break, or whatever comes next.
+- The user wrote "incorrecte"/"correcte"; línia and quina are feminine, so the words are logged as «incorrecta»/«correcta»: the user may overrule.
+- The card number on the phone's ribbon is the user's explicit choice (amends D32's "no winning card numbers on phones").
+- Consequences: the phones' prize panel goes (whats-left 4.3) and D312's stickers apply to the projector's Celebrations only. Frontend draws the ribbon's states, side by side with today's, before building.
+By: the user. Source: the user's message of 28 Nov. Amends: D32, D190, D242, D285, D287, D312. Lives in: requirements/screens.md › Player app.
