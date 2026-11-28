@@ -31,7 +31,7 @@ if (!lan) {
 async function relay(port: number, flags: string[]): Promise<ChildProcess> {
   const patch = path.join(os.tmpdir(), 'quina-relay-audit-interfaces.mjs');
   fs.writeFileSync(patch, `import os from 'node:os';\nconst real = os.networkInterfaces;\nos.networkInterfaces = () => Object.fromEntries(Object.entries(real()).map(([n, l]) => [n, l.filter((i) => i.internal)]));\n`);
-  const child = spawn(process.execPath, ['--import', patch, 'relay/server.ts', '--port', String(port), '--dist', '--token', TOKEN, ...flags], { cwd: SHOW, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, QUINA_LINK_DIR: LINK_DIR } });
+  const child = spawn(process.execPath, ['--import', patch, 'relay/server.ts', '--port', String(port), '--dist', '--token', TOKEN, '--repertoire', 'default', ...flags], { cwd: SHOW, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, QUINA_LINK_DIR: LINK_DIR } });
   let output = '';
   child.stdout?.on('data', (d) => (output += d));
   child.stderr?.on('data', (d) => (output += d));

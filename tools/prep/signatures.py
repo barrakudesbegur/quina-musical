@@ -46,7 +46,7 @@ class Paths:
 
 
 def resolve_paths(args: argparse.Namespace) -> Paths:
-    """The song repertoire's directories (--repertoire, else $QUINA_REPERTOIRE, else the default repertoire)."""
+    """The song repertoire's directories (--repertoire, else $QUINA_REPERTOIRE, else the night's)."""
     repertoire = repertoires.from_args(args)
     return Paths(data=repertoire.data_dir, cache=repertoire.cache_dir, overrides=repertoire.overrides_dir)
 

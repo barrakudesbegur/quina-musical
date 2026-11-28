@@ -1,6 +1,7 @@
 // Before every rehearsal and show, on the show laptop, with the relay, the show page and the cloud link running:
-//   npm run preflight -- [--repertoire default] [--relay http://127.0.0.1:5174] [--cloud https://…] [--fast] [--json]
+//   npm run preflight -- [--repertoire NAME] [--relay http://127.0.0.1:5174] [--cloud https://…] [--fast] [--json]
 //                        [--only Repertoire,Laptop,Network,Cloud] [--laptop-only]
+// The repertoire is the night's (relay/repertoire.ts NIGHT_REPERTOIRE, as the relay serves it) unless named.
 // --laptop-only: the presenters don't use the tablet; the tech drives from the console on the laptop's own screen
 // (it must be open, the projector must be a separate display, and the tablet's LAN address is optional).
 // A table of checks: FAIL is anything that would hurt the show (fix it before the doors open), WARN is worth a

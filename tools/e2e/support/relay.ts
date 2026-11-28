@@ -1,5 +1,6 @@
 // A relay of its own for the test: on a free port, serving the build, with a scratch cloud link folder so the
-// laptop's real Game plan and journal copy are never touched.
+// laptop's real Game plan and journal copy are never touched. It serves last year's repertoire, `default`, named
+// (the relay's own default is the night's): the e2e plays its prepared songs and its printed cards.
 import { spawn, type ChildProcess } from 'node:child_process';
 import fs from 'node:fs';
 import net from 'node:net';
@@ -37,7 +38,7 @@ export interface Relay {
 export async function startRelay(): Promise<Relay> {
   const port = await freePort();
   const linkDir = fs.mkdtempSync(path.join(os.tmpdir(), 'quina-e2e-link-'));
-  const child: ChildProcess = spawn(process.execPath, ['relay/server.ts', '--dist', '--port', String(port)], {
+  const child: ChildProcess = spawn(process.execPath, ['relay/server.ts', '--dist', '--port', String(port), '--repertoire', 'default'], {
     cwd: SHOW,
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, QUINA_LINK_DIR: linkDir },

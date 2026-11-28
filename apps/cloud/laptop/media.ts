@@ -1,7 +1,8 @@
 // Push this laptop's prepared repertoire to the cloud's private R2 bucket, or pull it onto a takeover laptop; or fetch
 // the edition's Game plan and its images into the link folder (a laptop's setup, without connecting as the show
 // laptop, which would take over from the one playing):
-//   npm run media -- push|pull|plan [--repertoire default] [--cloud https://quina-dev.barrakudesbegur.org]
+//   npm run media -- push|pull|plan [--repertoire NAME] [--cloud https://quina-dev.barrakudesbegur.org]
+//   (the repertoire is the night's, relay/repertoire.ts NIGHT_REPERTOIRE, unless named)
 //   npm run media -- push --repertoire 2026 --dry-run   what a push would upload, by root, without sending anything
 //   npm run media -- pull --repertoire 2026 --into /tmp/x   pull into an empty folder instead (each folder at its place
 //                                         under it, as under the repo): a check that the bucket alone rebuilds it

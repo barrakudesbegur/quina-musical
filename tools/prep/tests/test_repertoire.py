@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -29,11 +30,18 @@ def named_manifest(repertoires_dir: Path, name: str, **fields) -> Path:
     return path
 
 
-# ---------------------------------------------------------------- the default repertoire
+# ---------------------------------------------------------------- the night's, and last year's by name
 
-def test_default_repertoire_points_at_the_existing_locations(monkeypatch):
+def test_without_a_name_it_is_the_nights_repertoire(monkeypatch):
     monkeypatch.delenv(repertoires.ENV_VAR, raising=False)
     p = repertoires.load()
+    assert p.name == repertoires.NIGHT_REPERTOIRE == "2026"
+    assert p.manifest == REPO / "data/repertoires/2026.json"
+
+
+def test_last_years_repertoire_points_at_the_existing_locations(monkeypatch):
+    monkeypatch.delenv(repertoires.ENV_VAR, raising=False)
+    p = repertoires.load("default")
     assert p.name == "default"
     assert p.manifest == REPO / "data/repertoires/default.json"
     assert p.songs_json == REPO / "data/repertoires/default/songs.json"
@@ -48,13 +56,13 @@ def test_default_repertoire_points_at_the_existing_locations(monkeypatch):
     assert repertoires.display(p.stems_cache(12)) == "data/cache/12/stems"  # stems.py's pathTemplate, relative to the repo
 
 
-# ---------------------------------------------------------------- precedence: --repertoire, $QUINA_REPERTOIRE, default
+# ---------------------------------------------------------------- precedence: --repertoire, $QUINA_REPERTOIRE, the night's
 
-def test_precedence_spec_then_env_then_default(repertoires_dir, monkeypatch):
-    named_manifest(repertoires_dir, "default")
+def test_precedence_spec_then_env_then_the_nights(repertoires_dir, monkeypatch):
+    named_manifest(repertoires_dir, repertoires.NIGHT_REPERTOIRE)
     named_manifest(repertoires_dir, "next")
     named_manifest(repertoires_dir, "other")
-    assert repertoires.load().name == "default"
+    assert repertoires.load().name == repertoires.NIGHT_REPERTOIRE
     monkeypatch.setenv(repertoires.ENV_VAR, "next")
     assert repertoires.load().name == "next"
     assert repertoires.load("other").name == "other"
@@ -211,6 +219,16 @@ def test_typescript_twin_resolves_the_same_paths(tmp_path, which):
                           timeout=60, check=False)
     assert node.returncode == 0, node.stderr
     assert json.loads(node.stdout) == repertoires.load(spec).to_json()
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not on PATH")
+def test_typescript_twin_has_the_same_nights_repertoire():
+    """relay/repertoire.ts's NIGHT_REPERTOIRE decides the night's repertoire; this module's must be the same."""
+    env = {k: v for k, v in os.environ.items() if k != repertoires.ENV_VAR}
+    node = subprocess.run(["node", str(repertoires.SHOW / "relay/repertoire.ts")], cwd=REPO, capture_output=True, text=True,
+                          timeout=60, check=False, env=env)
+    assert node.returncode == 0, node.stderr
+    assert json.loads(node.stdout)["name"] == repertoires.NIGHT_REPERTOIRE
 
 
 @pytest.mark.skipif(shutil.which("node") is None, reason="node not on PATH")

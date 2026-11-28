@@ -5,9 +5,9 @@
 // one origin; with --dist the relay serves the built dist/ instead (`npm start` builds it first) and refuses a dist
 // built from other sources than these (relay/build-stamp.ts).
 // The build is rooted at apps/ (vite.config.ts): the engine's pages are /show/engine/*, and /show/<page> still works.
-// The repertoire (--repertoire, else $QUINA_REPERTOIRE, else "default"; relay/repertoire.ts reads data/repertoires/<name>.json) decides
-// what the song routes serve; the URLs are the same for every repertoire. <cache> and <data> are its cacheDir and
-// dataDir (data/cache/ and data/out/ for the default repertoire):
+// The repertoire (--repertoire, else $QUINA_REPERTOIRE, else the night's, NIGHT_REPERTOIRE; relay/repertoire.ts reads
+// data/repertoires/<name>.json) decides what the song routes serve; the URLs are the same for every repertoire.
+// <cache> and <data> are its cacheDir and dataDir (data/cache/ and data/out/ for last year's, `default`):
 //   /audio/<id>.flac → <cache>/<id>/mix.flac, /stems/<id>/<stem>.<startSample>.flac → <cache>/<id>/stems/,
 //   /signatures/<id>/<sigId>.flac → <cache>/<id>/signatures/, /snippets/<id>.flac → <cache>/<id>/snippet.flac
 //   (a Check's 3 s from the song's best hook, tools/prep/snippets.py), /stretch/<id>/<render>/<part>.flac →
@@ -38,7 +38,7 @@ import { distProblem } from './build-stamp.ts';
 import { TEST_MODE_BANNER, relayAcceptsCommand, relayModeMessage } from './gate.ts';
 import { defaultRouteInterface, describeAddress, lanAddresses, type LanAddress } from './lan.ts';
 import { LaptopPlan, PLAN_BASE_HEADER, parsePlanBase, type CurrentPlan } from './plan.ts';
-import { CACHE, DEFAULT_REPERTOIRE, LINK, MEDIA, OUT, REPERTOIRE_ENV, PREP, REPO, SHOW, display, loadRepertoire, type Repertoire } from './repertoire.ts';
+import { CACHE, LINK, MEDIA, NIGHT_REPERTOIRE, OUT, REPERTOIRE_ENV, PREP, REPO, SHOW, display, loadRepertoire, type Repertoire } from './repertoire.ts';
 
 const args = process.argv.slice(2);
 const argValue = (name: string, fallback: string): string => {
@@ -57,7 +57,7 @@ const USE_DIST = args.includes('--dist');
 const TEST_MODE = args.includes('--test');
 /** With --lan, how often the relay checks whether the laptop's address changed (and prints the console URL again). */
 const LAN_RECHECK_MS = 10_000;
-const REPERTOIRE: Repertoire = repertoireOrExit(argValue('--repertoire', process.env[REPERTOIRE_ENV] || DEFAULT_REPERTOIRE));
+const REPERTOIRE: Repertoire = repertoireOrExit(argValue('--repertoire', process.env[REPERTOIRE_ENV] || NIGHT_REPERTOIRE));
 const ANALYSIS_DIR = path.join(REPERTOIRE.dataDir, 'analysis');
 
 function repertoireOrExit(spec: string): Repertoire {

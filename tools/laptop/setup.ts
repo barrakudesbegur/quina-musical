@@ -1,5 +1,6 @@
 // Set up a show laptop (the main one, or a spare), from a clone of the repo:
-//   npm run setup:laptop [-- --repertoire default] [--skip-media]
+//   npm run setup:laptop [-- --repertoire NAME] [--skip-media]
+// The repertoire is the night's (apps/show/relay/repertoire.ts NIGHT_REPERTOIRE, the one the relay serves) unless named.
 // Safe to run again: each step checks first and does only what is missing. In order:
 //   1. the prerequisites (Node, macOS, uv, Rubber Band, Google Chrome, disk space), with the exact install hints;
 //   2. npm ci (only when package-lock.json changed since the last setup);
@@ -9,13 +10,15 @@
 //   6. the Game plan and its images, fetched with the laptop's token (no takeover of the laptop playing);
 //   7. the Chrome profiles for the show page and the laptop's console, outside /tmp (they survive a restart);
 //   8. the preflight's Repertoire and Laptop checks.
-// It only uses Node's own modules (and apps/cloud/laptop/chrome-profiles.ts, which does too), so it runs before npm ci.
+// It only uses Node's own modules (and apps/cloud/laptop/chrome-profiles.ts and apps/show/relay/repertoire.ts, which
+// do too), so it runs before npm ci.
 import { spawnSync, type SpawnSyncOptions } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { RUNBOOK_COMMANDS, ensureChromeProfiles } from '../../apps/cloud/laptop/chrome-profiles.ts';
+import { NIGHT_REPERTOIRE, RepertoireError, loadRepertoire } from '../../apps/show/relay/repertoire.ts';
 
 const REPO = path.resolve(import.meta.dirname, '../..');
 const args = process.argv.slice(2);
@@ -23,7 +26,6 @@ const flag = (name: string): string | undefined => {
   const i = args.indexOf(name);
   return i >= 0 ? args[i + 1] : undefined;
 };
-const REPERTOIRE = flag('--repertoire') ?? 'default';
 const SKIP_MEDIA = args.includes('--skip-media');
 const MIN_FREE_GB = 10;
 
@@ -46,6 +48,15 @@ function stop(reason: string): never {
   console.log(`\n${bold('Stopped:')} ${reason}\nFix that, then run npm run setup:laptop again; finished steps are skipped.`);
   process.exit(1);
 }
+
+/** The night's repertoire, or the one named (--repertoire, else $QUINA_REPERTOIRE), as the relay resolves it. */
+const REPERTOIRE = (() => {
+  try {
+    return loadRepertoire(flag('--repertoire')).name;
+  } catch (error) {
+    return stop(error instanceof RepertoireError ? error.message : String(error));
+  }
+})();
 
 // ---- 1. prerequisites ------------------------------------------------------------------------------------
 step(1, 'Prerequisites');
@@ -142,6 +153,6 @@ const preflight = run('npm', ['run', 'preflight', '-w', '@quina/cloud', '--', '-
 console.log(`\n${bold(preflight ? 'This laptop is set up.' : 'Set up, but the preflight found problems (above).')}
 On the night (docs/night-runbook.md): in apps/show, npm start -- --lan; in apps/cloud, npm run link; the show page
 and the console in Chrome (the commands in step 7); then the full preflight with everything running:
-npm run preflight -w @quina/cloud.
+npm run preflight -w @quina/cloud. ${REPERTOIRE === NIGHT_REPERTOIRE ? `Each uses the night's repertoire, ${REPERTOIRE}, by itself.` : `Not the night's repertoire: add --repertoire ${REPERTOIRE} to the relay and the preflight.`}
 At the sound check: the show plays 6 dB lower inside than last year (D157), so turn the PA up about 6 dB.`);
 process.exit(preflight ? 0 : 1);

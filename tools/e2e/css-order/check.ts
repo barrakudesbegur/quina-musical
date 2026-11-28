@@ -62,7 +62,7 @@ async function startRelay(distDir?: string): Promise<Server> {
   const port = await freePort();
   const linkDir = fs.mkdtempSync(path.join(os.tmpdir(), 'quina-css-link-'));
   const extra = distDir ? ['--dist', '--dist-dir', distDir] : [];
-  const child: ChildProcess = spawn(process.execPath, ['relay/server.ts', '--port', String(port), ...extra], {
+  const child: ChildProcess = spawn(process.execPath, ['relay/server.ts', '--port', String(port), '--repertoire', 'default', ...extra], {
     cwd: SHOW,
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, QUINA_LINK_DIR: linkDir },

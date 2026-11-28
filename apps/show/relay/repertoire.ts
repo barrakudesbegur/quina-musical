@@ -29,7 +29,13 @@ export const LINK = process.env.QUINA_LINK_DIR ? path.resolve(process.env.QUINA_
 /** tools/prep: the preparation pipeline (Python), which the relay also runs during the show. */
 export const PREP = path.join(REPO, 'tools', 'prep');
 export const REPERTOIRE_ENV = 'QUINA_REPERTOIRE';
-export const DEFAULT_REPERTOIRE = 'default';
+/**
+ * The night's repertoire: the one every command uses when none is named. The relay serves it, and the preflight,
+ * setup:laptop, the media sync and the edition tool all resolve theirs here, so they agree with the relay the night
+ * runs; tools/prep/repertoire.py's NIGHT_REPERTOIRE is its twin (tools/prep/tests/test_repertoire.py checks they match).
+ * Last year's 77 songs, `default`, only when named (`--repertoire default`).
+ */
+export const NIGHT_REPERTOIRE = '2026';
 
 const NAME_RE = /^[a-z0-9][a-z0-9_-]*$/;
 const REQUIRED = ['name', 'songsJson', 'audioDir'];
@@ -74,9 +80,9 @@ export function availableRepertoires(): string[] {
   }
 }
 
-/** The repertoire named or pointed to by `spec`, else $QUINA_REPERTOIRE, else "default". Throws RepertoireError. */
+/** The repertoire named or pointed to by `spec`, else $QUINA_REPERTOIRE, else the night's. Throws RepertoireError. */
 export function loadRepertoire(spec?: string): Repertoire {
-  const chosen = spec || process.env[REPERTOIRE_ENV] || DEFAULT_REPERTOIRE;
+  const chosen = spec || process.env[REPERTOIRE_ENV] || NIGHT_REPERTOIRE;
   const file = manifestPath(chosen);
   const inRepertoiresDir = path.dirname(file) === REPERTOIRES_DIR;
   let text: string;

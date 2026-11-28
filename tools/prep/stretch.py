@@ -32,7 +32,7 @@ CLI (from the repo root):
     tools/prep/.venv/bin/python tools/prep/stretch.py --song 12 --hook 12-best-0 --to-bpm 126 \
         [--bars 4] [--after-bars 1] [--stems] [--max-stretch 0.08] [--force] [--verify] [--json] [--repertoire NAME]
 
-Python (every function takes repertoire=; None means $QUINA_REPERTOIRE, else the default repertoire):
+Python (every function takes repertoire=; None means $QUINA_REPERTOIRE, else the night's):
     from stretch import render, verify
     result = render(12, "12-best-0", 126.0, bars=4, after_bars=1, stems=True)
 """

@@ -71,7 +71,7 @@ interface Relay {
 async function startRelay(flags: string[]): Promise<Relay> {
   const port = await freePort();
   const linkDir = fs.mkdtempSync(path.join(os.tmpdir(), 'quina-relay-gate-'));
-  const child: ChildProcess = spawn(process.execPath, ['relay/server.ts', '--port', String(port), '--token', 'GATETESTTOKEN2345', ...flags], {
+  const child: ChildProcess = spawn(process.execPath, ['relay/server.ts', '--port', String(port), '--token', 'GATETESTTOKEN2345', '--repertoire', 'default', ...flags], {
     cwd: SHOW, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, QUINA_LINK_DIR: linkDir },
   });
   let output = '';

@@ -119,7 +119,7 @@ def main() -> int:
 
     lines += ["", "## Audition queue (most severe first)", "",
               (f"Open `/show/audition.html?song=N`. Fix with `{repertoires.display(repertoire.overrides_dir)}/<id>.json`, "
-               f"then re-run `tools/prep/analyze.py{'' if repertoire.name == repertoires.DEFAULT_REPERTOIRE else ' --repertoire ' + repertoire.name}"
+               f"then re-run `tools/prep/analyze.py{'' if repertoire.name == repertoires.NIGHT_REPERTOIRE else ' --repertoire ' + repertoire.name}"
                " --derive-only --song N`."), "",
               "| # | Song | BPM (ours / Spotify / librosa) | Δ duration | Best hook | Flags |", "|---|---|---|---|---|---|"]
     for severity, a, excluded in sorted(rows, key=lambda r: (-r[0], r[1]["songId"])):

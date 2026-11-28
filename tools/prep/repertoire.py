@@ -7,7 +7,8 @@ data/repertoires/<name>.json; apps/show/README.md › "Repertoires" documents th
 apps/show/relay/repertoire.ts is the TypeScript twin of this module (tools/prep/tests/test_repertoire.py checks that
 both resolve a manifest to the same paths).
 
-Every repertoire-specific script takes --repertoire <name|path>. Without it: $QUINA_REPERTOIRE, then "default".
+Every repertoire-specific script takes --repertoire <name|path>. Without it: $QUINA_REPERTOIRE, then the night's
+(NIGHT_REPERTOIRE, the twin of the relay's). Last year's 77 songs, "default", only when named.
 
     tools/prep/.venv/bin/python tools/prep/repertoire.py [--repertoire NAME|PATH]   # print the resolved paths as JSON
 
@@ -38,7 +39,9 @@ OUT = DATA / "out"
 CACHE = DATA / "cache"
 """Decoded audio, stems, Signatures, Blend renders, Hold and Interval audio."""
 ENV_VAR = "QUINA_REPERTOIRE"
-DEFAULT_REPERTOIRE = "default"
+# The night's repertoire, used when none is named: apps/show/relay/repertoire.ts's NIGHT_REPERTOIRE decides it (the
+# relay, the preflight and the laptop setup read that one), and tools/prep/tests/test_repertoire.py checks this matches.
+NIGHT_REPERTOIRE = "2026"
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*$")
 
 REQUIRED = ("name", "songsJson", "audioDir")
@@ -253,8 +256,8 @@ def available() -> list[str]:
 
 
 def load(spec: str | os.PathLike | None = None) -> Repertoire:
-    """The repertoire named or pointed to by `spec`, else $QUINA_REPERTOIRE, else "default"."""
-    spec = os.fspath(spec) if spec else (os.environ.get(ENV_VAR) or DEFAULT_REPERTOIRE)
+    """The repertoire named or pointed to by `spec`, else $QUINA_REPERTOIRE, else the night's."""
+    spec = os.fspath(spec) if spec else (os.environ.get(ENV_VAR) or NIGHT_REPERTOIRE)
     path = manifest_path(spec)
     by_name = path.parent == REPERTOIRES_DIR and path.stem == spec
     if not path.is_file():
@@ -306,7 +309,7 @@ def load(spec: str | os.PathLike | None = None) -> Repertoire:
 def add_argument(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--repertoire", metavar="NAME|PATH",
                         help=f"repertoire name (data/repertoires/<name>.json) or manifest path; default ${ENV_VAR}, "
-                             f"then {DEFAULT_REPERTOIRE!r}")
+                             f"then the night's, {NIGHT_REPERTOIRE!r}")
 
 
 def from_args(args: argparse.Namespace) -> Repertoire:

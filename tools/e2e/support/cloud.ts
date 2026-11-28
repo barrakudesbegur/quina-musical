@@ -16,10 +16,11 @@ export interface Cloud {
   stop: () => Promise<void>;
 }
 
-/** Assemble the Worker's static files from the show's fresh build (the player at the root), into a scratch folder. */
+/** Assemble the Worker's static files from the show's fresh build (the player at the root), into a scratch folder,
+ * with the cards of the relay's repertoire (`default`, support/relay.ts). */
 function assembleAssets(): string {
   const out = fs.mkdtempSync(path.join(os.tmpdir(), 'quina-e2e-assets-'));
-  execFileSync(process.execPath, ['scripts/assets.ts', '--ui', path.join(REPO, 'apps/show/dist'), '--out', out], { cwd: path.join(REPO, 'apps/cloud'), stdio: 'ignore' });
+  execFileSync(process.execPath, ['scripts/assets.ts', '--repertoire', 'default', '--ui', path.join(REPO, 'apps/show/dist'), '--out', out], { cwd: path.join(REPO, 'apps/cloud'), stdio: 'ignore' });
   return out;
 }
 
