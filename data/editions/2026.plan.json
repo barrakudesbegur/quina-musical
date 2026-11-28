@@ -883,6 +883,11 @@
       "logo": "/media/0caf92090a4098c711ac2359a625cf5e.png"
     },
     {
+      "id": "la-palma",
+      "name": "La Palma",
+      "logo": null
+    },
+    {
       "id": "pa-de-pessic",
       "name": "Pa de Pessic",
       "logo": "/media/baf25d0318f8423c4ca55d04c96c098d.png"
@@ -923,14 +928,34 @@
       "logo": "/media/bfea468c37fabff03cae2b0bc3e83832.png"
     },
     {
+      "id": "nepoca",
+      "name": "Nèpoca",
+      "logo": null
+    },
+    {
       "id": "141-ceramica",
       "name": "141 Ceràmica d'Autor",
       "logo": "/media/84368c298f57ed400029b7f4295a25d9.png"
     },
     {
+      "id": "1701",
+      "name": "1701",
+      "logo": null
+    },
+    {
       "id": "17255-studio",
       "name": "17255 Studio",
       "logo": "/media/4a00a8022c8364b683e9431be428e5f9.jpg"
+    },
+    {
+      "id": "arran-de-mar",
+      "name": "Arran de Mar",
+      "logo": null
+    },
+    {
+      "id": "begur-jewellery",
+      "name": "Begur Jewellery",
+      "logo": null
     },
     {
       "id": "blauet",
@@ -943,6 +968,11 @@
       "logo": "/media/0ae1791e5d317b0045b3b85ea65d3485.jpg"
     },
     {
+      "id": "cactus-begur",
+      "name": "Cactus Begur",
+      "logo": null
+    },
+    {
       "id": "dana-taboe",
       "name": "Dana Taboe",
       "logo": "/media/2503c6079a5387d0190c84929265bc3f.png"
@@ -951,6 +981,11 @@
       "id": "el-taller",
       "name": "El Taller",
       "logo": "/media/717727baf6de8634842aea225d9868f3.jpg"
+    },
+    {
+      "id": "estanc-begur",
+      "name": "Estanc Begur",
+      "logo": null
     },
     {
       "id": "indians",
@@ -963,6 +998,11 @@
       "logo": "/media/6355626222360fa0a3d829c2232fa92a.png"
     },
     {
+      "id": "la-bugada",
+      "name": "La Bugada",
+      "logo": null
+    },
+    {
       "id": "la-petite",
       "name": "La Petite",
       "logo": "/media/1b1c58bad2e3c7bb72d44d2065cde8ac.jpg"
@@ -973,6 +1013,21 @@
       "logo": "/media/6968bce1540d3f6ef4c8695985b9faa1.png"
     },
     {
+      "id": "locadeamor",
+      "name": "LocadeAmor",
+      "logo": null
+    },
+    {
+      "id": "pet-love",
+      "name": "Pet Love",
+      "logo": null
+    },
+    {
+      "id": "pou-nou",
+      "name": "Pou Nou",
+      "logo": null
+    },
+    {
       "id": "s-and-s",
       "name": "S&S",
       "logo": null
@@ -981,6 +1036,11 @@
       "id": "set-vetes",
       "name": "Set Vetes",
       "logo": "/media/488f7e0a2913ac839ab3732305534bad.jpg"
+    },
+    {
+      "id": "soho",
+      "name": "Soho",
+      "logo": null
     },
     {
       "id": "zig-zag",
