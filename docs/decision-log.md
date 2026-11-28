@@ -1634,7 +1634,7 @@ By: the user (to Backend). Source: Backend's report of 27 Nov. Lives in: docs/te
 The user asked for the "add another card" flow to be researched and redone (D237). Frontend followed government "add another" patterns: after «Desar», the drawer shows the card's mark with a ✓, «Cartró #N afegit!», the phone's cards, and «Vols afegir un altre cartró?» with «+ Un altre» (a fresh form) and «Fet» (closes, and rings the new card on the home), with a quiet cue and haptics. It replaces D200's banner over the cards list, so U174 is moot. Built in 3e3cb154, with the drawers' and forms' other fixes.
 By: Frontend, as the user asked (D237). Source: Frontend's report of 27 Nov. Supersedes: D200. Lives in: requirements/screens.md › Player app.
 
-### D242 · No prize panel in a Line's Celebration, for now · 2026-11-27 · Active; amended by D285
+### D242 · No prize panel in a Line's Celebration, for now · 2026-11-27 · Active; amended by D285, D311
 On the canvas: the projector's and the phones' Line Celebration lose their prize panel («Premis de línia · Entrada al spa…»). Frontend draws proposals for how a Celebration shows its prize, for the user to pick.
 By: the user via canvas. Source: Frontend's report of 27 Nov. Lives in: requirements/screens.md › Projector, Player app.
 
@@ -1854,7 +1854,7 @@ By: the user (to Frontend). Source: Frontend's report of 28 Nov. Lives in: requi
 On 28 Nov this Mac's Chrome audio clock stopped: an `AudioContext` "running" whose time moved 0.005 s in 2 s, so a Shuffle never ended and no Spin started, with nothing on screen to say why. It's the only failure that stops the whole show silently. The show page checks every second that the audio clock advances; if it moves under half of wall time for 2 s while running, it tries `resume()` once, then reports `audioStalled { sinceMs }` in the private state (not journaled, not public), which clears when the clock recovers. The consoles show it in their existing alert banner, with the runbook's steps (quit Chrome, then `sudo killall coreaudiod`, then a reboot), and the preflight FAILs on it. Nothing shows on the projector: it's the public screen. Backend's e2e runs Chrome with `--disable-audio-output` (057ff2a), so it no longer depends on the Mac's audio.
 By: the orchestrator, on Sound engine's proposal (Sound engine: the check and the state; Frontend: the banner and its board; Backend: the preflight). Source: Sound engine's report of 28 Nov. Lives in: requirements/operations.md › What must never fail; docs/night-runbook.md › When something goes wrong.
 
-### D285 · A Celebration shows its prize's sponsors as logos; the Quina's fireworks · 2026-11-28 · Active; amended by D287; the boards Pending
+### D285 · A Celebration shows its prize's sponsors as logos; the Quina's fireworks · 2026-11-28 · Active; amended by D287, D309, D311; the boards Pending
 - **How a Celebration shows its prize (D242):** none of the proposals A–D. Taking D's idea, the Line's and the Quina's Celebrations show only the logos of the sponsors whose gifts make up that prize: no prize text and no «Gentilesa de» label. Logos as stickers: not now. Frontend draws examples first (boards only). Until the board is approved, "no prize panel for now" stays on the projector and the phones. The prize model does: each round keeps its Line and Quina prize lists, and every prize has its own sponsor; a Celebration's logos are that list's distinct sponsors, in plan order, and a prize with no sponsor brings none. Consequences, not questions: an unrevealed round's Celebration shows no logos (D27, R2-Q35); «QUINA POTRA!» takes the logos too, as it shows its bundle like a Quina today (a default the user can overrule); the phones change with the projector (D242). Left for the user, on the board: a bundle with no sponsor at all shows nothing or the gift sticker.
 - **The Quina Celebration's fireworks** (ANIMATIONS.md `celebrate`, board Projector-Focs-Propostes): C, shells going off behind «QUINA!», and animated. An animated board first, then the ANIMATIONS.md row; not a go to build yet.
 - **Not decided:** the phone's collapsed cards (§8 Y2). A leads, but the user wants more variants first: a card with 1 song left, with all, with none; a card with a Line, before and after the prize is given; cards that don't match the round's type (Especial). The user thinks the remaining-songs counts on the proposals are wrong, and worries players won't know they can tap a card. Frontend draws affordance options. No code.
@@ -1874,7 +1874,7 @@ Boards only; not a go to build. A (§8 Y2) is polished before the final decision
 - **Canvas fixes, in code now:** the phone's Check ribbon moves off the now-playing card and gets smaller; the winner's «Quina potra!» card header fits on one line.
 By: the user (to Frontend, on canvas v123). Source: Frontend's report of 28 Nov. Lives in: requirements/screens.md › Player app.
 
-### D287 · The sponsor logos are stickers, packed around «QUINA!» · 2026-11-28 · Active; not a go to build
+### D287 · The sponsor logos are stickers, packed around «QUINA!» · 2026-11-28 · Active; amended by D309; not a go to build
 After seeing the board: "i really like the sponsor stickers, and they should also show in the player app. would be nice you use some kind of library/algorythm that places them together dynamically based on their sizes and space available (including around the QUINA! in the projector, not just under it), and within some rotation and size thresholds". So a Celebration's sponsor logos are die-cut stickers, on the projector and the phones, packed as a collage by a layout algorithm that uses the free space (around «QUINA!» on the projector, not only under it), within rotation and size limits. Frontend builds a shared, tested packing module and boards rendered from it, and plans how stickers are made from the real logos (it may touch Admin's logo import or Backend's storage: owners reported, nothing wired). Not wired into the live Celebrations until the user says build. Still open: a bundle with no sponsor at all shows nothing or the gift sticker. Amends D285 ("logos as stickers: not now").
 By: the user (to Frontend, on the canvas). Source: Frontend's report of 28 Nov. Lives in: requirements/screens.md › Projector, Player app.
 
@@ -1971,3 +1971,38 @@ By: the user. Source: the user's message of 28 Nov. Amends: D295. Lives in: requ
 ### D307 · Businesses' names are fine in git; logos stay out · 2026-11-28 · Active
 The user: "i dont think there's any issue in haveing their names, just the logos i will keep out from git". Businesses' names (sponsors, shops, venues) may appear anywhere in the public repo: docs, commit messages, the edition file. Sponsor logos stay out of git. The decision log's own rule still said "no businesses' names", from D112 ("Businesses' names and prizes change every year, so they don't belong in git"), which D116 had already amended for the edition's JSON. People's names, emails, money, secrets and seeds stay out (operations.md › Privacy).
 By: the user. Source: the user's message of 28 Nov. Amends: D112, D116. Lives in: requirements/operations.md › Privacy; this log's "Adding an entry".
+
+### D308 · The projector's Break: the current board, with a timeline of the night · 2026-11-28 · Active
+Answers U235 with (a), `Projector-Descans`, changed: "remove the "Tornem d'aqui...". instead of seguend button, i preffer you make a horizontal timeline like progrss bar that marks the progress and the progress is in between the dots (exept in the break that is the break dot), and the name of the quina is standalone without seguent nor count. use the inspiration form the schedule tab. inside the balls you can put the quina number. the card prixe should be also a big element like the countdown and next to it. ninos may need to be adjusted, i dont like the sardanes nino here. and sponsors should use the new stickers format we're making."
+- No «Tornem d'aquí…».
+- No «Següent» plate: a horizontal timeline of the night, like a progress bar, with a dot per round (its Quina number inside) and the Break as its own dot. The progress sits between the dots, except during a Break, when it's on the Break's dot. Inspired by the phone's Horari.
+- The coming round's name stands alone: no «Següent», no total (D305).
+- The card's price is a big element like the countdown, beside it.
+- Other ninos: not the sardanes nino here.
+- The sponsors as stickers (D309).
+Frontend draws it (side by side with today's board) before building.
+By: the user. Source: the user's message of 28 Nov. Lives in: requirements/screens.md › Projector.
+
+### D309 · Every sponsor, everywhere, as a sticker · 2026-11-28 · Active
+"sponsors should use the new stickers format we're making. (all sponsors should always use the sticker format)". Wherever sponsors show to the public, on the projector and the phones (before the night, the Break, the end of the night's credits, the phones' Premis drawer, a Celebration), they're die-cut stickers from D287's module and the sticker logos being prepared now (the logos session). Amends D285 ("logos as stickers: not now") and D287 (stickers only in the Celebrations).
+By: the user. Source: the user's message of 28 Nov. Amends: D285, D287. Lives in: requirements/screens.md › Projector, Player app.
+
+### D310 · «QUINA POTRA!»: the current board, as the Line's · 2026-11-28 · Active
+Answers U236 with (a), `Projector-Desgraciat-Potra`: "same logic as U233", read as D302's changes: the title nearer the centre, and the drum behind fixed. Its prize card goes (D311).
+By: the user. Source: the user's message of 28 Nov. Lives in: requirements/screens.md › Projector.
+
+### D311 · No prizes on the projector, for now; how to show prizes is a later task · 2026-11-28 · Active
+"i dont want to show the prixes in the projector because i dont like the designs we have, and i need to think about it better. remove them all in the projector (unless you should push back because doent make sense or it is important in there). note it as a task to do later on: figure out how to display prizes and shwo them in the projector and other places that makes sense. btw note all locations that had prizes and you rmeoved them, so when we want to add them back we have a starting point."
+- **Removed from the projector, the starting point for later:**
+  1. A round's intro: the Line's and the Quina's prize cards (apps/stage/render/round-start.ts, two `PrizeBlock`s; board Projector-Presentacio; screens.md › Projector, "A round's intro").
+  2. The Especial's intro: its prize cards (same code; the special prize, a TV and a helmet in the 2026 example plan).
+  3. The Desgraciat's intro: «PREMI DE L'ÚLTIM DEMPEUS» and its prize (same code).
+  4. The Quina's Celebration: the prize bundle (apps/stage/render/celebration.ts, `PrizeBlock`; board Projector-Quina; screens.md, "Celebration").
+  5. «QUINA POTRA!»: the PrizeCard with «Gentilesa de» (celebration.ts; boards Projector-Desgraciat-Potra, -Dempeus).
+  6. The proposals for showing a Celebration's prize: Projector-Celebracio-Premi-Propostes (D242), and D285's sponsors' logos for the prize (Projector-Celebracio-Logos, -Stickers): whether those sponsors stay is U240.
+  7. The shared pieces: `PrizeBlock` (apps/stage/render/parts.ts:40), the design system's PrizeCard (C2; packages/ui/recipes/prizes.ts, prizes.css).
+  Already none: the Line's Celebration (D242), the Break, before the night, the end.
+- **Not touched:** the phones' Premis drawer, the console's prizes for the presenters to announce, the cheat sheet, Admin.
+- **The orchestrator's view, given once:** a round's intro is where the room learns what it plays for. Removing the cards for now works, since the presenters read the prizes from the console and the cheat sheet, and phones have Premis; the new design should come before the tech rehearsal.
+- **Later task (the user):** how to show prizes, on the projector and wherever else it makes sense.
+By: the user. Source: the user's message of 28 Nov. Amends: D242, D285. Lives in: requirements/screens.md › Projector; whats-left.md.

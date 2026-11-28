@@ -59,8 +59,9 @@ After the tech rehearsal comes the code freeze (timeline.md), so P1 must be done
 |---|---|---|---|---|
 | 3.1 | P0 | **The public Shuffle shows all 135 covers of the repertoire, not the round's 70:** half the covers flying into the drum can never come up (fairness: event.md › Fairness) | V, F | Sound engine and Frontend |
 | 3.2 | P1 | **In play, and the Desgraciat's play: not the agreed look (D294, `Abans-28nov-Projector-Joc`).** Live: three huge flat covers, a thin window, a small «QUINA 1» over the left cover, a plain title and lilac artist, the current song plus two earlier. Agreed: about 9 covers on a curved drum with a floor shadow, a thick glowing gold window and ink pointer, the gold «QUINA N» plate, an ink-stroked title with a gold artist, the oval-lamp garland, the starfield, the three earlier songs | V, F | Frontend |
-| 3.3 | P1 | **The other scenes: built to the board the user picks** (before the night D297, the Check D303, the Line D302, the finale D301; U235, U236 open), with the agreed look's starfield and ink-stroked titles | V, F | Frontend, after the answers |
-| 3.4 | P1 | Wrong whatever the board: intro prize cards cut off at the bottom (Desgraciat, Especial) at both ratios; the Check's «CARTRÓ #N» grey from the first reveal (orange until a fail on both boards); the type badge's ✓ an empty disc from the second Check; the failed ✗ half size and low; «Cartró correcte!» never shown for the last card (the engine goes straight to the Celebration); «QUINA POTRA!» shows a prize card with «Gentilesa de», against D285; a round total «de 12» shown (D305: none on any screen); the intro's drum shows the last round's song; an empty lower half between the Shuffle and the first Spin; a «?» and a blank cover in the grid; no rough countdown before the night; intros show only the headline prize, no sponsors (screens.md) | V, F | Frontend; Sound engine for «Cartró correcte!» |
+| 3.3 | P1 | **The other scenes: built to the board the user picks** (before the night D297, the Check D303, the Line D302, the finale D301, the Break D308, «QUINA POTRA!» D310; every sponsor a sticker, D309), with the agreed look's starfield and ink-stroked titles | V, F | Frontend, after the answers |
+| 3.4 | P1 | Wrong whatever the board: the Check's «CARTRÓ #N» grey from the first reveal (orange until a fail on both boards); the type badge's ✓ an empty disc from the second Check; the failed ✗ half size and low; «Cartró correcte!» never shown for the last card (the engine goes straight to the Celebration); a round total «de 12» shown (D305: none on any screen); the intro's drum shows the last round's song; an empty lower half between the Shuffle and the first Spin; a «?» and a blank cover in the grid; no rough countdown before the night | V, F | Frontend; Sound engine for «Cartró correcte!» |
+| 3.6 | P1 | **No prizes on the projector for now (D311):** take them out of a round's intro (the Especial's and the Desgraciat's too), the Quina's Celebration and «QUINA POTRA!»; D311 lists every place, as the starting point for later | the user | Frontend |
 | 3.5 | P2 | At 16:9 the sponsor strips and end credits stay in a centred 4:3 box; the end roll has small logos, text-only sponsors and 10–15 s of empty screen between loops (Projector-Final draws a big static grid); 9 finalists' plates touch; the Shuffle's and the finale's sound cues aren't played | V, F | Frontend, Sound engine |
 | — | — | Not a go to build: the sponsor sticker collage (D287), fireworks C (D285) | F | — |
 
@@ -80,6 +81,8 @@ What works, seen live on the production path: the QR link, the pad, the scan, th
 | 4.8 | P1 | The «Toca per veure'l!» hint never shows at 390×844 with 4 cards; it flips place 549 times a second (battery) | V | Frontend |
 | 4.9 | P1 | The iPhone install steps describe iOS 26 Safari, not the Safari 18 floor (D293) (read, not seen on a device) | V | Frontend |
 | 4.10 | P1 | The relay's own feed has no plan: laptop-only rehearsals show «0 premis»; phones have no LAN fallback | F, B | Backend |
+| 4.12 | P1 | **The phone during a Break isn't designed** (the user, 28 Nov); a hand-drawn board existed before the redraw (Abans-28nov-Mobil-MitjaPart, a countdown ring) and the build shows text. Boards side by side, with U237's Check and Celebration flow | the user | Frontend |
+| 4.13 | P1 | Every sponsor as a sticker on the phones too (D309): the Premis drawer, the end of the night | the user | Frontend, with the logos session |
 | 4.11 | P2 | The Check ribbon truncates at 390 and 320 px; the end pill wraps; «Encara no ha sonat cap cançó» twice; at 320×640 the last tiles sit behind the corner buttons; a one-card phone never gets «LÍNIA!»/«QUINA!» (D289); the last-year drawer is a dead end; the floating «+ Cartró» covers the tab switch; the link opens scrolled; agreed phone designs dropped in the redraw (the Shuffle's «Ara comença la», «El teu premi d'aquesta nit», the three-level QR stack) | V, F | Frontend |
 
 ## 5. Transitions and music (the user's ears; no agent can check these)
@@ -155,6 +158,11 @@ The generator works today: the final cards in both layouts from repertoire 2026,
 - **Needed (P1):** an end-to-end night on the 2026 repertoire and the 12-round plan, started with the runbook's commands and driven by tapping the console (Backend); screenshots of every projector scene and console page compared with the agreed boards, at 4:3 and 16:9 (Frontend); a phone following it on the production path.
 - **Done means seen:** a session reports an item done with screenshots of the running app, never a generated board. The orchestrator's agent then checks the pushed build against the agreed board or requirement, as on 28 Nov. Only then does status.md say done. Agreed boards are never regenerated "as built"; as-built snapshots go beside them.
 
+## 12. Later, by the user's choice
+
+- **The transitions** (D298): after the night's start, the console and the projector work.
+- **How to show prizes** (D311): on the projector and wherever else it makes sense; D311 lists where they were. The orchestrator suggests before the tech rehearsal, since a round's intro is where the room learns what it plays for.
+
 ## The plan
 
 Sessions keep their lanes (team.md) and their limits on parallel agents (Frontend: at most two). Each works through its items in the order below.
@@ -175,6 +183,6 @@ Sessions keep their lanes (team.md) and their limits on parallel agents (Fronten
 **Phase D:** the tech rehearsal when the user says; then the code freeze; P2 only if there's time.
 
 **What needs the user, by phase:**
-- A: U235, U236, U237, U238's conclusion, the go for this plan (answered: D297, D301–D306).
+- A: U237 (after Frontend's boards), U238's conclusion, U240, the go for this plan (answered: D297, D301–D306, D308–D311).
 - B: the proof sheet and the print.
 - C: the listening session (a couple of hours), the hook approval (about 4.5 h, U14), vetting the Signatures, the voices and Hold music (U20), D282's conversation, the real-device checks (U19), the organizers' plan in Admin (U18).
