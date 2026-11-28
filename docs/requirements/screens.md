@@ -31,7 +31,7 @@ _From event.md › The audience, Atmosphere and style, Fairness and trust._
 
 _From event.md › When and where (Projection), The night, step by step, Claims and checks, Fairness and trust; the decisions doc › Projector._
 
-**Who uses it:** the whole audience. It's a 4:3 projector far from the audience, so only big things are readable and there's no small text. It must also work at 16:9. It's silent: the sound comes from the engine on the PA.
+**Who uses it:** the whole audience. It's a 4:3 projector far from the audience, so only big things are readable and there's no small text. It must also work at 16:10 and 16:9, the most common projector formats (D276). A second projector, if one is found, shows the same image from an HDMI splitter (D276). It's silent: the sound comes from the engine on the PA.
 
 | State | What it shows |
 |---|---|

@@ -1803,3 +1803,14 @@ By: the user. Source: the user's message of 28 Nov, after docs/research/reports/
 - **The real problem is the presenters' control:** "the main issue to figure out is a reliable way for the presenter to control the game. a screen is not nice because needs his eyes to be on it, and he should look at the public." Research: docs/research/reports/presenter-remote.md.
 - **Where the laptop sits:** "my preference is to keep the laptop on the table, near the projector, with the mixer with me as well. but i can adapt. the audio source is not the issue, the issue is the remote connectivity, and the slight inconvenience of wires." U221 waits on the remote's research.
 By: the user. Source: the user's message of 28 Nov. Amends: ADR-0002. Lives in: requirements/operations.md › Where things run.
+
+### D275 · The Wii remote stays, paired with the Mac; a backup remote too · 2026-11-28 · Active
+Answers U226: "i want the wii remote but using the mac software is fine, we dont need the adapter. and as a backup i think i will buy a presenter remote, or maybe a mini gamepad so i can use it for something else." The genuine Wii remote stays the presenters' main control, paired with the Mac by MacWiiPair (U220) and read by the Console's WebHID driver, as built. No 8BitDo adapter. The user buys a backup: a presenter remote or a mini gamepad (U229).
+By: the user. Source: the user's message of 28 Nov, after docs/research/reports/presenter-remote.md. Lives in: requirements/operations.md › Fallbacks.
+
+### D276 · A second projector, if one is found: inside for the back tables, the same image · 2026-11-28 · Active
+- Answers U227 with (a): inside the tent, about 12–14 m from the stage, on the long wall away from the open area, angled 30–45° to the back tables.
+- Answers U228 with (a): the same image as the first screen, from a 1-in, 2-out HDMI splitter on the laptop. No new code.
+- **The projector scenes support the most common projector formats:** "we should support most frequent vendor formats": 4:3, 16:10 and 16:9. With a splitter both projectors get one signal, so it's set to suit both (a 4:3 signal keeps the text's size on a 16:9 projector).
+- The open area beside the tent needs no screen: people there "can, probably" play, "but they have the app".
+By: the user. Source: the user's message of 28 Nov, after docs/research/reports/two-projectors.md. Lives in: requirements/screens.md › Projector; requirements/operations.md › Where things run.

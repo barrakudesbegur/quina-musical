@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D275**, **U229**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D277**, **U230**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -44,7 +44,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 - U204: the realistic run's start time today, or 27 Dec (Backend uploads the plan with `--start` when it's relayed);
 - U212: the organizers pick the card, «Quadrat amb portades» (the default, A3 six a sheet) or «Apaïsat sense portades» (A4 three a page). The generator makes both (`--layout a4-3`); the cards are made on 4–5 Dec, after a proof sheet;
 - U222–U225: Frontend's redraw questions (the Desgraciat's standing Check, the edition's name, the Efectes tab, the thick ✗);
-- U218: when the "just a website" setup happens (U219 answered: D273, a 5G drop isn't a design concern); the presenters' remote is the main problem (D274): U226, what to buy for the home test (research: presenter-remote.md); U227, U228: a second projector's place and image (two-projectors.md; also: film the displayOffsetMs calibration from mid-tent, ~12 m, for the runbook); U220 (user task): try the Wii remote with MacWiiPair; U221: where the laptop sits (the user prefers the table by the projector, with the mixer; decided by the remote research);
+- U218: when the "just a website" setup happens (U219 answered: D273, a 5G drop isn't a design concern); the Wii remote stays, paired by MacWiiPair (D275); U229: the backup remote; a second projector if found: inside for the back tables, same image (D276; for the runbook: film the displayOffsetMs calibration from mid-tent, ~12 m); U220 (user task): try the Wii remote with MacWiiPair; U221: where the laptop sits (the user prefers the table by the projector, with the mixer; decided by the remote research);
 - U216, U217: the Check's side label on a wrong-type card, and «Desgraciat» twice in the Desgraciat's Check header (Frontend, 28 Nov);
 - U215: a double-click start for the night laptop (research in docs/research/reports/laptop-app.md; recommended: a launcher only);
 - U214: the grill format only in a card design session (the default), or plain questions there too;

@@ -157,21 +157,10 @@ The user (28 Nov): "just a website … a PWA that works offline … the show pag
 - (a) The direction for after 27 Dec. This year the laptop stays the only playback device, with the cheap pieces: the start app (U215), the cloud Console as the main path, and the Wii remote fixes.
 - (b) This year: reopens R2-Q26, and the rehearsals run on the new setup.
 
-### U227 · What a second projector's screen is for (if one is found)
-The research (docs/research/reports/two-projectors.md): in this tent a second screen is about readability in the back half, not sound. From today's screen the song's title is readable to about 20–30 m, but the artist and the last 3 are lost from about 11 m back. Feed: the same image on both from a 1-in, 2-out HDMI splitter, with no new code.
-- (a) The back tables: inside, about 12–14 m from the stage, on the long wall away from the open area, angled 30–45° to the back. It blocks no one's view of the first screen, and the cable from the tech's table is about 10 m.
-- (b) The open area beside the tent: outside at its stage end, facing along it. Risks: dew, rain, wind, street lamps, outdoor power, and probably little sound there.
-- (c) Both: a third projector, on a 1-in, 4-out splitter.
-
-### U228 · The second screen's image
-- (a) The same image as the first, from the splitter: the drum on both.
-- (b) A different scene (for example the prizes, or a bigger card during a Check). New work for Frontend and Sound engine, and it hides the drum there ("the drum is what people trust").
-
-### U226 · What to buy to test the presenters' remote
-The research (docs/research/reports/presenter-remote.md): "move the radio, not the remote". Any link from the stage to the table through a full tent is a gamble, so the receiver goes within 1–3 m of the presenter: the tablet on stage, or a USB receiver on an active USB extension along the audio cables to the stage edge (two 5 m cables give 10 m). The laptop stays at the table. Nothing was tried on hardware; the home test plan is in the report.
-- (a) The full kit, about 90–120 €: a 2.4 GHz presenter remote with a USB receiver (a Logitech R400 or similar), the 8BitDo USB Wireless Adapter 2 for the genuine Wii remote (about 20 €; pairs with SYNC, no MacWiiPair, but no rumble or shake), two 5 m active USB extensions, and optionally an 8BitDo Micro for the tablet. It tests both paths against the Wii remote at once.
-- (b) Only the Wii remote's path: the 8BitDo adapter (or a DolphinBar, unconfirmed on a Mac) and the extensions.
-- (c) Only the presenter remote and the extensions.
+### U229 · The backup remote
+D275: the user buys a backup for the Wii remote, "a presenter remote, or maybe a mini gamepad so i can use it for something else" (docs/research/reports/presenter-remote.md).
+- (a) A 2.4 GHz presenter remote with a USB receiver (a Logitech R400 or similar). Its receiver is a plain USB keyboard: no pairing, and it can sit on a USB extension near the stage. Següent works today with no code (PageDown); the tap-and-hold mapping for its other keys is a Console change (Frontend, board first).
+- (b) A mini gamepad (for example an 8BitDo Micro). More buttons and useful for other things, but it's Bluetooth, so to the laptop it has the Wii remote's range; and the Console needs a gamepad or keyboard mapping for it (Frontend, board first).
 
 ### U222 · The Desgraciat's standing Check when no finale was started
 D166: the finale replaces the Desgraciat's public Check. But the built console still offers one: with one card left standing and no finale started, Dempeus «Comprovar #N» (or the Wii remote's A) sends a standing Check. «Començar final» needs at least 2 finalists, so in that case the Check is the only way to confirm the winner.
@@ -413,6 +402,8 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U226 · What to buy to test the remote** (2026-11-28) → D275: the Wii remote with MacWiiPair, no adapter; a backup remote (U229).
+- **U227, U228 · A second projector** (2026-11-28) → D276: inside for the back tables; the same image from a splitter.
 - **U219 · If 5G drops** (2026-11-28) → D273: a drop isn't a design concern; what's built for it stays.
 - **U57 · Pool 2's song numbers** (2026-11-28) → D238, D269: pool 2 continues after pool 1 (71–135), and a shared song keeps pool 1's number.
 - **U61 · A pool's song we can't download** (2026-11-28): moot. All 135 songs downloaded (D269).
