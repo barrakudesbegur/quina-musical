@@ -157,6 +157,16 @@ The user (28 Nov): "just a website … a PWA that works offline … the show pag
 - (a) The direction for after 27 Dec. This year the laptop stays the only playback device, with the cheap pieces: the start app (U215), the cloud Console as the main path, and the Wii remote fixes.
 - (b) This year: reopens R2-Q26, and the rehearsals run on the new setup.
 
+### U227 · What a second projector's screen is for (if one is found)
+The research (docs/research/reports/two-projectors.md): in this tent a second screen is about readability in the back half, not sound. From today's screen the song's title is readable to about 20–30 m, but the artist and the last 3 are lost from about 11 m back. Feed: the same image on both from a 1-in, 2-out HDMI splitter, with no new code.
+- (a) The back tables: inside, about 12–14 m from the stage, on the long wall away from the open area, angled 30–45° to the back. It blocks no one's view of the first screen, and the cable from the tech's table is about 10 m.
+- (b) The open area beside the tent: outside at its stage end, facing along it. Risks: dew, rain, wind, street lamps, outdoor power, and probably little sound there.
+- (c) Both: a third projector, on a 1-in, 4-out splitter.
+
+### U228 · The second screen's image
+- (a) The same image as the first, from the splitter: the drum on both.
+- (b) A different scene (for example the prizes, or a bigger card during a Check). New work for Frontend and Sound engine, and it hides the drum there ("the drum is what people trust").
+
 ### U226 · What to buy to test the presenters' remote
 The research (docs/research/reports/presenter-remote.md): "move the radio, not the remote". Any link from the stage to the table through a full tent is a gamble, so the receiver goes within 1–3 m of the presenter: the tablet on stage, or a USB receiver on an active USB extension along the audio cables to the stage edge (two 5 m cables give 10 m). The laptop stays at the table. Nothing was tried on hardware; the home test plan is in the report.
 - (a) The full kit, about 90–120 €: a 2.4 GHz presenter remote with a USB receiver (a Logitech R400 or similar), the 8BitDo USB Wireless Adapter 2 for the genuine Wii remote (about 20 €; pairs with SYNC, no MacWiiPair, but no rumble or shake), two 5 m active USB extensions, and optionally an 8BitDo Micro for the tablet. It tests both paths against the Wii remote at once.
