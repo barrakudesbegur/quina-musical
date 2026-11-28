@@ -49,6 +49,18 @@ test('Aguanta blocks Next; Parlem does not, since Next ends it (D133, D142)', ()
   assert.equal(nextBlocked(null), false);
 });
 
+test('Pausa from Aguanta: Next plays the transition (D128), as the engine lets it', () => {
+  const stay = FIXTURES.stay(NOW).state;
+  const paused = { ...stay, pause: { sinceMs: NOW, overlay: true } };
+  assert.equal(nextBlocked(paused), false);
+  assert.equal(controlsModel(input(paused)).next.enabled, true);
+});
+
+test("Enrere in a Check only while revealing (D127, D134): not once its cue is on screen, nor before a shared Celebration's press", () => {
+  assert.equal(controlsModel(fixture('check')).back.enabled, true);
+  for (const name of ['checkCuePass', 'checkCueFail', 'checkCelebrateNext']) assert.equal(controlsModel(fixture(name)).back.enabled, false, name);
+});
+
 test("the night's last round reaches the scene rules: the corn-seed storm in its play and its Check (D155)", () => {
   const last = FIXTURES.lastRound(NOW).state;
   assert.equal(sceneContext(flowOf(last), last).lastRound, true);

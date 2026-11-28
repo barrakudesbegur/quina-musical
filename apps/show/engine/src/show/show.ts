@@ -19,6 +19,7 @@ import type {
   AutoSound,
   AutoSounds,
   SoundTestKind,
+  Command,
   CommandOf,
   ResumeToken,
   CelebrationInfo,
@@ -900,8 +901,9 @@ export class Show {
     // D234's lock, enforced: while a console holds a two-level button, only that sender's Aguanta, Parlem, Suspens
     // and Pausa act. Each console locks itself from its last snapshot, so two presses within the network latency
     // could both act; the first `twoLevelHold on` wins here. Consoles sharing a clientId are one sender.
+    // Only the held button's commands: the other two-level button works as usual (screens.md).
     const held = this.twoLevelHeld;
-    if (held && (c.cmd === 'hold' || c.cmd === 'pause' || c.cmd === 'suspense') && (c.from ?? OWN_PAGE) !== held.clientId) {
+    if (held && this.twoLevelButtonOf(c) === held.button && (c.from ?? OWN_PAGE) !== held.clientId) {
       this.reject(reqId, c.cmd, 'busy', `held by ${held.clientId}`);
       return this.flush();
     }
@@ -916,7 +918,8 @@ export class Show {
       case 'next':
         // Nothing lands while B is held (D133): Aguanta, or a Suspense (let go of B, or `suspense {on: false}`).
         if (this.suspense) this.reject(reqId, c.cmd, 'nextBlocked', 'Suspens is on: it lands when B is let go');
-        else if (this.status === 'hold' && this.hold?.ducked === false) this.reject(reqId, c.cmd, 'nextBlocked', 'Aguanta is on');
+        // During Pausa the tablet's Next plays the transition into the next song, whatever Hold Pausa found (D128).
+        else if (!this.pause && this.status === 'hold' && this.hold?.ducked === false) this.reject(reqId, c.cmd, 'nextBlocked', 'Aguanta is on');
         else if (this.finaleInfo()?.winner && !this.finaleCued) this.reject(reqId, c.cmd, 'finaleDecided', 'the finale has its winner: the cue comes first');
         else {
           if (this.pause) this.endPause({ forNext: true });
@@ -1668,6 +1671,20 @@ export class Show {
    * `busy` (the first holder keeps it), and a release that isn't the holder's, of that button, is ignored. The holder's
    * own press again (the other button) takes over. It clears by itself after TWO_LEVEL.timeoutSec.
    */
+  /**
+   * The two-level button a command belongs to (D234's lock): Pausa is Parlem's (`hold`), Suspens Aguanta's (`stay`);
+   * a `hold` is the button of the mode it enters, and its tap off (or a toggle while holding) the current mode's.
+   */
+  twoLevelButtonOf(c: Command): TwoLevelButton | null {
+    if (c.cmd === 'pause') return 'hold';
+    if (c.cmd === 'suspense') return 'stay';
+    if (c.cmd !== 'hold') return null;
+    if (c.duck !== undefined && c.on !== false) return c.duck ? 'hold' : 'stay';
+    const holding = this.status === 'hold' && this.hold != null;
+    if (c.on === false || (c.on === undefined && holding)) return holding && this.hold?.ducked === false ? 'stay' : 'hold';
+    return 'hold';
+  }
+
   twoLevelHold(reqId: string, button: TwoLevelButton, on: boolean, clientId: string) {
     const held = this.twoLevelHeld;
     if (on) {
@@ -2339,6 +2356,9 @@ export class Show {
 
   // -------------------------------------------------------------------------------------- Back
   back(reqId: string | null) {
+    // In a Check, Enrere acts only while revealing (D127, D134): after a cue its result is on screen and the Check moves
+    // on by itself (the next card, the round's Hold) or on its Celebration's press; undoing a landing then strands it.
+    if (this.scene === 'check' && (this.check?.info.cue != null || this.celebrationNext)) return this.reject(reqId, 'back', 'invalid', 'the Check had its cue');
     if (this.pending) {
       this.pending = null;
       this.enterHold('back', { music: !this.current });

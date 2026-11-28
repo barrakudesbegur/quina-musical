@@ -46,12 +46,17 @@ export function canSend(cmd: AnyCommandName, { state, flow, online }: ControlsIn
 
 /**
  * Nothing lands while B is held (D133, D142): Next is refused (`nextBlocked`) during Aguanta and while a Suspens is on.
- * Parlem doesn't block it: Next ends Parlem.
+ * Parlem doesn't block it: Next ends Parlem. During Pausa Next plays the transition, from Aguanta too (D128).
  */
-export function nextBlocked(state: Pick<ShowState, 'status' | 'hold' | 'suspense'> | null): boolean {
+export function nextBlocked(state: Pick<ShowState, 'status' | 'hold' | 'suspense' | 'pause'> | null): boolean {
   if (!state) return false;
-  return state.suspense != null || (state.status === 'hold' && state.hold?.ducked === false);
+  return state.suspense != null || (state.pause == null && state.status === 'hold' && state.hold?.ducked === false);
 }
+
+/** In a Check, Enrere acts only while revealing (D127, D134): never once its cue is on screen, nor while a shared
+ * Celebration waits for its press (the engine refuses it). */
+const checkCued = (flow: Pick<FlowFields, 'scene' | 'check' | 'celebrationNext'>): boolean =>
+  flow.scene === 'check' && (flow.check?.cue != null || flow.celebrationNext !== null);
 
 export function controlsModel(input: ControlsInput): ControlsModel {
   const { state } = input;
@@ -65,7 +70,7 @@ export function controlsModel(input: ControlsInput): ControlsModel {
     next: { enabled: canSend('next', input) && !spinning && !nextBlocked(state) },
     hold: { enabled: canSend('hold', input), holding: state?.status === 'hold' },
     suspense: { enabled: canSend('suspense', input) && !spinning, open: suspenseOpen },
-    back: { enabled: canSend('back', input) && somethingToUndo },
+    back: { enabled: canSend('back', input) && somethingToUndo && !checkCued(input.flow) },
     claim: { enabled: canSend('claim', input) },
   };
 }

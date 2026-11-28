@@ -4,7 +4,7 @@
 import nodeTest from 'node:test';
 import { dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
-import { checkCommand, formatCardRanges, makeCommand, parseCardRanges, replayJournal, stampCommandFrom, type CommandFields, type JournalEntry } from '@quina/protocol';
+import { checkCommand, formatCardRanges, makeCommand, parseCardRanges, replayJournal, stampCommandFrom, type CommandFields, type JournalEntry, type TwoLevelButton } from '@quina/protocol';
 import { TWO_LEVEL, SUSPENSE } from '../engine/src/config.ts';
 import type { Effect } from '../engine/src/show/show.ts';
 import { allCards, setup } from './support/harness.ts';
@@ -172,38 +172,58 @@ nodeTest('D234: the relay stamps the sender on every command, over any `from` th
 /** Any command from a console, as the relay forwards it (its `from`); `null`: the show page's own. */
 const from = <C extends keyof CommandFields>(h: ReturnType<typeof setup>, sender: string | null, cmd: C, fields: CommandFields[C]) =>
   h.dispatch({ ...makeCommand(cmd, fields), ...(sender ? { from: sender } : {}) });
-/** The lock's commands, on and off: Parlem, Aguanta, Suspens (and its cancel), Pausa. */
-const locked = [
-  ['hold', { on: true }],
-  ['hold', { on: true, duck: false }],
-  ['hold', { on: false }],
-  ['hold', {}],
-  ['suspense', { on: true }],
-  ['suspense', { on: false }],
-  ['suspense', { on: false, cancel: true }],
-  ['pause', { on: true }],
-  ['pause', { on: false }],
-] as const;
-const lockedBy = (h: ReturnType<typeof setup>, sender: string | null) =>
-  locked.map(([cmd, fields]) => rejection(from(h, sender, cmd, fields as never)));
+/** The lock's commands, on and off, by the two-level button they belong to: Parlem's (and Pausa), Aguanta's (and
+ * Suspens, and its cancel). A `hold` off or toggled with no Hold on is Parlem's. */
+const LOCKED = {
+  hold: [
+    ['hold', { on: true }],
+    ['hold', { on: false }],
+    ['hold', {}],
+    ['pause', { on: true }],
+    ['pause', { on: false }],
+  ],
+  stay: [
+    ['hold', { on: true, duck: false }],
+    ['suspense', { on: true }],
+    ['suspense', { on: false }],
+    ['suspense', { on: false, cancel: true }],
+  ],
+} as const;
+const lockedBy = (h: ReturnType<typeof setup>, sender: string | null, button: TwoLevelButton = 'hold') =>
+  LOCKED[button].map(([cmd, fields]) => rejection(from(h, sender, cmd, fields as never)));
 
-test('D234: while a console holds, another’s hold, suspense and pause are refused busy, held by the holder; nothing changes', () => {
+test('D234: while a console holds a button, another’s commands of that button are refused busy, held by the holder; nothing changes', () => {
+  for (const button of ['hold', 'stay'] as const) {
+    const h = setup({ seed: 3 });
+    h.send('unlock');
+    twoLevel(h, TABLET, { button, on: true });
+    const before = h.show.status;
+    for (const r of lockedBy(h, LAPTOP, button)) {
+      assert.ok(r?.type === 'reject', button);
+      assert.equal(r.reason, 'busy');
+      assert.equal(r.detail, `held by ${TABLET}`);
+    }
+    assert.equal(h.show.status, before);
+    assert.equal(h.show.pause, null);
+    assert.equal(heldOf(h)?.clientId, TABLET);
+    // The show page's own commands (no `from`) are another sender's too.
+    for (const r of lockedBy(h, null, button)) assert.ok(r?.type === 'reject' && r.reason === 'busy');
+    // Other commands are not the lock's.
+    assert.deepEqual(rejected(from(h, LAPTOP, 'setVolume', { key: 'master', percent: 80 })), []);
+  }
+});
+
+test('D234: the other two-level button works as usual on another console (screens.md)', () => {
   const h = setup({ seed: 3 });
   h.send('unlock');
   twoLevel(h, TABLET, { button: 'hold', on: true });
-  const before = h.show.status;
-  for (const r of lockedBy(h, LAPTOP)) {
-    assert.ok(r?.type === 'reject');
-    assert.equal(r.reason, 'busy');
-    assert.equal(r.detail, `held by ${TABLET}`);
-  }
-  assert.equal(h.show.status, before);
-  assert.equal(h.show.pause, null);
-  assert.equal(heldOf(h)?.clientId, TABLET);
-  // The show page's own commands (no `from`) are another sender's too.
-  for (const r of lockedBy(h, null)) assert.ok(r?.type === 'reject' && r.reason === 'busy');
-  // Other commands are not the lock's.
-  assert.deepEqual(rejected(from(h, LAPTOP, 'setVolume', { key: 'master', percent: 80 })), []);
+  for (const r of lockedBy(h, LAPTOP, 'stay')) assert.notEqual(r?.reason, 'busy');
+  const s = setup({ seed: 3 });
+  s.send('unlock');
+  twoLevel(s, TABLET, { button: 'stay', on: true });
+  assert.deepEqual(rejected(from(s, LAPTOP, 'hold', { on: true })), [], 'Parlem');
+  assert.deepEqual(rejected(from(s, LAPTOP, 'pause', { on: true })), [], 'Pausa');
+  assert.ok(s.show.pause);
 });
 
 test('D234: the holder’s own hold, suspense and pause act; consoles sharing a clientId are one sender', () => {
@@ -222,7 +242,7 @@ test('D234: the holder’s own hold, suspense and pause act; consoles sharing a 
   p.send('unlock');
   twoLevel(p, null, { button: 'stay', on: true });
   assert.deepEqual(rejected(p.send('hold', { on: true, duck: false })), []);
-  assert.equal(rejection(from(p, LAPTOP, 'pause', { on: true }))?.detail, 'held by local');
+  assert.equal(rejection(from(p, LAPTOP, 'suspense', { on: true }))?.detail, 'held by local');
 });
 
 test('D234: after the release, or once the holder disconnects, everyone’s commands act again', () => {
@@ -233,10 +253,10 @@ test('D234: after the release, or once the holder disconnects, everyone’s comm
   twoLevel(h, TABLET, { button: 'hold', on: false });
   for (const sender of [LAPTOP, null, TABLET]) for (const r of lockedBy(h, sender)) assert.notEqual(r?.reason, 'busy');
   twoLevel(h, TABLET, { button: 'stay', on: true });
-  assert.deepEqual(rejected(from(h, LAPTOP, 'pause', { on: true })), ['busy']);
+  assert.deepEqual(rejected(from(h, LAPTOP, 'suspense', { on: true })), ['busy']);
   h.show.clientsChanged(['show-1', LAPTOP]);
   assert.equal(heldOf(h), null);
-  for (const sender of [LAPTOP, null]) for (const r of lockedBy(h, sender)) assert.notEqual(r?.reason, 'busy');
+  for (const sender of [LAPTOP, null]) for (const r of lockedBy(h, sender, 'stay')) assert.notEqual(r?.reason, 'busy');
 });
 
 test('D234: checkReview (the touch «Revisió manual») is never refused by the lock', () => {
