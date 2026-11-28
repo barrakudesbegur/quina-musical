@@ -881,8 +881,6 @@ export const S = {
     songsMore: 'Una cançó més',
     play: (n: number) => (n === 0 ? 'Anar-hi sense cap cançó' : n === 1 ? "Anar-hi després d'1 cançó" : `Anar-hi després de ${n} cançons`),
     playNote: "Barreja nova; la música d'espera sona fins a Següent.",
-    /** LOCAL until the protocol has the commands (then S.commands). */
-    commands: { testReset: 'Nova partida', testJump: 'Anar a la ronda' } as Record<string, string>,
   },
 
   /** The menu's «Sons automàtics» (D237; AutoSounds.svelte): each sound the show plays by itself, on or off. */
@@ -1053,6 +1051,8 @@ export const S = {
     soundTest: 'Prova de so',
     addCardsInPlay: 'Cartrons venuts',
     twoLevelHold: 'Parlem o Aguanta',
+    testReset: 'Nova partida',
+    testJump: 'Anar a la ronda',
   } satisfies Record<ConsoleCommand, string> as Partial<Record<AnyCommandName, string>>,
   commandFallback: 'Ordre',
 
@@ -1062,7 +1062,7 @@ export const S = {
 /** The text for a hold reason. */
 export const holdReasonText = (reason: HoldReason | string): string => S.hold.reasons[reason as HoldReason] ?? S.hold.reasonFallback;
 /** The label of a command, for toasts. */
-export const commandText = (cmd: string | null): string => (cmd ? (S.commands[cmd as AnyCommandName] ?? S.tests.commands[cmd]) : undefined) ?? S.commandFallback;
+export const commandText = (cmd: string | null): string => (cmd ? S.commands[cmd as AnyCommandName] : undefined) ?? S.commandFallback;
 /** The Catalan reason of a rejection. */
 export const reasonText = (reason: RejectReason | string): string => S.reasons[reason as RejectReason] ?? S.reasonFallback;
 /** A sound's button label. */

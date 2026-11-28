@@ -26,14 +26,14 @@
   const max = $derived(testSongsMax(round));
   let songs = $state(0);
   const k = $derived(Math.min(songs, max));
-  const allowed = $derived(model.canTest);
+  const allowed = $derived(model.can('testReset'));
 </script>
 
 <section class="menu-group tests" aria-labelledby="{uid}-title" data-testid="tests-panel">
   <h3 class="menu-group__title" id="{uid}-title"><Icon name="tests" />{S.tests.title}</h3>
   <p class="note">{S.tests.note}</p>
 
-  <LongPressButton {...ACTIONS.testReset} disabled={!allowed} data-testid="tests-reset" onconfirm={() => model.testAct('testReset', {})} />
+  <LongPressButton {...ACTIONS.testReset} disabled={!allowed} data-testid="tests-reset" onconfirm={() => model.act('testReset', {})} />
 
   <span class="menu-group__field" id="{uid}-round">{S.tests.round}</span>
   <div class="choice-group" role="group" aria-labelledby="{uid}-round">
@@ -42,7 +42,7 @@
     {/each}
   </div>
 
-  <MiniButton {...MINI.testIntro} disabled={!allowed || !round} data-testid="tests-intro" onclick={() => round && model.testAct('testJump', testJumpArgs(round.number, null))} />
+  <MiniButton {...MINI.testIntro} disabled={!allowed || !round} data-testid="tests-intro" onclick={() => round && model.act('testJump', testJumpArgs(round.number, null))} />
   <p class="note">{S.tests.introNote}</p>
 
   <Slider
@@ -58,6 +58,6 @@
     oninput={(v) => (songs = v)}
     data-testid="tests-songs"
   />
-  <MiniButton {...MINI.testPlay} label={S.tests.play(k)} disabled={!allowed || !round} data-testid="tests-play" onclick={() => round && model.testAct('testJump', testJumpArgs(round.number, k))} />
+  <MiniButton {...MINI.testPlay} label={S.tests.play(k)} disabled={!allowed || !round} data-testid="tests-play" onclick={() => round && model.act('testJump', testJumpArgs(round.number, k))} />
   <p class="note">{S.tests.playNote}</p>
 </section>

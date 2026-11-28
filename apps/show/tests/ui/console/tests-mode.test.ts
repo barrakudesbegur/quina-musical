@@ -2,13 +2,17 @@
 // commands its controls send; «Nova partida» behind a hold.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { PROTOCOL_VERSION } from '@quina/protocol';
+import { PROTOCOL_VERSION, TEST_COMMANDS, makeCommand } from '@quina/protocol';
 import type { CatalogCard } from '../../../../../packages/ui/data/catalog.ts';
 import { LONG_PRESS_IDLE, longPress, type LongPressEvent } from '../../../../../packages/ui/components/hold/long-press.ts';
 import type { GamePlan } from '../../../../../packages/ui/plan.ts';
 import { ACTIONS } from '../../../../console/actions.ts';
+import { CONSOLE_COMMANDS } from '../../../../console/config.ts';
+import { canSend } from '../../../../console/logic/scene.ts';
+import { flowOf } from '../../../../../packages/ui/flow.ts';
+import { FIXTURES } from '../../../../../packages/ui/fixtures/states.ts';
 import { S, commandText } from '../../../../console/strings.ts';
-import { TEST_SONGS_FALLBACK_MAX, sendTestCommand, testCanSend, testJumpArgs, testModeAfter, testRounds, testSongsMax } from '../../../../console/logic/tests-mode.ts';
+import { TEST_SONGS_FALLBACK_MAX, testJumpArgs, testModeAfter, testRounds, testSongsMax } from '../../../../console/logic/tests-mode.ts';
 
 const mode = (test: unknown) => ({ v: PROTOCOL_VERSION, type: 'relay.mode', test });
 
@@ -29,20 +33,28 @@ test('anything else in relay.mode hides it: false, a truthy non-boolean, a missi
   assert.equal(testModeAfter(false, { v: 99, type: 'relay.mode', test: true }), false, 'another protocol version is ignored');
 });
 
-test('the commands: offline or locked can’t send; any scene can', () => {
-  assert.equal(testCanSend({ online: false, state: { status: 'playing' } }), false);
-  assert.equal(testCanSend({ online: true, state: null }), false);
-  assert.equal(testCanSend({ online: true, state: { status: 'locked' } }), false);
-  assert.equal(testCanSend({ online: true, state: { status: 'hold' } }), true);
+test('the commands: offline or locked can’t send; any scene can, Pausa included (the protocol’s scene rule)', () => {
+  const now = Date.UTC(2026, 11, 27, 21);
+  const play = FIXTURES.play(now).state;
+  const states = [...['before', 'play', 'check', 'interval', 'after'].map((name) => FIXTURES[name]!(now).state), { ...play, pause: { sinceMs: now, overlay: false } }];
+  for (const state of states) {
+    for (const cmd of TEST_COMMANDS) {
+      assert.equal(canSend(cmd, { online: true, state, flow: flowOf(state) }), true, `${cmd} in ${flowOf(state).scene}`);
+      assert.equal(canSend(cmd, { online: false, state, flow: flowOf(state) }), false);
+      assert.equal(canSend(cmd, { online: true, state: { ...state, status: 'locked' }, flow: flowOf(state) }), false);
+    }
+  }
+  assert.equal(canSend('testJump', { online: true, state: null, flow: flowOf(null) }), false);
 });
 
-test('the messages: testReset {} and testJump, like ShowClient.send builds them', () => {
-  const reset = sendTestCommand('testReset', {}, 'Tauleta');
-  assert.deepEqual(reset.message, { v: PROTOCOL_VERSION, type: 'cmd', cmd: 'testReset', reqId: reset.reqId });
-  assert.match(reset.reqId, /^Tauleta-/);
-  const jump = sendTestCommand('testJump', testJumpArgs(4, 7), 'Tauleta');
-  assert.deepEqual(jump.message, { v: PROTOCOL_VERSION, type: 'cmd', cmd: 'testJump', reqId: jump.reqId, round: 4, songs: 7 });
-  assert.equal(commandText('testReset'), S.tests.reset, 'a refusal names it');
+test('the messages: testReset {} and testJump, as the console sends them; a refusal names them', () => {
+  const reset = makeCommand('testReset', {});
+  assert.deepEqual(reset, { v: PROTOCOL_VERSION, type: 'cmd', cmd: 'testReset', reqId: reset.reqId });
+  const jump = makeCommand('testJump', testJumpArgs(4, 7));
+  assert.deepEqual(jump, { v: PROTOCOL_VERSION, type: 'cmd', cmd: 'testJump', reqId: jump.reqId, round: 4, songs: 7 });
+  for (const cmd of TEST_COMMANDS) assert.ok((CONSOLE_COMMANDS as readonly string[]).includes(cmd), `${cmd} is a console command`);
+  assert.equal(commandText('testReset'), S.tests.reset);
+  assert.equal(commandText('testJump'), 'Anar a la ronda');
 });
 
 /** A card of `type`, its side 1 songs `first` … `first + 11`. */
