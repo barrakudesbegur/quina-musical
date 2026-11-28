@@ -78,6 +78,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `68340f6f` (`843bb85`, repertoire 2026): D279/D280 in the console (the bare padlock, level 2's stripes, the side chip hidden when it repeats the round, the Efectes pads at 1194 × 834, the demo plan «Quina Quina! 3», the menu's light dismiss, Pausa's music named).
     - `cf9e4ea9` (`9defcd2`, repertoire 2026): «#57» card numbers on the phone, the near-win chime and buzz back (D278), the toast off the header, the console's pre-night cleanup.
     - `ff40c7c4` (`6ee5d54`, repertoire 2026): Frontend's D276 (every stage scene at 4:3, 16:10 and 16:9), stage fixes, U225's thick Check marks; Sound engine's `c91a721` (the flag and moon count from the plan's start until round 1, so phones' end time does too).
+    - `a4bcdd18` (`95580b6`, repertoire 2026): D284's console banner for `audioStalled` (so D284 is complete: the engine's watchdog, the consoles' banner, my preflight FAIL), «Cartró #57» on the console and in Admin.
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
