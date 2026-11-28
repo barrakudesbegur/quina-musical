@@ -39,11 +39,15 @@
     hex: string | null;
     ms: number | null;
     px: number | null;
+    /** The @media (or other condition) it is declared under, when it is. */
+    when: string | null;
   }
-  const tok = (d: Pick<TokenDecl, 'name' | 'raw'>, look = lookup): Tok => {
+  const tok = (d: Pick<TokenDecl, 'name' | 'raw'> & Partial<Pick<TokenDecl, 'conditions'>>, look = lookup): Tok => {
     const value = resolveVars(d.raw, look);
-    return { name: d.name, raw: d.raw, value, hex: hexOf(value), ms: msOf(value), px: pxOf(value) };
+    return { name: d.name, raw: d.raw, value, hex: hexOf(value), ms: msOf(value), px: pxOf(value), when: d.conditions?.length ? d.conditions.join(' and ') : null };
   };
+  /** A token's key in a list: a name can come back under a condition (reduced motion). */
+  const keyOf = (t: Tok) => (t.when ? `${t.name} @ ${t.when}` : t.name);
   const ROOT = rootDecls.map((d) => tok(d));
   const names = new Set(ROOT.map((t) => t.name));
   const has = (prefix: string | RegExp) => ROOT.filter((t) => (typeof prefix === 'string' ? t.name.startsWith(prefix) : prefix.test(t.name)));
@@ -116,13 +120,15 @@
   // ---- the apps' own ----
   /** Each app stylesheet's tokens on its root (.player, .console, the stage's .stage-root), by file. */
   const APP_ROOTS = ['.player', '.console', '.stage-root', '.ds-stage'];
+  /** A length of time by its name (--dur-*, --delay-*, --stage-dur-*…) and its value. */
+  const isDuration = (t: Tok) => /(^--|-)(dur|delay)-/.test(t.name) && t.ms !== null;
   const appDecls = decls.filter((d) => d.file.startsWith('apps/') && !d.file.startsWith('apps/ds/') && APP_ROOTS.includes(d.selector));
   /** An app's values resolve against its own root tokens over tokens.css's, as on the app's root element. */
-  const appLookup = lookupIn([...rootDecls, ...appDecls]);
+  const appLookup = lookupIn([...rootDecls, ...appDecls.filter((d) => !d.conditions.length)]);
   const APP_FILES = groupBy(
     appDecls.map((d) => ({ ...tok(d, appLookup), file: d.file })),
     (t) => (t as Tok & { file: string }).file,
-  ).map(([file, list]) => ({ file, durations: list.filter((t) => /^--(dur|delay)-/.test(t.name) && t.ms !== null), rest: list.filter((t) => !(/^--(dur|delay)-/.test(t.name) && t.ms !== null)) }));
+  ).map(([file, list]) => ({ file, durations: list.filter(isDuration), rest: list.filter((t) => !isDuration(t)) }));
   const STAGE_LIFTED = decls.some((d) => d.selector === '.ds-stage');
 
   // ---- drawing helpers ----
@@ -174,19 +180,19 @@
 {#snippet bars(list: Tok[])}
   <div class="ds-tok__bars">
     <span></span><span class="ds-tok__ticks" aria-hidden="true">{#each ['10 ms', '100 ms', '1 s', '10 s'] as tick, i (tick)}<span style:--at={i / 3}>{tick}</span>{/each}</span><span></span>
-    {#each list as t (t.name)}
-      <code class="ds-tok__name">{t.name}</code>
+    {#each list as t (keyOf(t))}
+      <code class="ds-tok__name">{t.name}{#if t.when}<small class="ds-tok__when">{` @media ${t.when}`}</small>{/if}</code>
       <span class="ds-tok__track"><span class="ds-tok__bar" style:--share={logShare(t.ms ?? 1)}></span></span>
-      <span class="ds-tok__value">{formatMs(t.ms ?? 0)}{#if refOf(t.raw)} = {refOf(t.raw)}{:else if !/^[\d.]+m?s$/.test(t.raw)} = {short(t.raw, 40)}{/if}</span>
+      <span class="ds-tok__value">{formatMs(t.ms ?? 0)}{#if refOf(t.raw)}{` = ${refOf(t.raw)}`}{:else if !/^[\d.]+m?s$/.test(t.raw)}{` = ${short(t.raw, 40)}`}{/if}</span>
     {/each}
   </div>
 {/snippet}
 
 {#snippet rows(list: Tok[])}
   <dl class="ds-tok__rows">
-    {#each list as t (t.name)}
+    {#each list as t (keyOf(t))}
       <div>
-        <dt><code class="ds-tok__name">{t.name}</code></dt>
+        <dt><code class="ds-tok__name">{t.name}</code>{#if t.when}<small class="ds-tok__when">{` @media ${t.when}`}</small>{/if}</dt>
         <dd>
           {#if t.hex}<span class="ds-tok__dot" style:background={t.value}></span>{/if}
           <span class="ds-tok__value">{short(t.raw, 90)}{#if t.hex && t.hex !== t.raw.toLowerCase()}{' · '}{t.hex}{:else if t.px !== null && t.raw.endsWith('rem')}{' · '}{formatPx(t.px)}{/if}</span>

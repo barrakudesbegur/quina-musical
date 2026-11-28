@@ -40,6 +40,14 @@
   overflow-wrap: anywhere;
 }
 
+.ds-tok__when {
+  display: block;
+  color: var(--color-text-muted);
+  font-family: var(--ds-tok-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
 .ds-tok__value {
   color: var(--color-text-muted);
   font-family: var(--ds-tok-mono);
