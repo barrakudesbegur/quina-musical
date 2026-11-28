@@ -58,7 +58,7 @@ This page explains the event: what happens on the night, who does what, and how 
 - **Sound:** two big speakers on stage and a simple mixing desk. There's no sound team.
   - In 2024 the sound was too quiet at the back. We want a stronger system and a sound check beforehand.
 - **Projection:** one 4:3 projector, far from the audience, so only big things are readable. A 16:9 projector might replace it.
-- **Distances:** the stage is 5–10 m from the projector, and the closest table is next to the projector. The audio cables are usually long enough; the only worry is someone tripping over them. The mixing desk can be placed almost anywhere. The tech prefers the laptop and the mixer at that table, next to the projector. 5G in Begur is reliable: a drop is so unlikely it isn't worth designing for.
+- **Distances:** the stage is 5–10 m from the projector, and the closest table is next to the projector. The audio cables are usually long enough; the only worry is someone tripping over them. The mixing desk can be placed almost anywhere. The tech prefers the laptop and the mixer at that table, next to the projector. 5G in Begur is reliable: a drop is so unlikely it isn't worth designing for. Congestion, when the whole tent loads the player app at once, is unlikely but possible.
 - **Microphones:** both wired and wireless are available. The choice isn't fixed.
 - **Show equipment:**
   - the laptop, which drives the projector and the music, in the first row or at the side of the stage;

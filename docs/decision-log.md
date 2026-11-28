@@ -1794,7 +1794,7 @@ By: the user (to the card design session). Source: quina-musical-d1's report of 
 By: the user (to the card design session). Source: quina-musical-d1's report of 28 Nov.
 
 ### D273 · A 5G drop isn't a design concern · 2026-11-28 · Active
-Answers U219 with (b): "A 5G drop is so unlikely it is absurd to care about. i'm in begur a town in girona, spain." New designs may rely on the internet: losing the tablet until 5G returns is acceptable. What's built for a drop (the relay, the hotspot Console, the laptop's journal, R2-Q26) stays as it is. ADR-0003's reason for rejecting the cloud as the live show's hub no longer weighs on later designs, such as the browser-only setup (U218).
+Answers U219 with (b): "A 5G drop is so unlikely it is absurd to care about. i'm in begur a town in girona, spain." New designs may rely on the internet: losing the tablet until 5G returns is acceptable. What's built for a drop (the relay, the hotspot Console, the laptop's journal, R2-Q26) stays as it is. ADR-0003's reason for rejecting the cloud as the live show's hub no longer weighs on later designs, such as the browser-only setup (U218). **Congestion is the one real risk:** when the whole tent loads the player app at once (the start, the Celebrations), the cell can saturate. The user: "good point 5g congestion is a possible danger. unlikely but exists". So the built offline paths keep their purpose, and a later design that relies on the internet must say what congestion does to it.
 By: the user. Source: the user's message of 28 Nov, after docs/research/reports/browser-only-show.md. Lives in: requirements/operations.md › Where things run.
 
 ### D274 · No stick at the projector; the audio on another device is only a nice-to-have · 2026-11-28 · Active
