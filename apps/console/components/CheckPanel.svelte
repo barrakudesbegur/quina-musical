@@ -123,7 +123,7 @@
     {#if check}
       <CheckCard {check} {claim} {of} />
     {:else}
-      <section class="panel check-card check-card--none"><p class="note">{S.check.none}</p></section>
+      <section class="panel check-card check-card--none"><p class="note">{state?.stage === 'celebrateNext' ? S.check.noneDiscarded : S.check.none}</p></section>
     {/if}
   </div>
 

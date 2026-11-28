@@ -420,7 +420,9 @@ test("D121: a review back on screen after another card's Check: its earlier reve
 test('a Check discarded from its review fades out while the next card comes', () => {
   const state = FIXTURES.checkReview(NOW).state;
   assert.ok(state.check);
-  const discarded: FlowState = { ...state, check: null, claims: state.claims.map((c) => ({ ...c, status: 'discarded' as const })) };
+  // The next card is on its way (queued); with none to come the round shows instead (stage/model/check.ts › shownCheck).
+  const next = { ...state.claims[0], claimId: 'cl-next', status: 'queued' as const };
+  const discarded: FlowState = { ...state, check: null, claims: [...state.claims.map((c) => ({ ...c, status: 'discarded' as const })), next] };
   const view = stageView(discarded, flowOf(discarded), SAMPLE_PLAN, CATALOG, { landed: [], spin: null, check: { ...NO_CHECK_MEMORY, last: state.check } });
   if (view.body.scene !== 'check') return assert.fail('not check');
   assert.equal(view.body.check.discarded, true);

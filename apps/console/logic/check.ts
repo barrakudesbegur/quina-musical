@@ -226,10 +226,18 @@ export const stepBackOnScreen = (check: Pick<CheckInfo, 'claimId' | 'revealed' |
 export const replayedAfterBack = (check: CheckInfo, claim: ClaimInfo | null, removedIndex: number): number | null =>
   removedIndex > 0 ? (checkedSongs(check, claim)[removedIndex - 1]?.songId ?? null) : null;
 
-/** The cards of the shared Celebration (`celebrationNext`): the valid Claims of the Check's kind. */
-export function batchWinners(flow: Pick<FlowFields, 'check' | 'claims'>): number[] {
-  const kind = flow.check?.kind;
-  return flow.claims.filter((c) => c.status === 'valid' && (kind === undefined || c.kind === kind)).map((c) => c.cardId);
+/** The win a round's valid Claims celebrate, as the engine picks it: the last card standing, else a Bingo, else a Line. */
+const WIN_RANK: Record<WinKind, number> = { line: 0, bingo: 1, standing: 2 };
+
+/**
+ * The cards the shared Celebration (`celebrationNext`) will name, as the engine's Celebration lists them: the round's
+ * valid Claims of the win it celebrates (the highest one valid this round), each card once. Never the Check on
+ * screen's kind: after a discard no Check is on screen, and the Line's earlier winners must not join a Bingo's (2.2).
+ */
+export function batchWinners(flow: Pick<FlowFields, 'claims'>): number[] {
+  const valid = flow.claims.filter((c) => c.status === 'valid');
+  const top = valid.reduce<WinKind | null>((k, c) => (k === null || WIN_RANK[c.kind] > WIN_RANK[k] ? c.kind : k), null);
+  return [...new Set(valid.filter((c) => c.kind === top).map((c) => c.cardId))];
 }
 
 /** The Review's decisions by hand (D121): winning a card that fails, or losing one that passes, needs a confirmation. */

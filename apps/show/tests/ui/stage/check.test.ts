@@ -360,7 +360,12 @@ test("the last card's fail stays on screen through the round's `checkFailed` Hol
 });
 
 test('a Check discarded from its review fades out while the next card is on its way', () => {
-  const kept = shownCheck({ scene: 'check', check: null, claims: [claim('discarded')] }, 'claim', info({ reviewing: true }));
+  const next = { claimId: 'cl-6', status: 'queued' } as ClaimInfo;
+  const kept = shownCheck({ scene: 'check', check: null, claims: [claim('discarded'), next] }, 'claim', info({ reviewing: true }));
   assert.equal(kept?.discarded, true);
+  assert.equal(shownCheck({ scene: 'check', check: null, claims: [claim('discarded'), { ...next, status: 'reviewing' }] }, 'claim', info())?.discarded, true, 'or one under review');
+  // None to come: an earlier pass's Celebration waits for its press (`celebrationNext`). The round shows, not an empty
+  // screen (2.2, the orchestrator's run of 28 Nov).
+  assert.equal(shownCheck({ scene: 'check', check: null, claims: [{ ...next, status: 'valid' }, claim('discarded')] }, 'claim', info()), null);
   assert.equal(shownCheck({ scene: 'check', check: null, claims: [claim('queued')] }, 'back', info()), null, 'a Back puts it back in the queue: it goes');
 });

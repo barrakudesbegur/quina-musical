@@ -343,8 +343,10 @@ export interface ShownCheck {
  * - The last card's fail: the engine goes straight back to the round (scene `play`, the `checkFailed` Hold) as the
  *   cue plays, so the projector keeps that card, with its fail moment, until the Hold ends (Next, Back, another
  *   Claim).
- * - A Claim discarded from its review while the round waits in its Check for the next card: it fades out (the
- *   last card's discard goes back to the round, which fades the Check out anyway).
+ * - A Claim discarded from its review while the next card is on its way (queued, or under review): it fades out
+ *   until that card's Check comes on. With none to come, nothing is kept: the last card's discard goes back to the
+ *   round, and one that leaves an earlier pass's Celebration waiting for its press (`celebrationNext`) shows the
+ *   round too, never an empty screen (2.2).
  */
 export function shownCheck(
   flow: Pick<FlowFields, 'scene' | 'check' | 'claims'>,
@@ -355,7 +357,8 @@ export function shownCheck(
   if (!last) return null;
   const claim = flow.claims.find((c) => c.claimId === last.claimId);
   if (!claim) return null;
-  if (flow.scene === 'check' && claim.status === 'discarded') return { check: readCheck(last), discarded: true };
+  const nextOnItsWay = flow.claims.some((c) => c.status === 'queued' || c.status === 'reviewing');
+  if (flow.scene === 'check' && claim.status === 'discarded' && nextOnItsWay) return { check: readCheck(last), discarded: true };
   if (flow.scene === 'play' && holdReason === 'checkFailed' && claim.status === 'invalid') {
     return { check: { ...readCheck(last), cue: 'fail', reviewing: false }, discarded: false };
   }

@@ -514,6 +514,8 @@ export const S = {
     checkNow: (id: number) => `Comprova el #${id}`,
     /** No Check on screen (after a Back during a Check, U104): the queued cards wait for a press. */
     none: 'Cap cartró a la pantalla: trieu quin voleu comprovar.',
+    /** No Check on screen after a discard, with an earlier pass's Celebration waiting for its press (2.2). */
+    noneDiscarded: 'Cartró descartat: no en queda cap per comprovar.',
   },
 
   /** The Review («Revisió manual», D119–D125; board Consola-Comprovacio-Revisio, a draft: U77). */
