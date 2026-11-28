@@ -170,15 +170,17 @@ The generator works today: the final cards in both layouts from repertoire 2026,
 Sessions keep their lanes (team.md) and their limits on parallel agents (Frontend: at most two). Each works through its items in the order below.
 
 **Phase A, now to 3 Dec: P0.**
-- **Sound engine:** 1.1 (the engine side), 1.2, 1.6, 2.4, 2.3 (the engine side), 3.1 (with Frontend), 8.2 (the repertoire's `cardsJson`). No transition work yet (D298).
-- **Backend, or the user's setup session for the start and the screens (D282, D299, D300):** 1.1 (the runbook and the launch command), 6.1, 6.2, 6.3, 6.4b, 6.5's port; then the end-to-end night (11).
-- **Frontend:** 8.1 and 8.2 first (small, and the cards depend on them), then 7.1, 2.1, 2.2, 2.3 (the console side), 1.3 (after U173); then the in-play projector (3.2).
-- **The orchestrator:** checks each pushed item; models the night's opening (1.5) with the user (U97, U99, U173, D291), so it's ready to build in phase C.
+- **Sound engine:** 1.1 (refuse play commands before the night, the Queue drawn at its Shuffle, no `next` on unlock), 1.2 (the plan's round count; nothing after the last round but the end), 1.6, 2.3 and 2.4 (the engine's presenter actions), 3.1 (the Shuffle shows the round's 70, with Frontend), 8.2 (the repertoire's `cardsJson`). No transition work (D298).
+- **Frontend (at most two agents):** 8.1 and 8.2 (the A4 card by default, the A3 kept; apps/cards' README) and the proof sheet before 4 Dec; 7.1 (Admin's blank plan); 2.1, 2.2, 2.3 (the console side); D304 (the doors' «Començar la nit»); D305 (no round totals); 2.12 (reproduce the Heat meter). Then the boards side by side for the user: D302 (the drum behind the Line's Celebration), D303 (the squashed nino), D308 (the Break with the timeline), D315 and D316 (the phone's ribbon states); then the in-play projector (3.2, D294) and 3.6 (no prizes on the projector, D311).
+- **Backend:** 6.1 (the night's repertoire as the default for the preflight, setup, the README and `media pull`), 6.3 (the preflight), the launch command without `autostart` (chrome-profiles.ts; the runbook's lines go to the orchestrator), 4.10 (the relay's plan for phones); then the end-to-end night (§11).
+- **The setup session (quina-musical-79), with the user:** D282 (the Mac app), D299 and D313 (the audio unlock), D300 (the projector from a website), the backup remote, Rubber Band in WebAssembly, each device's place.
+- **The Check's song session (quina-musical-f5), with the user:** the ✗ case (D314) and U205.
+- **The orchestrator:** checks every pushed item with a verify agent on a frozen build, as on 28 Nov, before it counts as done; logs the decisions the sessions send.
 
 **Phase B, 4–5 Dec: the cards.** Frontend generates them in D295's layout; the user checks the proof and prints.
 
 **Phase C, from 6 Dec to the tech rehearsal: P1.**
-- **Frontend:** the projector's scenes (3.2–3.4, as the user picks), the console's P1 (2.5–2.10), the phone's P1 (4.1–4.9), the cheat sheet (7.2), the screenshot comparisons (11).
+- **Frontend:** the projector's scenes (3.2–3.4, 3.7, as the user picked: D297, D301–D303, D308–D311), every sponsor a sticker (D309, D312, D317), the phone's Break (4.12), the console's P1 (2.5–2.10), the phone's P1 (4.1–4.9), the cheat sheet (7.2), the screenshot comparisons (11).
 - **Sound engine:** once the app works better (D298), the user's listening session and the tuning (5.1–5.3, 5.7); the doors music and the night's opening (1.4, 1.5), Hold music and voices (5.5, 5.6), the quick hook review (U56) before the user's approval pass (9.1).
 - **Backend:** the feed's heartbeat (4.2), the relay's plan for phones (4.10), the load test and the usage counter (10.1, 10.2), the Plan B drills (6.6), D282 when the user resumes it.
 
