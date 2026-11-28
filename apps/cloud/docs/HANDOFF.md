@@ -2,18 +2,12 @@
 
 The single place to resume Platform's work from. Sessions get cleared, so keep it current at each milestone.
 
-## Now (2026-11-28, the user's prod test)
+## Now (2026-11-28, after the user's prod test)
 
-- **Running on this Mac for the user's test** (from the detached worktree `…/792339b0-…/scratchpad/wt-fix` at `f54eb5f8`): caffeinate, the relay `npm start -- --lan --repertoire 2026 --test`, the link, the show page in kiosk (profile `~/Library/Application Support/Quina/chrome-show`), the laptop's console (`chrome-console`). The plan's start is 12:20 Begur time (`--start`, D288).
-- **When the user says the test is done:**
-  1. stop the relay, the link and caffeinate, and quit both Chrome profiles;
-  2. `npm run edition -- upload data/editions/2026.plan.json --repertoire 2026` (preview), then `--yes`, to restore 27 Dec 17:00/18:00, and tell the Orchestrator;
-  3. remove my scratchpad worktrees after unlinking their links (`wt-guard`, `wt-e2e`; `wt-fix` is the previous session's).
-- **After the test:**
-  - push the 2026 media to R2: the preflight FAILs "Media files" because Sound engine renamed the stems (`bass.0.flac`); preview first, and tell Sound engine and the user before pushing;
-  - add a test and a README note that `/media/*` stays same-origin with the screens (a canvas reads logo pixels, D287);
-  - propose to Sound engine that checkGamePlan take only `/media/<hash>.(png|jpg)` logos (stored plans go through that check on load, so carefully);
-  - suggest Frontend a lint: no `animation-timeline` outside `@supports`. Playwright's WebKit is newer than Safari 18, so the e2e can't catch it, and this Mac's simulators are iOS 27 only.
+- **The prod test is over** (the user: "you can stop everything"). Nothing runs on this Mac; the cloud's plan is back to 27 Dec 17:00/18:00 (the test plan saved in `data/link/backups/`). Live: `b57a3eb6` (from `e6d95db1`). The previous session's `wt-fix` and my `wt-guard`/`wt-e2e` worktrees stay (mine are unlinked); a hook refuses removing worktrees by hand.
+- **R2 needs no push:** `media push --repertoire 2026 --dry-run` says 0 changed, and the preflight from the main checkout passes. The test's FAIL came from a stale local manifest used when the cloud's couldn't be fetched (the Mac switching networks).
+- **In progress (a helper, in `wt-guard`):** the preflight names its fallback (WARN with the local copy's date, not FAIL; the Orchestrator's ask), and a workerd test plus a README line that `/media/*` stays same-origin with the screens (D287's canvas).
+- **Sent, waiting on others:** to Sound engine, `checkGamePlan` taking only `/media/<hash>.(png|jpg)` logos (my pick: a migration that nulls other values on read); to Frontend, a lint against `animation-timeline`/`view()`/`scroll()` outside `@supports` (the e2e can't see Safari 18: Playwright's WebKit is newer, this Mac's simulators are iOS 27).
 - **Found today:** a 27 Nov kiosk (profile `/tmp/quina-show`) was still running and reconnected to a new relay as a second show page; I quit it. Reloading a `fresh=1` tab started a new Game (now one-shot, `11948775`). The Mac switches networks (172.26.205.80, 192.168.10.153, 192.168.10.31), so the relay now prints its address again when it changes.
 
 ## Before (2026-11-27)
