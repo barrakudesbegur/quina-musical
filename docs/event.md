@@ -368,6 +368,7 @@ This page explains the event: what happens on the night, who does what, and how 
 - **2026's deadlines** (the organizers' task list): the sponsors contacted by 22 November; the town council request and a check of the storeroom's stock by 1 December; the cards made by 5 December and printed by 12 December; the stock and material lists and the crisps order by 6 December; the baskets and the Line bags by 7 December; the hampers' food in the last week; a social post every 2–3 days.
 - **What gets printed** (2026's material list): the cards; price posters for the cards and the Quines; a sheet of each round's prizes; the winners' tickets for the hampers; sponsor sheets to hang up. The team also needs pens, paper and the list of Quines.
 - **After the playlist is final:** generate the cards and print them well ahead.
+- **Once the sponsors have sent their logos:** prepare them with tools/logos (`npm run logos -- data/editions/<year>.logos.json`, as tools/logos/README.md says), check the two sheets, then deliver them to the Drive and the plan (D329).
 - **3–4 days before:** assign the prizes to rounds and build the hampers.
 - **Days before:** rehearsals, including the presenters.
 - **On the day:**

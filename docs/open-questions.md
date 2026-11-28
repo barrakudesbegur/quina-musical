@@ -308,10 +308,6 @@ D113 lets R2 go past the free 10 GB. Backend can't see billing. In Cloudflare: M
 ### U14 · Approve this year's hooks · before the first rehearsal
 On the audition page: about 2 minutes a song, so about 3 hours for 90 songs, and about 4.7 hours for 140 unless U56 cuts it. A song can't play until its hook is approved. It starts once the playlist is handed over and prepared (D80).
 
-### U16 · Check the sponsors' cleaned logos
-`temp/logos-2026/comparison.png` shows each sponsor's original, transparent logo and sticker, made by `tools/logos/prepare.py` from `data/editions/2026.logos.json` (28 Nov). Once you've checked them, and fixed any in ArtCraft, the transparent ones are uploaded and written into the plan with `npm run edition -- logos data/editions/2026.plan.json --from temp/logos-2026/upload.json --dir temp/logos-2026/transparent --yes`, then the plan is uploaded. No Google login is needed.
-Still without a logo: 1701 (listed online as «1701 By Soho»), Arran de Mar and LocadeAmor (Instagram only: @arrandemar_begur, @locadeamor_spain), Estanc Begur, Pet Love (not found anywhere) and S&S. Small sources to ask the businesses for: Begur Jewellery, Begur Dive, Tocineria Mario and La Palma. To check: Pou Nou uses its brand's logo (the shop is also listed as Abril Boutique); Dana Taboe's website logo is black, the organizers' photo of its badge blue. The online finds and their links are in `temp/logos-2026/candidates/README.md`.
-
 ### U18 · The night's plan in Admin · before the first rehearsal
 Rounds in order, a card type and side per round, prize bundles, sponsors, the doors' time and the throws. Since D116 it goes in through the edition file (U68–U75).
 
@@ -330,6 +326,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U16 · Check the sponsors' cleaned logos** (2026-11-28) → D329: approved; 6 sponsors still without a logo show as name plates.
 - **U205 · Parlem's switch to Hold music after 40 s** (2026-11-28) → D318: (a), the ducked song loops; no Hold music or Pausa by itself.
 - **U242, U243 · The winner's phone; the Desgraciat's end on phones** (2026-11-28) → D316: the same ribbon on every phone; «Tenim desgraciat!».
 - **U241 · Where the money-only sponsors show** (2026-11-28) → D317: their round's Celebrations (the orchestrator's default).
