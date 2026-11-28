@@ -16,6 +16,10 @@
   // - `check`: the Check's ribbon hangs under the drum's box (CheckStrip), riding with the collapse and stuck under the
   //   strip; the content and the fade line make room for it (`--ara-check-room`).
   // - Reduced motion and Data Saver: nothing follows the finger; the view changes by a crossfade (a view transition).
+  // - `mark-bob`: the cards' marks (`data-bob`) bob on the beat of the song heard now. The home sets the beat as CSS
+  //   (`data-beat`, `--beat-period`, `--beat-delay`), recomputed only when the beat or the clock's offset changes, never
+  //   per frame; each bob's start time is pinned as it starts, so marks that come later swing in step, and only the
+  //   marks on screen bob (device/bob.ts).
   // It scrolls in the shell's `.player__scroll` box (App.svelte), not the page.
   import { flushSync, onMount, untrack } from 'svelte';
   import { touchRelease } from '../../../packages/ui/sounds/touch.ts';
@@ -41,6 +45,8 @@
     type SwipePlan,
   } from '../logic/home-swipe.ts';
   import { ARA_VIEWS, type AraView } from '../logic/tabs.ts';
+  import { bobOn, bobStyle, bobTiming, keepTiming, type BobTiming } from '../logic/beat.ts';
+  import { BobWatcher } from '../device/bob.ts';
   import CardsList from './CardsList.svelte';
   import CheckStrip from './CheckStrip.svelte';
   import InstallPrompt from './InstallPrompt.svelte';
@@ -78,6 +84,19 @@
   const holders = $derived(
     playing === null ? [] : app.playingViews.filter((v) => v.card?.lines.some((line) => line.includes(playing))).map((v) => ({ id: v.saved.id, identity: v.saved.color })),
   );
+
+  // `mark-bob`: the beat as CSS. Re-derived on every clock tick (the offset can move), but the timing on screen changes
+  // only when it really differs (`keepTiming`), so the home restyles once per song, not per tick.
+  let bob = $state.raw<BobTiming | null>(null);
+  $effect(() => {
+    const next = bobTiming(app.beat, { offsetMs: app.cloudNow - app.localNow, localNowMs: Date.now(), timelineNowMs: performance.now() });
+    const kept = keepTiming(untrack(() => bob), next);
+    if (kept !== untrack(() => bob)) bob = kept;
+  });
+  const bobbing = $derived(bobOn({ scene: app.scene, paused: app.paused, offline: app.offline, linkOnline: app.state?.link.online ?? false, celebrationOpen: app.celebrationOpen, timing: bob }));
+  const bobCss = $derived(bob ? bobStyle(bob) : null);
+  const bobWatch = new BobWatcher();
+  $effect(() => () => bobWatch.stop());
 
   let root: HTMLElement | undefined = $state();
   let top: HTMLElement | undefined = $state();
@@ -447,6 +466,10 @@
   data-drum={drum || undefined}
   data-swiping={frame ? 'true' : undefined}
   data-anim="home-swipe"
+  data-beat={bobbing || undefined}
+  style:--beat-period={bobCss?.period}
+  style:--beat-delay={bobCss?.delay}
+  onanimationstart={bobWatch.onanimationstart}
   style:--ara-stick="{stickAt}px"
   style:--ara-full="{fullHeight}px"
   style:--ara-sticky-top="{stickyTop - boxPad}px"

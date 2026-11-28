@@ -14,6 +14,9 @@
   --dur-tab-switch: var(--dur-fast);
   --dur-player-landing: 400ms;
   --dur-mark-in: var(--dur-base);
+  /* `mark-bob`: a side of the swing eases out (two-thirds of the way in its first quarter), so the snap is on the beat */
+  --bob-angle: 8deg;
+  --ease-bob: cubic-bezier(0.25, 1, 0.5, 1);
   --dur-check-dots: 1.2s;
   --dur-confetti: 6000ms;
   --dur-overlay: 300ms;
@@ -1837,9 +1840,15 @@
   filter: drop-shadow(0 3px 0 rgb(23 19 43 / 0.6));
 }
 
-.card-grid__kernel > .card-mark {
+.card-grid__kernel > .card-mark,
+.card-grid__bob > .card-mark {
   width: var(--kernel-size);
   height: var(--kernel-size);
+}
+
+/* `mark-bob`'s box round the mark: the mark's own size (a grid, so no line box under the SVG). */
+.card-grid__bob {
+  display: grid;
 }
 
 /* ---- the Desgraciat round (Quina del Desgraciat) ------------------------------------------------------------ */
@@ -3376,6 +3385,33 @@
 @media (prefers-reduced-motion: no-preference) {
   :where(.player[data-motion='full']) .card-grid__kernel[data-anim='mark-in'] {
     animation: player-kernel-drop var(--dur-mark-in) var(--ease-out) var(--stagger, 0ms) both;
+  }
+}
+
+/* `mark-bob` (the user, 28 Nov): the marks bob like a head on the beat, −8° ↔ +8°, each side easing out from the beat.
+   The home sets the beat (`data-beat`, `--beat-period`: two sides; `--beat-delay`: the phase, in the document
+   timeline's time, as every bob's start time is pinned to its zero: logic/beat.ts). The bob is the `rotate` of an HTML
+   box round the mark (Chrome runs an SVG element's animation on the main thread), pivoting near its bottom; the random
+   tilt stays on the kernel box round it (its `transform`), so they compose. A mark outside the screen stops
+   (`data-bob-out`, device/bob.ts): each animated element costs the main thread a little every frame. */
+:where([data-bob]) {
+  rotate: 0deg;
+  transform-origin: 50% 90%;
+}
+
+@keyframes player-mark-bob {
+  from,
+  to {
+    rotate: calc(-1 * var(--bob-angle));
+  }
+  50% {
+    rotate: var(--bob-angle);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where(.player[data-motion='full']) [data-beat] [data-bob]:not([data-bob-out]) {
+    animation: player-mark-bob var(--beat-period) var(--ease-bob) var(--beat-delay, 0ms) infinite;
   }
 }
 

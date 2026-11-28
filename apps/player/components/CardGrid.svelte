@@ -7,6 +7,8 @@
   // In the Desgraciat round (`crosses`) a landed song gets a red ✗ over a red-tinted cover instead of a mark: on
   // every screen a ✗ marks the song that sank the card. A fresh one stamps on (scale 2 → 1 at −12°).
   // Each cell is the design system's CardCell; its look comes from CardGrid's looks table (card-looks.ts).
+  // A mark bobs on the beat (`mark-bob`: `data-bob` on an HTML box round the mark, inside the tilted kernel box, so the
+  // tilt stays; an HTML box, as the browser runs an SVG element's animation on the main thread); a ✗ never does. Whether anything moves is the home's (AraHome's `data-beat`).
   import { songTitle, type Catalog } from '../../../packages/ui/data/catalog.ts';
   import type { CardMarks, PlayerCard } from '../../../packages/rules/marks.ts';
   import CardCell from '../../../packages/ui/components/CardCell.svelte';
@@ -72,7 +74,7 @@
             style:--tilt="{kernelTilt(card.id, songId)}deg"
             style:--stagger="{stagger}ms"
             aria-hidden="true"
-          ><CardMark {identity} decorative /></span>
+          ><span class="card-grid__bob" data-bob><CardMark {identity} decorative /></span></span>
         {/if}
       </CardCell>
     {/each}
