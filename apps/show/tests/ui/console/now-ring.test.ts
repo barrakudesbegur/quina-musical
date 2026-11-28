@@ -66,10 +66,13 @@ test('a Check in progress names its card; a failed Check plays error music until
   assert.deepEqual([failed.state, failed.badge, failed.holdMusic], ['checkFailed', 'held', true]);
 });
 
-test('a Claim hold through the Celebration is not a Check', () => {
+test('a Claim hold through the Celebration is not a Check, nor Parlem until the presenters turn it on (whats-left 2.3)', () => {
   const s = fixture('celebration');
   const held = { ...s, status: 'hold' as const, hold: { sinceMs: NOW - 1_000, reason: 'claim' as const, holdMusic: false } };
-  assert.equal(ring(held).state, 'talk');
+  assert.deepEqual([ring(held).state, ring(held).badge], ['waiting', null]);
+  assert.ok(s.celebration);
+  const parlem = { ...held, celebration: { ...s.celebration, parlem: true } };
+  assert.deepEqual([ring(parlem).state, ring(parlem).badge], ['talk', 'talk']);
 });
 
 test('the technical pause wins over everything, with Hold music and no badge', () => {

@@ -106,7 +106,7 @@
 
   {#each ['talk', 'stay'] as const as mode (mode)}
     <div class="thumb-cluster__slot thumb-cluster__slot--{mode}">
-      <HoldModeButton {mode} {active} enabled={c.hold.enabled} />
+      <HoldModeButton {mode} {active} enabled={mode === 'stay' ? c.stay.enabled : c.hold.enabled} />
     </div>
   {/each}
 

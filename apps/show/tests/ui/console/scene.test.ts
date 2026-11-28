@@ -56,6 +56,15 @@ test('Pausa from Aguanta: Next plays the transition (D128), as the engine lets i
   assert.equal(controlsModel(input(paused)).next.enabled, true);
 });
 
+test('a Celebration: Parlem ducks its music (D117); Aguanta has nothing to hold there', () => {
+  for (const name of ['celebration', 'celebrationBingo']) {
+    const c = controlsModel(fixture(name));
+    assert.deepEqual([c.hold.enabled, c.stay.enabled], [true, false], name);
+  }
+  const p = controlsModel(fixture('play'));
+  assert.deepEqual([p.hold.enabled, p.stay.enabled], [true, true]);
+});
+
 test("Enrere in a Check only while revealing (D127, D134): not once its cue is on screen, nor before a shared Celebration's press", () => {
   assert.equal(controlsModel(fixture('check')).back.enabled, true);
   for (const name of ['checkCuePass', 'checkCueFail', 'checkCelebrateNext']) assert.equal(controlsModel(fixture(name)).back.enabled, false, name);

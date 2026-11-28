@@ -33,6 +33,8 @@ export interface ControlsModel {
   live: boolean;
   next: { enabled: boolean };
   hold: { enabled: boolean; holding: boolean };
+  /** Aguanta: as Parlem, but a Celebration has nothing for it to hold (its music plays on and nothing lands). */
+  stay: { enabled: boolean };
   suspense: { enabled: boolean; open: boolean };
   back: { enabled: boolean };
   claim: { enabled: boolean };
@@ -69,6 +71,7 @@ export function controlsModel(input: ControlsInput): ControlsModel {
     live,
     next: { enabled: canSend('next', input) && !spinning && !nextBlocked(state) },
     hold: { enabled: canSend('hold', input), holding: state?.status === 'hold' },
+    stay: { enabled: canSend('hold', input) && input.flow.scene !== 'celebration' },
     suspense: { enabled: canSend('suspense', input) && !spinning, open: suspenseOpen },
     back: { enabled: canSend('back', input) && somethingToUndo && !checkCued(input.flow) },
     claim: { enabled: canSend('claim', input) },

@@ -933,7 +933,7 @@ export class Show {
         break;
       case 'hold': {
         if (this.scene === 'celebration') {
-          this.celebrationHold(reqId, c.on);
+          this.celebrationHold(reqId, c.on, c.duck);
           break;
         }
         // A review's Parlem (D118): the duck in place; the round never leaves the Check's Hold.
@@ -3179,24 +3179,23 @@ export class Show {
   }
 
   /**
-   * Parlem in a Celebration (D117): its music ducks under the voices, and comes back. Releasing a Line's Celebration
-   * with no Parlem on goes back to the round, like Next.
+   * Parlem in a Celebration (D117): it only ducks the Celebration's music under the voices, and brings it back; it never
+   * ends the Celebration or lands a song (that is Next's, D142). Aguanta has nothing to hold there: the Celebration's
+   * music already plays on at full volume and nothing lands by itself.
    */
-  celebrationHold(reqId: string | null, on: boolean | undefined) {
+  celebrationHold(reqId: string | null, on: boolean | undefined, duck: boolean | undefined) {
     const c = this.celebration;
     if (!c) return;
+    if (duck === false && on !== false) return this.reject(reqId, 'hold', 'invalid', 'no Aguanta in a Celebration: its music plays on');
     if (on ?? !c.parlem) {
       if (c.parlem) return;
       c.parlem = true;
       this.out.push({ type: 'bedDuck', db: this.parlemDb(), seconds: HOLD.duckSec });
       return;
     }
-    if (c.parlem) {
-      c.parlem = false;
-      this.out.push({ type: 'bedDuck', db: 0, seconds: HOLD.releaseSec });
-      return;
-    }
-    if (c.kind === 'line') this.release(reqId);
+    if (!c.parlem) return this.reject(reqId, 'hold', 'notHolding', 'Parlem is off');
+    c.parlem = false;
+    this.out.push({ type: 'bedDuck', db: 0, seconds: HOLD.releaseSec });
   }
 
   /** The round's Celebration of `kind`: every valid Claim of that kind shares it; the earliest Winning song leads. */

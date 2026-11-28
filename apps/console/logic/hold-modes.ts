@@ -14,9 +14,16 @@ export type HoldMode = 'talk' | 'stay';
 /** The `hold` command that enters a mode, or switches to it from the other one. */
 const withDuck = (duck: boolean): CommandFields['hold'] => ({ on: true, duck });
 
-/** The mode of the current Hold, or null when not holding. A Hold without `ducked` (an older engine) is Parlem. */
-export function activeHoldMode(state: Pick<ShowState, 'status' | 'hold'> | null): HoldMode | null {
-  if (!state || state.status !== 'hold' || !state.hold) return null;
+/**
+ * The mode of the current Hold, or null when not holding. A Hold without `ducked` (an older engine) is Parlem.
+ * The show flow holds the round under its own music in a round's intro, the Interval, the end and a Celebration: no
+ * Parlem or Aguanta is on there (whats-left 2.3), except a Celebration's own Parlem once the presenters turn it on (D117).
+ */
+export function activeHoldMode(state: Pick<ShowState, 'status' | 'hold'> & Partial<Pick<ShowState, 'scene' | 'celebration'>> | null): HoldMode | null {
+  if (!state) return null;
+  if (state.scene === 'celebration') return state.celebration?.parlem ? 'talk' : null;
+  if (state.scene === 'roundStart' || state.scene === 'interval' || state.scene === 'after') return null;
+  if (state.status !== 'hold' || !state.hold) return null;
   return state.hold.ducked === false ? 'stay' : 'talk';
 }
 

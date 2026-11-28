@@ -83,6 +83,23 @@ test('the active hold mode: none, Parlem (ducked, or an engine without `ducked`)
   assert.equal(activeHoldMode(holding({ ducked: false })), 'stay');
 });
 
+test("the show flow's own Hold is no Parlem (whats-left 2.3): a round's intro, the Interval, the end; a Celebration's only when on (D117)", () => {
+  // The engine holds the round (status hold, ducked) under the scene's own music in these scenes.
+  const flowHold = (scene: ShowState['scene'], parlem?: boolean) => ({
+    ...holding({ ducked: true, reason: scene === 'celebration' ? 'claim' : 'music' }),
+    scene,
+    celebration: parlem === undefined ? null : { kind: 'line', round: 1, cardIds: [5], winningSongId: 9, sinceMs: 0, music: 'winningSong', parlem },
+  }) as Pick<ShowState, 'status' | 'hold' | 'scene' | 'celebration'>;
+  for (const scene of ['roundStart', 'interval', 'after'] as const) assert.equal(activeHoldMode(flowHold(scene)), null, scene);
+  assert.equal(activeHoldMode(flowHold('celebration', false)), null);
+  assert.equal(activeHoldMode(flowHold('celebration', true)), 'talk');
+  assert.equal(activeHoldMode(flowHold('play')), 'talk', "a round's Parlem");
+  assert.equal(activeHoldMode(flowHold('check')), 'talk', "a Claim's Hold (game-rules: the presenters stop new songs)");
+  // Parlem's tap in a Celebration then turns its own Parlem on, and off.
+  assert.deepEqual(holdPress('talk', activeHoldMode(flowHold('celebration', false))), { on: true, duck: true });
+  assert.deepEqual(holdPress('talk', activeHoldMode(flowHold('celebration', true))), { on: false });
+});
+
 test('Parlem and Aguanta: each enters its mode, the active one releases, the other switches in place', () => {
   assert.deepEqual(holdPress('talk', null), { on: true, duck: true });
   assert.deepEqual(holdPress('stay', null), { on: true, duck: false });

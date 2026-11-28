@@ -84,7 +84,10 @@ export function nowRing({ state, flow, nowMs, lastSec }: RingInput): RingView {
     if (flow.check || checkingClaim || (state.hold.reason === 'claim' && !flow.celebration)) {
       return { ...base, state: 'checking', badge: 'held', sinceMs, cardId: flow.check?.cardId ?? checkingClaim?.cardId ?? null };
     }
-    const mode = activeHoldMode(state) ?? 'talk';
+    const mode = activeHoldMode(state);
+    // The show flow's own Hold (a round's intro, the Interval, the end, a Celebration without its Parlem) is no Parlem
+    // (whats-left 2.3): the scene's music plays and the ring waits.
+    if (mode === null) return { ...base, state: 'waiting', badge: null };
     return { ...base, state: mode, badge: mode, sinceMs, holdMusic: state.holdMusic || state.hold.holdMusic };
   }
 

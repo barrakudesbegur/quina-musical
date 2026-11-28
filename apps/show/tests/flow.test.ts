@@ -576,7 +576,7 @@ test('Back during a Check undoes the landing; undecided Claims survive and wait 
   assert.deepEqual(rejected(h.send('hold', { on: false })), ['wrongScene'], 'the Check decides first');
 });
 
-test('the Celebration music changes without blocking anything; Hold music in the Celebration is a choice; Parlem ducks it (D117)', () => {
+test('the Celebration music changes without blocking anything; Hold music in the Celebration is a choice; Parlem only ducks it (D117)', () => {
   const h = flow();
   landSongs(h, 4);
   h.send('claim', { cardId: card.id });
@@ -597,8 +597,14 @@ test('the Celebration music changes without blocking anything; Hold music in the
   assert.equal(h.show.bed, null);
   assert.deepEqual(rejected(h.send('holdMusic')), ['wrongScene']);
   assert.deepEqual(rejected(h.send('interval')), ['wrongScene'], 'only after a Bingo');
-  // Releasing the Hold of a Line's Celebration goes back to the round, like Next.
-  const back = h.send('hold', { on: false });
+  // Parlem off with no Parlem on (a console that read the Celebration's Hold as Parlem): nothing ends, nothing lands
+  // (whats-left 2.3). Aguanta has nothing to hold there. Only Next goes back to the round.
+  const position = h.show.position;
+  assert.deepEqual(rejected(h.send('hold', { on: false })), ['notHolding']);
+  assert.deepEqual(rejected(h.send('hold', { on: true, duck: false })), ['invalid']);
+  h.advance(5);
+  assert.deepEqual([h.show.scene, h.show.position, h.show.celebration?.parlem], ['celebration', position, false]);
+  const back = h.send('next');
   assert.ok(find(back, 'startTransition')?.fromHoldMusic);
   assert.equal(h.show.scene, 'play');
 });
