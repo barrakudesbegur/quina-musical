@@ -1787,7 +1787,8 @@
 }
 
 /* The «Efectes» tab (EffectsPanel): the fanfares' grid in a narrow column, the effects' grid beside it (SoundPad,
-   packages/ui: one board each, D-l) */
+   packages/ui: one board each, D-l). U224 (28 Nov, Frontend's call): the pads are sized down (41 px rows, 28 px art)
+   so the four rows fit the tab at 1194 × 834 with no scroll, in the same grid and columns. */
 .sound-pad-tab {
   display: grid;
   grid-template-columns: minmax(6.5rem, 0.3fr) minmax(0, 1fr);
@@ -1801,10 +1802,15 @@
   }
 }
 
+.sound-pad-tab .sound-pad {
+  --sound-pad-cell: 2.5625rem;
+  --sound-pad-art: 1.75rem;
+}
+
 .sound-pad-tab__group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   min-width: 0;
 }
 
