@@ -1,6 +1,6 @@
 {
   "name": "2026",
-  "description": "This year's repertoire (D178, D227): pool 1 (final, ids 1–70) and pool 2 (provisional until its playlist is final, ids from 71, U57), merged into songs.json by tools/prep/pools.py from data/repertoires/2026/pools.json. The cards are the temporary ones, not for print, until the real cards on 4–5 Dec.",
+  "description": "This year's repertoire (D178, D227): pool 1 (ids 1–70) and pool 2 (its own songs from 71, plus 5 shared with pool 1, D268), both playlists final (D269, D296), merged into songs.json by tools/prep/pools.py from data/repertoires/2026/pools.json. The cards are the temporary ones, not for print, until the real cards on 4–5 Dec (apps/cards/README.md).",
   "songsJson": "data/repertoires/2026/songs.json",
   "audioDir": "data/media/2026/output/songs",
   "coversDir": "data/media/2026/output/covers",

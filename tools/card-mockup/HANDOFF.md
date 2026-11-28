@@ -1,5 +1,10 @@
 # Card design handoff
 
+> **28 Nov: D295 picked Option 2, «Apaïsat sense portades»; apps/cards is now the source of truth.** The A4 card
+> (`'a4-3'`) is the generator's default; the A3 square card with covers (`'a3-6'`) stays for the user's A3 test sheets
+> (D306, `--test-sheets`), and `--proof` makes the print shop's proof (D267). The cards are made on 4–5 Dec with
+> [apps/cards/README.md](../../apps/cards/README.md)'s checklist. What follows is this session's handoff as it was.
+
 Resume the 2026 printed-card design from this file. The card design session (quina-musical-d1) was opened by the user
 on 27 Nov 2026 for this task only. The design is final (two options), and this session builds it into `apps/cards`
 itself (the user, 27 Nov), before the cards are made on 4–5 Dec (D83). The Orchestrator keeps the decision log: report every user decision to it

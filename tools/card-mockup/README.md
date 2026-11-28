@@ -1,5 +1,11 @@
 # The 2026 printed cards: the design
 
+> **28 Nov: the organizers picked Option 2, «Apaïsat sense portades» (D295).** `apps/cards` is now the source of truth
+> for the printed cards: the A4 card (`3x1-h-bw` here, `'a4-3'` there) is its default, and the A3 square card with
+> covers (`a3-6-gomet-nino-between`, `'a3-6'`) stays only for the user's one or two A3 test sheets (D306). See
+> [apps/cards/README.md](../../apps/cards/README.md). This folder is the design's history; the rest of this page is as
+> it was before the pick.
+
 The design of this year's printed cards, made with the user in the card design session (27 Nov 2026), and the tool that
 draws it. **The design is final (27 Nov), in two options**, because the organizers choose between covers in colour (A, the
 working default) and no covers in black and white (B) (U212). The card design session builds both into `apps/cards/src`
