@@ -2,7 +2,7 @@
 
 One screen: where each area stands, what's blocked, and what waits on the user. Written by the orchestrator from each handoff's "Now" block; the detail is in the handoffs. Dates are in [timeline.md](timeline.md), and the user's items (U1, U2…) in [open-questions.md](open-questions.md).
 
-**Updated:** 2026-11-28. **The night:** Sun 27 Dec. **The playlists:** final since Fri 27 Nov (D230, D269). The cards are made on 4–5 Dec (D83); rehearsals have no fixed dates (D82).
+**Unverified (28 Nov, after the user's realistic test went badly):** this page lists what was deployed and what the sessions reported, not what was checked against the boards and requirements. The sessions' «What's left» sections and the next orchestrator's check replace it. **Updated:** 2026-11-28. **The night:** Sun 27 Dec. **The playlists:** final since Fri 27 Nov (D230, D269). The cards are made on 4–5 Dec (D83); rehearsals have no fixed dates (D82).
 
 ## The critical path
 

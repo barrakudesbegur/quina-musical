@@ -21,6 +21,17 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
   - the UI code rules (D215);
   - web UI work loads modern-web-guidance first.
 
+## Read this first (28 Nov, after the user's realistic test)
+
+**The realistic test went badly.** The user, verbatim: "I did a realisic test with the appropiate setup and it went HORIBLY WRONG. yes, the songs played and the player app mostly works. but the console logic is very bad, the transitions need a lot of improvement, the setup and startup is confusing, the show page (projected screen) has absolutely nothing to do with the design from the mockups. I feel like you lost notion of the project of what is really left, because i thought that the frontend implemented all of it and aparently he didnt."
+
+**What went wrong with the orchestration:** this orchestrator tracked decisions, deploys and green test runs, and relayed sessions' reports of "built" without checking the running screens against the agreed boards and the requirements. Green tests and deploys aren't the same as "matches the design" or "works for the presenters". So `status.md`, `timeline.md`'s "done" rows and the "Live" list below say what was deployed, not what's right. Treat them as unverified.
+
+**What the new orchestrator does first (the user's plan):** find out what is truly missing, then delegate the building to the sessions.
+- Each session was asked (28 Nov) to write «What's left (28 Nov, after the realistic test)» at the top of its handoff, checked against the code and the running app: Frontend in packages/ui/HANDOFF.md (the projector vs every agreed board, the console's logic and flow, the phone, Admin), Sound engine in apps/show/docs/HANDOFF.md (the transitions' real state, the engine's presenter actions vs the requirements, the night's flow from the doors), Backend in apps/cloud/docs/HANDOFF.md (setup and startup as a non-developer lives it, the cloud, why the tests passed while the user's test failed).
+- Verify those lists yourself (with subagents): run the show (`docs/night-runbook.md`), open the projector, the console and a phone side by side with the canvas ("Quina Musical look", https://claude.ai/artifact/Rs66YhT4XyRe8zQ84YUPSv), and check each requirement in docs/requirements/ against what you see. Then one list of what's missing, by area, with priorities against the dates (the cards 4–5 Dec, the night 27 Dec), for the user.
+- Known from today, beyond the user's words: the night's opening isn't modelled (the show jumped straight into a round, with no doors and card-selling state, and the round's intro music played under the presenters' talk; D291's Enrere on the first song undoing the round's start; maybe an entrance audio); the Mac app to start the night (D282) is on hold; the presenters' remote is the genuine Wii remote paired by MacWiiPair (D275), untested on this Mac (U220).
+
 ## In flight (28 Nov, evening)
 
 **Resume first: the laptop and its devices (the user's next topic).** The user paused it on 28 Nov: "we will resume this conversation about the mac app, rubber band on web asembly, the remote backup and each device location and connections in another session". Logged so far, all open to revisit with the user:
