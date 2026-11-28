@@ -1,6 +1,7 @@
 <!--
   The claimed card on the Check board (boards Consola-Comprovacio-Ritme, -Casos, -Desgraciat): «Cartró #57» with its
-  chips (what it claims; the side checked as printed, D163, D266: «Normal 1–5», «Desgraciat»), the warnings,
+  chips (what it claims; the side checked as printed, D163, D266: «Normal 1–5», «Especial», left out when it repeats
+  the claim's «Desgraciat», U217 (b)), the warnings,
   then the card's 12 songs as the design system's CardCells (CardGrid's looks table, D2). Each song the Check plays
   carries its mark from the start (D108), centred (#75), dashed while only the presenters know it and full once the
   room has seen it (hook check-step); a song still to reveal is greyed with a dashed ring and counts down («Següent»,
@@ -13,7 +14,7 @@
   import { knownCardTypes } from '../../../packages/ui/data/card-types.ts';
   import type { CheckInfo, ClaimInfo } from '../../../packages/ui/flow.ts';
   import { getConsole } from '../context.ts';
-  import { checkCells, checkVerdict, typeChip, type CheckCell } from '../logic/check.ts';
+  import { checkCells, checkVerdict, sideChip, typeChip, type CheckCell } from '../logic/check.ts';
   import { songTitleOf } from '../logic/show-data.ts';
   import { S } from '../strings.ts';
   import { VERDICT_LOOKS } from '../actions.ts';
@@ -31,6 +32,8 @@
   const types = $derived(knownCardTypes(model.catalog?.cardTypes));
   const type = $derived(typeChip(check.cardType, types, model.plan, check.side));
   const roundType = $derived(typeChip(snap?.round.cardType, types, model.plan));
+  /** The side's chip, unless it repeats the kind's («Desgraciat» twice: U217 (b)). */
+  const side = $derived(sideChip(type, S.check.kind[check.kind]));
   const cells = $derived(checkCells(check, claim, model.show.now));
   const verdict = $derived(checkVerdict(check, claim));
   const title = (songId: number) => songTitleOf(songId, snap, model.catalog) ?? `Cançó ${songId}`;
@@ -70,7 +73,7 @@
   <header class="check-card__head">
     <h2 class="check-card__title">{S.check.card(check.cardId)}</h2>
     <Chip class="card-type-chip" color="ink" variant="solid" label={S.check.kind[check.kind]} />
-    {#if type}<Chip class="card-type-chip" color="snow" icon={type.special ? 'star' : null} label={type.label} />{/if}
+    {#if side}<Chip class="card-type-chip" color="snow" icon={side.special ? 'star' : null} label={side.label} />{/if}
     {#if of}<span class="check-card__of">{S.check.ofCards(of.n, of.total)}</span>{/if}
   </header>
 

@@ -247,6 +247,14 @@ export interface TypeChip {
   special: boolean;
 }
 
+/**
+ * The side's chip beside the Check's kind chip, or null when it only repeats it (U217 (b)): an Especial card checked in
+ * the Desgraciat round reads «Desgraciat» on both, so the side's chip goes.
+ */
+export function sideChip(type: TypeChip | null, kindLabel: string): TypeChip | null {
+  return type && type.label.trim().toLocaleLowerCase('ca') !== kindLabel.trim().toLocaleLowerCase('ca') ? type : null;
+}
+
 /** A type's chip; `side` is the side checked (the Check's, which is the round's). */
 export function typeChip(type: string | null | undefined, types: readonly PrintedCardType[], plan: Pick<GamePlan, 'rounds'> | null, side: number = DEFAULT_SIDE): TypeChip | null {
   if (!type) return null;

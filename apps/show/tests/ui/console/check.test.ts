@@ -20,6 +20,7 @@ import {
   reviewNeedsConfirm,
   stepBackOnScreen,
   stepMark,
+  sideChip,
   typeChip,
 } from '../../../../console/logic/check.ts';
 import { S } from '../../../../console/strings.ts';
@@ -150,20 +151,32 @@ test('the shared Celebration names the cards that passed; a decision by hand aga
   assert.equal(reviewNeedsConfirm('win', passing), false);
 });
 
+/** Three printed types as apps/cards writes them: normal (1–5, 6–10), especial (Desgraciat, Especial), daurat. */
+const PRINTED = [
+  { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: '', priceCents: null, sides: [{ side: 1, pool: '1', label: '1–5', checkLabel: 'Normal 1–5' }, { side: 2, pool: '2', label: '6–10', checkLabel: 'Normal 6–10' }] },
+  { type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: '', priceCents: null, sides: [{ side: 1, pool: '1', label: 'Desgraciat', checkLabel: 'Desgraciat' }, { side: 2, pool: '2', label: 'Quina Especial', checkLabel: 'Especial' }] },
+  { type: 'daurat', name: 'Cartró daurat', shortName: 'Daurat', color: '#f5d77a', title: '', priceCents: null, sides: [{ side: 1, pool: '1', checkLabel: 'Daurat' }] },
+];
+
 test("marks mean «good for the claim»; the type chip names the side checked as printed (D163, D266)", () => {
   assert.equal(stepMark('line', true), 'ok');
   assert.equal(stepMark('line', false), 'bad');
   assert.equal(stepMark('standing', false), 'ok');
   assert.equal(stepMark('standing', true), 'bad');
-  const types = readPrintedCardTypes([
-    { type: 'normal', name: 'Cartró normal', shortName: 'Normal', color: '#cfe8ff', title: '', priceCents: null, sides: [{ side: 1, pool: '1', label: '1–5', checkLabel: 'Normal 1–5' }, { side: 2, pool: '2', label: '6–10', checkLabel: 'Normal 6–10' }] },
-    { type: 'especial', name: 'Cartró especial', shortName: 'Especial', color: '#ffd9e8', title: '', priceCents: null, sides: [{ side: 1, pool: '1', label: 'Desgraciat', checkLabel: 'Desgraciat' }, { side: 2, pool: '2', label: 'Quina Especial', checkLabel: 'Especial' }] },
-    { type: 'daurat', name: 'Cartró daurat', shortName: 'Daurat', color: '#f5d77a', title: '', priceCents: null, sides: [{ side: 1, pool: '1', checkLabel: 'Daurat' }] },
-  ]) ?? [];
+  const types = readPrintedCardTypes(PRINTED) ?? [];
   assert.deepEqual(typeChip('especial', types, null), { name: 'Especial', label: 'Desgraciat', color: '#ffd9e8', special: true }, 'U198 answered (a): the Desgraciat round checks side 1, «Desgraciat» alone');
   assert.equal(typeChip('especial', types, null, 2)?.label, 'Especial', 'the Especial round checks side 2');
   assert.deepEqual(typeChip('normal', types, null, 1), { name: 'Normal', label: 'Normal 1–5', color: '#cfe8ff', special: false });
   assert.equal(typeChip('normal', types, null, 2)?.label, 'Normal 6–10');
   assert.equal(typeChip('daurat', types, null, 2)?.label, 'Daurat', 'a side its type does not print: just the type');
   assert.equal(typeChip(null, types, null), null);
+});
+
+test("U217 (b): the side's chip goes when it repeats the kind's («Desgraciat» twice), and stays otherwise", () => {
+  const types = readPrintedCardTypes(PRINTED) ?? [];
+  const especialInDesgraciat = typeChip('especial', types, null, 1);
+  assert.equal(sideChip(especialInDesgraciat, S.check.kind.standing), null, 'an Especial card in the Desgraciat round');
+  assert.equal(sideChip(typeChip('normal', types, null, 1), S.check.kind.standing)?.label, 'Normal 1–5');
+  assert.equal(sideChip(typeChip('especial', types, null, 2), S.check.kind.bingo)?.label, 'Especial');
+  assert.equal(sideChip(null, S.check.kind.line), null);
 });
