@@ -3804,8 +3804,9 @@ export class Show {
   schedule() {
     const plan = this.plan;
     const after = plan?.rounds.filter((r) => r.number > this.round.number) ?? [];
-    return scheduleEstimate({
-      nowMs: this.env.nowMs(),
+    const nowMs = this.env.nowMs();
+    const est = scheduleEstimate({
+      nowMs,
       round: { ...this.round, targetEndMs: this.round.targetEndMs + 1000 * this.targetShiftSec, songs: this.expectedSongs, firstPlays: this.firstPlaysLeft(), pool: this.round.pool },
       game: { roundsTotal: this.game.roundsTotal },
       position: this.position,
@@ -3824,6 +3825,11 @@ export class Show {
           }
         : null,
     });
+    // The flag and moon say when the round and the night should end; at the doors that's from the planned start
+    // (plan.schedule.startAtMs), or from now if now is later. Only the ends move: the Drift (and so the nudge) stays.
+    const startAtMs = this.scene === 'before' ? plan?.schedule.startAtMs : null;
+    const waitMs = startAtMs != null ? Math.max(0, startAtMs - nowMs) : 0;
+    return waitMs ? { ...est, roundEndMs: est.roundEndMs + waitMs, gameEndMs: est.gameEndMs + waitMs } : est;
   }
 
   updateNudge() {

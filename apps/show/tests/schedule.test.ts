@@ -8,7 +8,7 @@ import { roundLengthSec, roundSongs, scheduleEstimate } from '../engine/src/plan
 import { SCHEDULE } from '../engine/src/config.ts';
 import { firstWinAt, standingCourse } from '../engine/src/game/cards.ts';
 import { setup, allCards } from './support/harness.ts';
-import { replayJournal, type JournalEntry, type RoundKind } from '@quina/protocol';
+import { checkGamePlan, replayJournal, type GamePlan, type JournalEntry, type RoundKind } from '@quina/protocol';
 
 /** 2025's rounds: first song and close (local time), songs to the win, seconds per song (gaps up to 45 s). */
 const NIGHT_2025: { round: string; kind: RoundKind; first: string; closed: string; songs: number; secPerSong: number }[] = [
@@ -94,4 +94,53 @@ dataTest('cards set mid-round move the expected end but not the Drift, and a rep
   assert.ok(Math.abs(after.roundDriftSec - before.roundDriftSec) < 1, `Drift ${before.roundDriftSec.toFixed(1)} → ${after.roundDriftSec.toFixed(1)} s`);
   const journal = h.log.flatMap((e) => (e.type === 'journal' ? [e.entry as JournalEntry] : []));
   assert.deepEqual(replayJournal(journal), h.show.record());
+});
+
+// The flag and moon say when the round and the night should end: at the doors, from the planned start (or now, if later).
+function doorsPlan(startAtMs: number | null): GamePlan {
+  const checked = checkGamePlan({
+    v: 3, edition: '26', title: 'Q', prizeReveal: 'perRound', sponsors: [],
+    rounds: ['normal', 'normal', 'desgraciat', 'normal'].map((kind, i) => ({ number: i + 1, kind, line: [], bingo: [] })),
+    schedule: { startAtMs, roundMinutes: 25, intervalMinutes: 3 }, cheatSheet: { claimRules: [], specialRoundRules: [] },
+  });
+  assert.ok(checked.ok, checked.ok ? '' : checked.errors.join('; '));
+  return checked.plan;
+}
+
+function doorsPair(offsetMs: number) {
+  const a = setup({ seed: 3, settings: { autoAdvance: false } });
+  const b = setup({ seed: 3, settings: { autoAdvance: false } });
+  const startAtMs = a.env.nowMs() + offsetMs;
+  a.show.setPlan(doorsPlan(startAtMs));
+  b.show.setPlan(doorsPlan(null));
+  for (const h of [a, b]) h.send('unlock');
+  return { a, b, startAtMs };
+}
+
+dataTest("at the doors, the flag and moon count from the plan's start when it's ahead", () => {
+  const { a, b, startAtMs } = doorsPair(30 * 60_000);
+  assert.equal(a.show.scene, 'before');
+  const doors = a.show.snapshot().schedule;
+  const fromNow = b.show.snapshot().schedule;
+  const roundSec = (fromNow.roundEndMs - b.env.nowMs()) / 1000;
+  assert.ok(roundSec > 0);
+  assert.ok(doors.roundEndMs >= startAtMs + 1000 * roundSec - 1, 'the round ends no earlier than the start plus its length');
+  assert.equal(doors.roundEndMs - fromNow.roundEndMs, 30 * 60_000, 'not now plus it');
+  assert.equal(doors.gameEndMs - fromNow.gameEndMs, 30 * 60_000);
+  assert.equal(doors.roundDriftSec, fromNow.roundDriftSec, 'the Drift stays');
+});
+
+dataTest("at the doors past the plan's start, the flag and moon count from now", () => {
+  const { a, b } = doorsPair(-10 * 60_000);
+  assert.deepEqual(a.show.snapshot().schedule, b.show.snapshot().schedule);
+});
+
+dataTest("once round 1 has started, the plan's start no longer moves the flag and moon", () => {
+  const { a, b } = doorsPair(30 * 60_000);
+  for (const h of [a, b]) {
+    h.send('next');
+    h.until(() => h.show.status === 'playing');
+  }
+  assert.equal(a.show.scene, 'play');
+  assert.deepEqual(a.show.schedule(), b.show.schedule());
 });
