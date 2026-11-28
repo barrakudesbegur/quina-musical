@@ -351,7 +351,7 @@ On the audition page: about 2 minutes a song, so about 3 hours for 90 songs, and
 
 ### U16 · Check the sponsors' cleaned logos
 `temp/logos-2026/comparison.png` shows each sponsor's original, transparent logo and sticker, made by `tools/logos/prepare.py` from `data/editions/2026.logos.json` (28 Nov). Once you've checked them, and fixed any in ArtCraft, the transparent ones are uploaded and written into the plan with `npm run edition -- logos data/editions/2026.plan.json --from temp/logos-2026/upload.json --dir temp/logos-2026/transparent --yes`, then the plan is uploaded. No Google login is needed.
-Still without a logo: 1701, Arran de Mar, Begur Jewellery, Estanc Begur, LocadeAmor, Pet Love, Pou Nou, S&S and Peixos Arnau (an online search is running). Small sources: Begur Dive, Carbó, Kumade, Villas Begur, Set Vetes, Tocineria Mario and La Palma.
+Still without a logo: 1701 (listed online as «1701 By Soho»), Arran de Mar and LocadeAmor (Instagram only: @arrandemar_begur, @locadeamor_spain), Estanc Begur, Pet Love (not found anywhere) and S&S. Small sources to ask the businesses for: Begur Jewellery, Begur Dive, Tocineria Mario and La Palma. To check: Pou Nou uses its brand's logo (the shop is also listed as Abril Boutique); Dana Taboe's website logo is black, the organizers' photo of its badge blue. The online finds and their links are in `temp/logos-2026/candidates/README.md`.
 
 ### U18 · The night's plan in Admin · before the first rehearsal
 Rounds in order, a card type and side per round, prize bundles, sponsors, the doors' time and the throws. Since D116 it goes in through the edition file (U68–U75).
