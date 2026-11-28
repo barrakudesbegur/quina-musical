@@ -18,6 +18,8 @@
   import CardMark from '../../player/components/CardMark.svelte';
   import Reel from '../../player/components/Reel.svelte';
   import { roundOrder } from '../../player/logic/drum.ts';
+  import { beatsPerSide, bobStyle, bobTiming } from '../../player/logic/beat.ts';
+  import { pinBob } from '../../player/device/bob.ts';
   import type { PublicLanding, PublicSpin } from '../../player/feed/public.ts';
   import './cards-songs.css';
 
@@ -95,6 +97,15 @@
     { state: 'idle', caption: 'idle: a Line’s other rows (the Check fades the whole cell)' },
   ];
   const label = (id: number, state: string) => `${title(id)}: ${state}`;
+
+  /** `mark-bob` (phone density): the marks bob at this tempo and bar, from the page's load as a downbeat. */
+  let bobBpm = $state(120);
+  let bobBar = $state(4);
+  const bobCss = $derived.by(() => {
+    const t = bobTiming({ bpm: bobBpm, beatsPerBar: bobBar, downbeatAtMs: now }, { offsetMs: 0, localNowMs: Date.now(), timelineNowMs: performance.now() });
+    return t ? bobStyle(t) : null;
+  });
+  const BOB_MARKS: [number, number][] = [[2, 1], [17, 4], [15, 7], [31, 9]];
 </script>
 
 {#snippet grid(identity: number, crosses = false, holds = true)}
@@ -243,6 +254,33 @@
     </ul>
   {:else}
     <p class="ds-gallery__note">The phone's states: empty, marked (played, #70), marked and playing (very clear: the running ring, see-through, with its glow), crossed. (No near: §8 Y1.)</p>
+    <h4>mark-bob: the marks bob like a head on the beat</h4>
+    <p class="ds-gallery__note">
+      Each mark turns −8° ↔ +8° round a pivot near its bottom, one side per beat, easing out (fast from the beat, slow at the
+      end); a fast pulse takes two beats a side (a bar in 3/4), never more than 135 sides a minute. The random tilt stays: it
+      is the kernel box's, the bob the mark's own <code>rotate</code>. On the phone only inside the home while a song's beat is
+      public, in play; still with reduced motion. Now: {bobBpm} bpm, {bobBar}/4, {beatsPerSide(bobBpm, bobBar)} beat(s) a side,
+      a cycle of {bobCss?.period}.
+    </p>
+    <div class="ds-gallery__bob-controls">
+      <label>Tempo (bpm) <input type="range" min="60" max="190" step="1" bind:value={bobBpm} /></label>
+      <label>Bar <select bind:value={bobBar}><option value={4}>4/4</option><option value={3}>3/4</option><option value={2}>2/4</option></select></label>
+    </div>
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div data-beat style:--beat-period={bobCss?.period} style:--beat-delay={bobCss?.delay} onanimationstart={pinBob}>
+      <ul class="ds-gallery__cells card-grid">
+        {#each BOB_MARKS as [id, identity] (id)}
+          <li class="ds-gallery__cellwrap">
+            <ul class="ds-gallery__bare">
+              <CardCell class="card-grid__cell is-marked" songId={id} title={title(id)} label={label(id, 'ha sonat')} coverFallback="empty" {...cellLook('marked', { playing: id === playingSong })}>
+                <span class="card-grid__kernel" style:--tilt="{(id % 5) * 6 - 12}deg" aria-hidden="true"><span class="card-grid__bob" data-bob><CardMark {identity} decorative /></span></span>
+              </CardCell>
+            </ul>
+            <span class="ds-gallery__caption">tilt {(id % 5) * 6 - 12}°{id === playingSong ? ', playing' : ''}</span>
+          </li>
+        {/each}
+      </ul>
+    </div>
   {/if}
   <h4>Long titles (R9)</h4>
   <ul class="ds-gallery__cells {phone ? 'card-grid' : 'check-grid'}">

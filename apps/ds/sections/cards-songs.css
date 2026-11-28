@@ -20,6 +20,20 @@
   border-radius: var(--radius-lg);
 }
 
+.ds-gallery__bob-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  align-items: center;
+  margin-block: var(--space-3);
+}
+
+.ds-gallery__bob-controls label {
+  display: inline-flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
 .ds-gallery__cellwrap {
   display: grid;
   gap: var(--space-3);
