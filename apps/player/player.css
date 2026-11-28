@@ -1840,14 +1840,16 @@
   filter: drop-shadow(0 3px 0 rgb(23 19 43 / 0.6));
 }
 
-.card-grid__kernel > .card-mark,
-.card-grid__bob > .card-mark {
+.card-grid__kernel > .card-mark {
   width: var(--kernel-size);
   height: var(--kernel-size);
 }
 
-/* `mark-bob`'s box round the mark: the mark's own size (a grid, so no line box under the SVG). */
+/* `mark-bob`'s box round the mark: the whole kernel box, as the mark itself fills it (CardMark's own 100 %), so its
+   pivot near the bottom is the drawing's bottom (a grid, so no line box under the SVG). */
 .card-grid__bob {
+  position: absolute;
+  inset: 0;
   display: grid;
 }
 

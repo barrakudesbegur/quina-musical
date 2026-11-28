@@ -258,7 +258,8 @@
     <p class="ds-gallery__note">
       Each mark turns −8° ↔ +8° round a pivot near its bottom, one side per beat, easing out (fast from the beat, slow at the
       end); a fast pulse takes two beats a side (a bar in 3/4), never more than 135 sides a minute. The random tilt stays: it
-      is the kernel box's, the bob the mark's own <code>rotate</code>. On the phone only inside the home while a song's beat is
+      is the kernel box's <code>transform</code>, the bob the <code>rotate</code> of an HTML box round the mark (an SVG element's
+      animation runs on the main thread). On the phone only inside the home while a song's beat is
       public, in play; still with reduced motion. Now: {bobBpm} bpm, {bobBar}/4, {beatsPerSide(bobBpm, bobBar)} beat(s) a side,
       a cycle of {bobCss?.period}.
     </p>
