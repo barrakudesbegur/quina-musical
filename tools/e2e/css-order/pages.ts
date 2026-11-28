@@ -21,12 +21,15 @@ export interface CheckPage {
 const PHONE = { width: 390, height: 844 };
 const TABLET = { width: 1194, height: 834 };
 const PROJECTOR = { width: 1440, height: 810 };
+/** The projector at 16:10 (D276): the box pillarboxed less, the screen-wide layers reaching into a narrower bleed. */
+const PROJECTOR_16_10 = { width: 1440, height: 900 };
 const DESKTOP = { width: 1280, height: 900 };
 
 const player = (name: string, query: string): CheckPage => ({ name: `player-${name}`, path: `/player/?${query}`, ...PHONE });
 const consolePage = (name: string, query: string, click?: string): CheckPage => ({ name: `console-${name}`, path: `/console/?${query}`, ...TABLET, ...(click ? { click } : {}) });
 const focused = (page: CheckPage, name: string, focus: string): CheckPage => ({ ...page, name: `${page.name}-${name}`, focus });
 const stage = (name: string, fixture: string): CheckPage => ({ name: `stage-${name}`, path: `/stage/?demo=${fixture}`, ...PROJECTOR });
+const stage1610 = (name: string, fixture: string): CheckPage => ({ ...stage(name, fixture), name: `stage-${name}-16x10`, ...PROJECTOR_16_10 });
 const admin = (view: string): CheckPage => ({ name: `admin-${view}`, path: `/admin/?demo=play#${view}`, ...DESKTOP });
 const gallery = (name: string, query: string, size: { width: number; height: number }): CheckPage => ({ name: `ds-${name}`, path: `/ds/${query}`, ...size, gallery: true });
 
@@ -68,6 +71,17 @@ export const PAGES: readonly CheckPage[] = [
   stage('desgraciat', 'desgraciat'),
   stage('finale', 'finale'),
   stage('finale-celebration', 'finaleCelebration'),
+  stage('pause', 'pause'),
+  stage1610('before', 'before'),
+  stage1610('play', 'play'),
+  stage1610('check', 'check'),
+  stage1610('check-failed', 'checkCueFallen'),
+  stage1610('celebration', 'celebration'),
+  stage1610('interval', 'interval'),
+  stage1610('desgraciat', 'desgraciat'),
+  stage1610('finale', 'finale'),
+  stage1610('finale-celebration', 'finaleCelebration'),
+  stage1610('pause', 'pause'),
   admin('preparacio'),
   admin('json'),
   admin('nit'),
