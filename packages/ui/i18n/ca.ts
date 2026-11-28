@@ -34,7 +34,7 @@ export const CA = {
   sponsors: { list: 'Patrocinadors', show: (name: string) => `${name}: mostra el logo més gran`, close: 'Tanca' },
   /** Under a bundle's headline prizes: how many smaller ones come with them. */
   morePrizes: (n: number) => (n === 1 ? 'i 1 premi més' : `i ${n} premis més`),
-  checking: (id: number) => `Comprovant el cartró ${id}…`,
+  checking: (id: number) => `Comprovant el cartró #${id}…`,
   checkValid: 'Cartró correcte!',
   checkInvalid: 'Aquest cartró no té premi',
   landed: 'Ha sonat',

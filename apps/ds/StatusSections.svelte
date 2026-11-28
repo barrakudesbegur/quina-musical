@@ -218,7 +218,7 @@
       {@render cell('note · green · solid', n4)}
       {#snippet n5()}<Notice layout="strip" color="periwinkle" icon="eye-off" live="off" text="Sense connexió · reconnectant…" />{/snippet}
       {@render cell('strip · periwinkle: offline (M34)', n5)}
-      {#snippet n6()}<Notice layout="strip" color="navy" live="off" progress="dots" text="Comprovant el cartró 123" />{/snippet}
+      {#snippet n6()}<Notice layout="strip" color="navy" live="off" progress="dots" text="Comprovant el cartró #123" />{/snippet}
       {@render cell('strip · navy · dots: the check line', n6)}
       {#snippet n7()}<Notice layout="scene" color="navy" live="off" text="Tornem de seguida"><Nino pose="meditant" size={110} motion="breathe" /></Notice>{/snippet}
       {@render cell('scene: the Pause (the breathing nino)', n7)}

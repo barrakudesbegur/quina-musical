@@ -7,7 +7,9 @@ import type { PublicWinKind } from './feed/public.ts';
 import type { HeatLevel } from '../../packages/ui/motion/garland.ts';
 import type { AraView } from './logic/tabs.ts';
 
-const card = CA.card;
+/** A card by its number, as the design system writes card numbers (components-v2.md: the header's «#123», the console's
+ * «#57»): «Cartró #123». Every string here that names a card by number uses it (28 Nov). */
+const card = (id: number): string => `Cartró #${id}`;
 /** "de" before a name, elided before a vowel sound ("d’Àvia", "d’Helena"), but not before a semivowel ("de Iaia"). */
 const ofName = (name: string): string => (/^h?[aeiouàáèéíïòóúü]/i.test(name) && !/^h?[iu][aeiouàáèéíòóú]/i.test(name) ? `d’${name}` : `de ${name}`);
 /** "Primer", "Segon"…: the plan's Throws come after a round that isn't the last, so 19 at most (20 rounds). */
@@ -78,11 +80,11 @@ export const S = {
     invalid: 'Aquest número no és vàlid.',
     duplicate: (id: number) => `El ${card(id).toLowerCase()} ja és en aquest mòbil.`,
     full: (max: number) => `Ja tens ${max} cartrons, que és el màxim.`,
-    unknown: (id: number) => `No hi ha cap cartró amb el número ${id}.`,
+    unknown: (id: number) => `No hi ha cap ${card(id).toLowerCase()}.`,
   },
-  added: (id: number) => `Cartró #${id} afegit`,
+  added: (id: number) => `${card(id)} afegit`,
   /** «Afegir cartró» after «Desar» (`pad-saved`, §8 Y3; replaces D200's banner): it confirms, then asks. */
-  savedTitle: (id: number) => `Cartró #${id} afegit!`,
+  savedTitle: (id: number) => `${card(id)} afegit!`,
   savedYours: (count: number) => (count === 1 ? 'El teu cartró' : `Els teus ${count} cartrons`),
   addAnotherAsk: 'Vols afegir un altre cartró?',
   addAnotherHint: 'Si jugues amb més cartrons, o vols seguir els de la família, afegeix-los: el mòbil els segueix tots alhora.',
