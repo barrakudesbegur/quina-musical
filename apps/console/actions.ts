@@ -64,6 +64,8 @@ export const ACTIONS = {
   panic: { color: colorOf('back'), layout: 'row', icon: 'warning', label: S.menu.panic, note: S.menu.panicNote },
   endNight: { color: colorOf('back'), layout: 'row', variant: 'plain', icon: 'power', label: S.menu.end, note: S.menu.endNote },
   resume: { color: colorOf('celebration'), layout: 'row', icon: 'play', label: S.resume.send, note: S.resume.sendNote },
+  /** «Proves» (test runs only): a new Game, behind the same hold as «Acabar la nit». */
+  testReset: { color: colorOf('back'), layout: 'row', variant: 'plain', icon: 'restart', label: S.tests.reset, note: S.tests.resetNote },
 
   // ---- the Check (CheckPanel) ----
   checkBack: { color: colorOf('back'), icon: 'undo', label: S.check.back, note: S.check.backNote, wii: WII.checkBack },
@@ -141,6 +143,9 @@ export const MINI = {
   resumeUseSaved: { size: 's', label: S.resume.useSaved },
   /** «Cartrons venuts» (D234): adds the typed cards to the cards in play. */
   cardsAdd: { icon: 'plus', label: S.cardsAdd.add },
+  /** «Proves» (test runs only): go to the picked round, at its intro or after K songs. */
+  testIntro: { icon: 'play', label: S.tests.intro },
+  testPlay: { icon: 'skip', label: S.tests.play(0) },
   // ---- the PA's sound test (D229, SoundTest)
   soundTestStart: { color: 'orange', icon: 'play', label: S.soundTest.start },
   soundTestPrev: { icon: 'chevron-left', label: S.soundTest.prev },

@@ -92,6 +92,8 @@ export const CONSOLE_ICONS = {
   soundTest: 'speaker-loud',
   /** «Cartrons venuts» (D234). */
   cards: 'ticket',
+  /** «Proves» (test runs only): the set has no wrench or flask; the cog. */
+  tests: 'cog',
 } as const satisfies Record<string, LineIconName>;
 
 export type IconName = keyof typeof CONSOLE_ICONS;

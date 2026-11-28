@@ -7,7 +7,7 @@
     technical pause, which is the Pausa, auto-advance in the final phase, the phones' «LÍNIA!»/«QUINA!» announce (D289), a Phase override), the tools (a Line
     confirmed without a Check);
   - the Game's Winners, plan B resume, and the Plan B cheat sheet (the laptop's keys and the setup
-    checklist) behind a disclosure.
+    checklist) behind a disclosure; last, «Proves» (TestsPanel), only while the relay runs with `--test`.
   The remote's card also has the shake gesture's switch (D144, D148; the Consola-Menu board). The night's card is
   followed by «Cartrons venuts» (CardsAdd, D234). Under the three columns, across them: «Sons automàtics» (AutoSounds,
   D237; the «Última volta» and voices switches live there now), «Prova de so» (SoundTest, D229) and the volume sliders
@@ -33,6 +33,7 @@
   import LongPressButton from '../../../packages/ui/components/LongPressButton.svelte';
   import ResumePanel from './ResumePanel.svelte';
   import SetupChecklist from './SetupChecklist.svelte';
+  import TestsPanel from './TestsPanel.svelte';
   import Switch from '../../../packages/ui/components/Switch.svelte';
   import TextField from '../../../packages/ui/components/TextField.svelte';
   import SegmentedControl from '../../../packages/ui/components/SegmentedControl.svelte';
@@ -224,6 +225,8 @@
           <SetupChecklist />
         </div>
       </section>
+
+      {#if open && model.testMode}<TestsPanel />{/if}
     </div>
 
     <section class="menu-group menu-ui-sounds" aria-label={S.menu.uiSounds}>

@@ -44,6 +44,7 @@ import { canSend, controlsModel, sceneContext } from './logic/scene.ts';
 import { EMPTY_TAB_MEMORY, fallenBetween, helperTabAfter, type HelperTab, type TabMemory } from './logic/standing.ts';
 import { nextSavedCode, resumeCommand } from '../../packages/rules/resume.ts';
 import { consoleAlert, isOnline, looksUnpaired } from './logic/status.ts';
+import { sendTestCommand, testCanSend, testModeAfter, type TestCommandFields, type TestCommandName } from './logic/tests-mode.ts';
 import { SentLog, dismissToast, holdToasts, isOwnRejection, pushToast, releaseToasts, shownToasts, type Toast, type ToastTone } from './logic/toasts.ts';
 import { S, commandText, reasonText } from './strings.ts';
 import { readStored, writeStored } from './storage.ts';
@@ -177,6 +178,9 @@ export class ConsoleModel {
   private fallSeq = 0;
   /** Pausa was on in the last snapshot (for `a-glide`). Not reactive. */
   private pausedSeen = false;
+  /** The relay runs in test mode (`relay.mode { test: true }` on hello, logic/tests-mode.ts): the menu's «Proves» card
+   *  shows. False until the relay says so, and again whenever the connection drops (the next hello says it again). */
+  testMode = $state(false);
 
   /** Commands can reach the engine (relay connected, show page on it). */
   readonly online = $derived(isOnline(this.show.connected, this.show.showOnline));
@@ -303,6 +307,14 @@ export class ConsoleModel {
           writeStored(CONSOLE.storage.resume, next);
         }
       }
+    });
+
+    // «Proves» (test runs only): the relay's raw messages, since `relay.mode` isn't an engine event (yet).
+    this.show.client.bus.on((message, { local }) => {
+      if (!local) this.testMode = testModeAfter(this.testMode, message);
+    });
+    this.show.client.onChange(() => {
+      if (!this.show.client.connected) this.testMode = false;
     });
 
     this.theme = resolveTheme(readStored(CONSOLE.storage.theme), DEFAULT_THEME, this.show.demo ? new URLSearchParams(location.search).get('theme') : null);
@@ -514,6 +526,20 @@ export class ConsoleModel {
   /** Plan B: resume a round by hand on this laptop (a replacement one, or after a restart). */
   resume(point: ResumePoint): string | null {
     return this.act('resumeAt', resumeCommand(point));
+  }
+
+  /** «Proves»: whether the test commands would be accepted now (LOCAL until the protocol has them: then `can(cmd)`). */
+  get canTest(): boolean {
+    return testCanSend({ online: this.online, state: this.show.state });
+  }
+
+  /** «Proves»: send a test command, like `act` (LOCAL until the protocol has them: then `this.act(cmd, fields)`). */
+  testAct<C extends TestCommandName>(cmd: C, fields: TestCommandFields[C]): string | null {
+    const { reqId, message } = sendTestCommand(cmd, fields, this.show.client.reqPrefix);
+    const sent = this.show.client.bus.sendRemote(message) ? reqId : null;
+    if (sent === null) this.toast('error', S.toast.notSent(commandText(cmd)));
+    else this.sent.remember(sent);
+    return sent;
   }
 
   /** Whether `cmd` would be accepted now, as far as the console can tell (the engine has the last word). */
