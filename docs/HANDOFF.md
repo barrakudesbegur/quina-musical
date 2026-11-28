@@ -33,7 +33,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 - The research: docs/research/reports/laptop-app.md, android-show-app.md, wii-remote-mac.md, browser-only-show.md, presenter-remote.md, two-projectors.md.
 - **How to ask (the user, 28 Nov):** a stated preference is an answer; never re-ask it, and never turn the user's own purchases into questions (memory: feedback-stated-preference-is-an-answer).
 
-**Chrome's audio clock stopped on this Mac (28 Nov):** the user's fix is to quit every Chrome (including a kiosk from the 27 Nov production test, profile /tmp/quina-show, and that test's relay), then `sudo killall coreaudiod`, then a reboot. Backend's production e2e was red until its Chrome ran with `--disable-audio-output` (057ff2a); D277 then deployed (c9865a9e). D284 adds detection: Sound engine's part (0dd44efe) and Backend's preflight FAIL (1a9714c) are on main; Frontend's Console banner is next on its list.
+**Chrome's audio clock stopped on this Mac (28 Nov):** the user's fix is to quit every Chrome (including a kiosk from the 27 Nov production test, profile /tmp/quina-show, and that test's relay), then `sudo killall coreaudiod`, then a reboot. Backend's production e2e was red until its Chrome ran with `--disable-audio-output` (057ff2a); D277 then deployed (c9865a9e). D284 adds detection: Sound engine's part (0dd44efe) and Backend's preflight FAIL (1a9714c) are on main; Frontend's Console banner is on main (1fa4ef60).
 
 **The sessions:**
 - **Sound engine:** important tasks only. Done today: the README's Chrome profile (9c5ef734), split mode marked a nice-to-have (9d1cb3ac), D277's public Spin target and the Pausa volume fix (a2d0b4af).
