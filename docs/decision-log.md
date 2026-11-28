@@ -1484,7 +1484,7 @@ By: the user and the team. Source: open-questions.md › Answered (U167). Lives 
 The corner buttons and the floating «+ Cartró», built now. The user's caution: "some pages in the artifact dont use the latest components from the design system". So the build follows the design system's components, and a board's outdated parts don't win. Answers U180 with (a).
 By: the user. Source: open-questions.md › Answered (U180). Lives in: requirements/screens.md › Player app.
 
-### D219 · The latest browsers only · 2026-11-27 · Active
+### D219 · The latest browsers only · 2026-11-27 · Active; amended by D293
 "dont care for backwards compatibility in tablet nor admin, i use latest. and for the player app they most likely have chrome latest and ios latest, so compatibility is not a concern". The screens target the latest Chrome and Safari, with no fallbacks for older versions: container queries, `@starting-style` and the like can be used freely. The game works fully with paper, so a phone that can't update loses only the companion. Answers U187, beyond its options.
 By: the user. Source: open-questions.md › Answered (U187). Supersedes: the 15.4 floor in packages/ui/HANDOFF.md. Lives in: requirements/screens.md › Every screen.
 
@@ -1911,3 +1911,7 @@ By: the user. Source: the user's message of 28 Nov. Lives in: requirements/show-
 - Sound engine: `--test`, `relay.mode`, `testReset` and the jumps mid-show. Frontend: the console section. Backend: the cloud refusal, the deploy, and the laptop restarted with `--test`.
 - The list of moments is the user's to extend later.
 By: the user (to Backend). Source: Backend's report of 28 Nov. Lives in: requirements/operations.md › Rehearsals; docs/night-runbook.md (a line when it lands).
+
+### D293 · A browser floor: Safari 18 and Chrome 131 · 2026-11-28 · Active; the user may overrule
+D219's premise, "they most likely have chrome latest and ios latest", didn't hold in today's production test: the user's own iPhone (iOS 18.6.2, Safari 18) showed a blank Historial. So the phone and the console now have a floor of Safari 18.0 (iOS and iPadOS 18) and Chrome 131, written once in packages/ui/baseline.ts (`FLOOR`). A lint fails on any newer feature outside a `@supports` or JS feature test, which must keep a visible fallback. It found three more Safari 18 bugs, fixed in 7f28fa9e: the console's «Cançons / Cartró» control over the first tab on iPadOS 18, the SegmentedControl's selection not showing, and the reduced-motion view switch throwing on iOS 18.0–18.1. The game still works fully with paper. Amends D219.
+By: Frontend, after the user's live test; the user may overrule. Source: Frontend's report of 28 Nov. Lives in: requirements/screens.md › Every screen.

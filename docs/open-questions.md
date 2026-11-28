@@ -325,7 +325,7 @@ Rounds in order, a card type and side per round, prize bundles, sponsors, the do
 3. Last year's offline cache (can be checked now): open the QR address on a phone that used last year's app; it must load this year's player, not the cached old one.
 4. On the iPad console, the Llançament icon's crossed swords: the front sword's outline must cut a clean gap in the back one (Safari, e4c0a3ca).
 5. The projector at 4:3, 16:10 and 16:9 (D276): the drum, the last-3 row and the Check readable from the back.
-6. The console on the actual tablet (iPad and Android) over the hotspot, then pair a phone as the tech's console. It needs the latest iPadOS or Chrome (D219).
+6. The console on the actual tablet (iPad and Android) over the hotspot, then pair a phone as the tech's console. It needs iPadOS 18 / Safari 18 or Chrome 131 or newer (D293).
 7. Scanning a card on Android (a Samsung and an older phone) before the cards are printed on 4–5 Dec: the camera, the Quick Settings scanner and Google Lens. Each must open the card itself, with or without the installed app (D224).
 8. The real Wii remote: every button, the shake for Suspens, and its range from the stage to the laptop.
 
@@ -364,7 +364,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 - **U58 · The alphabetical convention** (2026-11-27) → D238: letter by letter, as the user's sorting tool does and the playlists are.
 - **U192 · A two-sided special card** (2026-11-27) → D226: yes, agreed with the team; the Desgraciat on side 1 (pool 1), the Especial on side 2 (pool 2).
 - **U59 · The special card's back** (2026-11-27) → D226: it's side 2, for the Especial.
-- **U187 · The oldest iOS** (2026-11-27) → D219: the latest browsers only; no backwards compatibility.
+- **U187 · The oldest iOS** (2026-11-27) → D219: the latest browsers only; amended by D293 (a floor of Safari 18 and Chrome 131, after the user's iPhone on iOS 18 failed in the live test).
 - **U180 · The phone's home as drawn** (2026-11-27) → D218: build it now, from the design system's components.
 - **U167 · The special rounds' pool** (2026-11-27) → D217: for now, one side from pool 1, as the team agreed; the two-sided card is the user's task U192.
 - **U189 · Balanced line breaks on titles** (2026-11-27) → D215: yes, as a project-wide rule (headings balance, body text pretty).

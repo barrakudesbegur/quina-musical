@@ -23,7 +23,7 @@ _From event.md › The audience, Atmosphere and style, Fairness and trust._
 - **"On" is animated (D215):** a temporary active state, such as a Hold mode, shows panning stripes. Nothing is on by default, and a locked state is never striped.
 - **Placement (D215):** a control in a corner sits at the same distance from both edges. A ring keeps one even gap all round, its 3D edge included. Headings wrap balanced and body text wraps "pretty".
 - Images are JPEG XL, with a PNG or JPEG fallback. Never WebP.
-- **Browsers (D219):** only the latest Chrome and Safari, on the phones, the tablet and Admin. No fallbacks for older versions. The game works fully with paper, so a phone that can't update loses only the companion.
+- **Browsers (D219, D293):** Safari 18 (iOS and iPadOS 18) and Chrome 131 or newer, on the phones, the tablet and Admin. A newer feature is used only behind `@supports` or a feature test, with a visible fallback; a lint enforces it (packages/ui/baseline.ts). The game works fully with paper, so a phone that can't update loses only the companion.
 - **The ending stays secret.** Nothing public shows the next song, the Queue, who might win, or how close the end is.
 - The approved look still has to be applied to the projector, the console and Admin (pending U12; not ready yet). The player app already has it.
 
