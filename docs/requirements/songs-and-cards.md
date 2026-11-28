@@ -110,7 +110,7 @@ _From event.md › The cards; the decisions doc › Changes._
 _From event.md › The cards (Amounts)._
 
 - Card numbers restart each edition, normal cards first (2025: normal #1–399, special #400–699).
-- The amounts stay as D68: normal cards #1–399 and special cards #400–699, so a card's first digit tells its type (D264). On A4, three a page, both amounts fill whole pages: 133 + 100 = 233 sheets, printed on both sides (D295). D264's «MOSTRA» samples were for the A3 sheet's spare places. The one or two A3 test sheets repeat the last numbers of each run; the A4 cards with those numbers stay off sale with the user, who hands one or the other to a known buyer of two cards and tracks who holds them (D306).
+- The amounts stay as D68: normal cards #1–399 and special cards #400–699, so a card's first digit tells its type (D264). On A4, three a page, both amounts fill whole pages: 133 + 100 = 233 sheets, printed on both sides (D295). D264's «MOSTRA» samples were for the A3 sheet's spare places. The A3 test sheets repeat the last numbers of each run: one sheet per card type, its last 6 cards (normal #394–399, special #694–699; D327); the A4 cards with those numbers stay off sale with the user, who hands one or the other to a known buyer of two cards and tracks who holds them (D306).
 - 2024: 250 of each type printed; 214 normal and 147 special sold.
 - 2025: about 250 cards in play expected; about 190 normal and 151 special actually played.
 
