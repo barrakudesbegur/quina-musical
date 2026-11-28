@@ -44,8 +44,8 @@ test('validation errors come back with their paths; network errors never throw',
 
 test('media upload returns the public path, or a reason', async () => {
   const blob = new Blob([new Uint8Array([1, 2, 3])], { type: 'image/png' });
-  assert.deepEqual(await uploadMedia(async () => reply(201, { ok: true, path: '/media/abc.png', key: 'abc' }), blob), { ok: true, path: '/media/abc.png', key: 'abc' });
-  assert.deepEqual(await uploadMedia(async () => reply(201, { ok: true, path: '/media/def.png' }), blob), { ok: true, path: '/media/def.png', key: 'def' }, 'the key from the path');
+  assert.deepEqual(await uploadMedia(async () => reply(201, { ok: true, path: '/media/0123456789abcdef0123456789abcdef.png', key: '0123456789abcdef0123456789abcdef' }), blob), { ok: true, path: '/media/0123456789abcdef0123456789abcdef.png', key: '0123456789abcdef0123456789abcdef' });
+  assert.deepEqual(await uploadMedia(async () => reply(201, { ok: true, path: '/media/fedcba9876543210fedcba9876543210.png' }), blob), { ok: true, path: '/media/fedcba9876543210fedcba9876543210.png', key: 'fedcba9876543210fedcba9876543210' }, 'the key from the path');
   assert.deepEqual(await uploadMedia(async () => reply(415, { ok: false }), blob), { ok: false, status: 415, reason: 'type' });
   assert.deepEqual(await uploadMedia(async () => reply(413, { ok: false }), blob), { ok: false, status: 413, reason: 'size' });
   assert.deepEqual(

@@ -55,9 +55,9 @@ test('a bundle on the page: the headline, the sponsors\' rows, the plain prizes 
 });
 
 test('a prize carries its sponsor\'s logo; a locked round carries nothing of its own', () => {
-  const plan = { ...PUBLIC, sponsors: PUBLIC.sponsors.map((s) => (s.id === 'patrocinador-1' ? { ...s, logo: '/media/p1.png' } : s)) };
+  const plan = { ...PUBLIC, sponsors: PUBLIC.sponsors.map((s) => (s.id === 'patrocinador-1' ? { ...s, logo: '/media/0123456789abcdef0123456789abcdef.png' } : s)) };
   const rounds = prizeRounds(plan, playing());
-  assert.deepEqual(rounds[2].lines[0].headline[0], { title: 'Ampolla de vi blanc', detail: null, sponsor: '[Patrocinador 1]', logo: '/media/p1.png' });
+  assert.deepEqual(rounds[2].lines[0].headline[0], { title: 'Ampolla de vi blanc', detail: null, sponsor: '[Patrocinador 1]', logo: '/media/0123456789abcdef0123456789abcdef.png' });
   assert.equal(rounds[2].lines[1].others.find((p) => p.title === 'Xocolata')?.logo, null, 'no sponsor, no logo');
   assert.deepEqual(rounds[4].lines.map((l) => bundleView(l).count), [0], 'a locked round: not even how many');
 });

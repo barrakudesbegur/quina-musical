@@ -31,15 +31,15 @@ test('search: every word, ignoring case and accents, in the name or the key', ()
 test('the library list: newest first, malformed entries skipped, failures as values', async () => {
   const body = {
     media: [
-      { key: 'a', name: 'old', fallback: '/media/a.png', jxl: true, uploadedAtMs: 1 },
-      { key: 'b', name: ' new ', fallback: '/media/b.png', jxl: false, uploadedAtMs: 2 },
+      { key: '00112233445566778899aabbccddeeff', name: 'old', fallback: '/media/00112233445566778899aabbccddeeff.png', jxl: true, uploadedAtMs: 1 },
+      { key: 'ffeeddccbbaa99887766554433221100', name: ' new ', fallback: '/media/ffeeddccbbaa99887766554433221100.png', jxl: false, uploadedAtMs: 2 },
       { key: 'c', fallback: 'https://elsewhere/x.png' },
       'junk',
     ],
   };
   const r = await listMedia(async () => reply(200, body));
   assert.ok(r.ok);
-  if (r.ok) assert.deepEqual(r.media.map((m) => [m.key, m.name]), [['b', 'new'], ['a', 'old']]);
+  if (r.ok) assert.deepEqual(r.media.map((m) => [m.key, m.name]), [['ffeeddccbbaa99887766554433221100', 'new'], ['00112233445566778899aabbccddeeff', 'old']]);
   assert.deepEqual(await listMedia(async () => reply(403, {})), { ok: false, status: 403 });
 });
 
@@ -47,8 +47,8 @@ test('uploading a logo: the named PNG, then the given JXL (no encoding); cloud o
   const calls: string[] = [];
   const fetchImpl: FetchLike = async (url, init) => {
     calls.push(`${init?.method ?? 'GET'} ${url} ${init?.headers?.['content-type'] ?? ''}`.trim());
-    if (url.includes('/api/media?')) return reply(201, { ok: true, path: '/media/k1.png', key: 'k1' });
-    return reply(201, { ok: true, path: '/media/k1.jxl', key: 'k1' });
+    if (url.includes('/api/media?')) return reply(201, { ok: true, path: '/media/0123456789abcdef0123456789abcdef.png', key: '0123456789abcdef0123456789abcdef' });
+    return reply(201, { ok: true, path: '/media/0123456789abcdef0123456789abcdef.jxl', key: '0123456789abcdef0123456789abcdef' });
   };
   const cloud = new CloudPlanStore(fetchImpl);
   let encoded = 0;
@@ -59,8 +59,8 @@ test('uploading a logo: the named PNG, then the given JXL (no encoding); cloud o
   const png = new Blob([new Uint8Array([1])], { type: 'image/png' });
   const jxl = new Blob([new Uint8Array([0xff, 0x0a])]);
   const r = await store.uploadLogo(png, jxl, 'can pere');
-  assert.deepEqual(r, { ok: true, path: '/media/k1.png', key: 'k1' });
-  assert.deepEqual(calls, ['POST /api/media?name=can%20pere image/png', 'PUT /api/media/k1.jxl image/jxl']);
+  assert.deepEqual(r, { ok: true, path: '/media/0123456789abcdef0123456789abcdef.png', key: '0123456789abcdef0123456789abcdef' });
+  assert.deepEqual(calls, ['POST /api/media?name=can%20pere image/png', 'PUT /api/media/0123456789abcdef0123456789abcdef.jxl image/jxl']);
   assert.equal(encoded, 0, 'the logo tool already made its JXL');
   const local = new AdminPlanStore(cloud, new MemoryLogoStore(), 'relay', { store: cloud, fetchImpl });
   assert.equal((await local.uploadLogo(png, null, 'x')).ok, false, 'no library on the relay');

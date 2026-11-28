@@ -74,6 +74,6 @@ test('inline logos are stored aside, so the stored plan passes the shared valida
 });
 
 test('a stored logo never overrides a logo the plan already has', () => {
-  const plan = { ...SAMPLE_PLAN, sponsors: SAMPLE_PLAN.sponsors.map((s) => ({ ...s, logo: '/logos/x.png' })) };
+  const plan = { ...SAMPLE_PLAN, sponsors: SAMPLE_PLAN.sponsors.map((s) => ({ ...s, logo: '/media/0123456789abcdef0123456789abcdef.png' })) };
   assert.deepEqual(planFromStorage(plan, { [plan.sponsors[0].id]: LOGO }), plan);
 });

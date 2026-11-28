@@ -25,8 +25,8 @@ test('inline logos are uploaded, then the plan is saved with their media paths',
   let putBody: GamePlan | null = null;
   const fetchImpl: FetchLike = async (url, init) => {
     calls.push(`${init?.method ?? 'GET'} ${url}`);
-    if (url.endsWith('/api/media')) return reply(201, { ok: true, path: '/media/abc.png', key: 'abc' });
-    if (url.endsWith('/api/media/abc.jxl')) return reply(201, { ok: true, path: '/media/abc.jxl', key: 'abc' });
+    if (url.endsWith('/api/media')) return reply(201, { ok: true, path: '/media/0123456789abcdef0123456789abcdef.png', key: '0123456789abcdef0123456789abcdef' });
+    if (url.endsWith('/api/media/0123456789abcdef0123456789abcdef.jxl')) return reply(201, { ok: true, path: '/media/0123456789abcdef0123456789abcdef.jxl', key: '0123456789abcdef0123456789abcdef' });
     putBody = JSON.parse(String(init?.body)) as GamePlan;
     return reply(200, { ok: true, plan: putBody });
   };
@@ -34,8 +34,8 @@ test('inline logos are uploaded, then the plan is saved with their media paths',
   const result = await cloudStore(fetchImpl).save(plan);
   assert.deepEqual(calls, ['POST /api/media', 'PUT /api/plan']);
   assert.equal(result.ok, true);
-  assert.equal(putBody!.sponsors[0].logo, '/media/abc.png');
-  if (result.ok) assert.equal(result.saved?.sponsors[0].logo, '/media/abc.png');
+  assert.equal(putBody!.sponsors[0].logo, '/media/0123456789abcdef0123456789abcdef.png');
+  if (result.ok) assert.equal(result.saved?.sponsors[0].logo, '/media/0123456789abcdef0123456789abcdef.png');
 });
 
 test('a refused upload or plan is reported, never thrown', async () => {
@@ -81,8 +81,8 @@ test("each uploaded logo gets its JPEG XL; when the encoder can't, the save stil
   const calls: string[] = [];
   const fetchImpl: FetchLike = async (url, init) => {
     calls.push(`${init?.method ?? 'GET'} ${url}`);
-    if (url.endsWith('/api/media')) return reply(201, { ok: true, path: '/media/abc.png', key: 'abc' });
-    if (url.endsWith('.jxl')) return reply(201, { ok: true, path: '/media/abc.jxl', key: 'abc' });
+    if (url.endsWith('/api/media')) return reply(201, { ok: true, path: '/media/0123456789abcdef0123456789abcdef.png', key: '0123456789abcdef0123456789abcdef' });
+    if (url.endsWith('.jxl')) return reply(201, { ok: true, path: '/media/0123456789abcdef0123456789abcdef.jxl', key: '0123456789abcdef0123456789abcdef' });
     return reply(200, { ok: true, plan: JSON.parse(String(init?.body)) });
   };
   const plan: GamePlan = { ...SAMPLE_PLAN, sponsors: SAMPLE_PLAN.sponsors.map((s, i) => (i === 0 ? { ...s, logo: LOGO } : s)) };
@@ -92,7 +92,7 @@ test("each uploaded logo gets its JPEG XL; when the encoder can't, the save stil
   };
   const withJxl = await store(async () => new Blob([new Uint8Array([0xff, 0x0a])], { type: 'image/jxl' })).save(plan);
   assert.equal(withJxl.ok, true);
-  assert.deepEqual(calls, ['POST /api/media', 'PUT /api/media/abc.jxl', 'PUT /api/plan']);
+  assert.deepEqual(calls, ['POST /api/media', 'PUT /api/media/0123456789abcdef0123456789abcdef.jxl', 'PUT /api/plan']);
   calls.length = 0;
   const failing = await store(async () => {
     throw new Error('no wasm');
