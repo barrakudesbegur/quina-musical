@@ -1,8 +1,10 @@
-// Admin's view of plan validation. It is ui/plan.ts's checkGamePlan plus one thing the shared validator
-// doesn't accept yet: a sponsor logo kept inline as a data URL (the cleaned PNG), until the Platform
-// session stores logos in R2. checkGamePlan limits `logo` to a 500-character path, so the data URLs are
-// checked here (format and size) and set aside while the rest goes through checkGamePlan unchanged.
+// Admin's view of plan validation. It is ui/plan.ts's checkGamePlan, in its writing mode (a plan about to be
+// saved), plus one thing the shared validator doesn't accept: a sponsor logo kept inline as a data URL (the cleaned
+// PNG), until the save uploads it and puts the upload's path in its place. The data URLs are checked here (format
+// and size) and set aside while the rest goes through checkGamePlan. Any other logo must be an upload's path
+// (LOGO_PATH_RE): one that isn't is an error naming its sponsor, never a logo silently dropped.
 // Every function returns every problem with its JSON path and never throws.
+import { LOGO_PATH_RE } from '@quina/protocol';
 import { checkGamePlan, type GamePlan, type PlanCheck } from '../../../packages/ui/plan.ts';
 import { LOGO_CONFIG } from '../config.ts';
 
@@ -29,22 +31,36 @@ export function inlineLogoError(url: string, maxBytes: number = LOGO_CONFIG.maxB
   return null;
 }
 
+/** A logo that is neither inline nor an upload's path (a link elsewhere, a typo): Admin's error, naming the sponsor. */
+export function logoPathError(sponsorName: string): string {
+  return `the logo of "${sponsorName}" isn't one uploaded in Admin (/media/<32 hex digits>.png or .jpg): upload it again or remove it`;
+}
+
 /**
- * Check a plan that may carry inline logos. Same contract as checkGamePlan: `{ ok: true, plan }` with the
- * inline logos back in place, or every error with its path.
+ * Check a plan about to be saved, which may carry inline logos. Same contract as checkGamePlan: `{ ok: true, plan }`
+ * with the inline logos back in place, or every error with its path. Inline logos are set aside (they are uploaded
+ * first); every other logo must be an upload's path, and the rest goes through checkGamePlan's writing mode.
  */
 export function checkPlanDraft(json: unknown): PlanCheck {
-  if (!isRec(json) || !Array.isArray(json.sponsors)) return checkGamePlan(json);
+  if (!isRec(json) || !Array.isArray(json.sponsors)) return checkGamePlan(json, { write: true });
   const inline = new Map<number, string>();
   const errors: string[] = [];
   const sponsors = json.sponsors.map((s: unknown, i: number) => {
-    if (!isRec(s) || !isInlineLogo(s.logo)) return s;
-    const error = inlineLogoError(s.logo);
-    if (error) errors.push(`plan.sponsors[${i}].logo: ${error}`);
-    inline.set(i, s.logo);
+    if (!isRec(s) || typeof s.logo !== 'string') return s;
+    const logo: string = s.logo;
+    // Inline (isInlineLogo), written out so `logo` stays a string on the other branch.
+    if (logo.startsWith('data:')) {
+      const error = inlineLogoError(logo);
+      if (error) errors.push(`plan.sponsors[${i}].logo: ${error}`);
+      inline.set(i, logo);
+      return { ...s, logo: null };
+    }
+    if (LOGO_PATH_RE.test(logo.trim())) return s;
+    const name = typeof s.name === 'string' && s.name.trim() ? s.name.trim() : typeof s.id === 'string' && s.id ? s.id : `sponsor ${i + 1}`;
+    errors.push(`plan.sponsors[${i}].logo: ${logoPathError(name)}`);
     return { ...s, logo: null };
   });
-  const check = checkGamePlan({ ...json, sponsors });
+  const check = checkGamePlan({ ...json, sponsors }, { write: true });
   if (!check.ok) return { ok: false, errors: [...check.errors, ...errors] };
   if (errors.length) return { ok: false, errors };
   const plan: GamePlan = {
@@ -81,12 +97,12 @@ export function errorsAt(errors: readonly string[], prefix: string): string[] {
 }
 
 /**
- * The plan as the shared store can keep it. When the shared validator accepts the plan as it is (no inline
- * logos, or once it accepts them), it is stored whole. Otherwise the inline logos go to a side store, keyed by
+ * The plan as the shared store can keep it. When the shared validator accepts the plan as it is for writing (no
+ * inline logos), it is stored whole. Otherwise the inline logos go to a side store, keyed by
  * sponsor id, and the plan is stored with `logo: null` for them, so every other screen can still load it.
  */
 export function planForStorage(plan: GamePlan): { plan: GamePlan; logos: Record<string, string> } {
-  if (checkGamePlan(plan).ok) return { plan, logos: {} };
+  if (checkGamePlan(plan, { write: true }).ok) return { plan, logos: {} };
   const logos: Record<string, string> = {};
   const sponsors = plan.sponsors.map((s) => {
     if (!isInlineLogo(s.logo)) return s;

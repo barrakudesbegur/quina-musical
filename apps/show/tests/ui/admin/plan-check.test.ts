@@ -4,10 +4,43 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { checkGamePlan } from '../../../../../packages/ui/plan.ts';
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
-import { base64Bytes, checkPlanDraft, checkPlanText, errorsAt, inlineLogoError, planForStorage, planFromStorage } from '../../../../admin/logic/plan-check.ts';
+import { base64Bytes, checkPlanDraft, logoPathError, checkPlanText, errorsAt, inlineLogoError, planForStorage, planFromStorage } from '../../../../admin/logic/plan-check.ts';
 
 const LOGO = `data:image/png;base64,${Buffer.alloc(2000, 7).toString('base64')}`; // longer than the shared 500-character limit
 const withLogo = (logo: string) => ({ ...SAMPLE_PLAN, sponsors: SAMPLE_PLAN.sponsors.map((s, i) => (i === 1 ? { ...s, logo } : s)) });
+
+const UPLOADED = '/media/0123456789abcdef0123456789abcdef.png';
+
+test('a logo that isn\'t an upload\'s path is refused before saving, naming its sponsor', () => {
+  for (const logo of ['https://example.com/logo.png', '/media/logo.png', '/media/0123456789abcdef0123456789abcdef.webp', 'logo.png']) {
+    const plan = withLogo(logo);
+    assert.equal(checkGamePlan(plan).ok, true, 'reading would only drop it');
+    const r = checkPlanDraft(plan);
+    assert.equal(r.ok, false, logo);
+    if (r.ok) continue;
+    const name = plan.sponsors[1].name;
+    assert.deepEqual(errorsAt(r.errors, 'plan.sponsors[1]'), [`plan.sponsors[1].logo: ${logoPathError(name)}`], 'one error, under the sponsor');
+    assert.match(r.errors.join('\n'), new RegExp(`"${name.replace(/[[\]]/g, '\\$&')}"`), 'the sponsor by name');
+  }
+});
+
+test('a sponsor without a name is named by its id', () => {
+  const plan = { ...SAMPLE_PLAN, sponsors: SAMPLE_PLAN.sponsors.map((s, i) => (i === 1 ? { ...s, name: '', logo: 'x.png' } : s)) };
+  const r = checkPlanDraft(plan);
+  assert.equal(r.ok, false);
+  if (!r.ok) assert.ok(r.errors.includes(`plan.sponsors[1].logo: ${logoPathError(plan.sponsors[1].id)}`));
+});
+
+test('uploaded paths and inline data URLs pass (the save uploads the inline ones first)', () => {
+  const uploaded = checkPlanDraft(withLogo(UPLOADED));
+  assert.equal(uploaded.ok, true);
+  if (uploaded.ok) assert.equal(uploaded.plan.sponsors[1].logo, UPLOADED);
+  const short = 'data:image/png;base64,AAAA';
+  const inline = checkPlanDraft(withLogo(short));
+  assert.equal(inline.ok, true);
+  if (inline.ok) assert.equal(inline.plan.sponsors[1].logo, short, 'kept for the upload');
+  assert.equal(checkPlanDraft(withLogo(LOGO)).ok, true, 'a long one too');
+});
 
 test('base64Bytes is the decoded size', () => {
   assert.equal(base64Bytes(Buffer.from('abc').toString('base64')), 3);
@@ -56,6 +89,14 @@ test('errorsAt picks the errors under a path', () => {
   const errors = ['plan.rounds[1].line.title: must not be empty', 'plan.rounds[10].kind: bad', 'plan.rounds: too many', 'plan.title: x'];
   assert.deepEqual(errorsAt(errors, 'plan.rounds[1]'), ['plan.rounds[1].line.title: must not be empty']);
   assert.equal(errorsAt(errors, 'plan.rounds').length, 3);
+});
+
+test('a short inline logo is stored aside too: the shared store is written with the writing checks', () => {
+  const full = withLogo('data:image/png;base64,AAAA');
+  const { plan, logos } = planForStorage(full);
+  assert.equal(plan.sponsors[1].logo, null);
+  assert.equal(checkGamePlan(plan, { write: true }).ok, true);
+  assert.deepEqual(planFromStorage(plan, logos), full);
 });
 
 test('a plan without inline logos is stored whole', () => {

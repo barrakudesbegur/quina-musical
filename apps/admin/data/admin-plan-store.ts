@@ -1,9 +1,8 @@
 // Where Admin keeps the Game plan. It wraps a shared PlanStore (ui/data/plan-store.ts: localStorage today,
 // the cloud later) and adds two things Admin needs:
-// - Inline logos. The shared validator doesn't accept data-URL logos yet, so a plan carrying them would read
-//   as "no plan" on every screen. planForStorage keeps them in a side store (by sponsor id) and stores the
-//   plan with `logo: null` for them; load() puts them back. Once the shared validator accepts inline logos,
-//   the plan is stored whole and the side store stays empty, with no change here.
+// - Inline logos. The shared validator only accepts an upload's path (LOGO_PATH_RE) as a logo, so a plan
+//   carrying data URLs would be refused when written. planForStorage keeps them in a side store (by sponsor id)
+//   and stores the plan with `logo: null` for them; load() puts them back. The cloud uploads them on save.
 // - Defined failures. save() never throws: it reports a full storage (big logos), storage the browser
 //   refuses (private mode), or anything else, so the page can keep the draft and say why.
 import type { GamePlan } from '../../../packages/ui/plan.ts';
