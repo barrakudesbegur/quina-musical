@@ -4006,25 +4006,28 @@ kbd {
     padding: 2px 8px;
   }
 
-    /* Pace on a phone: the presets on one line, − and + under them, then Lock and Auto */
+    /* Pace on a phone: five presets don't fit one line at 390 px («Molt ràpid» was cut, − and + squeezed to 1 px), so
+       they sit on a six-column grid, three a row, − and + closing the second row, then Lock and Auto */
   .pace__body {
     flex-direction: column;
   }
 
   .pace__row {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    row-gap: 8px; /* the 4 px gap plus the buttons' 4 px drop, which hangs into it */
   }
 
   .pace__preset,
   .pace__preset:not([data-named]) {
-    flex: 1 1 calc(20% - 6px);
+    grid-column: span 2;
     padding-inline: 2px;
     font-size: 0.75rem;
   }
 
   .pace__step {
-    flex: 1;
     order: 1;
+    --mini-width: 0;
     min-height: var(--tap-min);
   }
 
