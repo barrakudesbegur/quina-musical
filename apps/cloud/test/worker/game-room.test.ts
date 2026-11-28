@@ -218,22 +218,26 @@ describe('the laptop and the phones', () => {
     expect(view.state.winners).toHaveLength(2);
   });
 
-  it('live events move the Spin; private fields never reach the phones', async () => {
+  it('live events move the Spin, with its landing song (D277); the private fields never reach the phones', async () => {
     const game = new JournalBuilder('g-spin').startRound().land(1);
     const { client } = await laptop('g-spin');
     await upload(client, 'g-spin', game.entries);
     const p = await phone();
-    const secret = 987_654;
+    const target = 987_654;
+    const secret = 123_457; // the drum's removeId
     client.send({
       v,
       type: 'link.event',
       sentAtMs: now(),
-      event: { v, type: 'transition.scheduled', id: 't9', to: secret, drum: { removeId: 1, targetId: secret, minLaps: 1 }, spinStartAtMs: now(), landAtMs: now() + 8000 },
+      event: { v, type: 'transition.scheduled', id: 't9', to: target, drum: { removeId: secret, targetId: target, minLaps: 1 }, spinStartAtMs: now(), landAtMs: now() + 8000 },
     });
     const view = await p.view();
     expect(p.seen).toHaveLength(2); // the snapshot, then the Spin
-    expect(JSON.stringify(p.seen)).not.toContain(String(secret));
+    const seen = JSON.stringify(p.seen);
+    expect(seen).not.toContain(String(secret));
+    for (const key of ['"drum"', '"removeId"', '"minLaps"', '"to"']) expect(seen).not.toContain(key);
     expect(view.state.spin?.landAtMs).toBeGreaterThan(now());
+    expect(view.state.spin?.targetId).toBe(target);
   });
 
   it("the drum's public seeds (D237) reach the phones, and a phone that connects after a restart still gets them", async () => {
@@ -243,23 +247,25 @@ describe('the laptop and the phones', () => {
     const { client } = await laptop('g-seeds');
     await upload(client, 'g-seeds', game.entries);
     const p = await phone();
-    const secret = 987_654;
+    const target = 987_654;
+    const secret = 123_457; // the drum's removeId
     const spinSeed = 4_294_967_295;
     client.send({
       v,
       type: 'link.event',
       sentAtMs: now(),
-      event: { v, type: 'transition.scheduled', id: 't7', to: secret, drum: { removeId: 1, targetId: secret, minLaps: 1 }, spinStartAtMs: now(), landAtMs: now() + 8000, spinSeed },
+      event: { v, type: 'transition.scheduled', id: 't7', to: target, drum: { removeId: secret, targetId: target, minLaps: 1 }, spinStartAtMs: now(), landAtMs: now() + 8000, spinSeed },
     });
     const view = await p.view();
     expect(view.state.rounds.at(-1)?.drumSeed).toBe(drumSeed);
     expect(view.state.spin?.spinSeed).toBe(spinSeed);
+    expect(view.state.spin?.targetId).toBe(target);
     expect(JSON.stringify(p.seen)).not.toContain(String(secret));
 
     await evictDurableObject(roomOf(env), { webSockets: 'close' }); // a restart: only SQLite remains
     const late = await (await phone()).view();
     expect(late.state.rounds.at(-1)?.drumSeed).toBe(drumSeed);
-    expect(late.state.spin).toMatchObject({ spinSeed });
+    expect(late.state.spin).toMatchObject({ spinSeed, targetId: target });
     expect(JSON.stringify(late)).not.toContain(String(secret));
   });
 
@@ -319,12 +325,12 @@ describe('consoles through the cloud', () => {
     expect(await link.next()).toMatchObject({ type: 'cloud.command', command: { v, type: 'cmd', cmd: 'hold', reqId: 'Mobil-r-1', on: true } });
 
     const p = await phone();
-    const secret = 424_242;
-    link.send({ v, type: 'link.event', sentAtMs: now(), event: { v, type: 'transition.scheduled', id: 't', to: secret, drum: { removeId: 1, targetId: secret, minLaps: 1 }, spinStartAtMs: now(), landAtMs: now() + 5000 } });
+    const secret = 424_242; // the drum's removeId: the landing song is public (D277), the rest of the drum isn't
+    link.send({ v, type: 'link.event', sentAtMs: now(), event: { v, type: 'transition.scheduled', id: 't', to: 5, drum: { removeId: secret, targetId: 5, minLaps: 1 }, spinStartAtMs: now(), landAtMs: now() + 5000 } });
     link.send({ v, type: 'link.event', sentAtMs: now(), event: { v, type: 'claim.opened', claim: { claimId: 'cl-1', cardId: 12 } } });
     const got = await c.drain();
     expect(got.map((m) => (m as { type: string }).type)).toEqual(['transition.scheduled', 'claim.opened']);
-    expect((got[0] as { to: number }).to).toBe(secret); // consoles see the private fields, as on the relay
+    expect((got[0] as { drum: { removeId: number } }).drum.removeId).toBe(secret); // consoles see the private fields, as on the relay
     await p.view();
     expect(JSON.stringify(p.seen)).not.toContain(String(secret)); // phones never do
 

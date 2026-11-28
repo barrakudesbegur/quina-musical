@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultCardType, emptyRecord, extendJournal, PROTOCOL_VERSION, type GameRecord, type JournalEntry, type ShowEvent, type ShowState } from '@quina/protocol';
 import { projectEntry, projectEvent, type ProjectionContext } from '../../src/domain/projection.ts';
-import { applyPublic, emptyPublicState, PUBLIC_FEED, type PublicChange, type PublicState } from '@quina/protocol';
+import { applyPublic, emptyPublicState, PUBLIC_FEED, type PublicChange, type PublicSpin, type PublicState } from '@quina/protocol';
 import { JournalBuilder } from '../support/journal-builder.ts';
 
 const OFFSET = 250;
@@ -23,9 +23,9 @@ function project(entries: readonly JournalEntry[], start = emptyPublicState('26'
   return { record, state, changes };
 }
 
-/** Keys that must never appear anywhere in what phones get. The paced Check's (D108–D123): the whole marked card,
+/** Keys that must never appear anywhere in what phones get. A Spin's `targetId` may (D277); `drum`'s other fields never. The paced Check's (D108–D123): the whole marked card,
  * how far its Check will reveal, whether the next press is the cue, a Review (U79) and a decision by hand (D121). */
-const FORBIDDEN_KEYS = new Set(['queue', 'next', 'possibleWinners', 'future', 'standing', 'lastStandingAt', 'standingCurve', 'fellLast', 'outcome', 'slip', 'phase', 'phaseSeed', 'shuffleSeed', 'name', 'notes', 'steps', 'completeSince', 'warnings', 'to', 'targetId', 'drum', 'roundEndMs', 'cardsInPlay', 'claims', 'settings', 'markedCard', 'revealUntil', 'cueNext', 'reviewing', 'manual', 'finale', 'byHand']);
+const FORBIDDEN_KEYS = new Set(['queue', 'next', 'possibleWinners', 'future', 'standing', 'lastStandingAt', 'standingCurve', 'fellLast', 'outcome', 'slip', 'phase', 'phaseSeed', 'shuffleSeed', 'name', 'notes', 'steps', 'completeSince', 'warnings', 'to', 'drum', 'removeId', 'minLaps', 'roundEndMs', 'cardsInPlay', 'claims', 'settings', 'markedCard', 'revealUntil', 'cueNext', 'reviewing', 'manual', 'finale', 'byHand']);
 function forbiddenKeys(value: unknown, path = ''): string[] {
   if (Array.isArray(value)) return value.flatMap((v, i) => forbiddenKeys(v, `${path}[${i}]`));
   if (!value || typeof value !== 'object') return [];
@@ -287,11 +287,11 @@ test('a Check is public as "pending" once on screen, without its reveals, and sh
   assert.equal(state.check, null, 'leaving the Check clears it');
 });
 
-test('Spin timing goes public on the cloud clock, never its song; a landing or a cancel stops it', () => {
+test('Spin timing and its landing song go public on the cloud clock (D277); a landing or a cancel stops it', () => {
   const state = project(new JournalBuilder('g-spin').startRound().land(2).entries).state;
   const scheduled = { v: PROTOCOL_VERSION, type: 'transition.scheduled', id: 't1', to: 33, drum: { removeId: 1, targetId: 33, minLaps: 2 }, spinStartAtMs: 1000, landAtMs: 9000 } as unknown as ShowEvent;
   const spin = projectEvent(state, scheduled, ctx);
-  assert.deepEqual(spin, [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 9000 + OFFSET } }]);
+  assert.deepEqual(spin, [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 9000 + OFFSET, targetId: 33 } }]);
   const spinning = applyPublic(state, spin);
   const suspense = { v: PROTOCOL_VERSION, type: 'suspense.started', to: 33, spinStartAtMs: 2000 } as unknown as ShowEvent;
   assert.deepEqual(projectEvent(spinning, suspense, ctx), [{ kind: 'spin', spin: { startAtMs: 2000 + OFFSET, landAtMs: null } }]);
@@ -304,26 +304,54 @@ test('Spin timing goes public on the cloud clock, never its song; a landing or a
   assert.deepEqual(projectEvent(state, { v: PROTOCOL_VERSION, type: 'transition.cancelled' } as unknown as ShowEvent, ctx), [], 'no Spin, no change');
 });
 
-test("a Spin's spinSeed is public (D237), never its drum or target (U206); a new seed on the same times is a change", () => {
+test("a Spin's spinSeed is public (D237), its target too (D277), never the rest of its drum; a new seed on the same times is a change", () => {
   const state = project(new JournalBuilder('g-spin-seed').startRound().land(2).entries).state;
   const drum = { removeId: 1, targetId: 33, minLaps: 1 };
   const scheduled = (spinSeed: unknown) =>
     ({ v: PROTOCOL_VERSION, type: 'transition.scheduled', id: 't1', to: 33, drum, spinStartAtMs: 1000, landAtMs: 9000, spinSeed }) as unknown as ShowEvent;
   const spin = projectEvent(state, scheduled(4_294_967_295), ctx);
-  assert.deepEqual(spin, [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 9000 + OFFSET, spinSeed: 4_294_967_295 } }]);
+  assert.deepEqual(spin, [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 9000 + OFFSET, spinSeed: 4_294_967_295, targetId: 33 } }]);
   const spinning = applyPublic(state, spin);
   assert.equal(spinning.spin?.spinSeed, 4_294_967_295);
   assert.deepEqual(projectEvent(spinning, scheduled(4_294_967_295), ctx), [], 'the same Spin again: no change');
-  assert.deepEqual(projectEvent(spinning, scheduled(7), ctx), [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 9000 + OFFSET, spinSeed: 7 } }], 're-sent with a new seed');
+  assert.deepEqual(projectEvent(spinning, scheduled(7), ctx), [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 9000 + OFFSET, spinSeed: 7, targetId: 33 } }], 're-sent with a new seed');
   // A Suspense held open has no seed; its braking landing is a transition.scheduled with one.
   const held = applyPublic(spinning, projectEvent(spinning, { v: PROTOCOL_VERSION, type: 'suspense.started', id: 't1', fromSpin: true, to: 33, drum, spinStartAtMs: 1000 } as unknown as ShowEvent, ctx));
   assert.deepEqual(held.spin, { startAtMs: 1000 + OFFSET, landAtMs: null });
   const braking = projectEvent(held, { ...(scheduled(99) as object), id: 's1', drum: { removeId: null, targetId: 33, minLaps: 0 }, landAtMs: 12_000 } as unknown as ShowEvent, ctx);
-  assert.deepEqual(braking, [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 12_000 + OFFSET, spinSeed: 99 } }]);
-  assert.deepEqual(projectEvent(state, scheduled(undefined), ctx), [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 9000 + OFFSET } }], 'an older engine: no seed, no field');
+  assert.deepEqual(braking, [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 12_000 + OFFSET, spinSeed: 99, targetId: 33 } }]);
+  assert.deepEqual(projectEvent(state, scheduled(undefined), ctx), [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 9000 + OFFSET, targetId: 33 } }], 'an older engine: no seed, no field');
   const all = [spin, braking, projectEvent(spinning, scheduled(7), ctx)];
   assert.deepEqual(forbiddenKeys(all), []);
-  assert.equal(JSON.stringify(all).includes('33'), false, 'the target song never goes public');
+});
+
+test("a Spin carries its landing song from its start (D277, U206); a held Suspense doesn't; never drum's other fields", () => {
+  const state = project(new JournalBuilder('g-spin-target').startRound().land(2).entries).state;
+  const scheduled = (targetId: unknown, extra: object = {}) =>
+    ({ v: PROTOCOL_VERSION, type: 'transition.scheduled', id: 't1', to: 41, drum: { removeId: 7, targetId, minLaps: 3 }, spinStartAtMs: 1000, landAtMs: 9000, spinSeed: 5, ...extra }) as unknown as ShowEvent;
+  const spin = projectEvent(state, scheduled(41), ctx);
+  assert.deepEqual(spin, [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 9000 + OFFSET, spinSeed: 5, targetId: 41 } }]);
+  const spinning = applyPublic(state, spin);
+  assert.equal(spinning.spin?.targetId, 41);
+  assert.deepEqual(projectEvent(spinning, scheduled(41), ctx), [], 'the same Spin again: no change');
+  const retargeted = projectEvent(spinning, scheduled(42), ctx);
+  assert.deepEqual(retargeted, [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 9000 + OFFSET, spinSeed: 5, targetId: 42 } }], 're-sent with a new target');
+  // Only a number goes out: a malformed or missing target leaves the field absent.
+  for (const bad of [undefined, null, '41']) {
+    assert.equal((projectEvent(state, scheduled(bad), ctx)[0] as { spin: PublicSpin }).spin.targetId, undefined, String(bad));
+  }
+  // A held Suspense: its landing isn't chosen yet, so no target; the braking transition.scheduled carries it.
+  const suspense = { v: PROTOCOL_VERSION, type: 'suspense.started', id: 't1', fromSpin: true, to: 41, drum: { removeId: 7, targetId: 41, minLaps: 3 }, spinStartAtMs: 1000 } as unknown as ShowEvent;
+  const holding = projectEvent(spinning, suspense, ctx);
+  assert.deepEqual(holding, [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: null } }]);
+  const held = applyPublic(spinning, holding);
+  assert.equal(held.spin?.targetId, undefined);
+  const braking = projectEvent(held, scheduled(43, { id: 's1', landAtMs: 12_000 }), ctx);
+  assert.deepEqual(braking, [{ kind: 'spin', spin: { startAtMs: 1000 + OFFSET, landAtMs: 12_000 + OFFSET, spinSeed: 5, targetId: 43 } }]);
+  const all = [spin, retargeted, holding, braking];
+  assert.deepEqual(forbiddenKeys(all), [], 'never drum, removeId, minLaps or to');
+  const text = JSON.stringify(all);
+  for (const key of ['"drum"', '"removeId"', '"minLaps"', '"to"']) assert.equal(text.includes(key), false, key);
 });
 
 test('a late journal upload does not stop a newer Spin; the landing it belongs to does', () => {

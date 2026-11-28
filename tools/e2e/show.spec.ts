@@ -159,6 +159,21 @@ test('one whole show, every screen following', async ({ browser }) => {
   });
   soft(spins.length, 'the phone saw the Spins').toBeGreaterThan(0);
   soft(spins.filter((spin) => typeof spin.spinSeed !== 'number'), 'every Spin came with its spinSeed').toEqual([]);
+  // And its landing song from its start (D277, U206): every Spin with a landAtMs names one, and the next song
+  // that landed is that one. Each landing pairs with the last landing Spin before it in the feed.
+  soft(spins.filter((spin) => spin.landAtMs !== null && typeof spin.targetId !== 'number'), 'every landing Spin came with its targetId').toEqual([]);
+  const aimed: { targetId: number | undefined; songId: number }[] = [];
+  let target: number | undefined;
+  for (const text of phone.raw) {
+    const message = JSON.parse(text) as PublicMessage;
+    if (message.type !== 'public.delta') continue;
+    for (const change of message.changes) {
+      if (change.kind === 'spin' && change.spin?.landAtMs != null) target = change.spin.targetId;
+      if (change.kind === 'landed') aimed.push({ targetId: target, songId: change.landing.songId });
+    }
+  }
+  soft(aimed.length, 'the phone saw the landings').toBeGreaterThan(0);
+  soft(aimed.filter((a) => a.targetId !== a.songId), "each song landed on its Spin's targetId").toEqual([]);
 
   // ---- Parlem (the song ducks), then Aguanta (it stays up) -------------------------------------------------
   await remote.command('hold', { on: true });
@@ -264,11 +279,11 @@ test('one whole show, every screen following', async ({ browser }) => {
 
   // What the phones got, all show long: a gap-free feed with nothing private in it. Not the Queue or the next
   // song, not possible winners or the Futur (nor the Desgraciat round's standing cards and curve), no Check
-  // outcome before the verdict, no private seeds (the drum's are public, D237) or resume codes, no Spin's drum or
-  // target (U206), no cheat sheet, no Wii status.
+  // outcome before the verdict, no private seeds (the drum's are public, D237) or resume codes, no Spin's drum
+  // (its landing song is public from its start, D277, U206: the targetId), no cheat sheet, no Wii status.
   expect(phone.gaps, 'the feed never had to resync').toBe(0);
   const all = phone.everything();
-  for (const secret of ['"queue"', '"next":', '"possibleWinners"', '"future"', '"standing":', '"lastStandingAt"', '"standingCurve"', '"fellLast"', '"outcome"', '"slip"', '"shuffleSeed"', '"phaseSeed"', '"resume"', '"drum":', '"targetId"', '"removeId"', 'cheatSheet', 'remote.status', '"claims"', '"markedCard"', '"revealUntil"', '"cueNext"', '"reviewing"', '"manual":', '"finale":', '"byHand"']) {
+  for (const secret of ['"queue"', '"next":', '"possibleWinners"', '"future"', '"standing":', '"lastStandingAt"', '"standingCurve"', '"fellLast"', '"outcome"', '"slip"', '"shuffleSeed"', '"phaseSeed"', '"resume"', '"drum":', '"removeId"', 'cheatSheet', 'remote.status', '"claims"', '"markedCard"', '"revealUntil"', '"cueNext"', '"reviewing"', '"manual":', '"finale":', '"byHand"']) {
     expect(all, `phones never get ${secret}`).not.toContain(secret);
   }
 });

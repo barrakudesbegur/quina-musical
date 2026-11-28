@@ -260,7 +260,10 @@ function forwardedEventError(event: unknown): string | null {
     case 'transition.scheduled':
       if (!isTime(event.spinStartAtMs) || !isTime(event.landAtMs)) return 'transition.scheduled needs spinStartAtMs and landAtMs';
       // D237's public spinSeed; an older engine sends none.
-      return event.spinSeed === undefined || isTime(event.spinSeed) ? null : 'transition.scheduled.spinSeed must be a number';
+      if (!(event.spinSeed === undefined || isTime(event.spinSeed))) return 'transition.scheduled.spinSeed must be a number';
+      // The landing song, public from the Spin's start (D277, U206); an older engine sends none.
+      if (isRecord(event.drum) && !(event.drum.targetId === undefined || isCount(event.drum.targetId))) return 'transition.scheduled.drum.targetId must be a song id';
+      return null;
     case 'suspense.started':
       return isTime(event.spinStartAtMs) ? null : 'suspense.started needs spinStartAtMs';
     case 'shuffle.scheduled':

@@ -2,8 +2,9 @@
 // one place that decides what phones may learn, so it is a whitelist by construction:
 // - journal entries: an exhaustive switch, so tsc makes every new kind decide whether anything of it is public;
 // - live events: only the cases below, and only the fields named there; every other event is private.
-// Phones never get the Queue, the next song, possible winners, the Phase, the real Heat, `roundEndMs`, a Check's
-// steps before its verdict, a claim's details, or winners' names.
+// Phones never get the Queue, the next song before a Spin, possible winners, the Phase, the real Heat, `roundEndMs`,
+// a Check's steps before its verdict, a claim's details, or winners' names. A Spin does carry its landing song from
+// its start (`targetId`, D277 for U206): phones reveal it only at `landAtMs`.
 // Times arrive on the laptop's clock and leave on the cloud's (`toCloudMs`).
 import type { GameRecord, JournalEntry, ShowEvent, ShowState } from '@quina/protocol';
 import { DEFAULT_SIDE, defaultCardType, roundGameEnd, type PublicChange, type PublicRound, type PublicSpin, type PublicState } from '@quina/protocol';
@@ -143,12 +144,15 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
 export function projectEvent(state: PublicState, event: ShowEvent, ctx: ProjectionContext): PublicChange[] {
   switch (event.type) {
     case 'transition.scheduled':
-      // Its timing and its public spinSeed (D237); never `drum` (its targetId is the incoming song) or `to`.
+      // Its timing, its public spinSeed (D237) and its landing song, `drum.targetId`, from its start (D277, U206:
+      // phones reveal it at landAtMs). Never the rest of `drum` (removeId, minLaps) or `to`.
       return spinChange(state, {
         startAtMs: ctx.toCloudMs(event.spinStartAtMs),
         landAtMs: ctx.toCloudMs(event.landAtMs),
         ...(event.spinSeed != null ? { spinSeed: event.spinSeed } : {}),
+        ...(typeof event.drum?.targetId === 'number' ? { targetId: event.drum.targetId } : {}),
       });
+    // A held Suspense's landing isn't chosen yet: no targetId. Its braking landing comes as a transition.scheduled.
     case 'suspense.started':
       return spinChange(state, { startAtMs: ctx.toCloudMs(event.spinStartAtMs), landAtMs: null });
     case 'transition.cancelled':
@@ -202,7 +206,11 @@ function spinChange(state: PublicState, spin: PublicSpin | null): PublicChange[]
   const same =
     spin === null
       ? state.spin === null
-      : state.spin !== null && state.spin.startAtMs === spin.startAtMs && state.spin.landAtMs === spin.landAtMs && state.spin.spinSeed === spin.spinSeed;
+      : state.spin !== null &&
+        state.spin.startAtMs === spin.startAtMs &&
+        state.spin.landAtMs === spin.landAtMs &&
+        state.spin.spinSeed === spin.spinSeed &&
+        state.spin.targetId === spin.targetId;
   return same ? [] : [{ kind: 'spin', spin }];
 }
 

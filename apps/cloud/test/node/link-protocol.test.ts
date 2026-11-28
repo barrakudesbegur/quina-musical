@@ -18,6 +18,9 @@ test('a hello, an upload, a ping and the forwarded events pass', () => {
     // D237's public spinSeed, a uint32 as the engine draws it (drumSpinSeed); an older engine sends none (above).
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1, landAtMs: 2, to: 5, spinSeed: 4_294_967_295 } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1, landAtMs: 2, to: 5, spinSeed: 0 } },
+    // The landing song, public from the Spin's start (D277, U206); an older engine's drum has it too, or none at all.
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1, landAtMs: 2, to: 5, drum: { removeId: null, targetId: 5, minLaps: 1 } } },
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1, landAtMs: 2, to: 0, drum: { removeId: 1, targetId: 0, minLaps: 0 } } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'suspense.started', spinStartAtMs: 1 } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.landed' } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'shuffle.scheduled', round: 2, startAtMs: 1, endAtMs: 2 } },
@@ -49,6 +52,11 @@ test('anything malformed, an unknown event type, or the journal as an event, is 
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1 } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1, landAtMs: 2, spinSeed: '7' } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1, landAtMs: 2, spinSeed: null } },
+    // A landing song that isn't a song id.
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1, landAtMs: 2, drum: { removeId: null, targetId: '5', minLaps: 1 } } },
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1, landAtMs: 2, drum: { removeId: null, targetId: null, minLaps: 1 } } },
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1, landAtMs: 2, drum: { removeId: null, targetId: -1, minLaps: 1 } } },
+    { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'transition.scheduled', spinStartAtMs: 1, landAtMs: 2, drum: { removeId: null, targetId: 1.5, minLaps: 1 } } },
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'state', pause: 5, interval: null, schedule: { gameEndMs: 9 } } },
     // Pausa says whether phones show it (D135).
     { v, type: 'link.event', sentAtMs: 1, event: { v, type: 'state', pause: { sinceMs: 3 }, interval: null, schedule: { gameEndMs: 9 }, transition: null, suspense: null } },
