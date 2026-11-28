@@ -549,7 +549,7 @@ export const S = {
   celebration: {
     /** The presenters' own label for the win (the screens shout nothing in the Desgraciat round). */
     title: { line: 'LÍNIA!', bingo: 'QUINA!', standing: 'Últim cartró dempeus' } satisfies Record<WinKind, string>,
-    cards: (ids: readonly number[]) => (ids.length === 1 ? CA.card(ids[0]) : `Cartrons ${ids.join(', ')}`),
+    cards: (ids: readonly number[]) => (ids.length === 1 ? CA.card(ids[0]) : `Cartrons ${ids.map((id) => `#${id}`).join(', ')}`),
     winningSong: (title: string) => `Cançó guanyadora: ${title}`,
     music: 'Música de celebració',
     choices: { winningSong: 'Cançó guanyadora', victory: 'Victòria', holdMusic: 'Música de fons' } satisfies Record<CelebrationMusic, string>,

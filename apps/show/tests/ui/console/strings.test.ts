@@ -27,3 +27,10 @@ test('every hold reason has a text, with a fallback', () => {
   assert.equal(holdReasonText('hold'), S.hold.reasons.hold);
   assert.equal(holdReasonText('mystery'), S.hold.reasonFallback);
 });
+
+test('a card named by its number reads «#57» (components-v2.md §11, 28 Nov): the winner form, the winners list', () => {
+  assert.equal(S.celebration.cards([57]), 'Cartró #57', "the Celebration's winner form title");
+  assert.equal(S.celebration.cards([57, 204]), 'Cartrons #57, #204');
+  assert.equal(S.winnersList.item('line', 57), 'Línia · Cartró #57');
+  assert.equal(S.winnersList.item('bingo', 204), 'Quina · Cartró #204');
+});

@@ -15,7 +15,8 @@ export const CA = {
   desgraciatRound: 'Quina del Desgraciat',
   /** The Desgraciat round's name where space is short (D251): the console's header, the Check's chip. */
   desgraciatShort: 'Desgraciat',
-  card: (id: number) => `Cartró ${id}`,
+  /** A card by its number, as the design system writes card numbers (components-v2.md §11, 28 Nov): «Cartró #57». */
+  card: (id: number) => `Cartró #${id}`,
   /** A printed card type card-types.json doesn't name (its id, "Cartró daurat"). */
   cardType: (id: string) => `Cartró ${id}`,
   cards: 'Cartrons',

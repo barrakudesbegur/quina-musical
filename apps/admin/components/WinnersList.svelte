@@ -72,7 +72,7 @@
             <tr class="winners__row" data-kind={winner.kind} class:is-dirty={dirty}>
               <td>{S.round(roundAt(plan, winner.round), plan)}</td>
               <td>{S.night.kind[winner.kind]}</td>
-              <td class="winners__card">{winner.cardId}</td>
+              <td class="winners__card">{S.night.cardCell(winner.cardId)}</td>
               <td>{songOf(winner.winningSongId)}</td>
               <td>{prize ?? '—'}</td>
               <td>

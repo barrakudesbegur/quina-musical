@@ -395,6 +395,8 @@ export const S = {
     col: { round: 'Quina', kind: 'Premi', card: 'Cartró', song: 'Cançó guanyadora', prize: 'Què guanya', name: 'Nom', notes: 'Notes', action: 'Desar' },
     /** What a Winner won: "Línia", "Quina", or the Desgraciat round's "Últim cartró dempeus" (D186). */
     kind: { line: CA.line, bingo: CA.bingo, standing: 'Últim cartró dempeus' } satisfies Record<WinKind, string>,
+    /** The Cartró column's cell: the card's number as the design system writes it, «#57». */
+    cardCell: (id: number) => `#${id}`,
     nameLabel: (card: string) => `Nom del guanyador del ${card.toLowerCase()}`,
     notesLabel: (card: string) => `Notes del ${card.toLowerCase()}`,
     saveWinner: 'Desar',

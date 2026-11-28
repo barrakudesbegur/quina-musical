@@ -8,8 +8,8 @@ import type { HeatLevel } from '../../packages/ui/motion/garland.ts';
 import type { AraView } from './logic/tabs.ts';
 
 /** A card by its number, as the design system writes card numbers (components-v2.md: the header's «#123», the console's
- * «#57»): «Cartró #123». Every string here that names a card by number uses it (28 Nov). */
-const card = (id: number): string => `Cartró #${id}`;
+ * «#57»): «Cartró #123», the shared CA.card. Every string here that names a card by number uses it (28 Nov). */
+const card = CA.card;
 /** "de" before a name, elided before a vowel sound ("d’Àvia", "d’Helena"), but not before a semivowel ("de Iaia"). */
 const ofName = (name: string): string => (/^h?[aeiouàáèéíïòóúü]/i.test(name) && !/^h?[iu][aeiouàáèéíòóú]/i.test(name) ? `d’${name}` : `de ${name}`);
 /** "Primer", "Segon"…: the plan's Throws come after a round that isn't the last, so 19 at most (20 rounds). */

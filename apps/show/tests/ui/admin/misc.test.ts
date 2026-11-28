@@ -8,6 +8,8 @@ import { applyRejection, lastCommand, recordCommand, type CommandRecord } from '
 import { editDiffers, editOf, winnerInfoFields, winnerRows } from '../../../../admin/logic/winners.ts';
 import { exportFileName, fullExport } from '../../../../admin/logic/exports.ts';
 import { DEFAULT_PLAYER_SETTINGS, readPlayerSettings } from '../../../../admin/logic/player-settings.ts';
+import { S } from '../../../../admin/strings.ts';
+import { CA } from '../../../../../packages/ui/i18n/ca.ts';
 
 test('routes come from the hash, unknown ones fall back to setup', () => {
   assert.equal(routeFromHash('#xuleta'), 'xuleta');
@@ -65,4 +67,10 @@ test('player settings fall back to the defaults field by field', () => {
   assert.equal(readPlayerSettings({ banner: 'Hola', bannerOn: true }).bannerOn, true);
   assert.equal(readPlayerSettings({ banner: 'Hola', bannerOn: 'yes' }).bannerOn, false, 'settings from before the switch: off');
   assert.equal(readPlayerSettings({ banner: 'x'.repeat(500) }).banner.length, 140);
+});
+
+test("Winners name a card by its number as «#57» (components-v2.md §11, 28 Nov): the Cartró column and the fields' labels", () => {
+  assert.equal(S.night.cardCell(57), '#57');
+  assert.equal(S.night.nameLabel(CA.card(57)), 'Nom del guanyador del cartró #57');
+  assert.equal(S.night.notesLabel(CA.card(204)), 'Notes del cartró #204');
 });
