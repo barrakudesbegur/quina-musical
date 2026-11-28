@@ -72,6 +72,10 @@
   let boxPad = $state(0);
   /** Where the content fades out under the stuck strip (`strip-fade`), in the swipe's coordinates at scroll 0. */
   let fadeAt = $state(0);
+  /** Safari before 26 has no scroll-driven animations: there `drum-collapse` switches at once as the drum reaches the
+   *  top, from this flag (home.css), as reduced motion does elsewhere. */
+  const scrollTimelines = typeof CSS !== 'undefined' && CSS.supports('animation-timeline: scroll()');
+  let stuck = $state(false);
   /** The Check's ribbon under the drum (`check`): the room it takes under the drum's box (its height and margins). */
   let checkEl: HTMLElement | undefined = $state();
   let checkRoom = $state(0);
@@ -128,6 +132,7 @@
     boxPad = parseFloat(getComputedStyle(box()).paddingTop) || 0;
     stickyTop = Math.max(boxPad, heat?.getBoundingClientRect().bottom ?? 0) + (a && getComputedStyle(a).display !== 'none' ? a.offsetHeight : 0);
     stickAt = root.getBoundingClientRect().top + box().scrollTop - stickyTop;
+    if (!scrollTimelines) stuck = box().scrollTop > stickAt;
     // The Check's ribbon hangs under the drum's box and the content makes room for it (home.css); with no drum it is
     // in the page's flow, under the top's content.
     if (drum && checkEl) {
@@ -156,7 +161,10 @@
     const player = playerEl();
     const watched = [root, top?.firstElementChild, alertsEl(), ...headEls(), player?.querySelector('.player__main')].filter(Boolean) as Element[];
     const sc = box();
-    const onScroll = () => scheduleHint();
+    const onScroll = () => {
+      if (!scrollTimelines) stuck = sc.scrollTop > stickAt;
+      scheduleHint();
+    };
     sc.addEventListener('scroll', onScroll, { passive: true });
     const ro = new ResizeObserver(() => measure());
     for (const el of watched) ro.observe(el);
@@ -470,6 +478,7 @@
   data-drum={drum || undefined}
   data-empty={empty || undefined}
   data-swiping={frame ? 'true' : undefined}
+  data-stuck={(!scrollTimelines && stuck) || undefined}
   data-anim="home-swipe"
   data-beat={bobbing || undefined}
   style:--beat-period={bobCss?.period}

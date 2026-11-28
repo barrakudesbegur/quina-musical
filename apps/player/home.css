@@ -124,16 +124,26 @@
   }
 }
 
-.ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top .reel__words[data-look='full'] {
-  animation: drum-words-hit linear both;
-  animation-timeline: scroll(nearest block);
-  animation-range: var(--ara-stick, 0px) calc(var(--ara-stick, 0px) + var(--reel-collapse-range, 9.375rem));
-  animation-timing-function: steps(1, jump-start);
+/* Only where scroll-driven animations run: without them (Safari before 26) the animation would end at once and hide
+   the words from the start. There they hide as the drum collapses, at once (AraHome's `data-stuck`, below). */
+@supports (animation-timeline: scroll()) {
+  .ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top .reel__words[data-look='full'] {
+    animation: drum-words-hit linear both;
+    animation-timeline: scroll(nearest block);
+    animation-range: var(--ara-stick, 0px) calc(var(--ara-stick, 0px) + var(--reel-collapse-range, 9.375rem));
+    animation-timing-function: steps(1, jump-start);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :where(.player[data-motion='full']) .ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top .reel__words[data-look='full'] {
+      animation-timing-function: linear;
+    }
+  }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  :where(.player[data-motion='full']) .ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top .reel__words[data-look='full'] {
-    animation-timing-function: linear;
+@supports not (animation-timeline: scroll()) {
+  .ara[data-drum][data-view='historial'][data-stuck]:not([data-swiping]) > .ara__top .reel__words[data-look='full'] {
+    visibility: hidden;
   }
 }
 
@@ -160,16 +170,27 @@
   }
 }
 
-.ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top > :is(.now, .check-strip) {
-  animation: drum-collapse linear both;
-  animation-timeline: scroll(nearest block);
-  animation-range: var(--ara-stick, 0px) calc(var(--ara-stick, 0px) + var(--reel-collapse-range, 9.375rem));
-  animation-timing-function: steps(1, jump-start);
+/* Only where scroll-driven animations run: without them (Safari before 26, iOS 18) the animation would end at once,
+   the drum collapsed from the start over the full drum's empty room. There it stays full until it reaches the top and
+   then switches at once (AraHome's `data-stuck`, set from the scroll), as reduced motion does here. */
+@supports (animation-timeline: scroll()) {
+  .ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top > :is(.now, .check-strip) {
+    animation: drum-collapse linear both;
+    animation-timeline: scroll(nearest block);
+    animation-range: var(--ara-stick, 0px) calc(var(--ara-stick, 0px) + var(--reel-collapse-range, 9.375rem));
+    animation-timing-function: steps(1, jump-start);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    :where(.player[data-motion='full']) .ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top > :is(.now, .check-strip) {
+      animation-timing-function: linear;
+    }
+  }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  :where(.player[data-motion='full']) .ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top > :is(.now, .check-strip) {
-    animation-timing-function: linear;
+@supports not (animation-timeline: scroll()) {
+  .ara[data-drum][data-view='historial'][data-stuck]:not([data-swiping]) > .ara__top > :is(.now, .check-strip) {
+    --reel-collapse: 1;
   }
 }
 
