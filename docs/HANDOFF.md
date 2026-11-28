@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D301**, **U240**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D308**, **U240**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -27,7 +27,8 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 
 - **Logged today:** D295 (the cards are «Apaïsat sense portades»; the A3 layout stays for one or two test sheets), D296 (the playlists confirmed final, unchanged since D269).
 - **The user's answers so far (28 Nov night):** U231 (a) → D297; the transitions wait until the app works better (D298); nothing on the projector starts the event (D299); the projector screen can open from a website for a second projector (D300); the console's Heat meter ("thermometer") didn't work in the test (whats-left 2.12). The user wants all questions answered before the plan.
-- **Waiting on the user:** U232–U236 and U237 on the side-by-side page https://claude.ai/code/artifact/91dfbce3-8e64-4d2a-b289-e87f4dc50506 (the user: "cant you put both side to side and i chose? easier": always show design questions as images side by side), then U238, U239, U173, U163; then the go for the plan.
+- **More answers (28 Nov, later):** D301 (U234), D302 (U233 with edits), D303 (U232 with the squashed nino), D304 (U173), D305 (U163: no round total anywhere), D306 (U239, the user's two-card test), D307 (businesses' names fine in git, logos out). U238: the user is listening now, keep it open for the conclusion.
+- **Waiting on the user:** U235, U236, U237 on the side-by-side page https://claude.ai/code/artifact/91dfbce3-8e64-4d2a-b289-e87f4dc50506 (the user: "cant you put both side to side and i chose? easier": always show design questions as images side by side), then U238, U239, U173, U163; then the go for the plan.
 - **For the user's setup session** (the user: "i have an open session to work on this, send him whatever you did in this topic and my comments"): the brief is ready (D299, D300, the verified setup findings); send it once the user names the session.
 - **Not yet briefed:** the sessions. On the user's go, brief phase A (whats-left.md › The plan) to each, and check each pushed item with a verify agent before it counts as done.
 - **Peers seen on 28 Nov night:** quina-musical-e0, -f5 and -cd (started around 5:20 pm, roles not yet confirmed) and the idle -79.

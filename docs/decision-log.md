@@ -32,7 +32,7 @@ Every decision about the Quina Musical, with an ID, a date, a status, what it re
 3. **By** is "the user", "the user via canvas", "the orchestrator", or "the sessions, agreed". Only log real decisions: the user's, or a role's within its remit. An unconfirmed proposal is Pending, or left out.
 4. Update the status of every entry it amends or supersedes.
 5. When a decision answers an open question, name the U number and move the question to "Answered" in open-questions.md.
-6. Dates are the venue's local date; transcript times are UTC (Z). The repo is public: no people's or businesses' names, no emails, no secrets.
+6. Dates are the venue's local date; transcript times are UTC (Z). The repo is public: no people's names, no emails, no secrets; businesses' names are fine, logos stay out of git (D307).
 
 ---
 
@@ -910,7 +910,7 @@ By: the user. Source: the Check's redesign in chat, 26 Nov. Lives in: requiremen
 One rule, whatever the date: the cloud's plan wins. There's no git-tracked settings file and no prizes or sponsors in git. A local copy an agent edits is only a working copy, pushed back to the cloud. Development has no cloud, so it runs on a test plan. Answers U43.
 By: the user. Source: open-questions.md › Answered (U43); the user's message of 26 Nov. Supersedes: D97. Amends: D89 (the organizers' spreadsheet is parsed into the cloud's plan, not into a git file). Lives in: requirements/operations.md › Privacy; requirements/game-rules.md › Sponsors.
 
-### D112 · No sponsors, prizes or money in git · 2026-11-26 · Amended by D116
+### D112 · No sponsors, prizes or money in git · 2026-11-26 · Amended by D116, D307
 Businesses' names and prizes change every year, so they don't belong in git. Money amounts live only in the organizers' spreadsheet. Answers U48.
 By: the user. Source: open-questions.md › Answered (U48). Lives in: requirements/operations.md › Privacy.
 
@@ -926,7 +926,7 @@ By: the user. Source: open-questions.md › Answered (U46). Amends: D96. Lives i
 On "Afegir cartró", the icon picker is framed, with the icons already taken pressed in, as on `Mobil-B-J2`. The QR icon feels too sharp next to the others and gets softened on the boards. Designs only. Answers U47.
 By: the user. Source: open-questions.md › Answered (U47). Lives in: requirements/screens.md › Player app.
 
-### D116 · One JSON per edition, in git, sent to the cloud by hand · 2026-11-26 · Active; the details Pending (Backend's and Sound engine's proposal)
+### D116 · One JSON per edition, in git, sent to the cloud by hand · 2026-11-26 · Active, amended by D307; the details Pending (Backend's and Sound engine's proposal)
 Each edition keeps one JSON in git with all the info it needs: the plan and its rounds, prizes and sponsors (businesses' names included), the songs and the cards. Local seeding uses it. On the day, or for a rehearsal, the user or an agent uploads it by hand to configure everything or reset all data, and an upload always saves the old settings first, so nothing is lost. Git isn't read at runtime: the cloud stays the source of truth while running (D111). Logos stay separate, in the bucket. Money amounts stay in the organizers' spreadsheet (D112). The user: "you assumed that being in git meant also being used at runtime in production, no, i (or an agent) would send it to prod manually."
 By: the user. Source: the user's message of 26 Nov. Amends: D111 (it read "no git file" into the user's answer), D112 (names and prizes in git are fine). Lives in: requirements/operations.md › Privacy; requirements/game-rules.md › Sponsors.
 
@@ -1943,3 +1943,31 @@ By: the user. Source: the user's message of 28 Nov. Lives in: requirements/opera
 ### D300 · The projector screen can also open from a website · 2026-11-28 · Active; the design with the user's setup session
 "the projector screen should also be able to be opened via a website (not in the same hotspot), (because i may want to add a second projector)". Besides the laptop's own show page, a projector screen can open from the cloud's address, on another computer on another network. Amends D276 (a second projector from an HDMI splitter, "no new code"). To settle in the design: such a screen has no audio and follows the cloud like the phones, so its landings must still meet the PA's sound (the phones' drum does it with D277's target from the Spin's start), and it gets only what the projector shows, never the Queue.
 By: the user. Source: the user's message of 28 Nov. Amends: D276. Lives in: requirements/screens.md › Projector; requirements/operations.md.
+
+### D301 · The Desgraciat's finale: the current board · 2026-11-28 · Active
+Answers U234 with (a): `Projector-Desgraciat-Final`, a costume pose per finalist, the bulb garland, the flat finale band, paper rain. Picked on the side-by-side page (https://claude.ai/code/artifact/91dfbce3-8e64-4d2a-b289-e87f4dc50506).
+By: the user. Source: the user's message of 28 Nov. Lives in: requirements/screens.md › Projector.
+
+### D302 · The Line's Celebration: the current board, «LÍNIA!» nearer the centre, the drum behind fixed · 2026-11-28 · Active
+Answers U233 with (a), `Projector-Linia`: "u233 a, but the drum in the bg looks bad, i assume it is a mistake in the bg, not the intended design. and linea text should be moved more to the center." So «LÍNIA!» sits nearer the screen's centre, and the drum's victory lap behind it must look right: the user takes the board's background drum for a mistake, not the design. Frontend draws the drum behind properly (as the agreed drum, D294) and shows the user before building.
+By: the user. Source: the user's message of 28 Nov. Lives in: requirements/screens.md › Projector.
+
+### D303 · The Check: the current boards, with the squashed nino and its new head drawing · 2026-11-28 · Active
+Answers U232 with (a): `Projector-Comprovacio`, `-Fallida` and `-Revisio` (thick centred ✓s, D283; the running ring and ▷ on the playing song; reveals stopping at the ✗, D117). One change: "i want the nino from b but with the drawing iver the head the new version iof it has in the design system". The failed Check shows (b)'s squashed nino, not the falling one, with the drawing over its head that the design system's newer version of that nino has.
+By: the user. Source: the user's message of 28 Nov. Lives in: requirements/screens.md › Projector.
+
+### D304 · The doors' big button starts the night, by a tap only · 2026-11-28 · Active
+Answers U173 with (a): at the doors, the console's big slot shows «Començar la nit», and only a tap on a console starts it; the remote's A does nothing before the night ("an A pressed while testing the remote mustn't start the show"). The menu item goes. With D299, the night starts nowhere else.
+By: the user. Source: the user's message of 28 Nov. Lives in: requirements/screens.md › Console; operations.md › The day itself.
+
+### D305 · No round total on any screen · 2026-11-28 · Active
+U163 asked what "Quina 4 de N" counts. The user: "here we have an issue because the quina played on the 6th place is not quina 6, it is quina desgraciat. so that count is unecesary, presenter already knows how many rounds are there. if you check the schedule it is like that". So no screen shows a total ("de 12", "de 5"): a round shows its name only, as in the schedule: «Quina 1»…, «Quina Especial», «Quina del Desgraciat» (D251). The engine still takes the number of rounds from the plan, for what comes after the last one (whats-left 1.2). Answers U163 with neither option.
+By: the user. Source: the user's message of 28 Nov. Lives in: requirements/game-rules.md, screens.md.
+
+### D306 · The A3 test cards: the last numbers, kept off sale, for buyers of two cards · 2026-11-28 · Active
+Answers U239 with (a): "those are off sale. my test will be that if a known person wants to try it, it has to be a person that buys 2 cards, and i will ofer him that the 2nd card uses the alternative design. so he can see in realtime how easy it is to find songs side to side (the 2 cards he looks at have different numbers and each has a diferent style), if he wants to go back to normal, i get the design with covers and hand him the same but with no covers. i will keep track of who has the special cards, so no worries about selling them to different people". The one or two A3 sheets repeat the last numbers of each run; the A4 cards with those numbers stay off sale and with the user, who hands out one or the other and tracks who holds them.
+By: the user. Source: the user's message of 28 Nov. Amends: D295. Lives in: requirements/songs-and-cards.md › Numbers and amounts.
+
+### D307 · Businesses' names are fine in git; logos stay out · 2026-11-28 · Active
+The user: "i dont think there's any issue in haveing their names, just the logos i will keep out from git". Businesses' names (sponsors, shops, venues) may appear anywhere in the public repo: docs, commit messages, the edition file. Sponsor logos stay out of git. The decision log's own rule still said "no businesses' names", from D112 ("Businesses' names and prizes change every year, so they don't belong in git"), which D116 had already amended for the edition's JSON. People's names, emails, money, secrets and seeds stay out (operations.md › Privacy).
+By: the user. Source: the user's message of 28 Nov. Amends: D112, D116. Lives in: requirements/operations.md › Privacy; this log's "Adding an entry".

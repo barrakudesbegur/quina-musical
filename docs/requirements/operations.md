@@ -124,7 +124,7 @@ _From event.md › What must never fail (Privacy), The songs._
 - Phones have no account. Admin only sees which card numbers were opened, never who opened them.
 - Admin, the console and the organizers' routes are behind the organizers' Google login. The laptop has its own key, kept only on the show laptops and never sent by chat or email.
 - The console's pairing token and the hotspot password are treated like the resume code: no photos. The hotspot password is the first line of defence, because anyone on the hotspot can reach the laptop's relay; the token then guards the commands.
-- The repo is public: no people's names, no emails, secrets or personal data. Businesses' names in the edition's JSON are fine (D116).
+- The repo is public: no people's names, no emails, secrets or personal data. Businesses' names are fine anywhere (D116, D307); sponsor logos stay out of git (D307).
 
 ## The day itself
 
@@ -134,5 +134,5 @@ _From event.md › Before the night (On the day), The night, step by step._
 - The laptop, phones, PA, projector and tablet are set up by the [night runbook](../night-runbook.md).
 - The preflight runs before the doors open, and every failure is fixed first.
 - The sound check: an effect at low volume, then a few seconds of Hold music. Since D157–D158 the laptop plays about 6 dB quieter inside, to leave room for the chaotic moments, so the sound system is turned up about 6 dB compared with 2025. The cheat sheet and the laptop's setup notes say so. The console's sound test (D229) plays each kind of sound in turn for adjusting every level. With the tablet's interface sounds on (D208), tap a few tablet buttons near the presenters' microphones and check that the PA doesn't carry the clicks; if it does, switch them off in the tablet's settings.
-- The night is started from the console only (D299; where on the console is U173). Nothing on the projector starts it.
+- The night is started from the console only: the doors' big button «Començar la nit», by a tap (D299, D304). Nothing on the projector starts it.
 - The QR address points at the new app since 25 Nov (D76).

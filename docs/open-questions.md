@@ -8,19 +8,6 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
-### U232 · The projector's Check: which boards (D294)
-For `Comprovacio`, `Comprovacio-Fallida` and `Comprovacio-Revisio`. D283's thick centred marks and D117's reveals stopping at the ✗ live only in the current boards.
-- (a) The current boards: thick centred ✓s, the playing song with the running dashed ring and ▷ (as on the phones), the falling nino; drawn on the agreed look's starfield and ink-stroked type (the recommendation: they already hold D283 and D117).
-- (b) The pre-redraw boards with D283's marks added: a solid glowing ring and an equaliser badge on the playing song, the squashed nino.
-
-### U233 · The projector's Line Celebration: which board (D294)
-- (a) The current `Projector-Linia`: «LÍNIA!» over the drum's victory lap, the garland, slow paper rain (the recommendation: screens.md asks for the drum's victory lap).
-- (b) The pre-redraw: «LÍNIA!» high on a starry ray field, static confetti, no drum or garland, other ninos.
-
-### U234 · The Desgraciat's finale: which board (D294)
-- (a) The current `Projector-Desgraciat-Final`: a costume pose per finalist, the bulb garland, paper rain; drawn after D180–D187 (the recommendation).
-- (b) The pre-redraw: three plain tinted figures, an oval-lamp garland, a curved cover row; drawn before D180–D187.
-
 ### U235 · The Descans on the projector: which board (D294)
 Two boards show it; the redraw left `Projector-MitjaPart` unchanged.
 - (a) `Projector-Descans`: no garland, the cyan ring, «Descans» (D149), Londrina capitals marked not built; what's live (the recommendation: the later board, after D149).
@@ -41,10 +28,7 @@ No decision is recorded for #90 and #117 (low bitrate: 117 and 114 kbps) or #18 
 - (a) Keep all four (the recommendation, unless one sounds bad to the user; D270 already says #117 is the right song).
 - (b) The user listens and names the ones to swap.
 
-### U239 · The A3 test sheets' card numbers (D295)
-One or two A3 sheets hold 6–12 cards. If their numbers are also sold on A4, two players hold the same card and can claim at the same moment.
-- (a) The A3 sheets repeat numbers from the end of each run, and those A4 sheets are kept off sale (the recommendation: no new cards in the system, and D264's first-digit rule holds).
-- (b) The A3 sheets get new numbers past #699 (new cards in cards.json; breaks the first-digit rule).
+**The user picked (b) on 28 Nov:** "i will do it now, keep a question open on what is the conclusion". Open until the user says which, if any, to swap.
 
 ### U230 · Where the install button goes on the phone (replaces U193)
 U193's reading put the install button in the spot the empty list's big add-card button left once a phone had cards. D290 removed that spot: a phone with no cards shows a centred heading and two floating buttons, gone at the first card. And the user's condition, "only if +card button is not showing", now holds exactly when there are no cards. Only where the browser can install the app and it isn't installed; never on iPhones (Ajustos there).
@@ -84,11 +68,6 @@ The user's own decisions: R1-Q36 (23 Nov) set the default, the Winning song loop
 ### U158 · The Celebration's music options (if U157 keeps the pick)
 - (a) Two: the Winning song and the victory track. Parlem already lowers either for talking.
 - (b) Three, with Hold music too.
-
-### U163 · The round total in "Quina 4 de N"
-The model numbers only normal rounds ("Quina 1"…; the specials are "Quina Especial" and "Quina del Desgraciat", with no number). Today every screen shows the plan's position instead, specials included, so with a special earlier in the night a normal round's number is one too high. Frontend is fixing that. Left open: what the total "de N" counts. In 2026 that's 10 normal rounds plus 2 specials.
-- (a) Normal rounds only: "Quina 4 de 10".
-- (b) Every round: "Quina 4 de 12", though only 10 rounds carry a number.
 
 ### U160 · The last real players falling together before the finale
 Before the finale the engine only sees the cards in play, unsold ones included (D180 is built: 6eb9624, 21254e1). Say the last two real players in the room fall on one song while an unsold card still stands. The landing counts for them, because it didn't take out every card in play, so they're out and nobody in the room is standing. Today they can't be entered as finalists, since entry needs standing cards (D168).
@@ -238,12 +217,6 @@ Today they're taps: up «tada», right an orchestra hit, down a sad trombone, le
 
 Left out on purpose: anything that changes the song's speed or pitch, like a tape stop or a scratch, because the landings follow the song's timing.
 
-### U173 · Starting the night from the big button at the doors
-D195 puts "Comença la quina" in the big slot in a break. At the doors, what comes next is starting the night, which today is only in the menu ("Començar la nit"). That's on purpose: "an A pressed while testing the remote mustn't start the show". With D198, starting it also plays the kick-off and the voice-over story in front of everyone.
-- (a) The doors' big slot shows "Començar la nit", but only a tap on the tablet starts it; the remote's A does nothing before the night. The menu item goes.
-- (b) The big slot is the A button there too: A starts the night.
-- (c) It stays in the menu only.
-
 ### U168 · Horari's rows from the organizers' schedule
 The organizers' list (D192) has two rows that D150's Horari doesn't: "Començem (6pm)" and "Descans + llançament".
 - (a) Horari follows the list: a "Comencem" row at 6 pm (spelled the Catalan way) after "Venda de cartrons", and the break as "Descans + llançament".
@@ -366,6 +339,12 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U232 · The projector's Check** (2026-11-28) → D303: (a), with (b)'s squashed nino and its new head drawing.
+- **U233 · The Line's Celebration** (2026-11-28) → D302: (a), «LÍNIA!» nearer the centre, the drum behind fixed.
+- **U234 · The Desgraciat's finale** (2026-11-28) → D301: (a).
+- **U173 · Starting the night from the doors' big button** (2026-11-28) → D304: (a).
+- **U163 · The round total** (2026-11-28) → D305: no total on any screen.
+- **U239 · The A3 test sheets' numbers** (2026-11-28) → D306: (a), the user hands them out and tracks them.
 - **U231 · The projector before the night** (2026-11-28) → D297: (a), the pre-redraw board with the garland.
 - **U212 · Which card** (2026-11-28) → D295: the organizers chose «Apaïsat sense portades», the 21 × 9.9 cm card without covers, three to an A4 page.
 - **U193 · Where the install button goes** (2026-11-28): replaced by U230, since D290 removed the spot it relied on.
