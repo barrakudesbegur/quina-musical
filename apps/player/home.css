@@ -207,6 +207,15 @@
   visibility: visible;
 }
 
+/* Each view scrolls only its own content (the user's phone test, 28 Nov: a long Historial left a lot of empty scroll
+   after the last card). A positioned box still counts in its scroll container's scrollable overflow, hidden or not, so
+   the track clips what reaches below it: its height is the shown view's, and the waiting view, however tall, adds
+   none. While a swipe runs both views show in full (the box holds still meanwhile, and the end of the swipe sets the
+   coming view's own scroll). Clipped on this axis only, so the sideways track still slides under the column's edges. */
+.ara:not([data-swiping]) .ara__track {
+  overflow-y: clip;
+}
+
 /* Reduced motion: the views change by the whole home's crossfade (a view transition), opacity only. */
 html:active-view-transition-type(home-crossfade)::view-transition-old(root),
 html:active-view-transition-type(home-crossfade)::view-transition-new(root) {
