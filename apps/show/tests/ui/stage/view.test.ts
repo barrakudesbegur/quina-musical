@@ -14,13 +14,21 @@ import { STAGE_TEXT } from '../../../../stage/strings.ts';
 
 const NOW = 1_800_000_000_000;
 
-/** Round 4's prize titles that no earlier round has (its hamper's headline, its sponsors' gifts): what would give
- * its secret bundles away. The sample hampers share their staples, so those can't tell. */
-const ROUND_4_ONLY = (() => {
-  const titles = (r: (typeof SAMPLE_PLAN.rounds)[number]) => [...r.line, ...r.bingo].map((p) => p.title);
-  const earlier = new Set(SAMPLE_PLAN.rounds.slice(0, 3).flatMap(titles));
-  return titles(SAMPLE_PLAN.rounds[3]).filter((t) => !earlier.has(t));
-})();
+/** Every prize the sample plan gives away, by title and detail: none may reach the projector for now (D311). */
+const PRIZE_WORDS = [...new Set(SAMPLE_PLAN.rounds.flatMap((r) => [...r.line, ...r.bingo]).flatMap((p) => [p.title, p.detail]).filter((t): t is string => !!t))];
+
+/** The plan's prize words a view carries, and whether its body has a prize field. */
+function prizesIn(view: StageView): string[] {
+  const json = JSON.stringify(view);
+  const words = PRIZE_WORDS.filter((t) => json.includes(JSON.stringify(t).slice(1, -1)));
+  return 'prize' in view.body || 'prizes' in view.body ? ['(a prize field)', ...words] : words;
+}
+
+/** A fixture with every round's prizes revealed (D311: even then the projector shows none). */
+function allRevealed(name: string, patch: Partial<FlowState> = {}): FlowState {
+  const { state } = FIXTURES[name](NOW);
+  return { ...state, ...patch, prizes: { revealed: SAMPLE_PLAN.rounds.map((r) => ({ round: r.number, by: 'presenters' as const })) } };
+}
 
 /** A tiny catalog: cards 57 and 508 (the especial one) on both sides, and card 123 as a card from before sides (the
  * songs as in the fixtures). */
@@ -281,16 +289,13 @@ test('at the cue: the result as the cue says, its look from the finding', () => 
   assert.equal(at(cued('checkFailed', 'pass')), 'complete', 'won by hand from a review');
 });
 
-test('roundStart: headline prizes with sponsors and how many more; the Shuffle grid by song id, its window from the engine', () => {
+test('roundStart: the round, no prizes (D311); the Shuffle grid by song id, its window from the engine', () => {
   const state = FIXTURES.shuffle(NOW).state;
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
   assert.equal(view.body.scene, 'roundStart');
   if (view.body.scene !== 'roundStart') return;
   assert.deepEqual(view.body.round, { number: 4, special: false, desgraciat: false, label: 'Quina 4' });
-  assert.deepEqual(view.body.prizes, [
-    { kind: 'line', title: 'Ampolla de vi blanc', detail: null, sponsor: '[Patrocinador 2]', more: 3 },
-    { kind: 'bingo', title: "Fregidora d'aire", detail: null, sponsor: '[Patrocinador 2]', more: 17 },
-  ]);
+  assert.deepEqual(prizesIn(view), []);
   assert.equal(view.body.shuffle?.startAtMs, NOW + 500);
   assert.equal(view.body.shuffle?.endAtMs, NOW + 9500);
   assert.deepEqual(view.body.tiles, [...view.body.tiles].sort((a, b) => a - b));
@@ -440,7 +445,7 @@ test('an odd Check in a snapshot never breaks the projector', () => {
   }
 });
 
-test('celebration: the shout kind and the round prize, never the winning card numbers', () => {
+test('celebration: the shout kind and the round, never the winning card numbers nor the prize (D311)', () => {
   const state = FIXTURES.celebrationBingo(NOW).state;
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
   assert.deepEqual(view.body, {
@@ -448,19 +453,30 @@ test('celebration: the shout kind and the round prize, never the winning card nu
     key: `3:bingo@${NOW - 1500}`,
     kind: 'bingo',
     round: { number: 3, special: false, desgraciat: false, label: 'Quina 3' },
-    prize: { kind: 'bingo', title: 'Pernil', detail: null, sponsor: '[Patrocinador 1]', more: 16 },
   });
   assert.ok(!/\b(57|301)\b/.test(JSON.stringify(view)), 'no winning card number');
 });
 
-test("a Line's Celebration shows no prize panel for now (D242), revealed or not", () => {
-  const state = FIXTURES.celebration(NOW).state;
-  const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
-  if (view.body.scene !== 'celebration') return assert.fail('not celebration');
-  assert.equal(view.body.kind, 'line');
-  assert.equal(view.body.prize, null);
-  assert.ok(!JSON.stringify(view).includes('Ampolla de vi blanc'), "the Line's prize stays off the projector");
-});
+// D311: no prizes on the projector for now, revealed or not, on every screen that had one (and the Line's Celebration,
+// which had none since D242).
+const NO_PRIZE_SCREENS: [string, string, Partial<FlowState>, string][] = [
+  ['a round\'s intro', 'roundStart', {}, 'Quina 4'],
+  ['the Especial\'s intro', 'roundStart', { intro: { round: 7, kind: 'special', sinceMs: NOW } }, 'Quina Especial'],
+  ['the Desgraciat\'s intro', 'desgraciatIntro', {}, 'Quina del Desgraciat'],
+  ['a Line\'s Celebration', 'celebration', {}, 'Quina 3'],
+  ['a Quina\'s Celebration', 'celebrationBingo', {}, 'Quina 3'],
+  ['«QUINA POTRA!»', 'celebrationStanding', {}, 'Quina del Desgraciat'],
+];
+for (const [screen, fixture, patch, label] of NO_PRIZE_SCREENS) {
+  test(`no prize on ${screen}, even with every round's prizes revealed (D311)`, () => {
+    const state = allRevealed(fixture, patch);
+    const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
+    assert.ok(view.body.scene === 'roundStart' || view.body.scene === 'celebration', `${fixture}: ${view.body.scene}`);
+    if (view.body.scene !== 'roundStart' && view.body.scene !== 'celebration') return;
+    assert.equal(view.body.round?.label, label, 'the screen it is');
+    assert.deepEqual(prizesIn(view), []);
+  });
+}
 
 test("every Celebration names its round for the gold plate (U175 item 7): «Quina 3», «Quina del Desgraciat»", () => {
   for (const [name, label] of [['celebration', 'Quina 3'], ['celebrationStanding', 'Quina del Desgraciat']] as const) {
@@ -481,45 +497,12 @@ test('no winning card number on the projector after a win: Celebration, Interval
   }
 });
 
-test('two headline prizes share one block: titles and sponsors joined, no single detail', () => {
-  const { state } = FIXTURES.roundStart(NOW);
-  const last: FlowState = { ...state, intro: { round: 8, kind: 'normal', sinceMs: NOW }, prizes: { revealed: [{ round: 8, by: 'intro' }] } };
-  const view = stageView(last, flowOf(last), SAMPLE_PLAN, null);
-  if (view.body.scene !== 'roundStart') return assert.fail('not roundStart');
-  assert.deepEqual(view.body.prizes[1], { kind: 'bingo', title: 'Pernil i Planxa de cuina', detail: null, sponsor: 'Barrakudes i [Patrocinador 2]', more: 16 });
-});
-
-test('secret prizes never reach the projector: only revealed rounds show theirs, and never in the Interval', () => {
-  // The Interval before round 4 is introduced: its prizes are still secret.
-  const interval = FIXTURES.interval(NOW).state;
-  const view = stageView(interval, flowOf(interval), SAMPLE_PLAN, null);
-  if (view.body.scene !== 'interval') return assert.fail('not interval');
-  assert.ok(ROUND_4_ONLY.includes("Fregidora d'aire") && ROUND_4_ONLY.length >= 5, 'round 4 has prizes of its own to give away');
-  const leaks = (v: StageView) => ROUND_4_ONLY.filter((t) => JSON.stringify(v).includes(JSON.stringify(t).slice(1, -1)));
-  assert.deepEqual(leaks(view), []);
-  // Even revealed early from the console, the Interval shows none: they show at the round's intro.
-  const revealed: FlowState = { ...interval, prizes: { revealed: [{ round: 4, by: 'presenters' }] } };
-  const shown = stageView(revealed, flowOf(revealed), SAMPLE_PLAN, null);
-  assert.deepEqual(leaks(shown), []);
-  const introduced: FlowState = { ...FIXTURES.roundStart(NOW).state, prizes: { revealed: [{ round: 4, by: 'presenters' }] } };
-  const atIntro4 = stageView(introduced, flowOf(introduced), SAMPLE_PLAN, null);
-  if (atIntro4.body.scene !== 'roundStart') return assert.fail('not roundStart');
-  assert.equal(atIntro4.body.prizes[1]?.title, "Fregidora d'aire");
-  // All secret: introducing a round doesn't reveal it, and the Celebration shows no prize either.
-  const secret = { ...SAMPLE_PLAN, prizeReveal: 'allSecret' as const };
-  const intro = FIXTURES.roundStart(NOW).state;
-  const atIntro = stageView(intro, flowOf(intro), secret, null);
-  if (atIntro.body.scene !== 'roundStart') return assert.fail('not roundStart');
-  assert.deepEqual(atIntro.body.prizes, []);
-  const celebration = FIXTURES.celebrationBingo(NOW).state;
-  const won = stageView(celebration, flowOf(celebration), secret, null);
-  if (won.body.scene !== 'celebration') return assert.fail('not celebration');
-  assert.equal(won.body.prize, null);
-  // An engine that doesn't report reveals: every round, as before.
-  const old: FlowState = { ...FIXTURES.roundStart(NOW).state, prizes: undefined };
-  const fromOld = stageView(old, flowOf(old), SAMPLE_PLAN, null);
-  if (fromOld.body.scene !== 'roundStart') return assert.fail('not roundStart');
-  assert.equal(fromOld.body.prizes.length, 2);
+test('no prize reaches the projector in any scene, revealed or not (D311)', () => {
+  assert.ok(PRIZE_WORDS.length >= 20, 'the sample plan has prizes to give away');
+  for (const name of FIXTURE_NAMES) {
+    const state = allRevealed(name);
+    assert.deepEqual(prizesIn(stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG)), [], name);
+  }
 });
 
 test('a Check carries the card\'s printed type, which is public', () => {
@@ -618,7 +601,6 @@ test('the round start names the round being introduced, before the Shuffle', () 
   const view = stageView(introduced, flowOf(introduced), SAMPLE_PLAN, null);
   if (view.body.scene !== 'roundStart') return assert.fail('not roundStart');
   assert.equal(view.body.round?.number, 4);
-  assert.equal(view.body.prizes[1]?.title, "Fregidora d'aire");
 });
 
 test('without any state: the before scene, never a crash', () => {
@@ -644,8 +626,6 @@ test('the Desgraciat round is named "Quina del Desgraciat" in play, at its intro
   assert.equal(intro.body.scene, 'roundStart');
   if (intro.body.scene !== 'roundStart') return;
   assert.equal(intro.body.round?.desgraciat, true);
-  // One prize: the last card standing's (the plan's `bingo` bundle), and no Line.
-  assert.deepEqual(intro.body.prizes.map((p) => [p.kind, p.title, p.more]), [['standing', 'Pernil', 18]]);
 
   const intervalState = FIXTURES.intervalDesgraciat(NOW).state;
   const interval = stageView(intervalState, flowOf(intervalState), SAMPLE_PLAN, CATALOG);
@@ -701,14 +681,13 @@ test('a standing Check: all 12 songs, no row dimmed; a fallen one names the song
   assert.equal(firstMiss(passed.body.check), null);
 });
 
-test('the last card standing is celebrated with its prize, and no card number', () => {
+test('the last card standing is celebrated with no prize (D311) and no card number', () => {
   const state = FIXTURES.celebrationStanding(NOW).state;
   const view = stageView(state, flowOf(state), SAMPLE_PLAN, CATALOG);
   assert.equal(view.body.scene, 'celebration');
   if (view.body.scene !== 'celebration') return;
   assert.equal(view.body.kind, 'standing');
-  assert.equal(view.body.prize?.kind, 'standing');
-  assert.equal(view.body.prize?.title, 'Pernil');
+  assert.deepEqual(prizesIn(view), []);
   assert.ok(!/\b57\b/.test(JSON.stringify(view.body)), 'no winning card number');
 });
 

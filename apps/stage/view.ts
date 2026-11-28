@@ -3,12 +3,13 @@
 // winners, the Phase, claims and their warnings, winners' names and notes. Winning card numbers aren't secret
 // but are never shown either (the user's review: "people don't care who won unless it's them"), so they don't
 // come out: only the Check names the card being checked, and the Desgraciat's finale its finalists, who are on stage
-// (D161: their numbers and fates, never their cards). `stageView` picks out only what the projector may
+// (D161: their numbers and fates, never their cards). No prize comes out either, revealed or not (D311: none on the
+// projector for now; D311 lists where they were). `stageView` picks out only what the projector may
 // draw, and the DOM code reads nothing else. Pure; tests/ui/stage/view.test.ts checks that no private field
 // ever comes out.
-import { DEFAULT_SIDE, winKindsOf, type RoundKind, type ShowState } from '@quina/protocol';
+import { DEFAULT_SIDE, type RoundKind, type ShowState } from '@quina/protocol';
 import type { CheckInfo, FlowFields, WinKind } from '../../packages/ui/flow.ts';
-import { prizeBundleOf, revealedRounds, roundPlan, roundTitle, sponsorOf, splitBundle, type GamePlan, type Prize } from '../../packages/ui/plan.ts';
+import { roundPlan, roundTitle, type GamePlan } from '../../packages/ui/plan.ts';
 import { catalogFace, type Catalog } from '../../packages/ui/data/catalog.ts';
 import { comingRoundPrice, knownCardTypes, type ComingRoundPrice } from '../../packages/ui/data/card-types.ts';
 import { STAGE } from './config.ts';
@@ -20,21 +21,7 @@ import { cardTypeBadge, checkCells, checkTypeOk, NO_CHECK_MEMORY, shownCheck, ve
 import { nightCardTypes, type NightCardType } from './model/night.ts';
 import { shuffleTimeline, type ShuffleTimeline } from './model/shuffle.ts';
 import { playerAppLink } from './model/qr.ts';
-import { STAGE_TEXT, joinCa, nextRoundLabel } from './strings.ts';
-
-/** A Line's or a Quina's prize bundle (the Desgraciat round's: the last card standing's) as the projector shows it:
- * its headline prizes, and how many more. */
-export interface PrizeView {
-  kind: WinKind;
-  /** The headline prizes' titles, joined ("Sopar per a dos i Pernil"). */
-  title: string;
-  /** A single headline prize's detail (null with several). */
-  detail: string | null;
-  /** The headline prizes' sponsors' names, joined, or null. */
-  sponsor: string | null;
-  /** How many other prizes the bundle holds ("i 3 premis més"). */
-  more: number;
-}
+import { STAGE_TEXT, nextRoundLabel } from './strings.ts';
 
 /** A sponsor as the projector shows it (`label`: its public name; a winner's name never gets here). */
 export interface SponsorView {
@@ -66,10 +53,11 @@ export interface BeforeView {
   link: LinkView;
 }
 
+/** A round's intro: its name, never its prizes (D311: no prizes on the projector for now; the presenters read them
+ * from the console and phones have Premis). */
 export interface RoundStartView {
   scene: 'roundStart';
   round: RoundView | null;
-  prizes: PrizeView[];
   shuffle: (ShuffleTimeline & { key: string }) | null;
   /** Song ids for the Shuffle's grid, by id (never in Queue order: the stage doesn't know it). */
   tiles: number[];
@@ -89,20 +77,16 @@ export interface CheckSceneView {
   check: CheckView;
 }
 
-/** No winning card numbers: the shout, the round's name on its gold plate (U175 item 7), and the round's prize once
- * revealed (a Quina's or the last card standing's; a Line's shows none for now, D242). */
+/** No winning card numbers and no prize (D311, for now): the shout and the round's name on its gold plate (U175
+ * item 7). */
 export interface CelebrationView {
   scene: 'celebration';
   key: string;
   kind: WinKind;
   round: RoundView;
-  prize: PrizeView | null;
 }
 
-/**
- * The Interval: the next round and the countdown guide. No winning card numbers, no QR, and none of the next
- * round's prizes: they are revealed at its intro (the round start), never here.
- */
+/** The Interval: the next round and the countdown guide. No winning card numbers, no QR, no prizes. */
 export interface IntervalView {
   scene: 'interval';
   /** The round about to start (named `nextRound`: `next` is the private next song everywhere else). */
@@ -154,38 +138,6 @@ export interface LiveNotes {
 }
 
 const NO_NOTES: LiveNotes = { landed: [], spin: null, check: NO_CHECK_MEMORY };
-
-function prizeView(plan: GamePlan, kind: WinKind, bundle: readonly Prize[]): PrizeView | null {
-  const { headline, others } = splitBundle(bundle.filter((p) => p.title));
-  if (!headline.length) return null;
-  const sponsors = [...new Set(headline.map((p) => sponsorOf(plan, p)?.name).filter((n): n is string => !!n))];
-  return {
-    kind,
-    title: joinCa(headline.map((p) => p.title)),
-    detail: headline.length === 1 ? headline[0].detail || null : null,
-    sponsor: sponsors.length ? joinCa(sponsors) : null,
-    more: others.length,
-  };
-}
-
-/**
- * The rounds whose prizes the projector may show: what phones may see (plan.ts revealedRounds over the
- * engine's `prizes.revealed`). Null (every round) from an engine that doesn't report reveals.
- */
-function openRounds(plan: GamePlan | null, state: ShowState | null): ReadonlySet<number> | null {
-  if (!plan || !state?.prizes) return null;
-  return new Set(revealedRounds(plan, state.prizes.revealed));
-}
-
-/** A round's prizes, one per win it can have (the Desgraciat round's one bundle is the last card standing's), unless
- * they are still secret. */
-function prizesOf(plan: GamePlan | null, round: number, open: ReadonlySet<number> | null): PrizeView[] {
-  const r = plan ? roundPlan(plan, round) : null;
-  if (!plan || !r || (open && !open.has(round))) return [];
-  return winKindsOf(r.kind)
-    .map((kind) => prizeView(plan, kind, prizeBundleOf(r, kind)))
-    .filter((p): p is PrizeView => p !== null);
-}
 
 /** Round `number` and its kind: the plan's, else `known` (the intro's), else the state's for its current round. */
 function roundOf(number: number | null | undefined, plan: GamePlan | null, state: ShowState | null, known: RoundKind | null = null): { number: number; kind: RoundKind } | null {
@@ -248,7 +200,6 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
   const scene = shown ? 'check' : stageScene(flow);
   const link = playerAppLink(plan?.edition, STAGE.playerApp);
   const roundNumber = state?.round.number ?? 0;
-  const open = openRounds(plan, state);
   const current = roundOf(roundNumber, plan, state);
   const play = (): PlayView => {
     const motion = motionView(state, notes.spin);
@@ -272,7 +223,6 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
       return {
         scene,
         round: round && roundView(round, plan),
-        prizes: prizesOf(plan, number, open),
         shuffle: s ? { ...shuffleTimeline(s.startAtMs, s.endAtMs, STAGE.shuffle.split), key: `${s.round}@${s.startAtMs}` } : null,
         tiles: catalog ? [...catalog.songs.keys()].sort((a, b) => a - b) : [],
       };
@@ -283,11 +233,8 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
     case 'celebration': {
       const c = flow.celebration;
       if (!c) return play();
-      // D242 (the user's canvas comment S5, 27 Nov): no prize panel in a Line's Celebration for now; how a Celebration
-      // shows its prize waits for the proposals (board Projector-Celebracio-Premi-Propostes).
-      const prize = c.kind === 'line' ? null : (prizesOf(plan, c.round, open).find((p) => p.kind === c.kind) ?? null);
       const round = roundView(roundOf(c.round, plan, state, c.kind === 'standing' ? 'desgraciat' : null) ?? { number: c.round, kind: 'normal' }, plan);
-      return { scene, key: `${c.round}:${c.kind}@${c.sinceMs}`, kind: c.kind, round, prize };
+      return { scene, key: `${c.round}:${c.kind}@${c.sinceMs}`, kind: c.kind, round };
     }
     case 'interval': {
       const i = flow.interval;
@@ -314,7 +261,7 @@ function sceneView(state: ShowState | null, flow: FlowFields, plan: GamePlan | n
 
 /**
  * What the projector may draw, from the full state, its show flow (`flowOf(state)`), the Game plan, the
- * catalog (cards.json) and the notes taken from events. Missing plan: no prize or sponsor blocks. Missing
+ * catalog (cards.json) and the notes taken from events. Missing plan: no sponsor blocks. Missing
  * catalog: titles from the snapshot, no card grid beyond the played songs.
  */
 export function stageView(

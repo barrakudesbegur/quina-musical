@@ -1,5 +1,5 @@
-// C2's prize recipes (D-p): the card's words top to bottom and the kind chip's palette, shared by the phone, the
-// console and the projector's plain-TypeScript PrizeBlock.
+// C2's prize recipes (D-p): the card's words top to bottom and the kind chip's palette, shared by the phone and the
+// console.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PRIZE_COLOR, prizeCardText, ticketRibbon } from '../../../../../packages/ui/recipes/prizes.ts';

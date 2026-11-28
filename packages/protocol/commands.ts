@@ -182,8 +182,8 @@ export const COMMANDS = Object.freeze({
   },
 
   // ---- the show flow (docs/protocol.md › Scenes) ----
-  /** Introduce the next round (scene `roundStart`): its name and prizes on screen, Interval music on. No
-   * Queue yet: `newRound` runs the Shuffle. */
+  /** Introduce the next round (scene `roundStart`): its name on screen (its prizes on phones; none on the projector for
+   * now, D311), Interval music on. No Queue yet: `newRound` runs the Shuffle. */
   roundIntro: {
     number: { type: 'integer', optional: true, min: 1, max: 20 },
     kind: { type: 'string', optional: true, oneOf: ROUND_KINDS },

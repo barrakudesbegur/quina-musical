@@ -1,5 +1,6 @@
-// Round start: "Quina N" with its Line and Quina prizes while the presenters announce them (the Quina del Desgraciat:
-// its name, its one prize, and the hands-up nino bouncing in beside the name, the "everyone stand up" cue); then the Shuffle
+// Round start: "Quina N", centred under the drum's band, while the presenters announce its prizes (none on the
+// projector for now, D311; the Quina del Desgraciat: its name and the hands-up nino bouncing in beside it, the
+// "everyone stand up" cue); then the Shuffle
 // (ANIMATIONS.md `shuffle`): every cover appears in a grid, the grid jiggles, the covers fly into the drum
 // one by one in a random VISUAL order (never the Queue's: the stage doesn't know it), and the drum settles.
 // The phases come from the engine's window on the show clock, so a late join starts mid-Shuffle.
@@ -9,7 +10,7 @@ import { STAGE_TEXT } from '../strings.ts';
 import type { AnimDetail } from '../model/moments.ts';
 import type { RoundStartView } from '../view.ts';
 import { CoverArt, h, playAnim, setData, setHidden, setVar } from './dom.ts';
-import { PrizeBlock, RoundTitle, pickSticker, stickerImage } from './parts.ts';
+import { RoundTitle, pickSticker, stickerImage } from './parts.ts';
 import { sceneRoot, type SceneEnv, type SceneRenderer } from './scene.ts';
 
 /** The phases in which the grid covers the screen. */
@@ -23,7 +24,6 @@ export class RoundStartScene implements SceneRenderer<RoundStartView> {
   private readonly special: HTMLElement;
   /** The Desgraciat round's hands-up nino, beside its name (null while the stage has no sticker for it). */
   private readonly standUp: HTMLImageElement | null;
-  private readonly prizes = [new PrizeBlock('round-start__prize'), new PrizeBlock('round-start__prize')];
   private readonly grid: HTMLElement;
   private readonly caption: HTMLElement;
   private body: RoundStartView | null = null;
@@ -38,14 +38,8 @@ export class RoundStartScene implements SceneRenderer<RoundStartView> {
     this.special = h('p', { class: 'round-start__rule', hidden: true }, STAGE_TEXT.specialRule);
     this.standUp = stickerImage(STAGE.stickers.standUp, 'round-start__sticker');
     if (this.standUp) this.standUp.hidden = true;
-    this.intro = h(
-      'div',
-      'round-start__intro',
-      // The special round's rule sits beside its name, not on a line of its own: the band below the drum keeps the
-      // room for the prizes (a headline prize with a detail, such as the Especial's TV, makes the panel taller).
-      h('div', 'round-start__head', this.title.root, this.standUp, this.special),
-      h('div', 'round-start__prizes', ...this.prizes.map((p) => p.root)),
-    );
+    // The special round's rule sits beside its name, not on a line of its own.
+    this.intro = h('div', 'round-start__intro', h('div', 'round-start__head', this.title.root, this.standUp, this.special));
     this.grid = h('div', { class: 'shuffle', hidden: true, attrs: { 'aria-hidden': 'true' } });
     this.caption = h('p', { class: 'shuffle__caption', hidden: true }, STAGE_TEXT.shuffling);
     this.root.append(this.intro, this.grid, this.caption);
@@ -58,7 +52,6 @@ export class RoundStartScene implements SceneRenderer<RoundStartView> {
     if (this.standUp) setHidden(this.standUp, !body.round?.desgraciat);
     pickSticker(this.standUp, STAGE.stickers.standUp, body.round?.number ?? 0);
     setData(this.root, 'round', body.round?.desgraciat ? 'desgraciat' : null);
-    this.prizes.forEach((block, i) => block.set(body.prizes[i] ?? null));
     const key = body.shuffle?.key ?? null;
     if (key !== this.shuffleKey) {
       this.shuffleKey = key;

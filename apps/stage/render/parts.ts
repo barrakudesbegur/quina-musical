@@ -1,15 +1,14 @@
-// Building blocks shared by the scenes: a prize, the sponsors, a round title, a song tile, a countdown, a
+// Building blocks shared by the scenes: the sponsors, a round title, a song tile, a countdown, a
 // mini card and a nino sticker. Each owns its DOM nodes and updates them from view data only.
 import { miniCardElement } from '../../../packages/ui/components/mini-card.ts';
 import { songTileElement } from '../../../packages/ui/components/song-tile.ts';
-import type { RoundView, PrizeView, SponsorView } from '../view.ts';
+import type { RoundView, SponsorView } from '../view.ts';
 import type { StageSong } from '../model/songs.ts';
 import { STAGE } from '../config.ts';
 import { roughCountdown, sameCountdown, type RoughCountdown } from '../model/timing.ts';
 import { clockParts } from '../../../packages/rules/time.ts';
 import { imageSources } from '../../../packages/ui/data/media.ts';
 import { STAGE_TEXT, type CountdownContext } from '../strings.ts';
-import { prizeCardText } from '../../../packages/ui/recipes/prizes.ts';
 import { h, playAnim, setData, setHidden, setText, setVar } from './dom.ts';
 import { loopRepeats, panTiming, sponsorPage, stripRows } from '../model/sponsors.ts';
 import { logoTileElement } from '../../../packages/ui/components/sponsors-dom.ts';
@@ -33,47 +32,6 @@ export class RoundTitle {
     setText(this.name, round.label);
     setData(this.root, 'special', round.special ? 'true' : null);
     setData(this.root, 'desgraciat', round.desgraciat ? 'true' : null);
-  }
-}
-
-/**
- * A headline prize: the design system's PrizeCard (C2, D-p) built in plain DOM, with its CSS and its words from the
- * same recipe (packages/ui/recipes: paper-card.css, prizes.css, prizes.ts): the kind as the chip, the prize's name
- * big, its detail, «Gentilesa de …», «i 3 premis més». Hidden without a prize.
- */
-export class PrizeBlock {
-  readonly root: HTMLElement;
-  private readonly chip: HTMLElement;
-  private readonly title: HTMLElement;
-  private readonly detail: HTMLElement;
-  private readonly sponsor: HTMLElement;
-  private readonly more: HTMLElement;
-
-  constructor(extraClass = '') {
-    this.chip = h('span', 'paper-card__ribbon');
-    this.title = h('p', 'prize-card__title');
-    this.detail = h('p', 'prize-card__detail');
-    this.sponsor = h('p', 'prize-card__sponsor');
-    this.more = h('p', 'prize-card__more');
-    const part = h('div', 'paper-card__part', this.title, this.detail, this.sponsor, this.more);
-    this.root = h('article', { class: `paper-card prize-card ${extraClass}`.trim(), data: { layout: 'hero' }, hidden: true }, this.chip, h('div', 'paper-card__paper', part));
-  }
-
-  set(prize: PrizeView | null): void {
-    setHidden(this.root, prize === null);
-    if (!prize) return;
-    const text = prizeCardText({ kind: prize.kind, headline: [{ title: prize.title, detail: prize.detail, sponsor: prize.sponsor }], more: prize.more });
-    setData(this.root, 'kind', prize.kind);
-    this.root.setAttribute('aria-label', text.chip);
-    setText(this.chip, text.chip);
-    setData(this.chip, 'color', text.color);
-    setText(this.title, text.title);
-    setText(this.detail, text.detail ?? '');
-    setHidden(this.detail, !text.detail);
-    setText(this.sponsor, text.sponsor ?? '');
-    setHidden(this.sponsor, !text.sponsor);
-    setText(this.more, text.more ?? '');
-    setHidden(this.more, !text.more);
   }
 }
 

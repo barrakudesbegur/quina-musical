@@ -52,9 +52,6 @@ export const STAGE_TEXT = {
   saved: 'SALVATS!',
   /** The finalists' plates: "#57". */
   finalist: (n: number) => `#${n}`,
-  prize: CA.prize,
-  sponsoredBy: CA.sponsoredBy,
-  morePrizes: CA.morePrizes,
   /** The Check's plate: "Cartró #57" (shown in capitals). */
   checkPlate: (id: number) => `Cartró #${id}`,
   /** The plaque while a Check is under review (D123). */

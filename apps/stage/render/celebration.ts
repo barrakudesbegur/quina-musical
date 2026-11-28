@@ -1,9 +1,9 @@
 // The Celebration: "LÍNIA!" or "QUINA!" huge and tilted over the drum's victory lap (never the winning card numbers),
-// the round's name on its gold plate under it (U175 item 7), the round's prize and sponsor (a Quina's only: a Line's
-// shows none for now, D242), a flash, rays, the slow paper confetti raining (D185) and four ninos bouncing in at the
-// corners (ANIMATIONS.md `celebrate`; board Projector-Linia). The Desgraciat round's last one standing gets «QUINA
-// POTRA!» (D186, amending D62; board Projector-Desgraciat-Potra): the green title, the gold «Quina del Desgraciat»
-// plate under it, the prize on paper, green rays and three ninos around it. Each kind's ninos come from its own pool
+// the round's name on its gold plate under it (U175 item 7), no prize (none on the projector for now, D311), a flash,
+// rays, the slow paper confetti raining (D185) and four ninos bouncing in at the corners (ANIMATIONS.md `celebrate`;
+// board Projector-Linia). The Desgraciat round's last one standing gets «QUINA POTRA!» (D186, amending D62; board
+// Projector-Desgraciat-Potra): the green title, the gold «Quina del Desgraciat» plate under it, green rays and three
+// ninos around it. Each kind's ninos come from its own pool
 // (`STAGE.stickers.celebration`). The scene itself moves on to play (Line) or the Interval (Bingo, last standing) when the engine's
 // scene changes. The Heat garland comes along across the top in the `win` pattern: the party colours, a burst of light
 // running along the string, flames when very hot (#84, D-t; ANIMATIONS.md `celebrate` ⑦).
@@ -17,14 +17,15 @@ import type { WinKind } from '../../../packages/ui/flow.ts';
 import type { CelebrationView } from '../view.ts';
 import { h, playAnim, setData, setHidden, setText } from './dom.ts';
 import { Garland } from './garland.ts';
-import { PrizeBlock, stickerImage } from './parts.ts';
+import { stickerImage } from './parts.ts';
 import '../../../packages/ui/components/sticker.css';
 import '../../../packages/ui/components/particles.css';
 import { ninosFor } from '../../../packages/ui/concepts.ts';
 import { setNino } from '../../../packages/ui/components/nino-dom.ts';
 import { sceneRoot, type SceneEnv, type SceneRenderer } from './scene.ts';
 
-/** The corners the ninos stand in, by kind («QUINA POTRA!»'s prize takes the bottom right). */
+/** The corners the ninos stand in, by kind («QUINA POTRA!»'s three, as its board draws them; its prize took the bottom
+ * right, none on the projector for now, D311; its layout waits on D310's board). */
 const SPOTS = ['topLeft', 'topRight', 'bottomLeft', 'bottomRight'] as const;
 const SPOTS_OF: Record<WinKind, readonly (typeof SPOTS)[number][]> = {
   line: SPOTS,
@@ -53,7 +54,6 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
   private readonly shout: HTMLElement;
   /** The round's name under the shout: «QUINA 3», «QUINA DEL DESGRACIAT». */
   private readonly roundPlate: HTMLElement;
-  private readonly prize = new PrizeBlock('celebration__prize');
   /** The ninos at the corners, one per spot, each shown when its kind stands there and has a pool. */
   private readonly stickers: HTMLImageElement[];
   private key: string | null = null;
@@ -79,7 +79,6 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
       this.paper,
       this.shout,
       this.roundPlate,
-      this.prize.root,
       ...this.stickers,
     );
     this.stagePanel.dataset.testid = 'celebration';
@@ -102,12 +101,11 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
       setHidden(img, i < 0 || i >= poses.length);
       if (i >= 0 && i < poses.length) setNino(img, { pose: poses[i] });
     }
-    this.prize.set(body.prize);
     if (body.key !== this.key) {
       this.key = body.key;
       this.stopPaper?.();
       this.stopPaper = null;
-      // None with reduced motion: the title and the prize appear.
+      // None with reduced motion: the title appears.
       if (!this.env.reducedMotion()) {
         const rain = STAGE.confetti[body.kind];
         const paper = STAGE.paper;

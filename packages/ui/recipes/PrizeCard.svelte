@@ -2,7 +2,7 @@
   The headline prize card (C2's `PrizeCard` recipe, D-p, #66): a PaperCard `hero` with a clear order, top to bottom:
   the kind as a chip over the top edge («PREMI DE LÍNIA»), the prize's name big, its detail, the sponsor (with its
   logo when it has one), and «i 3 premis més». No columns: every line takes the card's width and wraps (R6). The
-  projector's PrizeBlock (apps/stage/render/parts.ts) builds the same DOM from the same words (prizes.ts).
+  projector shows no prizes for now (D311).
 -->
 <script lang="ts">
   import PaperCard from '../components/PaperCard.svelte';

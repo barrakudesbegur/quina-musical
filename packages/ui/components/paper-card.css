@@ -1,7 +1,7 @@
 /*
- * C2 · PaperCard (components-v2.md § 4; PaperCard.svelte, and the projector's PrizeBlock builds the same DOM): a
- * piece of paper on the night ground, in three layouts: `ticket` (the console's prize tickets: a perforation with a
- * punched hole at each end), `hero` (the headline prize card: the phone's Celebration, the projector) and `row`.
+ * C2 · PaperCard (components-v2.md § 4; PaperCard.svelte): a piece of paper on the night ground, in three layouts:
+ * `ticket` (the console's prize tickets: a perforation with a punched hole at each end), `hero` (the headline prize
+ * card: the phone's Celebration) and `row`.
  *
  *   article.paper-card[data-layout]          the whole piece; the ribbon hangs over its top edge
  *     span.paper-card__ribbon[data-color]    the kind chip («LÍNIA», «PREMI DE QUINA»), optional

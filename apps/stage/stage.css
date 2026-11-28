@@ -140,7 +140,7 @@
   --stage-delay-stand-up: 300ms; /* the Desgraciat intro's nino, after the name */
   --stage-dur-flash: 120ms;
   --stage-dur-slam: 600ms;
-  --stage-delay-prize: 600ms;
+  --stage-delay-ninos: 600ms; /* celebrate ⑥: a Celebration's ninos pop in as the title lands */
   --stage-dur-rays: 20s;
   --stage-dur-rotate: 400ms;
   --stage-dur-idle: 8s;
@@ -431,8 +431,6 @@
   border-radius: var(--radius-sm);
   background: var(--color-bg-deep);
 }
-
-/* A prize: the design system's PrizeCard (PrizeBlock; packages/ui/components/paper-card.css, recipes/prizes.css). */
 
 .sponsors {
   display: grid;
@@ -826,14 +824,15 @@
 .round-start__intro {
   grid-row: 2;
   display: grid;
-  align-content: start;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--stage-pad) var(--stage-pad);
+  /* With no prizes under it (D311, for now) the name sits in the middle of the room under the drum's band. */
+  align-content: center;
+  padding: var(--stage-pad);
 }
 
 .round-start__head {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   align-items: center;
   gap: var(--space-2) var(--space-5);
 }
@@ -844,8 +843,8 @@
   flex: none;
   height: 12rem;
   width: auto;
-  /* Taller than the name: it takes no more of the row than the name does, so the prize under it fits the screen (it
-     was cut 29 px at the bottom). It reaches up to the drum's band, never into it, and down beside the prize. */
+  /* Taller than the name: it takes no more of the row than the name does, so the name sits where every round's
+     does, and the nino reaches a little above and below it. */
   margin-block: calc(-1 * var(--space-4)) calc(var(--stage-text-xl) - 12rem + var(--space-4));
   rotate: 6deg;
 }
@@ -868,12 +867,6 @@
   transition: none;
 }
 
-/* Its one prize (the last card standing's), alone and centred. */
-.scene--roundStart[data-round='desgraciat'] .round-start__prizes {
-  grid-template-columns: minmax(0, 40rem);
-  justify-content: center;
-}
-
 .round-start__title {
   font-family: var(--font-display);
   text-transform: uppercase;
@@ -886,12 +879,6 @@
 .round-start__rule {
   font-size: var(--stage-text-sm);
   color: var(--color-text-muted);
-}
-
-.round-start__prizes {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--stage-gap);
 }
 
 /* `shuffle`: ① the grid appears, ② jiggles, ③ covers fly into the drum one by one, ④ the drum settles. */
@@ -2712,10 +2699,9 @@
   position: absolute;
   inset: 0;
   display: grid;
-  grid-template-rows: var(--band-h-ref) auto auto;
+  grid-template-rows: var(--band-h-ref);
   justify-items: center;
   align-content: start;
-  gap: var(--space-4);
 }
 
 .celebration__flash {
@@ -2731,7 +2717,7 @@
 }
 
 /* The Desgraciat round's last one standing: «QUINA POTRA!» (D186; board Projector-Desgraciat-Dempeus), green and
-   tilted, the gold «Quina del Desgraciat» plate under it, the prize on paper, green rays and three ninos around it. */
+   tilted, the gold «Quina del Desgraciat» plate under it, green rays and three ninos around it. */
 .celebration[data-kind='standing'] {
   display: block;
 }
@@ -2774,29 +2760,6 @@
 .celebration[data-kind='standing'] .celebration__round {
   top: 420px;
   font-size: 5.5rem;
-}
-
-.celebration[data-kind='standing'] .celebration__prize {
-  position: absolute;
-  left: 50%;
-  top: 620px;
-  translate: -50% 0;
-}
-
-.celebration[data-kind='standing'] :is(.prize__kind, .prize__detail, .prize__more, .prize__sponsor) {
-  color: #4a4270;
-}
-
-.celebration[data-kind='standing'] .prize__title {
-  font-family: var(--font-body);
-  font-weight: 900;
-  font-size: 3.375rem;
-}
-
-.celebration[data-kind='standing'] .prize__kind {
-  font-weight: var(--font-weight-strong);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
 }
 
 .celebration[data-kind='standing'] .celebration__rays {
@@ -2848,20 +2811,6 @@
   rotate: 5deg;
 }
 
-/* A Quina's prize panel sits between the bottom two: a wide nino keeps its height's box and shrinks to fit beside it. */
-.celebration[data-kind='bingo'] :is(.celebration__sticker--bottomLeft, .celebration__sticker--bottomRight) {
-  max-width: 13.75rem;
-  object-fit: contain;
-}
-
-.celebration[data-kind='bingo'] .celebration__sticker--bottomLeft {
-  object-position: left bottom;
-}
-
-.celebration[data-kind='bingo'] .celebration__sticker--bottomRight {
-  object-position: right bottom;
-}
-
 .celebration[data-kind='standing'] .celebration__sticker--topLeft {
   left: 2.5rem;
   top: 5.625rem;
@@ -2880,14 +2829,14 @@
 }
 
 .celebration[data-anim='celebrate'] .celebration__sticker {
-  transition: opacity var(--dur-fast) linear var(--stage-delay-prize);
+  transition: opacity var(--dur-fast) linear var(--stage-delay-ninos);
 }
 
 @media (prefers-reduced-motion: no-preference) {
   .celebration[data-anim='celebrate'] .celebration__sticker {
     transition:
-      transform var(--stage-dur-sticker) var(--ease-bounce) var(--stage-delay-prize),
-      opacity var(--dur-fast) linear var(--stage-delay-prize);
+      transform var(--stage-dur-sticker) var(--ease-bounce) var(--stage-delay-ninos),
+      opacity var(--dur-fast) linear var(--stage-delay-ninos);
   }
 }
 
@@ -2937,13 +2886,7 @@
   rotate: -5deg;
 }
 
-.celebration__prize {
-  grid-row: 3;
-  position: relative;
-  width: min(820px, 90%);
-}
-
-/* `celebrate`: flash, the shout slams in (scale 3, −5°), then the prize rises. No card numbers. */
+/* `celebrate`: flash, the shout slams in (scale 3, −5°). No card numbers, no prize (D311). */
 @media (prefers-reduced-motion: no-preference) {
   .celebration[data-anim='celebrate'] .celebration__flash {
     animation: stage-flash var(--stage-dur-flash) var(--ease-out);
@@ -2962,26 +2905,8 @@
   }
 }
 
-.celebration[data-anim='celebrate'] .celebration__prize {
-  transition: opacity var(--dur-slow) var(--ease-out) var(--stage-delay-prize);
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .celebration[data-anim='celebrate'] .celebration__prize {
-    transition:
-      transform var(--dur-slow) var(--ease-out) var(--stage-delay-prize),
-      opacity var(--dur-slow) var(--ease-out) var(--stage-delay-prize);
-  }
-}
-
 .celebration[data-anim='celebrate'].is-entering .shout {
   transform: scale(3) rotate(-5deg);
-  opacity: 0;
-  transition: none;
-}
-
-.celebration[data-anim='celebrate'].is-entering .celebration__prize {
-  transform: translateY(var(--stage-title-drop));
   opacity: 0;
   transition: none;
 }
@@ -3342,7 +3267,7 @@
   .shuffle__tile.is-flying,
   .shuffle__tile.is-flying .shuffle__lift,
   .shuffle__tile.is-flying .shuffle__spin,
-  .celebration[data-anim='celebrate'].is-entering :is(.shout, .celebration__prize, .celebration__sticker) {
+  .celebration[data-anim='celebrate'].is-entering :is(.shout, .celebration__sticker) {
     transform: none;
   }
 

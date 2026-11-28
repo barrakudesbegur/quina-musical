@@ -1,7 +1,7 @@
 // The prize recipes' data side (components-v2.md § 4 C2 and § 11.5; D-p): what a prize ticket and a prize card say and
 // which palette their kind chip takes, from the game's data. Shared by the Svelte recipes (Ticket.svelte,
-// PrizeCard.svelte) and the projector's plain-TypeScript PrizeBlock, so the three draw the same words in the same
-// DOM. Pure, tested in apps/show/tests/ui/ds/prizes.test.ts.
+// PrizeCard.svelte), so both draw the same words. (The projector shows no prizes for now, D311.) Pure, tested in
+// apps/show/tests/ui/ds/prizes.test.ts.
 import { CONCEPTS } from '../concepts.ts';
 import type { PaletteColor } from '../components/types.ts';
 import type { WinKind } from '../flow.ts';
