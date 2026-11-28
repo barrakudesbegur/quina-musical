@@ -17,6 +17,7 @@ The playlists → the repertoire prepared and checked → the cards made → the
 | Before the cards | Last year's test cards move under the default repertoire, and every test reads cards through its repertoire (still `apps/cards/dist/cards.json` today) | Sound engine, then Frontend and Backend |
 | **4–5 Dec** | **The cards generated (`npm start -- --repertoire 2026` in apps/cards) in the organizers' layout (D295: A4, three a page, no covers), proofed on a proof sheet (D267) and printed**. No song changes after this | User, Frontend |
 | Then | Hooks approved on the audition page (U14, faster with U56), Signatures vetted, stems rendered, pushed to R2 and both laptops synced; the Pausa, break and Hold music into the repertoire (D268); the night's plan in Admin (U18); the real-device checks (U19) | User, Sound engine, Backend |
+| **22 Dec** | The user has the Wii remote again (D325): the first test with the real one (U220's pairing, the Mac app's reader, the reconnect, the range); a tech rehearsal includes the remote only from then | User |
 | When ready (D82) | The tech rehearsal: a whole show with this year's repertoire, the real plan, the tablet, the Wii remote and real phones | User, everyone |
 | After the tech rehearsal | **Code freeze:** only fixes for what a rehearsal found. Every deploy changes what the printed QR codes open | All sessions |
 | A day or two before, or on the day | Maybe a presenters' rehearsal (D82), without eating the night's cloud quota | Presenters |
