@@ -58,6 +58,7 @@ This page explains the event: what happens on the night, who does what, and how 
 - **Sound:** two big speakers on stage and a simple mixing desk. There's no sound team.
   - In 2024 the sound was too quiet at the back. We want a stronger system and a sound check beforehand.
 - **Projection:** one 4:3 projector, far from the audience, so only big things are readable. A 16:9 projector might replace it.
+- **Distances:** the stage is 5–10 m from the projector, and the closest table is next to the projector. The audio cables are usually long enough; the only worry is someone tripping over them.
 - **Microphones:** both wired and wireless are available. The choice isn't fixed.
 - **Show equipment:**
   - the laptop, which drives the projector and the music, in the first row or at the side of the stage;
@@ -279,8 +280,8 @@ This page explains the event: what happens on the night, who does what, and how 
   - on request, how close cards are to winning and who might win. It's hidden by default, so the presenters stay intrigued too.
 - **Their equipment:**
   - **The shared tablet** (**new in 2026**). The presenters may not like it. Then the tech drives the show from the laptop, and they advance by hand.
-  - **The Wii remote** is the intended experience. It's fun, the presenters joke about it, and shaking it can start a Suspense. It needs a plan B: the tablet can do everything the remote does. In 2025 its range from the stage to the laptop was at the limit.
-- **The tech** can open the presenters' controls on a phone to help them.
+  - **The Wii remote** is the intended experience. It's fun, the presenters joke about it, and shaking it can start a Suspense. It needs a plan B: the tablet can do everything the remote does. In 2025 its range from the stage to the laptop was at the limit: it worked most of the time, but was unreliable at moments. It was paired with WiimotePair and read through WebHID in Chrome (natel97/wiimote-chrome). So in 2026 the device it connects to sits closer to the stage.
+- **The tech** can open the presenters' controls on a phone to help them. The tech wants to sit at a table with friends and family, not tied to the laptop, and still control the show from a phone or a second tablet.
 
 ## Fairness and trust
 
