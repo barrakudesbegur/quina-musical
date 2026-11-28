@@ -6,8 +6,202 @@ The single place to resume the sound engine's work from. It was first written wh
 
 **Where else to look:**
 - The decisions are in `GLOSSARY.md`, `docs/how-the-quina-works.md` (the current-state read of a whole night), `docs/mixer-design-decisions.md`, `docs/show-ui-and-platform-decisions.md` (its "Changes" section) and `docs/adr/`. They override older research.
-- The dates are in `docs/timeline.md`: the playlist is final on Tue 1 Dec, the night is Sun 27 Dec.
+- The dates are in `docs/timeline.md`: the playlists became final on Fri 27 Nov (D230), the night is Sun 27 Dec.
 - The team roles are in `docs/team.md`. Questions only the user can answer go in `docs/open-questions.md`.
+
+## What's left (28 Nov, after the realistic test)
+
+The user on the 28 Nov realistic test: "it went HORIBLY WRONG. yes, the songs played and the player app mostly works. but the console logic is very bad, the transitions need a lot of improvement, the setup and startup is confusing, the show page (projected screen) has absolutely nothing to do with the design from the mockups."
+
+This section is the sound engine's real state. Four read-only audits checked it on 28 Nov against the code, `docs/requirements/show-and-music.md`, `game-rules.md`, `event.md` and `operations.md`, not against memory or this file. Code refs are as of a30542e7.
+- **(ran)** means reproduced by driving the real engine in the test harness. Everything else is read from the code.
+- The projected screen's design is Frontend's (apps/stage, packages/ui) and is not covered here.
+- Everything below this section was written before the test. Its "Done" table is what was committed, not what works on the night.
+
+### 0. The likely cause of "it jumped straight into a round"
+- The night's own launch command opens `http://localhost:5174/show/?autostart=1` (docs/night-runbook.md:14, apps/cloud/laptop/chrome-profiles.ts:37).
+- `autostart=1` sends `next` right after the Start click (engine/src/main.ts:1237).
+- `next` is allowed in `before` (packages/protocol/scenes.ts:4, :65: "before accepts everything play does").
+- Round 1's Queue is drawn secretly at boot (show.ts:864-866).
+- So clicking Start plays round 1's first Spin at once: no doors, no «Començar la nit», no intro, no public Shuffle.
+- This contradicts event.md:164 and :166 and game-rules.md:27 ("a round never starts by itself", the Shuffle in public).
+- A resumed Game under 12 h old (when `fresh=1` was missing) does the same with its own round.
+- `newRound` is also allowed in before, interval and after without an intro (scenes.ts:73).
+- **Direction, not started:**
+  - the night command loses `autostart`;
+  - `next` and `newRound` are refused in `before`, so the night starts only with `roundIntro(1)`;
+  - round 1's Queue is drawn at its Shuffle.
+
+### 1. Transitions and music
+- **Nothing has been tuned by ear.**
+  - The Phase tables, the impact odds, the orchestra hit's cooldown and the riser dress are one commit (3ed3a6a4, 24 Nov), written from the user's spoken notes.
+  - The Signature chances, the Suspense ramp and the Hold delay come from the POC.
+  - No transition constant is marked measured (only SCHEDULE and BEAT are).
+  - U13, the listening pass, never happened on this sound. The only demo (25 Nov) used last year's 77 test songs.
+- **By Phase** (config.ts):
+  - early: R8, D10, R1, R2, D8, D20, D1, R6, D3, R7, R4, R5 (:75);
+  - mid adds D16, D11, D2, D19, D15, D7 (:93-96);
+  - late: :112-115;
+  - final: R10, D2, D16, D8, D6, D15, D1, D19, D3 (:133);
+  - the first Spin from silence uses the openers (:732-737);
+  - "no impact" odds: 0.65 early, 0.4 mid, 0.15 late, 0 final (:503-508);
+  - the orchestra hit only late and final, with a cooldown of 6 transitions late and 3 final (:511-518; landing.ts:78).
+- **Simulated on 2026** (4 nights × 12 rounds, 3,884 transitions):
+  - 65% early, 18% mid, 11% late, 6% final;
+  - impacts on 49% of landings, the orchestra hit on 3.1%;
+  - the Blend 5%. That assumes every render arrives in time; real render latency on the show laptop was not verified.
+- **Bugs and weak spots:**
+  - **Every Suspense release bypasses the impact gating.** It builds with no landing, so it falls back to the Phase's impact samples (landing.ts:99, :107; recipes.ts:281; suspense.ts:277). Every late or final Suspense gets an orchestra hit with no cooldown, and a cymbal swell every time (suspense.ts:287, :342).
+  - **The Suspense release waits for up to about 5 bars**: about 10 s at 126 bpm, 14 s at 84 bpm (suspense.ts:258-264; computed, not measured). The release's exit is drawn without variety memory (suspense.ts:252).
+  - **A "phrase" is a bar count from the landed hook** (`k%8`, `k%4`; timeline.ts:79-85), not detected structure. Every 2026 hook is provisional, so "phrase-aligned" is only as right as the hook. Automatic hooks were within a bar of a hand tag in only 26 of 77 old songs.
+  - **Every effect sound is an oscillator or noise synth**: risers, rolls, swells, impacts, kicks, claps (audio/synth/fx.ts:35-259). Only the boom, orchestra hit, horn and comedy sounds are samples (config.ts:858). This is a plausible source of a cheap or robotic feel.
+  - **"Call and response" is only weights and a landing-cost bonus** (planner.ts:862-871; config.ts:681-683). Nothing trades lines. It labels 63% of 2026 transitions; sudden vocal entries are 3%.
+  - **FADE is still the last fallback**: a 1 s ramp plus a swell, the plain fade the user rejected (planner.ts:586-621; recipes.ts:1224-1237). The sim never reached it.
+  - **One hook per song** (`best`, no `main`), so a replayed song always lands on the same spot.
+  - **The Blend renders live per pair** through the relay's stretch.py, one job at a time with a 60 s kill (relay/server.ts:296-323). Half- or double-time pairs are refused. Only 28.8% of 2026 pairs are within ±8% tempo.
+- **Signatures (2026):**
+  - 111 of 135 files are empty, with the warning "no analysis or stems": they were cut before the stems existed.
+  - 23 songs have candidates (51 in all), and 14 have an automatic pick. The user vetted none.
+  - They played in 0.8% of simulated transitions; the requirement says about 5%.
+  - `signatures.py` keeps existing files, so a plain prep won't refill them: rerun with `--force`.
+- **Suspense:** built (A loops, the drum hovers over 3 pending songs, Decoy teases). From Hold music, or after A's exit (D177), there is no hover and no Decoys.
+- **Music:**
+  - Hold music has only the 3 `error` tracks, so a long Parlem (the 40 s switch) plays a synthesized chiptune placeholder (audio/holdmusic.ts:368, :416-418; U20, U205).
+  - Back, and a Spin cancelled by Back, play the error music (show.ts:2290).
+  - 1 victory track. The intro track (Parasail) is flagged `weak_seam`. Breaks 50 tracks, Pausa 37.
+  - **No doors music:** MUSIC_SETS has none, and the `doors` slider controls no sound (packages/protocol/vocabulary.ts:222, :256-257). This is against event.md:131 and show-and-music.md:150.
+- **Voices:** all 23 cues are placeholders (macOS `say`; data/out/voice/index.json `placeholder: true`), and `data/media/voice/` doesn't exist. The `start` cue is never played (U173).
+- **The drum roll:** synthesized snare noise. It is the only pad-hold effect; the others are names only (U178).
+- **A listening pass must cover:**
+  - the early cuts R1, R2, D8 and D20 (most of the night);
+  - phrase landings on the real 2026 hooks;
+  - a late or final Suspense release (the orchestra hit, the 5-bar wait) and the Decoys' level;
+  - R8, D10 and D16 with live renders on the show laptop;
+  - the 14 Signatures;
+  - how often call and response comes;
+  - the synth risers, rolls and impacts against real songs;
+  - Aguanta's loop and the Count-in;
+  - R10 and D2 in final;
+  - Hold → resume, and a manual Next waiting up to 11 s;
+  - the placeholder Hold music and voices.
+
+### 2. Presenter actions: the engine's side of "the console logic is very bad"
+**Wrong:**
+1. **(ran) Parlem in a Line's Celebration starts the next song.**
+   - The Celebration's state is `status: 'hold'` with `hold.ducked: true` (flowHold, show.ts:2550), so the console reads Parlem as on and its tap sends `hold {on:false}`.
+   - celebrationHold then releases a Line into `next()` (show.ts:3143, :2198).
+   - Requirement: Parlem only ducks the Celebration's music (D117, show-and-music.md:98).
+   - Aguanta there also just ducks, because `duck` is ignored (show.ts:923-926).
+2. **(ran) Back after a Check's cue leaves the round stuck.**
+   - `back` is allowed anywhere in a Check (scenes.ts:66), and its undo clears the Check and `celebrationNext` (show.ts:2358, :2710-2720).
+   - In the 3 s after a failed last card, the scene stays `check` with nothing to check. next, newRound and roundIntro are then refused; only a new claim or endGame gets out.
+   - After "one passed, the last failed", the Winner is recorded but its Celebration never comes (show.ts:2874-2875).
+   - Requirement: show-and-music.md:90. U104 is open.
+3. **(ran) Pausa from Aguanta blocks Next.** setPause keeps the Aguanta Hold (show.ts:3628-3659), so Next is refused `nextBlocked` (show.ts:913). Requirement: during Pausa, Següent plays the transition (show-and-music.md:87, D128).
+4. **(ran) The two-level lock is too wide.** It refuses every hold, pause and suspense from the other consoles, whichever button is held (show.ts:898). screens.md:188 says the other two-level button works as usual.
+5. **`newRound` while a song plays loses its intro track.** stopAll's release 330 ms later kills the intro on the same player (main.ts:840-848, :527-532), and the watchdog brings the chiptune (main.ts:1030-1047).
+6. **(ran) Aguanta isn't always Aguanta.**
+   - Pressed in a Spin's last 0.15 s it becomes Parlem (show.ts:2370, :2173).
+   - Pressed on Hold music it silently stays Parlem, and Next still goes through (show.ts:2182).
+7. **(ran) Tapping Parlem off while Hold music plays lands the next song** (show.ts:2198).
+8. **Confusing:**
+   - every newRound resets an unlocked Pace to 14 s (show.ts:1291);
+   - phaseOverride is never reset between rounds;
+   - `newRound` is allowed in play and in a Line's Celebration (scenes.ts:73), so one mis-press throws the round away with no discard journaled;
+   - roundIntro is refused in play, so a round that ends without a Bingo reaches the next intro only through newRound or endGame;
+   - endGame leaves undecided claims open;
+   - a Line's Celebration never ends by itself, even with auto-advance on (show.ts:2572);
+   - a Bingo's Celebration goes to the Interval after 60 s even with Parlem on;
+   - a storm started in the last round stops when a claim opens the Check (show.ts:2534);
+   - the +50% slot for a landing that probably completes a card applies in every Phase (config.ts:172).
+9. **After the last round's Bingo** the engine still enters an Interval, whose big button would introduce a round 13 (`isLastRound`, show.ts:3612-3614; not verified on a device).
+
+**Matches the requirements:**
+- Next: busy while a Spin or decode runs; a phrase wait of up to 11 s; refused in Aguanta and Suspens; ends Parlem and Pausa; after Barreja in roundStart.
+- Suspens, Pausa (except item 3), Enrere and checkBack.
+- Claims (the pad, several cards, the private unknownCard), the paced Check, its Review and its four outcomes.
+- The Celebration's music, confirmLine, auto-advance with the Pace and Drift, Panic, interval, intervalSkip and throw.
+
+**The Desgraciat finale:**
+- Built (show.ts:3005-3104), not only sketched. The "NOT BUILT" line further down is stale.
+- Its requirements contradict each other: no public Check (game-rules.md:61) versus «Comprovar #57» (screens.md:77).
+
+**Defaults placeholdered by open questions:**
+- U85 and U166: −32 dB under a Check.
+- U99: the intro music's span.
+- U104: the remote's long press undoes a landing inside a Check.
+- U105–U114, the Pausa defaults: a Suspense is cancelled; Aguanta comes back as Parlem; Pausa works in a Check with its marks kept (protocol.md:134 wrongly says the Check is re-queued); a Celebration resumes at its own level; paused time counts as lost.
+- U173, U178, U205, U20.
+
+### 3. The night's flow, doors to end
+- **Boot:**
+  - A fresh Game is `locked` in `before`.
+  - The resume order is Admin's resume.json, then the local journal (≤ 12 h), then the cloud's Game (≤ 12 h). `fresh=1` skips all three.
+  - Since a74f7faa the URL drops `fresh` at the first stored entry. That entry is the constructor's `round.started` (show.ts:866), so it's dropped at page load, not at the click; the comment at main.ts:388-389 is wrong.
+  - `autostart` does not skip the Start click; README:58 and this file's run section are wrong.
+- **Silence:**
+  - `before` plays nothing: unlock only sets `idle`, and the watchdog ignores `idle` (main.ts:1031, :1040).
+  - A resumed `play` Game is silent until Next, because restore() enters no Hold (show.ts:1496-1535).
+  - Both contradict "the music never stops" (show-and-music.md:126).
+- **The doors:**
+  - The countdown cues need the plan's `startAtMs`. They fire only after unlock, from `doorsAtMs`, and drop when 60 s late. Nothing starts by itself at `doorsAtMs` or `startAtMs`.
+  - From the doors to round 1 the only way is ☰ → «Començar la nit», which sends `roundIntro(1)`.
+  - The doors' big button is «Llançament», the throw.
+  - On the show page, → and Enter send Next, which is round 1 directly.
+- **No welcome moment:**
+  - «Començar la nit» *is* Quina 1's intro: its fanfare, voice and prizes.
+  - Its intro bed (−14 dB, looping) plays under the whole prize reading and the Shuffle until the first Spin (U99 (a)).
+  - So a welcome given after pressing it runs over Quina 1's music and cues, which is the "intro music under the presenters' talk".
+  - The welcome's `start` cue is never played.
+- **Breaks:**
+  - A Line's Celebration ends with Next. A Bingo or standing Celebration goes to the Interval on a press or after 60 s.
+  - The breaks set plays at −6 dB. "Tornem en dos minuts" plays only before a planned throw.
+  - The next round only starts by hand.
+  - Desgraciat and Especial kinds come only from the plan; without one, every round is normal.
+- **The end:** `endGame` is manual only (the menu's long press), to `after`: the end set and the goodbye.
+- **Startup docs disagree:**
+  - the runbook never mentions the Start click or «Començar la nit»;
+  - README:51 says "Start show, then → Next", which skips the intro;
+  - the runbook's step numbers disagree (:65 vs :76);
+  - its crash row's "Press Next" is pressed by `autostart` anyway;
+  - a relaunch from a launch command carrying `&fresh=1` starts a new Game;
+  - the preflight's and setup's commands lack `--repertoire 2026` (runbook :26, :56).
+- **A stale kiosk acts as a second show page:** the relay forwards every command to every `show` client and caches the state from any of them (relay/server.ts:579, :586-588).
+
+### 4. Prep and the 2026 repertoire
+- **Songs:** 135. Pool 1 has 70 (1–70); pool 2 has 70: 65 of its own plus 5 shared (#5, #44, #46, #54, #62).
+- **Hooks:**
+  - 0 approved. Every song has one provisional best hook (D227, bulk-approved). The engine plays them like approved ones; Backend's preflight warns.
+  - Flags for the approval pass: bar phase changes 23, librosa disagrees 23, metre ambiguous 13, tempo unstable 7, half time guessed 6, irregular grid 4 (#17, #77, #86, #91), best hook ambiguous 1 (#51).
+- **Stems, snippets, keys:** stems 135/135, windowed around the provisional hook, so they need redoing where a hook moves. Snippets and keys 135/135. Signatures: see 1.
+- **Quality:** 6 flags. Kept: #73 (95 kbps) and #133 (+9.8 s). Not confirmed by the user: #90 and #117 (low bitrate), #18 and #83 (remixes).
+- **Before the cards:**
+  - the organizers' layout (U212);
+  - the quality flags settled (a swap needs a download, prep and an R2 push, and no song can change after printing);
+  - the real cards: `2026.json`'s `cardsJson` still points at the temporary 699.
+- **Before the tech rehearsal:**
+  1. re-cut Signatures with `--force` (can be done now);
+  2. hook approval, U14: about 2 minutes a song, about 4.5 h for 135. The quick-review mode (U56) isn't built;
+  3. prep again (stems for moved hooks, Signatures `--force`), then Backend pushes to R2;
+  4. the user vets the Signatures;
+  5. the listening pass, U13;
+  6. real voices and real Hold tracks;
+  7. the Hold, Pausa and break music moved into the repertoire (designed with Backend first).
+- **Stale:** the "Next" section further down (`data/pools/2026.json`, downloads on 1–3 Dec) predates the final playlists. songs-and-cards.md:57 and :60 and U14's text say a song can't play until its hook is approved; that's wrong since D227.
+
+### 5. Reported as done that isn't fully done
+- **"Phrase alignment, 99%"** (633649a) counts bars from hooks that are all provisional on 2026. No one has heard it on this repertoire.
+- **"Signatures auto-picked" (3e47471):** on 2026, 14 songs and 0.8% of transitions; 111 files are empty.
+- **"Vocals, call and response" (f4d0870):** a weighting, not traded lines.
+- **"The intensity range by Phase" (3ed3a6a):** every Suspense release bypasses it.
+- **"The music never stops":** `before` and a resumed Game are silent until Next, and newRound loses its intro track.
+- **The presenter actions in §2, items 1–4, 6 and 7:** shipped as working, and wrong.
+- **Voices, Hold music and every effect sound:** placeholders or synths.
+- **The Desgraciat finale:** built, but this file says NOT BUILT further down, and its rules contradict each other.
+- **Today's work:**
+  - `state.beat`, `announceWins`, the test tools, the logo rule, the one-shot `fresh` and the relay's LAN re-print;
+  - built and unit-tested; the beat and `announceWins` were in the user's test build;
+  - the `fresh` comment is wrong (§3).
 
 ## Now (kept current at each milestone)
 
