@@ -166,7 +166,8 @@ const store = (key: string, value: string) => {
   } catch {}
 };
 // The Game journal: kept in this browser's storage so a reload resumes the Game. A test show with a fixed
-// Queue (`?queue=`) or `?journal=0` keeps it in memory only; `?fresh=1` starts a new Game (the old journal stays).
+// Queue (`?queue=`) or `?journal=0` keeps it in memory only; `?fresh=1` starts a new Game (the old journal stays), once:
+// the URL drops it when that Game's first entry is stored (dropFreshParam).
 const browserStorage = (): KeyValueStorage | null => {
   try {
     return localStorage;
@@ -383,6 +384,18 @@ async function boot() {
 }
 
 /**
+ * `?fresh=1` is one-shot: once the new Game's first entry is in this browser's journal, the URL loses it, so a reload
+ * (⌘R, a crash, a testReset's tab later) resumes that Game instead of starting yet another one. Before that entry (no
+ * click yet) a reload still starts a new Game.
+ */
+function dropFreshParam(): void {
+  if (!persistJournal || !new URLSearchParams(location.search).has('fresh')) return;
+  const url = new URL(location.href);
+  url.searchParams.delete('fresh');
+  history.replaceState(history.state, '', url.href);
+}
+
+/**
  * The relay's test mode (`relay.mode`, its `--test`: rehearsal test runs only, never on the night). Only then does this
  * page act on the test tools (TEST_COMMANDS); it starts off on every (re)connection, until the relay says.
  */
@@ -472,7 +485,9 @@ function apply(effect: Effect): void {
     case 'sfx':
       return void playSfx(effect.name, effect.at, graph.vol[effect.volume]);
     case 'journal':
-      return journal.append(effect.entry);
+      journal.append(effect.entry);
+      dropFreshParam();
+      return;
     case 'journalRequest':
       bus.emit(makeEvent({ type: 'journal.entries', reqId: effect.reqId, gameId: journal.gameId, entries: journal.entries.filter((e) => e.seq >= effect.fromSeq) }));
       return;
