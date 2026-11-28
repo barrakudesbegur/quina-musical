@@ -83,7 +83,7 @@ The presenters can do any of these at any time, from the console or the Wii remo
 | On the console | What it does | Wii remote |
 |---|---|---|
 | "Següent" | The next song now. Ignored while a transition is running, so a double press does nothing | A |
-| "Parlem" | **Hold:** nothing lands by itself, even with the auto-advance on, and the music ducks under the presenters' voices: for something important, not every remark (D142). A long Hold switches to Hold music. "Següent" ends it | − or + (tap) |
+| "Parlem" | **Hold:** nothing lands by itself, even with the auto-advance on, and the music ducks under the presenters' voices: for something important, not every remark (D142). The ducked song keeps playing and loops near its end, as in Aguanta: a Hold never switches to Hold music and never starts Pausa by itself (D318). "Següent" ends it | − or + (tap) |
 | "Pausa" (hold "Parlem") | **Pause:** available at any time. No song lands, the Pausa music plays, and the projector and phones show "Tornem de seguida". The playback in progress is saved; when Pausa ends it resumes, with Parlem still on (D128). While it's on, A turns it off, and the tablet's "Següent" plays the transition into the next song. During a Check, this hold sends the Check to review instead | − or + (hold) |
 | "Aguanta" | **Stay:** no song lands, and the current song keeps playing at full volume, looping a phrase, for dancing and crowd moments. "Següent" is disabled while it's on (D133) | B (hold) |
 | "Suspens" (hold "Aguanta") | **Suspense:** the current song keeps playing while the build grows, and the drum hovers over about 3 pending songs while their Decoys tease. Letting go lands the real next song on the phrase. It releases by itself after about 30 s, and never starts by itself. "Següent" is disabled while it's on (D133) | B held plus A held (A first works too: B while A is still held turns the starting transition into a Suspens, D176), or (if the shake gesture is on) 3 strong shakes; 3 vibrations, and letting go of A before the third cancels it back to Aguanta; after it, letting go of B lands it (D144, D147). The shake is on by default, and the window is about 1.5 s (D148). With manual advance, holding B starts it at once: 3 vibrations, and letting go before the third cancels it, after it lands it (D145) |
@@ -124,7 +124,7 @@ _From event.md › One round, Timing; the mixer decisions › Pace, auto-advance
 _From event.md › Claims and checks, Atmosphere and style; the decisions doc › Rules (Check, Celebration)._
 
 - **The music never stops,** unless the silence is intended: during claims, pauses and Intervals too.
-- **Hold music** is looping background tracks, such as a video-game waiting tune. It takes over during a long Hold.
+- **Hold music** is looping background tracks, such as a video-game waiting tune. It never takes over during a Hold (D318); outside Pausa it plays only where a presenter asks for it (the remaining cases go to the user, D318).
 - **The Check's sound:**
   - the card's songs play in the card's order, each when a presenter reveals it (D107), from its hook on and into the rest of the song until the next reveal, a step back or the Check's end; near its end it loops its last phrase, as in Aguanta (D239, D314). A Pausa saves it and brings it back;
   - a song that has landed gets ✓; one that hasn't plays briefly "broken" (a short warble or bitcrush, never annoying) and gets ✗;

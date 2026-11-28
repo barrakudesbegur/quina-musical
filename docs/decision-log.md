@@ -1041,7 +1041,7 @@ By: the user. Source: the user's message of 26 Nov. Lives in: docs/status.md.
 "Escanejar el QR del cartró" opens the camera in the drawer and reads the card's QR. The number is filled in, and the name and icon already picked are kept. It needs a board for the camera view first, a camera permission prompt, and a small QR-reading library, since iPhones' Safari can't read QR codes on its own. Answers U115.
 By: the user. Source: open-questions.md › Answered (U115). Lives in: requirements/screens.md › Player app.
 
-### D142 · What Parlem and Pausa are for; "Següent" ends Parlem · 2026-11-26 · Active
+### D142 · What Parlem and Pausa are for; "Següent" ends Parlem · 2026-11-26 · Active; amended by D318
 The user's reasons, recorded so they aren't lost again:
 - **Parlem:** the presenters normally talk over the music at full volume. Parlem is for when something important needs saying: it gets the crowd's attention and makes the message easier to hear. It isn't meant to be switched on and off for every remark. While it's on the game doesn't move on (nothing lands by itself, even with the auto-advance on), and "Següent" ends it, because while saying something important they never want the game to carry on in the background.
 - **Pausa:** the next level. The sudden change of mood gets even more attention and makes it clear the normal flow has stopped for a while. Soft music plays, because complete silence would feel like an error or a bug.
@@ -1619,11 +1619,11 @@ By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: requi
 The user sorts the playlists with an online tool, and asked to "check the order is right and use that for the ids". That tool sorts letter by letter, ignoring spaces and punctuation, and both final playlists are exactly in its order (Sound engine, 27 Nov). So the ids follow the playlists as they are, and U58's convention is letter by letter, not the word-by-word default. Pool 1 is 1–70 and pool 2 starts at 71.
 By: the orchestrator, applying the user's instruction of 25 Nov. Source: Sound engine's report of 27 Nov. Amends: D103. Lives in: requirements/songs-and-cards.md › The pool.
 
-### D239 · A song the presenters let play loops; it never hands over by itself · 2026-11-27 · Active; Parlem Pending (U205)
+### D239 · A song the presenters let play loops; it never hands over by itself · 2026-11-27 · Active; amended by D318; Parlem Pending (U205)
 "When the presenter lets a song play it should always loop and not switch to pause music." The user's test ran a 25 Nov build, but Sound engine found the rule broken in today's code in two places, now being fixed:
 - Aguanta on a song with no 4- or 8-bar phrase in reach;
 - manual advance with no Hold, at the song's end.
-In both, the song loops its last phrase, or its last 4 bars when it has no phrase, until a presenter moves on. Parlem's 40 s switch to Hold music is U205. The other two things the user heard were the old build: Pausa as agreed (D128, D135) and Pausa playing the throw song or the intro.
+In both, the song loops its last phrase, or its last 4 bars when it has no phrase, until a presenter moves on. Parlem's 40 s switch to Hold music is gone (D318). The other two things the user heard were the old build: Pausa as agreed (D128, D135) and Pausa playing the throw song or the intro.
 By: the user. Source: the user's message of 27 Nov; Sound engine's check of 27 Nov. Lives in: requirements/show-and-music.md › The presenters' actions.
 
 ### D240 · Sessions delegate the work to subagents · 2026-11-27 · Active
@@ -2045,3 +2045,11 @@ By: the user. Source: the user's message of 28 Nov. Amends: D190, D315. Lives in
 ### D317 · Money-only sponsors show in their round's Celebrations (the orchestrator's default) · 2026-11-28 · Active; the user may overrule
 U241, decided as the obvious default after the user said follow-ups with obvious answers shouldn't be asked: the sponsors who gave only money are spread evenly through the rounds in plan order and show as stickers in their round's Celebrations on the projector, beside the sponsors who gave the prize (D312). Admin shows the result.
 By: the orchestrator. Source: D312. Lives in: requirements/screens.md › Projector.
+
+### D318 · Parlem never switches to Hold music: the ducked song loops · 2026-11-28 · Active
+Answers U205 with (a), to quina-musical-f5: "I consider this a bug: Under Parlem, today's engine lets the ducked song give way to Hold music after 40 s («Música d'espera»), if presenters want to pause, they have the button to pause, parlem should not put pause mode. puting pause music while it is not pause mode is wrong! in any case it should enable pause, not simply put pause music without being paused. but i dont want auto pause in this case."
+- Under Parlem the ducked song keeps playing and loops near its end, as Aguanta does (D239). The 40 s switch to Hold music goes, and Parlem never starts Pausa by itself.
+- The «Música d'espera» setting (`game.holdMusicOn`, `holdMusicAfterSec`) has nothing left to control and is removed from the engine, the protocol, the console and Admin; old journals stay restorable.
+- The same rule, no Hold music outside Pausa unless a presenter asks for it: Parlem or Enrere during a Spin whose exit has started brings the outgoing song back, as Aguanta does since f2b6dda. The other paths that still play Hold music outside Pausa (Enrere from rest after its rewind, a failed Check's error Hold music, a Hold with no song) go to the user next, through f5.
+- Being built by quina-musical-f5; a protocol change, so the console, Admin and the cloud's fixtures must still typecheck (f5 tells Backend first if it reaches apps/cloud).
+By: the user (to quina-musical-f5). Source: its report of 28 Nov. Amends: D239, D142. Lives in: requirements/show-and-music.md › The presenters' actions, Hold music and the Check's sound.

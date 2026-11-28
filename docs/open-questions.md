@@ -144,11 +144,6 @@ In a stack such as Ajustos → the add-card pad, ✕ closes every drawer at once
 - (a) Keep it: ✕ closes the whole stack, and ‹ goes back one level.
 - (b) ✕ closes only the top drawer.
 
-### U205 · Parlem's switch to Hold music after 40 s
-The user: "When the presenter lets a song play it should always loop and not switch to pause music." D239 does that for Aguanta and for manual advance. Under Parlem, today's engine lets the ducked song give way to Hold music after 40 s («Música d'espera»), and at its end. Hold music exists for long waits, so a long Hold doesn't loop the same few bars for minutes. But there are no real Hold tracks yet: data/media/hold has only error tracks, the win, the intro and the throw (U20), so today it would be a synthesized placeholder.
-- (a) Parlem keeps the ducked song looping too, and the 40 s takeover and its switch go.
-- (b) Keep the 40 s takeover, with real Hold tracks added (U20).
-
 ### U214 · The grill format outside the card design session
 On 26 Nov the user told the orchestrator not to use the grill format. On 27 Nov, in the card design session, they asked for it ("the skill to check is grill with docs": numbered ❓ rounds, each with a ➡️ recommendation, worded so "yes" accepts it). On 28 Nov they restarted the orchestrator with "plain questions (one numbered question, one set of options, a recommendation)".
 - (a) The grill format only in a card design session; plain questions in every other session. The default meanwhile.
@@ -324,6 +319,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U205 · Parlem's switch to Hold music after 40 s** (2026-11-28) → D318: (a), the ducked song loops; no Hold music or Pausa by itself.
 - **U242, U243 · The winner's phone; the Desgraciat's end on phones** (2026-11-28) → D316: the same ribbon on every phone; «Tenim desgraciat!».
 - **U241 · Where the money-only sponsors show** (2026-11-28) → D317: their round's Celebrations (the orchestrator's default).
 - **U237 · The phones in a Check and a Celebration** (2026-11-28) → D315: no Celebration screen; the Check's ribbon shows the result (U242, U243 follow).
