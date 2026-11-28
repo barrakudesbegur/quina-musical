@@ -35,6 +35,7 @@ This page explains the event: what happens on the night, who does what, and how 
 - **Entry is free.**
 - **Our income:** the bar (drinks and snacks) and the cards.
   - 2025 bar prices: water 1.50 €, soft drinks 2 €, beer 2.50 €, mixed drinks 5–6 €, crisps, popcorn and nuts 1–1.50 €, hot chocolate 2 €, a slice of pizza 3 €.
+  - 2026's food: crisps, popcorn, salted peanuts, kikos, palitos, olives, corn, cheese, fuet or llonganissa, sandwiches (cheese and ham, or Nutella) and pizza slices. Hot chocolate was considered and dropped; the bar's list of 22 November has cups, spoons and a ladle for broth instead.
 - **The bar takes cash and card.** It has two card terminals and a cash box in the middle. A token system (buy tokens, swap them for drinks) is only used at big parties.
 - **Sponsors** give prizes for free, and some give a small amount of money (for example 50 €). We spend it, and our own money, on items for the prize hampers.
 - **Licences:** the association holds the licences needed to play recorded music in public.
@@ -50,10 +51,11 @@ This page explains the event: what happens on the night, who does what, and how 
 - **The venue:** a large pop-up tent on a town square (2025: Plaça Esteva i Cruañas).
   - It's cold, so we ask for heaters.
   - The town council lends:
-    - tables and chairs for about 300 people;
-    - bars, fridges and tents;
-    - power, extension leads and bins;
-    - two speakers and two microphones.
+    - tables and chairs for about 300 people; 2026's request asks for thin tables, trestles and chairs for 400;
+    - bars, fridges and tents (2026: 4 wooden bars, 5 folding tables, 4 fridges and as many tents as there are);
+    - power, extension leads and bins (2026: a power point, 4 extension leads, a plastic container, and bins for cardboard, glass and organic waste);
+    - two speakers and two microphones (2026: "powerful" speakers);
+    - lighting on the square (asked for in 2026).
 - **Internet:** there's no Wi-Fi, but there's good 5G mobile data. Phones can share a hotspot. A router isn't an option.
 - **Sound:** two big speakers on stage and a simple mixing desk. There's no sound team.
   - In 2024 the sound was too quiet at the back. We want a stronger system and a sound check beforehand.
@@ -229,10 +231,12 @@ This page explains the event: what happens on the night, who does what, and how 
   - one headline item: a ham, or an appliance such as a coffee maker, an air fryer, earbuds, a toaster or a griddle, and a TV for the Especial;
   - Christmas staples: chocolate, panettone, turrón, neules, wine, cava, fruit, rice, tomatoes, fuet and a Barrakudes T-shirt;
   - vouchers and products from several sponsors.
-- **The Line's prize:** something small. 2024: a bottle of white wine, a fuet, neules and a small sponsor prize.
+  - 2026's shopping list: 12 baskets; 12–13 of each staple (hot chocolate powder, panettone, Raffaello, turrón, biscuits, neules, cava, white and red wine, pineapple, rice, melindros), 5 hams and about 60 fuets. The appliances for the normal hampers and for the Desgraciat's are still to be decided.
+- **The Line's prize:** something small. 2024: a bottle of white wine, a fuet, neules and a small sponsor prize. 2026: 20 paper bags, each with a bottle of white wine.
 - **Sponsors:** local businesses such as restaurants, food shops, pharmacies, shops, estate agents, hotels and services.
   - They give products, vouchers or money. Barrakudes also gives some prizes.
-  - 2024: 34 sponsors. 2025: about 55.
+  - 2024: 34 sponsors. 2025: about 55. 2026 (the sheet on 28 November): 104 businesses asked; 69 take part, 14 are waiting to answer, 3 said no and 18 haven't answered; 7 of those taking part give money.
+  - **Their logos** show as die-cut stickers (D287). A logo printed in white on a coloured box is cut out of the box and recoloured in the box's colour, darkened until it reads on the sticker's white (the user, 28 November). When a sponsor sends no logo this year, last year's is used. The organizers' Drive keeps each logo three ways: the original, a transparent version and its sticker.
 - **Tracking:** the organizers keep a spreadsheet with each sponsor's category, what they give, the logo, whether it was delivered, who holds it, pending tasks (some prizes are picked up on the day itself) and which Instagram post features them.
 - **Instagram:** before the night we publish the poster and several posts thanking the sponsors (2025: 6). In 2024 everything went up at the last minute; we want to start earlier.
 - **Assigning prizes to rounds:** about 3–4 days before the night. A sponsor may still bring a prize on the day, so the assignment can change during the night.
@@ -361,6 +365,8 @@ This page explains the event: what happens on the night, who does what, and how 
   - buy the hamper items and baskets;
   - file the town council request: tent, heaters, furniture, power, bins, speakers, microphones;
   - publish the poster with a clear date, then the sponsor posts.
+- **2026's deadlines** (the organizers' task list): the sponsors contacted by 22 November; the town council request and a check of the storeroom's stock by 1 December; the cards made by 5 December and printed by 12 December; the stock and material lists and the crisps order by 6 December; the baskets and the Line bags by 7 December; the hampers' food in the last week; a social post every 2–3 days.
+- **What gets printed** (2026's material list): the cards; price posters for the cards and the Quines; a sheet of each round's prizes; the winners' tickets for the hampers; sponsor sheets to hang up. The team also needs pens, paper and the list of Quines.
 - **After the playlist is final:** generate the cards and print them well ahead.
 - **3–4 days before:** assign the prizes to rounds and build the hampers.
 - **Days before:** rehearsals, including the presenters.

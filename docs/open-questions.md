@@ -349,9 +349,9 @@ D113 lets R2 go past the free 10 GB. Backend can't see billing. In Cloudflare: M
 ### U14 · Approve this year's hooks · before the first rehearsal
 On the audition page: about 2 minutes a song, so about 3 hours for 90 songs, and about 4.7 hours for 140 unless U56 cuts it. A song can't play until its hook is approved. It starts once the playlist is handed over and prepared (D80).
 
-### U16 · Upload the logo library in Admin
-It needs your Google login: Admin → "Pujar logos a la biblioteca" with the cleaned logos in `temp/logos-clean/`, then "Triar de la biblioteca" per sponsor. Two logos are small sources; ask those sponsors for bigger ones.
-Two sponsors have no logo file at all in the organizers' list: s-and-s and peixos-arnau (Backend, 28 Nov); ask the organizers for them. Verdures Andreu's was doubled; Backend cropped it and put it in the plan (49352964).
+### U16 · Check the sponsors' cleaned logos
+`temp/logos-2026/comparison.png` shows each sponsor's original, transparent logo and sticker, made by `tools/logos/prepare.py` from `data/editions/2026.logos.json` (28 Nov). Once you've checked them, and fixed any in ArtCraft, the transparent ones are uploaded and written into the plan with `npm run edition -- logos data/editions/2026.plan.json --from temp/logos-2026/upload.json --dir temp/logos-2026/transparent --yes`, then the plan is uploaded. No Google login is needed.
+Still without a logo: 1701, Arran de Mar, Begur Jewellery, Estanc Begur, LocadeAmor, Pet Love, Pou Nou, S&S and Peixos Arnau (an online search is running). Small sources: Begur Dive, Carbó, Kumade, Villas Begur, Set Vetes, Tocineria Mario and La Palma.
 
 ### U18 · The night's plan in Admin · before the first rehearsal
 Rounds in order, a card type and side per round, prize bundles, sponsors, the doors' time and the throws. Since D116 it goes in through the edition file (U68–U75).
