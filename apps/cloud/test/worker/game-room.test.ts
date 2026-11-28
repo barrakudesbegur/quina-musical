@@ -636,6 +636,35 @@ describe('the Game plan and its media (Admin)', () => {
     expect((await SELF.fetch(`${BASE}/media/not-a-hash.png`)).status).toBe(404);
   });
 
+  // Screens draw sponsor logos onto a canvas and read its pixels (the stickers, D287). A canvas that drew a
+  // cross-origin image without CORS is tainted and can't be read, so /media/ must stay on the screens' own origin
+  // (this Worker serves both; on the laptop the relay serves both), and nothing may forbid reading it from there.
+  it('logos stay same-origin with the screens: the plan names them root-relative, served from the player page\'s origin (D287)', async () => {
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 2, 8, 7, 1]);
+    const uploaded = await SELF.fetch(`${BASE}/api/media?name=Forn`, { method: 'POST', headers: { 'content-type': 'image/png' }, body: png });
+    expect(uploaded.status).toBe(201);
+    const { path } = (await uploaded.json()) as { path: string };
+    // Admin's upload answers a root-relative path, and that is what the plan keeps and the screens get.
+    expect(path).toMatch(/^\/media\/[0-9a-f]{32}\.png$/);
+    expect((await put({ ...PLAN, sponsors: [{ ...PLAN.sponsors[0], logo: path }] })).status).toBe(200);
+    const { plan } = await getJson<{ plan: GamePlan }>('/api/plan');
+    const logo = plan.sponsors[0]?.logo as string;
+    expect(logo).toBe(path);
+
+    // The logo as a player page resolves it: on the page's own origin. (Here the Worker never sees the static pages;
+    // test/node/static.e2e.test.ts fetches the page and the logo from one `wrangler dev` origin.)
+    const pageUrl = 'https://quina.example/26/123';
+    const logoUrl = new URL(logo, pageUrl);
+    expect(logoUrl.origin).toBe(new URL(pageUrl).origin);
+    for (const url of [logoUrl.href, logoUrl.href.replace(/\.png$/, '.jxl')]) {
+      const served = await SELF.fetch(url);
+      expect(served.status, url).toBe(200);
+      expect(served.headers.get('content-type'), url).toMatch(/^image\//);
+      // No Cross-Origin-Resource-Policy, or one that still lets the screens' own origin read it.
+      expect([null, 'same-origin', 'same-site', 'cross-origin'], url).toContain(served.headers.get('cross-origin-resource-policy'));
+    }
+  });
+
   it("the tablet's sliders fold into the plan's volumes, for the next fresh Game; a plan saved elsewhere, or an older Game, can't undo them (D139)", async () => {
     expect((await put(PLAN)).status).toBe(200);
     const { client: link } = await laptop('g-volumes-old');

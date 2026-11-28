@@ -9,7 +9,7 @@ import { startDevServer } from '../../loadtest/dev-server.ts';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
 
-test("static files: the kill switch for last year's service worker is never cached; _headers stays private", async () => {
+test("static files: the kill switch for last year's service worker is never cached; _headers stays private; a card link's page and its logos share one origin", async () => {
   const server = await startDevServer();
   try {
     const sw = await fetch(`${server.http}/sw.js`);
@@ -22,6 +22,16 @@ test("static files: the kill switch for last year's service worker is never cach
     const page = await fetch(`${server.http}/26/123`, { headers: { accept: 'text/html', 'sec-fetch-mode': 'navigate' } });
     assert.equal(page.status, 200, 'a card link opens the player (SPA fallback)');
     assert.match(await page.text(), /<html/);
+    // A logo the plan names (/media/…) comes from the page's own origin: canvases read its pixels (the stickers, D287).
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 5, 4, 3, 2]);
+    const uploaded = await fetch(`${server.http}/api/media`, { method: 'POST', headers: { 'content-type': 'image/png' }, body: png });
+    assert.equal(uploaded.status, 201);
+    const logo = new URL(((await uploaded.json()) as { path: string }).path, page.url);
+    assert.equal(logo.origin, new URL(page.url).origin);
+    const served = await fetch(logo);
+    assert.equal(served.status, 200);
+    assert.equal(served.headers.get('content-type'), 'image/png');
+    assert.equal(served.headers.get('cross-origin-resource-policy'), null);
   } finally {
     await server.stop();
   }
