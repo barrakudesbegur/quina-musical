@@ -1874,7 +1874,7 @@ Boards only; not a go to build. A (§8 Y2) is polished before the final decision
 - **Canvas fixes, in code now:** the phone's Check ribbon moves off the now-playing card and gets smaller; the winner's «Quina potra!» card header fits on one line.
 By: the user (to Frontend, on canvas v123). Source: Frontend's report of 28 Nov. Lives in: requirements/screens.md › Player app.
 
-### D287 · The sponsor logos are stickers, packed around «QUINA!» · 2026-11-28 · Active; amended by D309, D312, D315, D321; not a go to build
+### D287 · The sponsor logos are stickers, packed around «QUINA!» · 2026-11-28 · Active; amended by D309, D312, D315, D321, D328; not a go to build
 After seeing the board: "i really like the sponsor stickers, and they should also show in the player app. would be nice you use some kind of library/algorythm that places them together dynamically based on their sizes and space available (including around the QUINA! in the projector, not just under it), and within some rotation and size thresholds". So a Celebration's sponsor logos are die-cut stickers, on the projector and the phones, packed as a collage by a layout algorithm that uses the free space (around «QUINA!» on the projector, not only under it), within rotation and size limits. Frontend builds a shared, tested packing module and boards rendered from it, and plans how stickers are made from the real logos (it may touch Admin's logo import or Backend's storage: owners reported, nothing wired). Not wired into the live Celebrations until the user says build. Still open: a bundle with no sponsor at all shows nothing or the gift sticker. Amends D285 ("logos as stickers: not now").
 By: the user (to Frontend, on the canvas). Source: Frontend's report of 28 Nov. Lives in: requirements/screens.md › Projector, Player app.
 
@@ -1983,7 +1983,7 @@ Answers U235 with (a), `Projector-Descans`, changed: "remove the "Tornem d'aqui.
 Frontend draws it (side by side with today's board) before building.
 By: the user. Source: the user's message of 28 Nov. Lives in: requirements/screens.md › Projector.
 
-### D309 · Every sponsor, everywhere, as a sticker · 2026-11-28 · Active
+### D309 · Every sponsor, everywhere, as a sticker · 2026-11-28 · Active; amended by D328
 "sponsors should use the new stickers format we're making. (all sponsors should always use the sticker format)". Wherever sponsors show to the public, on the projector and the phones (before the night, the Break, the end of the night's credits, the phones' Premis drawer, a Celebration), they're die-cut stickers from D287's module and the sticker logos being prepared now (the logos session). Amends D285 ("logos as stickers: not now") and D287 (stickers only in the Celebrations).
 By: the user. Source: the user's message of 28 Nov. Amends: D285, D287. Lives in: requirements/screens.md › Projector, Player app.
 
@@ -2089,3 +2089,10 @@ By: the user (to quina-musical-79). Source: its report of 28 Nov. Amends: R2-Q26
 ### D327 · The A3 test sheets: one per card type, its last six numbers (the orchestrator's default) · 2026-11-28 · Active; the user may overrule
 D306's "the last numbers of each run", read as the obvious default: one A3 sheet per card type, each holding that type's last 6 cards (normal #394–399 on blue, special #694–699 on pink), since each type prints on its own colour of paper; both sides, as the A3 layout prints. They're the same numbers, songs and QR codes as those A4 cards, which stay off sale with the user (D306). The generator makes them with their own option, beside the A4 run.
 By: the orchestrator. Source: D306. Lives in: requirements/songs-and-cards.md › Numbers and amounts.
+
+### D328 · The screens show the prepared sticker files, all at one common scale · 2026-11-28 · Active
+The logos session asked whether the screens should keep cutting stickers in the browser (D287's die-cut) or show the stickers prepared in tools/logos. The user first leaned dynamic ("i like it is dynamic, but i dont want to make a complex logic, with a custom svg filter would be nice"); after a live SVG-filter demo of all 64 logos: "the svg filter looks very bad. lets use the prepared stickers and make them in a way that they are always proportional to each other. so you also need to adjust the sizes of each so they look visually uniform".
+- Every sponsor's sticker is a prepared file (tools/logos/prepare.py → temp/logos-2026/sticker/<id>.png), all at one scale: the same 20 px rim, a white shape of about 160 000 px², a long logo given elongation^0.25 more area so its letters don't get tiny. The screens show them all at one zoom, with no die-cut in the browser (the hull from the image's alpha).
+- The outlines the user approved per logo are baked into the files (Zig Zag convex; Cambra Clinic, La Petite, DO2 and Galena smoothed more; El Farolillo without two stray edge lines; La Lluna cut round).
+- Consequences: the collage sizes every sticker by one zoom; whether its ×1.3 favour and ±7 % variety stay is with the user (through the logos session); `npm run edition -- logos` must shrink all sticker files by one common factor (today each on its own, ≤ 512 px / 300 KB), and the plan's sponsor points at its sticker image; a logo added later in Admin needs its sticker made the same way.
+By: the user (to quina-musical-e0). Source: its report of 28 Nov. Amends: D287 (the browser's die-cut), D309 (how the stickers are made). Lives in: requirements/screens.md › Projector, Player app; tools/logos.
