@@ -31,7 +31,7 @@ One page for the organizers, next to the cheat sheet. The show runs on the **lap
    - Film the screen and the sound together, in slow motion, with a phone **from the middle of the tent, about 12 m from the stage**, not next to the speakers.
    - If the **flash comes before the click**, press **+5 ms**, which delays the picture. If the **click comes first**, press **−5 ms**. Repeat until they coincide. The page shows the offset in ms.
    - Quit, and start the show page again with step 5's command. It reads the same offset from that profile. On the show page, `[` and `]` still nudge it by 5 ms if a later check needs it.
-   - From the middle, every seat gets each landing's sound within the broadcast limits, from the front to the bar end: the sound travels about 35 ms over those 12 m, so the front hears it about 35 ms early and the back about as late (docs/research/reports/two-projectors.md). With a second projector on a splitter, both screens share this one offset.
+   - From the middle, every seat gets each landing's sound within the broadcast limits, from the front to the bar end: the sound takes about 35 ms to travel those 12 m, so at the front the sound comes about 35 ms before the picture, and at the back about 35 ms after it (docs/research/reports/two-projectors.md). With a second projector on a splitter, both screens share this one offset.
 
 At each Shuffle, note the round's **resume code** (console → **Codi de recuperació de la quina** → **Mostra el codi**). Keep it like the box of cards: never on a screen, never in a photo.
 

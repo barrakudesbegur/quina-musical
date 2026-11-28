@@ -29,7 +29,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 - **Backend:** cleared and resumed on 27 Nov. Its queue is empty; it waits for U204's time.
 - **The card design session (quina-musical-d1):** its work is done except U212. Its handoff is tools/card-mockup/HANDOFF.md, the spec tools/card-mockup/README.md, the canvas https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392. The generator with both layouts is on main (7092e216, acd8f1a9, 4e4c0fe2), and apps/cards is Frontend's again. Decisions D250–D272.
 
-**Live (last deploy 3aa936b9 = aa4c4d68, 28 Nov, the phone's jank pass; before it b488bafa: the renumbered 2026 repertoire, 135 songs, 70/70 with 5 shared, the remade temporary cards and covers):**
+**Live (last deploy 3e96560a = 90f45de9, 28 Nov: the Line and «QUINA!» Celebrations, offline covers; before it 84998894 = 855935c0, the redraw's bug fixes; 9516f6be, D266's labels; 3aa936b9, the phone's jank pass; b488bafa: the renumbered 2026 repertoire, 135 songs, 70/70 with 5 shared, the remade temporary cards and covers):**
 - the realistic run's plan on quina-dev: D192's order, 96 example prizes from the organizers' sheet (temp/wip prizes/2026-example-bundles.json), 58 sponsors and 55 logos, with the 27 Dec times;
 - the 2026 cards (699 temporary, both cards two-sided) and covers on the QR domain;
 - repertoire 2026 in R2's content-addressed layout (D248: manifests/2026.json, 2,772 blobs, 8.04 GB), with the final playlists (D230, D269: 135 songs, 5 shared), clean print names (D260, D270, D271), provisional hooks and placeholder voices;
