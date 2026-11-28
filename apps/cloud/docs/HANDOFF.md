@@ -7,7 +7,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
 - **The prod test is over** (the user: "you can stop everything"). Nothing runs on this Mac; the cloud's plan is back to 27 Dec 17:00/18:00 (the test plan saved in `data/link/backups/`). Live: `b57a3eb6` (from `e6d95db1`). The previous session's `wt-fix` and my `wt-guard`/`wt-e2e` worktrees stay (mine are unlinked); a hook refuses removing worktrees by hand.
 - **R2 needs no push:** `media push --repertoire 2026 --dry-run` says 0 changed, and the preflight from the main checkout passes. The test's FAIL came from a stale local manifest used when the cloud's couldn't be fetched (the Mac switching networks).
 - **Done after the test:** the preflight names its media fallback (`aed18cc8`: a WARN with the local copy's date, not a FAIL); `/media/*` stays same-origin with the screens (`470454d9`, D287's canvas); Sound engine's `LOGO_PATH_RE` (`284b8d0a`) with my write mode on PUT /api/plan, `link.plan` and the edition tool (`168d1c2d`). Live as `54fa6b59`.
-- **Sent, waiting on Frontend:** a lint against `animation-timeline`/`view()`/`scroll()` outside `@supports` (the e2e can't see Safari 18: Playwright's WebKit is newer, this Mac's simulators are iOS 27). Prize `image` paths are still any string: apply `LOGO_PATH_RE`'s rule if a canvas ever reads them.
+- **Done by Frontend (live in `759b4691`):** the support lint I suggested, against `animation-timeline`/`view()`/`scroll()` outside `@supports` (the e2e can't see Safari 18: Playwright's WebKit is newer, this Mac's simulators are iOS 27). Prize `image` paths are still any string: apply `LOGO_PATH_RE`'s rule if a canvas ever reads them.
 - **Found today:** a 27 Nov kiosk (profile `/tmp/quina-show`) was still running and reconnected to a new relay as a second show page; I quit it. Reloading a `fresh=1` tab started a new Game (now one-shot, `11948775`). The Mac switches networks (172.26.205.80, 192.168.10.153, 192.168.10.31), so the relay now prints its address again when it changes.
 
 ## Before (2026-11-27)
@@ -93,6 +93,7 @@ The single place to resume Platform's work from. Sessions get cleared, so keep i
     - `958a0fd2` (`20c8423e`, repertoire 2026): the iOS 18 fix (strip-fade's mask behind `@supports`), the test tools (D292) and the «Proves» card; my `116f6cc9` keeps them off the cloud.
     - `b57a3eb6` (`e6d95db1`, repertoire 2026): the Safari 18 follow-up, one-shot `fresh=1`, the relay's and the preflight's LAN address on the default route (`2f69f56c`).
     - `54fa6b59` (`168d1c2d`, repertoire 2026): sponsor logos checked strictly on save (`LOGO_PATH_RE`), the preflight's media fallback named, same-origin logo tests.
+    - `759b4691` (`7f28fa9e`, repertoire 2026): Frontend's Safari 18 support lint and its three fixes (iPadOS 18 console tabs, SegmentedControl, the phone's reduced-motion switch).
   - **The cloud side of step 2:**
     - `check.started` replaces `check.scheduled`; reveals stay off phones;
     - Pausa reaches phones only with its overlay (D135);
