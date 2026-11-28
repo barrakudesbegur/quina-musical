@@ -1563,7 +1563,7 @@ By: the user. Source: the user's message of 27 Nov. Lives in: requirements/scree
 "I need a functionality somewhere that i can do a sound test to adjust all volumes and make sure everything sounds right on the day of the event. i would do it whens eting up the sound system." A console mode plays each kind of sound in turn at its slider's level: songs, songs in Parlem, the effects, the drum's ticks, the Check's sounds, Hold, the win, the fail, the stinger, intros, breaks, Pausa, the throw and the storm, the doors, the end and the voices.
 By: the user. Source: the user's message of 27 Nov. Lives in: requirements/screens.md › Console; requirements/operations.md › Rehearsals.
 
-### D230 · Both playlists are final and sorted · 2026-11-27 · Active; the check Pending (Sound engine)
+### D230 · Both playlists are final and sorted · 2026-11-27 · Active (checked: D269, D296)
 "Now the playlists are final, and sorted." The organizers edited pool 1 too. Sound engine re-fetches both, checks 70 songs each, the order (U58) and any repeats between them, and numbers pool 1 1–70 and pool 2 71–140 (U57). This is earlier than the planned 1 Dec.
 By: the user. Source: the user's message of 27 Nov. Lives in: timeline.md; event.md › The songs.
 
@@ -1575,7 +1575,7 @@ By: the user. Source: the user's message of 27 Nov. Lives in: event.md › The c
 "We have to make sure we make it clear to the people that they can't mark the songs permanently (with stickers or markers), or they woant be able to reuse the card for the following rounds." Kids are with adults, so it shouldn't happen much. A spoilt card can be exchanged for a new one if any are left, only between rounds, to keep it fair. The new card's number joins the cards in play (the console's in-game admin, D234).
 By: the user. Source: the user's message of 27 Nov. Lives in: event.md › The cards; requirements/game-rules.md › Cards in play.
 
-### D233 · Song covers on the cards, printed in colour · 2026-11-27 · Active; the design Pending (the card design session)
+### D233 · Song covers on the cards, printed in colour · 2026-11-27 · Amended by D295 (the A3 test sheets only)
 "to help players find the song faster we can add the song cover. but that would mean printing in colour, and therefore we should update the rest of the elements to take advantage of that. To make the cards, i want to first do the design with an agent/session." The user opened a fresh session for this task only (quina-musical-d1). The card design comes before the cards are made on 4–5 Dec.
 By: the user. Source: the user's message of 27 Nov. Lives in: requirements/songs-and-cards.md › The card.
 
@@ -1711,7 +1711,7 @@ By: the user (to the card design session). Source: quina-musical-d1's report of 
 "remove the disclaimer at the bottom". The cards no longer say «MARCA NOMÉS AMB BLAT DE MORO». D232's message, that songs are marked only with corn seeds so the card serves every round, is now said by the presenters at the welcome and by the table setup. Drawn as Proposal 6. The design session also made a page of the four sides (normal 1 and 2, special 1 and 2), captioned in Catalan, for the user to show the other organizers.
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Amends: D232, D250. Lives in: event.md › The night, step by step; requirements/songs-and-cards.md › The card.
 
-### D256 · Six cards on an A3 sheet, portrait · 2026-11-27 · Active; the normal amount Pending (U211)
+### D256 · Six cards on an A3 sheet, portrait · 2026-11-27 · Amended by D295 (the A3 test sheets only)
 "I want vertical a3. decided." The card layout is A3 portrait with 6 cards a sheet: 2 columns by 3 rows, each card about 149 × 140 mm, printed duplex on the long edge. Each back row is mirrored so the back lines up with the front, and a light-table overlay on the card design canvas shows the grids coinciding. Amounts now fill whole sheets, a multiple of 6: the special card's 300 fits, and the normal card's 399 becomes 402 or 396 (U211). The generator's 3-a-page assumption becomes 6 a page (Frontend, apps/cards). Answers U210.
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Amends: D68 (the amounts), songs-and-cards' three cards a page. Lives in: requirements/songs-and-cards.md › The card, Numbers and amounts.
 
@@ -1726,7 +1726,7 @@ Two rules for the printed cards:
 And "if doesnt fit remove the nino". And "card number has to go next to the qr code because it is the content of the qr". So the order stays: the GOMET (and the figure), the heading, then the number with the QR. The design session's option A, with the QR on the left, is rejected. The user picks between C (with the figure, the heading centred between the side blocks, about 5 mm left of the card's centre) and B (without the figure, about 11 mm).
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Amends: D257 (its 28 pt). Lives in: requirements/songs-and-cards.md › The card.
 
-### D259 · The A3 card's header is option C · 2026-11-27 · Active; covers or not Pending (the organizers, U212)
+### D259 · The A3 card's header is option C · 2026-11-27 · Amended by D295 (the A3 test sheets only)
 "okay i want the option c you made". The header is the GOMET circle, the Barrakudes figure, the 38 pt heading centred in the space between, then «CARTRÓ #n» next to its 16 mm QR, with no branding text. Then the user made covers an organizers' choice: "add another option that is the one we agreed before but without album covers. (so they choose if they want albums · color or no albums · b&w)". So D233 and D256's A3 layout hold only if the organizers pick covers (U212). The other option is the 21 × 9.9 cm card they saw before, three to an A4 page, in black and white on coloured paper.
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Amends: D257, D258; puts D233 and D256 up to the organizers. Lives in: requirements/songs-and-cards.md › The card.
 
@@ -1738,7 +1738,7 @@ By: the user (to the card design session). Source: quina-musical-d1's report of 
 "Asereje should just be called asereje, not the ketchup song. Grupo Arenas seems like a cover, i thing who put it got confused, i will ask them. but for now keep asereje in both." #5 (Grupo Arenas, pool 1) and #128 (Las Ketchup, pool 2) both print «Aserejé». The user is asking the organizers about #5. No other song repeats by title across the two playlists.
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov.
 
-### D262 · Both card options are built, covers first · 2026-11-27 · Active
+### D262 · Both card options are built, covers first · 2026-11-27 · Retired (D295: the organizers picked)
 "they havent picked yet, but assume we do a. and you can code both so i decide the final later." Until the organizers choose (U212), the working default is covers in colour (the A3 card, six a sheet, header C). Both options are built into apps/cards behind one switch.
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov.
 
@@ -1746,7 +1746,7 @@ By: the user (to the card design session). Source: quina-musical-d1's report of 
 "keep the year in the stamp yes, as the old code did." The background stamp carries the year again, as last year's did, so a 2025 card stays easy to spot (D85). Amends D254 and D257.
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov.
 
-### D264 · The amounts stay 399 and 300, with sample cards on the spare places · 2026-11-27 · Active
+### D264 · The amounts stay 399 and 300, with sample cards on the spare places · 2026-11-27 · Amended by D295
 "i liked that tat the specials started on a round number, so based on the first digit i can know what card type it is. we can make that shose spaces simply repeat the last cards so we can use them as samples, please put a watermark, like a diagonal big word, like the stamp." Normal cards stay #1–399 and special cards #400–699 (D68), so the first digit tells the type. With six a sheet, the last normal sheet's 3 spare places repeat the last cards (#397–399), with a big faint diagonal «MOSTRA» on both sides. The 300 special cards fill 50 sheets exactly: 117 A3 sheets in all. Answers U211, and amends D256's "a multiple of 6".
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov.
 
@@ -1758,7 +1758,7 @@ By: the user (to the card design session). Source: quina-musical-d1's report of 
 Answers U198 with (a). During the Check the label is just those words. Frontend builds it from each side's `checkLabel` in card-types.json, with no join (30f7e61b).
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Lives in: requirements/screens.md › Projector.
 
-### D267 · Last year's coloured paper, printed in colour · 2026-11-27 · Active
+### D267 · Last year's coloured paper, printed in colour · 2026-11-27 · Amended by D295
 Blue for normal cards, pink for special ones, printed in colour, with a proof sheet first. Answers U52.
 By: the user (to the card design session). Source: quina-musical-d1's report of 27 Nov. Lives in: requirements/songs-and-cards.md › The card.
 
@@ -1919,3 +1919,11 @@ By: Frontend, after the user's live test; the user may overrule. Source: Fronten
 ### D294 · The projector's agreed in-play look is the pre-redraw board · 2026-11-28 · Active
 "«Before the redraw (28 Nov) · Projector · in play» is the correct one". The agreed main play screen is `Abans-28nov-Projector-Joc`, back on the canvas's Projector page (v131) as "THE AGREED LOOK"; the as-built Projector-Joc is archived as "NOT the agreed look". The Desgraciat's play screen follows it. The other projector scenes have pre-redraw boards too (Abans, Comprovacio, -Fallida, -Revisio, Desgraciat-Dempeus, Desgraciat-Final, Linia, MitjaPart), but some later agreed changes live only in the redrawn ones (D283's thick Check marks), so each scene's agreed look is asked of the user before it's built.
 By: the user (to Frontend). Source: Frontend's report of 28 Nov. Lives in: requirements/screens.md › Projector; the canvas's Projector page.
+
+### D295 · The cards are «Apaïsat sense portades» · 2026-11-28 · Active
+Answers U212 with (b). The user: "for the cards the organizers decided to use the horizontal without cover images". The 2026 card is the 21 × 9.9 cm card, three to an A4 page (the generator's `3x1-h-bw`, tools/card-mockup/README.md › Option 2): no covers, in black and white on last year's coloured paper (blue normal, pink special), with last year's 16 pt titles and the header the organizers saw. The print shop gets the PDF, as last year (D88). Both amounts fill whole A4 pages (133 + 100 sheets, both sides), so the A3 sheet's «MOSTRA» samples aren't needed. **The A3 square layout with covers stays in the generator** (`--layout a3-6`): "despite having picked that style, dont remove the code from the other format, because i'll probably print 1/2 sheets on the alternative format, so i can do a test the day of the events on real players to find out wich one is more useful, despite the aesthetic (because i think the other organizers are not valueing enough that images are faster to find than texts)", and "1/2 i meant one or 2, not half": one or two A3 sheets for the test. The cards are still made on 4–5 Dec, after a proof sheet (D267).
+By: the user (the organizers' pick; keeping the A3 layout is the user's). Source: the user's messages of 28 Nov. Amends D233, D256, D259 (they hold only for the A3 test sheets); retires D262; amends D264, D267. Lives in: requirements/songs-and-cards.md › The card, Numbers and amounts.
+
+### D296 · The organizers confirm the playlists are final; unchanged since D269 · 2026-11-28 · Active
+The user: "they told me the playlist is final now, check if it changed from last time i fetched". The orchestrator's check at 5:58 pm compared both Spotify playlists with D269's fetch (data/media/2026/pool{1,2}/output/playlist-raw.json, just after midnight on 28 Nov) and with the prepared data/repertoires/2026/songs.json: the same Spotify revision ids, the same 70 + 70 tracks in the same order, the same 5 shared songs (#5, #44, #46, #54, #62). No download, prep, R2 push or new cards needed. The check reads Spotify's data only, not the audio in data/.
+By: the organizers, through the user. Source: the user's message of 28 Nov; the orchestrator's read-only fetch. Lives in: event.md › The songs; timeline.md.

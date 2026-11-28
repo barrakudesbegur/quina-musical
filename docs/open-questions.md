@@ -152,12 +152,6 @@ On 26 Nov the user told the orchestrator not to use the grill format. On 27 Nov,
 - (a) The grill format only in a card design session; plain questions in every other session. The default meanwhile.
 - (b) Plain questions everywhere, the card design session too.
 
-### U212 · Ask the organizers: which card
-The user (28 Nov): "third option is discarded. keep square for now as default, but that i can also generate the pdf for the other". The generator does both: `CARD_LAYOUT` 'a3-6' by default, and `--layout a4-3` for the other. The card design session made the organizers an image of card #1 in all three, on blue paper, and a short message in Catalan with the pros and cons.
-- (a) «Quadrat amb portades»: the A3 card, 149 × 140 mm, six a sheet, header C, 17 mm covers (D256, D259, D271). The working default (D262).
-- (b) «Apaïsat sense portades»: the 21 × 9.9 cm card, three to an A4 page, in black and white, with last year's 16 pt titles.
-The cards are made on 4–5 Dec, and the build and proof round take about 2 days.
-
 ### U202 · What admin the console does during the night (D234)
 Admin isn't at hand on stage. The proposal for the console:
 1. Add sold cards to the cards in play: a range or single numbers.
@@ -334,6 +328,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U212 · Which card** (2026-11-28) → D295: the organizers chose «Apaïsat sense portades», the 21 × 9.9 cm card without covers, three to an A4 page.
 - **U193 · Where the install button goes** (2026-11-28): replaced by U230, since D290 removed the spot it relied on.
 - **U204 · The realistic run's times** (2026-11-28) → D288: today's test starts 30 minutes after the deploy and the laptop setup are live; 27 Dec's times go back afterwards.
 - **U225 · The ✗ in the Check's cells** (2026-11-28) → D283: thick on the projector's Check; the console's stay.

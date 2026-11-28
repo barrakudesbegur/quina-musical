@@ -13,9 +13,9 @@ The playlists → the repertoire prepared and checked → the cards made → the
 | **Fri 27 Nov** | **Playlists final**, sorted (the user, D230, D269; earlier than the planned 1 Dec) | User |
 | Done (27–28 Nov) | Repertoire 2026 (`data/repertoires/2026.json`, 3cb10aaa; pools became repertoires in D178): one repertoire of 135 songs, two pools of 70 with 5 shared (D268, d6bb94ae) | Sound engine |
 | Done (27–28 Nov) | Every song downloaded, checked, renumbered (8e50cd01) and prepared on provisional hooks; in R2 (D248) and deployed (b488bafa) with 699 temporary cards | Sound engine, Backend |
-| Now | The organizers pick the card (U212); the realistic run's start time (U204) | User, organizers |
+| Done (28 Nov) | The organizers picked «Apaïsat sense portades», the A4 card without covers (D295) | Organizers |
 | Before the cards | Last year's test cards move under the default repertoire, and every test reads cards through its repertoire (still `apps/cards/dist/cards.json` today) | Sound engine, then Frontend and Backend |
-| **4–5 Dec** | **The cards generated (`npm start -- --repertoire 2026` in apps/cards) in the organizers' layout (U212), proofed on a proof sheet (D267) and printed**. No song changes after this | User, Frontend |
+| **4–5 Dec** | **The cards generated (`npm start -- --repertoire 2026` in apps/cards) in the organizers' layout (D295: A4, three a page, no covers), proofed on a proof sheet (D267) and printed**. No song changes after this | User, Frontend |
 | Then | Hooks approved on the audition page (U14, faster with U56), Signatures vetted, stems rendered, pushed to R2 and both laptops synced; the Pausa, break and Hold music into the repertoire (D268); the night's plan in Admin (U18); the real-device checks (U19) | User, Sound engine, Backend |
 | When ready (D82) | The tech rehearsal: a whole show with this year's repertoire, the real plan, the tablet, the Wii remote and real phones | User, everyone |
 | After the tech rehearsal | **Code freeze:** only fixes for what a rehearsal found. Every deploy changes what the printed QR codes open | All sessions |
@@ -26,8 +26,8 @@ The playlists → the repertoire prepared and checked → the cards made → the
 ## The user's items
 
 The items themselves, with their defaults, are in [open-questions.md](open-questions.md).
-- **Now:** U212 (the organizers' card), U204 (the realistic run's start time), U13 (the listening pass), U16 (the logo library).
-- **4–5 Dec:** make the cards, after U212 and a proof sheet.
+- **Now:** U13 (the listening pass), U16 (the logo library).
+- **4–5 Dec:** make the cards (D295's layout), after a proof sheet.
 - **Before the tech rehearsal:** U14 (hooks; U56 would make it faster), U18 (the plan in Admin), U19 (real devices), U55 (old song data on the laptop).
 - **Any time:** U20 (more Hold and victory music), U12 (the theme pass, not ready yet).
 
