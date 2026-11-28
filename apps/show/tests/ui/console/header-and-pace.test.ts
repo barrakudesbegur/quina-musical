@@ -50,6 +50,7 @@ test('the recovery notice: how much shorter or longer each song is, from the nud
   assert.deepEqual(recoveryNotice(pace({ nudge: 0.98, slotSec: 13.72 })), { direction: 'faster', seconds: 0 });
   assert.equal(recoveryNotice(pace({})), null, 'no nudge');
   assert.equal(recoveryNotice(pace({ nudge: 0.9, slotSec: 12.6, locked: true })), null, 'locked');
+  assert.equal(recoveryNotice(pace({ nudge: 0.93, slotSec: 13.02 }), false), null, 'before the night: no round to recover');
   assert.equal(S.pace.recovery({ direction: 'faster', seconds: 1 }), "Recuperant l'horari: cada cançó dura 1 s menys.");
   assert.equal(S.pace.recovery({ direction: 'slower', seconds: 0 }), 'Anem avançats: cada cançó dura una mica més.');
 });

@@ -127,8 +127,9 @@ export function missingBars(counts: readonly number[], rows: number = MISSING_RO
   }));
 }
 
-/** Why the chart can't be drawn: no printed cards (cards.json), no cards in play, or not every counted song seen. */
-export type ChartGap = 'cards' | 'inPlay' | 'landings';
+/** Why the chart can't be drawn: before the night (no round yet), no printed cards (cards.json), no cards in play, or
+ * not every counted song seen. */
+export type ChartGap = 'before' | 'cards' | 'inPlay' | 'landings';
 
 export interface ChartInput {
   /** The engine's private future (ShowState.future): absent from an older engine, null without cards in play; the
@@ -143,6 +144,8 @@ export interface ChartInput {
   side: number;
   counted: CountedSongs;
   lineConfirmed: boolean;
+  /** False before the night: no round runs, so nothing is counted (no histogram). */
+  started?: boolean;
 }
 
 export interface ChartView {
@@ -155,8 +158,9 @@ export interface ChartView {
   validCount: number | null;
 }
 
-export function chartView({ engine, printed, inPlay, cardType, side, counted, lineConfirmed }: ChartInput): ChartView {
+export function chartView({ engine, printed, inPlay, cardType, side, counted, lineConfirmed, started = true }: ChartInput): ChartView {
   const kind = lineConfirmed ? 'bingo' : 'line';
+  if (!started) return { kind, bars: null, gap: 'before', validCount: null };
   if (engine) {
     const counts = kind === 'line' ? engine.toLine : engine.toBingo;
     return { kind, bars: missingBars(counts), gap: null, validCount: counts.reduce((a, b) => a + b, 0) };

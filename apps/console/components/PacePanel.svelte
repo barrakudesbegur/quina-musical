@@ -5,7 +5,8 @@
   the ends. The round's recommended preset is drawn with a dashed border (title "Recomanat"), whatever is
   selected. The current value is named next to the label only when it isn't a preset. At the title row's end,
   «Cançons noves: 22 s»: a song's first play in the Game gets the Pace × 22/14 (D174). While the engine bends
-  the Pace to recover the Schedule, an orange notice says how much each song changes. Auto-advance in the
+  the Pace to recover the Schedule, an orange notice says how much each song changes (never before the night: no round
+  runs yet). Auto-advance in the
   final phase is in the menu.
 -->
 <script lang="ts">
@@ -27,7 +28,7 @@
   const gameOk = $derived(model.can('setGame'));
   // The snapshot's default Pace when the engine reports it, else the shared rule.
   const recommended = $derived(snap ? recommendedPreset(snap.pace.defaultSec ?? DEFAULT_PACE_SEC, PACE_PRESETS_SEC) : null);
-  const notice = $derived(snap ? recoveryNotice(snap.pace) : null);
+  const notice = $derived(snap ? recoveryNotice(snap.pace, model.show.flow.scene !== 'before') : null);
   const onPreset = $derived(snap ? (PACE_PRESETS_SEC as readonly number[]).includes(snap.pace.sec) : false);
   const presets = PACE_PRESETS_SEC.map((sec) => ({ sec, name: S.pace.names[sec] ?? null }));
 </script>

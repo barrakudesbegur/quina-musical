@@ -3,6 +3,7 @@
   own column; the current one in the text colour and bold. A small ▼ on top of the bar points at the current
   Heat. The zones come from the engine's Heat bands (logic/phase-zones.ts); without
   them only the current Phase is named. The label always names the engine's Phase, never one read off the bar.
+  Before the night (`phase` null): the empty bar with its marks, and no names (their row keeps its height).
 -->
 <script lang="ts">
   import type { PhaseName, WinKind } from '@quina/protocol';
@@ -12,7 +13,8 @@
   interface Props {
     /** 0..100, or null without cards in play. */
     percent: number | null;
-    phase: PhaseName;
+    /** Null before the night: no round, so no Phase. */
+    phase: PhaseName | null;
     zones: readonly PhaseZone[] | null;
     /** A presenter fixed the Phase from the menu. */
     fixed: boolean;
@@ -20,10 +22,10 @@
   }
 
   let { percent, phase, zones, fixed, climbing }: Props = $props();
-  const text = $derived(S.header.heatText(percent, S.phase[phase], S.climbing[climbing], fixed));
+  const text = $derived(phase === null ? S.header.heatNone : S.header.heatText(percent, S.phase[phase], S.climbing[climbing], fixed));
 </script>
 
-<div class="heat" data-state={percent === null ? 'none' : 'on'} data-phase={phase} data-fixed={fixed || undefined}>
+<div class="heat" data-state={percent === null ? 'none' : 'on'} data-phase={phase ?? 'none'} data-fixed={fixed || undefined}>
   <div class="heat__track" style:--heat={(percent ?? 0) / 100}>
     <div class="heat__bar" role="meter" aria-label={S.header.heat} aria-valuemin={0} aria-valuemax={100} aria-valuenow={percent ?? 0} aria-valuetext={text}>
       <span class="heat__fill"></span>
@@ -37,7 +39,9 @@
       </span>
     {/if}
   </div>
-  {#if zones}
+  {#if phase === null}
+    <p class="heat__zones heat__zones--single" aria-hidden="true"><span class="heat__zone">&nbsp;</span></p>
+  {:else if zones}
     <div class="heat__zones" style:grid-template-columns={zoneColumns(zones)} aria-hidden="true">
       {#each zones as zone (zone.phase)}
         <span class="heat__zone" data-current={zone.phase === phase || undefined} title={zone.phase === phase && fixed ? S.header.phaseFixed : undefined}>

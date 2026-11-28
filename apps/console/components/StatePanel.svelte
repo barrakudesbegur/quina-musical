@@ -2,7 +2,8 @@
   The Estat tab (D170, D173; the Consola-Pestanyes-Noves board, frame a): the round's state, always visible, nothing of
   the future. On the left, how many cards miss each number of songs for a Line (for the Quina once the Line is
   confirmed), the bars growing in with a stagger (hook reveal's bars); on the right, the round's played songs.
-  What the console can't count shows "—" and why (logic/future.ts chartView).
+  What the console can't count shows "—" and why (logic/future.ts chartView); before the night, no histogram: "—" and
+  that it counts from the first round.
 -->
 <script lang="ts">
   import { roundCardType, roundSide } from '@quina/protocol';
@@ -24,6 +25,7 @@
           side: roundSide(snap.round),
           counted: model.counted,
           lineConfirmed: snap.round.lineConfirmed,
+          started: model.show.flow.scene !== 'before',
         })
       : null,
   );

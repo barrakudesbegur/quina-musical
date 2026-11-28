@@ -40,6 +40,8 @@ export const S = {
     /** The Heat meter's spoken value. */
     heatText: (percent: number | null, phase: string, climbing: string, fixed: boolean) =>
       `${percent === null ? 'sense dades' : `${percent} %`}, fase ${phase.toLowerCase()}${fixed ? ' (fixada des del menú)' : ''}, ${climbing}`,
+    /** The Heat meter before the night: no round yet. */
+    heatNone: 'Encara no ha començat cap quina',
     phaseFixed: 'Fase fixada des del menú',
     clock: 'Hora',
     roundEnd: 'Final previst de la quina',
@@ -237,6 +239,7 @@ export const S = {
     validCount: (n: number) => `${n} cartrons en joc en aquesta quina`,
     unknown: '—',
     gaps: {
+      before: 'Es comptarà quan comenci la primera quina.',
       cards: 'Falten els cartrons impresos (cards.json).',
       inPlay: 'No hi ha cartrons en joc registrats.',
       landings: "Aquesta consola no ha vist totes les cançons d'aquesta quina.",

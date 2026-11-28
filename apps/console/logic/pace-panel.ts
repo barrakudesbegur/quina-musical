@@ -20,11 +20,12 @@ export interface RecoveryNotice {
 /**
  * While the Drift nudge acts (`pace.nudge` ≠ 1: the engine stretches or squeezes each slot to recover the
  * Schedule), how much shorter or longer each song is than the Pace alone would make it. `slotSec` already has
- * the nudge applied, so the difference is slot − slot / nudge. Null with no nudge, or with the Pace locked.
+ * the nudge applied, so the difference is slot − slot / nudge. Null with no nudge, with the Pace locked, or before the
+ * night (`started` false: no round runs, so there is no Schedule to recover).
  */
-export function recoveryNotice(pace: PaceInfo): RecoveryNotice | null {
+export function recoveryNotice(pace: PaceInfo, started = true): RecoveryNotice | null {
   const { nudge, slotSec, locked } = pace;
-  if (locked || !Number.isFinite(nudge) || !Number.isFinite(slotSec) || nudge <= 0 || Math.abs(nudge - 1) < 0.005) return null;
+  if (!started || locked || !Number.isFinite(nudge) || !Number.isFinite(slotSec) || nudge <= 0 || Math.abs(nudge - 1) < 0.005) return null;
   const change = slotSec - slotSec / nudge;
   return { direction: change < 0 ? 'faster' : 'slower', seconds: Math.round(Math.abs(change)) };
 }

@@ -1,8 +1,9 @@
 <!--
   Always visible, in three panels (they stack on a phone):
   - the round: "Quina N" (or "Quina Especial", or "Desgraciat", the Quina del Desgraciat's short name: D251) and the
-    real Heat, with the Phase marked on it (HeatMeter);
-  - the time: the clock, the round's and the night's expected ends (flag, moon), and the Drift chip;
+    real Heat, with the Phase marked on it (HeatMeter); before the night (no round yet) the bar is empty and unnamed;
+  - the time: the clock, the round's and the night's expected ends (flag, moon), and the Drift chip (not before the
+    night: there is no round to be late in);
   - the links: the connection chips and the menu. This device's label lives in the menu; it still names
     who pressed what.
 -->
@@ -27,6 +28,8 @@
   const snap = $derived(model.show.state);
   const flow = $derived(model.show.flow);
   const round = $derived(roundOnScreen(snap, flow));
+  /** Before the night: no Heat, no Phase and no Drift yet (the engine's are a placeholder round's). */
+  const before = $derived(flow.scene === 'before');
   const clock = $derived(clockParts(model.show.now));
   const chips = $derived(headerChips(linksOf(model.show.connected, model.show.showOnline, wii.linkStatus)));
 </script>
@@ -35,7 +38,7 @@
   <div class="header__panel header__panel--round">
     <p class="header__round">{round ? S.roundShort(round, model.plan) : S.header.noRound}</p>
     {#if snap}
-      <HeatMeter percent={heatPercent(snap.heat)} phase={snap.phase} zones={ZONES} fixed={snap.game.phaseOverride !== null} climbing={snap.cards.climbingTo} />
+      <HeatMeter percent={before ? null : heatPercent(snap.heat)} phase={before ? null : snap.phase} zones={ZONES} fixed={snap.game.phaseOverride !== null} climbing={snap.cards.climbingTo} />
     {/if}
   </div>
 
@@ -53,9 +56,11 @@
           <Icon name="moon" /><span class="visually-hidden">{S.header.gameEnd}: </span>{formatClock(snap.schedule.gameEndMs)}
         </span>
       </p>
-      <p class="header__drift" data-tone={driftTone(snap.schedule.roundDriftSec)} title={S.header.drift}>
-        <span class="visually-hidden">{S.header.drift}: </span>{formatDrift(snap.schedule.roundDriftSec)}
-      </p>
+      {#if !before}
+        <p class="header__drift" data-tone={driftTone(snap.schedule.roundDriftSec)} title={S.header.drift}>
+          <span class="visually-hidden">{S.header.drift}: </span>{formatDrift(snap.schedule.roundDriftSec)}
+        </p>
+      {/if}
     {/if}
   </div>
 

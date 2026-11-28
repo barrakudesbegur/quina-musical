@@ -127,6 +127,12 @@ test('the chart: what the console can’t count shows as a gap, never a guess', 
   assert.equal(chartView(chartInput({ counted: { ids: [13], complete: false } })).gap, 'landings');
 });
 
+test('the chart before the night: no histogram, whatever the console could count', () => {
+  const engine = { lineAt: null, bingoAt: null, toLine: [0, 0, 0, 0, 210], toBingo: [0, 0, 0, 0, 210], markCounts: [] };
+  assert.deepEqual(chartView(chartInput({ started: false })), { kind: 'line', bars: null, gap: 'before', validCount: null });
+  assert.equal(chartView(chartInput({ engine, started: false })).bars, null);
+});
+
 test("the chart from the engine's future: the whole round, even on a console opened late", () => {
   const engine = { lineAt: 23, bingoAt: null, toLine: [0, 2, 1, 0, 3, 1], toBingo: [0, 0, 0, 0, 0, 0, 0, 0, 0, 7], markCounts: [] };
   const v = chartView(chartInput({ engine, printed: null, counted: { ids: [], complete: false } }));

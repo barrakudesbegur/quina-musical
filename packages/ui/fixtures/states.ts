@@ -138,7 +138,9 @@ export function baseState(now: number): FullState {
     heat: 0.71,
     cards: { inPlay: '1-210, 400-440', inPlayCount: 251, validCount: 210, phaseSource: 'cards', climbingTo: 'line' },
     possibleWinners: { line: [], bingo: [] },
-    pace: { sec: 14, firstPlaySec: 22, locked: false, nudge: 1.05, slotSec: 14.7, spinSec: 7 },
+    // Running 2 min late (roundDriftSec 120), so the engine squeezes the slots to catch up (driftNudge < 1), as the
+    // agreed Consola-Joc board's «Recuperant l'horari: cada cançó dura 1 s menys».
+    pace: { sec: 14, firstPlaySec: 22, locked: false, nudge: 0.95, slotSec: 13.3, spinSec: 7 },
     schedule: { roundEndMs: now + 27 * 60000, gameEndMs: now + 140 * 60000, roundDriftSec: 120, gameDriftSec: 300 },
     autoAtMs: now + 9000,
     transition: null,
@@ -637,7 +639,11 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
         landings: [],
         winners: [],
         autoAtMs: null,
+        // As the engine sends them before the night: no round started, so no target to drift from and nothing to nudge.
+        phase: 'early',
         heat: null,
+        pace: { ...s.pace, nudge: 1, slotSec: s.pace.sec },
+        schedule: { ...s.schedule, roundDriftSec: 0, gameDriftSec: null },
         prizes: { revealed: [] },
       }),
     };
