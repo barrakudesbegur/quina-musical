@@ -394,13 +394,16 @@
   --icon-button-icon: 1.375rem;
 }
 
-/* The Heat meter with its Phase zones */
+/* The Heat meter with its Phase zones. It is the size its names fit by (a container): beside a long round name
+   («DESGRACIAT», D251) the bar is narrow at 1194 px, so the names shrink with it, keep a gap before the next zone, and
+   under 14rem only the current Phase is named. */
 .heat {
   display: flex;
   flex: 1;
   flex-direction: column;
   gap: 5px;
   min-width: 0;
+  container-type: inline-size;
 }
 
 /* The bar and its ▼ pointer at the current Heat (outside the bar, which clips its fill) */
@@ -483,7 +486,8 @@
 .heat__zones {
   display: grid;
   margin: 0;
-  font-size: 0.75rem;
+  /* «TARDANA» fills a quarter of the bar at about 4.2 % of its width, leaving the zone's end gap */
+  font-size: clamp(0.625rem, 4.2cqi, 0.75rem);
   font-weight: var(--font-weight-strong);
   letter-spacing: 0.02em;
   line-height: 1.2;
@@ -493,7 +497,14 @@
 
 .heat__zone {
   overflow: hidden;
+  padding-inline-end: 0.25rem;
   white-space: nowrap;
+}
+
+@container (inline-size < 14rem) {
+  .heat__zone:not([data-current]) {
+    visibility: hidden;
+  }
 }
 
 .heat__zone[data-current] {
