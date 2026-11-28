@@ -21,7 +21,7 @@
     {"id": "l-autentic", "name": "L'Autèntic", "file": "drive:L_autèntic.jpg", "background": "edges"},
     {"id": "la-havana", "name": "La Havana", "file": "drive:La Havana.JPG", "crop": [0.0, 0.085, 0.975, 0.89], "background": "edges", "mask": "ellipse"},
     {"id": "la-lluna", "name": "La Lluna", "file": "drive:la-lluna.jpg", "crop": [0.064, 0.06, 0.936, 1.0], "background": "keep", "mask": "ellipse", "note": "cut round, the blue kept (the user: circular, or the gradient removed)"},
-    {"id": "la-motxa", "name": "La Motxa", "file": "drive:la-motxa.jpeg", "background": "edges"},
+    {"id": "la-motxa", "name": "La Motxa", "file": "drive:la-motxa.jpeg", "background": "edges", "holes": 0.008, "note": "the hair's white kept, the letters' holes cleared"},
     {"id": "platillos", "name": "Platillos", "file": "drive:can climent platillos.jpeg", "background": "all", "ink": {"color": "box"}},
     {"id": "sa-barra", "name": "Sa Barra", "file": "drive:Sa Barra.PNG", "background": "edges", "tolerance": 0.16},
     {"id": "sa-pizza", "name": "Sa Pizza", "file": "drive:sa-pizza.jpeg", "background": "edges"},
