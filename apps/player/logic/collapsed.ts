@@ -24,14 +24,10 @@ export function showsTiles(playing: number, kind: RoundKind | null): boolean {
 }
 
 /**
- * The public state with the presenters' setting (the user, 28 Nov: announcing a Line or a Quina on the tiles is on by
- * default and the presenters can turn it off). Backend's protocol carries it as `PublicState.announceWins` (default
- * true); until that type is on main this optional field reads it, absent meaning on.
+ * Whether the tiles announce a Line or a Quina (the user, 28 Nov: on by default; the presenters can turn it off): the
+ * one read of `PublicState.announceWins` (absent, from an older cloud: on).
  */
-export type AnnouncingState = PublicState & { announceWins?: boolean };
-
-/** Whether the tiles announce a Line or a Quina: the one read of the setting (absent: on). */
-export const announceWinsOf = (state: PublicState | null): boolean => (state as AnnouncingState | null)?.announceWins ?? true;
+export const announceWinsOf = (state: PublicState | null): boolean => state?.announceWins ?? true;
 
 /** What a tile shows in its map's place: «LÍNIA!» or «QUINA!». */
 export type BigCard = 'line' | 'quina';

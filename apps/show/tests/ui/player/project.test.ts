@@ -160,7 +160,7 @@ test('no private value or key ever comes out', () => {
 test('the public state has exactly the contract keys', () => {
   const out = projected();
   assert.deepEqual(Object.keys(out).sort(), [
-    'beat', 'check', 'edition', 'gameEndMs', 'gameId', 'heat', 'interval', 'intro', 'link', 'notice', 'pause', 'plan', 'rounds', 'scene', 'shuffle', 'soundsDefault', 'spin', 'winners',
+    'announceWins', 'beat', 'check', 'edition', 'gameEndMs', 'gameId', 'heat', 'interval', 'intro', 'link', 'notice', 'pause', 'plan', 'rounds', 'scene', 'shuffle', 'soundsDefault', 'spin', 'winners',
   ].sort());
   for (const r of out.rounds) {
     assert.deepEqual(Object.keys(r).sort(), ['cardType', 'ended', 'kind', 'landings', 'lineConfirmed', 'number', 'side', 'startedAtMs']);
@@ -183,6 +183,14 @@ test("the beat (mark-bob): the engine's three numbers, built one by one; null wh
   assert.equal(withBeat({ bpm: 0, beatsPerBar: 4, downbeatAtMs: NOW }), null);
   assert.equal(withBeat({ bpm: 120, beatsPerBar: 2.5, downbeatAtMs: NOW }), null);
   assert.equal(withBeat({ bpm: 120, beatsPerBar: 4 }), null);
+});
+
+test('the presenters’ announceWins (D289) reaches the phones; absent in the engine means on', () => {
+  assert.equal(projected().announceWins, true);
+  const off = new PublicProjector(() => 0.5);
+  const s = secretState();
+  off.ingest({ ...s, game: { ...s.game, announceWins: false } }, NOW);
+  assert.equal(off.project(ctx).announceWins, false);
 });
 
 test('the Spin carries only its timing; the exact start comes from the Spin event', () => {

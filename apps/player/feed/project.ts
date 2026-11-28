@@ -167,6 +167,8 @@ export class PublicProjector {
       notice: ctx.notice,
       soundsDefault: ctx.soundsDefault,
       beat: projectBeat(s),
+      // The tiles' «LÍNIA!»/«QUINA!» (D289): the presenters' setting, on unless they turned it off.
+      announceWins: s?.game.announceWins ?? true,
     };
   }
 

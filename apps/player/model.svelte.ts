@@ -19,6 +19,7 @@ import { drawersOnCelebration, popDrawer, pushDrawer, type Drawer } from './logi
 import type { Route } from './logic/router.ts';
 import { NO_BANNER, nextBanner, pauseOn, type BannerState } from './logic/status.ts';
 import { gameLive } from './logic/awake.ts';
+import { announceWinsOf, showsTiles } from './logic/collapsed.ts';
 import {
   addCard,
   dismiss,
@@ -32,6 +33,7 @@ import {
   setAraView,
   setIdentity,
   setSounds,
+  setTilesTaught,
   soundsOn,
   type PlayerData,
   type PlayerStorage,
@@ -128,9 +130,18 @@ export class PlayerApp {
   restingViews = $derived(this.views.filter((v) => !v.valid));
   /** Every song on the cards that play this round. */
   playingSongs = $derived(songsOnCards(this.playingViews));
+  /** Cartrons collapses the playing cards into tiles (§8 Y2, option A): 2+ of them play (logic/collapsed.ts). */
+  tiles = $derived(showsTiles(this.playingViews.length, this.round?.kind ?? null));
+  /**
+   * The presenters' setting: the tiles announce a Line or a Quina («LÍNIA!», «QUINA!»). The one place it is read
+   * (`PublicState.announceWins`, default on: logic/collapsed.ts `announceWinsOf`).
+   */
+  announceWins = $derived(announceWinsOf(this.state));
   araView = $derived(araViewFor({ session: this.araSession, saved: this.data.araView, cardCount: this.data.cards.length }));
   celebration = $derived(celebrationOf(this.state, this.data.cards.map((c) => c.id)));
   celebrationOpen = $derived(this.celebration !== null && !this.data.dismissed.includes(this.celebration.key));
+  /** Something covers the home (a drawer, a Celebration's screen, the Check): the tiles' peek waits (`tile-peek`). */
+  homeCovered = $derived(this.drawers.length > 0 || this.celebrationOpen || this.scene === 'check');
   /** Offline: the normal screen stays usable, greyed under the strip. */
   offline = $derived(this.banner.banner === 'offline');
   /** The presenters' technical pause: the meditating nino in the drum's place. */
@@ -256,6 +267,12 @@ export class PlayerApp {
   }
 
   // ---- actions (components call these) ------------------------------------------------------------------
+  /** The tiles' teaching (T3) has gone one step further on this phone: the peek has run, or a tile was tapped. */
+  noteTilesTaught(step: 'peeked' | 'tapped'): void {
+    const next = setTilesTaught(this.data, step);
+    if (next !== this.data) this.saveData(next, false);
+  }
+
   /** Ara's Historial | Cartrons switch: remembered on this device. */
   selectAraView(view: AraView): void {
     this.araSession = null;
