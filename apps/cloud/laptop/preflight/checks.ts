@@ -5,7 +5,9 @@ import {
   DEFAULT_CARD_TYPE, DEFAULT_SIDE, VOICE_CUES, cardTypeSides, checkGamePlan, defaultCardType, isCardTypeId, isPoolId, roundCardPrice, sideWarnings,
   type CardTypePrice, type CardTypeSides, type RemoteStatus,
 } from '@quina/protocol';
+import path from 'node:path';
 import { readPrintedCardTypes, UNKNOWN_CARD_TYPE_COLOR } from '../../../../packages/ui/data/card-types.ts';
+import { AUTOPLAY_FLAG, SHOW_CHROME_FLAGS, isChromeMain, isTemporary, temporaryDirs, userDataDir } from '../chrome-profiles.ts';
 
 export type Status = 'pass' | 'warn' | 'fail';
 
@@ -363,25 +365,62 @@ export function distCheck(problem: string | null): Check {
   return check('Laptop', 'Show build', 'pass', 'apps/show/dist was built from the sources checked out');
 }
 
-/** The show page's browser, from the process list: it must play sound without a click. */
-/**
- * Chrome must keep the show page's timers running even when its window isn't in front: a throttled page starves
- * the engine's lookahead (a hidden tab's timers fire once a minute after five minutes).
- */
-export const SHOW_CHROME_FLAGS = ['--disable-background-timer-throttling', '--disable-renderer-backgrounding', '--disable-backgrounding-occluded-windows'] as const;
+export { SHOW_CHROME_FLAGS };
 
+/** The night's Chrome browser processes, from `ps -axo command` (helpers and headless tools left out). */
+const nightChromes = (processes: readonly string[]) => processes.filter((p) => isChromeMain(p) && !p.includes('--headless'));
+const profileName = (p: string) => path.basename(userDataDir(p) ?? '');
+
+/** The show's own Chrome: the runbook's profile (chrome-show), the show page's address, or kiosk mode. */
+export function findShowChrome(processes: readonly string[]): string | undefined {
+  return nightChromes(processes).find((p) => profileName(p) === 'chrome-show' || /\/show\/(\?|show\.html|\s|"|$)/.test(p) || p.includes('--kiosk'));
+}
+
+/** The laptop's console window: the runbook's profile (chrome-console) or the console's address. */
+export function findConsoleChrome(processes: readonly string[]): string | undefined {
+  return nightChromes(processes).find((p) => p !== findShowChrome(processes) && (profileName(p) === 'chrome-console' || /\/console\/(\?|\s|"|$)/.test(p)));
+}
+
+/** The show page's browser, from the process list: no throttling, and sound without a click. */
 export function browserCheck(processes: readonly string[]): Check {
-  const chrome = processes.filter((p) => /Google Chrome\.app\/Contents\/MacOS\/Google Chrome(\s|$)/.test(p));
-  if (chrome.length === 0) return check('Laptop', 'Browser', 'warn', 'Chrome is not running: open the show page with the kiosk command (night runbook)');
-  // The show's own Chrome: the kiosk command's profile or the show page's address.
-  const show = chrome.find((p) => p.includes('--user-data-dir=/tmp/quina-show') || /\/show\/(\?|show\.html|\s|"|$)/.test(p) || p.includes('--kiosk'));
+  if (nightChromes(processes).length === 0) return check('Laptop', 'Browser', 'warn', 'Chrome is not running: open the show page with the kiosk command (night runbook)');
+  const show = findShowChrome(processes);
   if (!show) return check('Laptop', 'Browser', 'warn', "Chrome runs, but not the show's: open the show page with the kiosk command (night runbook)");
   const missing = SHOW_CHROME_FLAGS.filter((f) => !show.includes(f));
   if (missing.length) return check('Laptop', 'Browser', 'fail', `the show's Chrome runs without ${missing.join(' ')}: a covered or minimised window would stall the show. Quit it and start it with the kiosk command (night runbook)`);
-  if (!show.includes('--autoplay-policy=no-user-gesture-required')) {
-    return check('Laptop', 'Browser', 'warn', "the show's Chrome runs without --autoplay-policy=no-user-gesture-required: the show page needs a click before it plays");
+  if (!show.includes(AUTOPLAY_FLAG)) {
+    return check('Laptop', 'Browser', 'warn', `the show's Chrome runs without ${AUTOPLAY_FLAG}: the show page needs a click before it plays`);
   }
   return check('Laptop', 'Browser', 'pass', `the show's Chrome: no background throttling, autoplay allowed${show.includes('--kiosk') ? ', in kiosk mode' : ''}`);
+}
+
+/**
+ * The show's and the console's Chrome profiles: each must survive a restart (macOS empties /tmp at every boot).
+ * WARN only. A wiped show profile still resumes the Game from the link's copy; a wiped console profile costs a
+ * click (Comandament → Connectar). The show not running is the Browser check's; with `laptopOnly`, the console
+ * not running is the Console check's FAIL.
+ */
+export function chromeProfilesCheck(processes: readonly string[], laptopOnly: boolean, tmpDirs: readonly string[] = temporaryDirs()): Check {
+  const show = findShowChrome(processes);
+  const consoleChrome = findConsoleChrome(processes);
+  const problems: string[] = [];
+  const fix = (step: string) => `Quit it and start it with the runbook's command (${step})`;
+  if (show) {
+    const dir = userDataDir(show);
+    if (!dir) problems.push(`the show runs in the everyday Chrome profile (no --user-data-dir), with its extensions and tabs. ${fix('step 5')}`);
+    else if (isTemporary(dir, tmpDirs)) problems.push(`the show's profile ${dir} is a temporary folder that a restart empties: the show page would lose its display offset, the Interval's place and its own copy of the Game (the link's copy still resumes the Game). ${fix('step 5')}`);
+  }
+  if (consoleChrome) {
+    const dir = userDataDir(consoleChrome);
+    if (!dir) problems.push(`the console runs in the everyday Chrome profile (no --user-data-dir). ${fix('step 7')}`);
+    else if (isTemporary(dir, tmpDirs)) problems.push(`the console's profile ${dir} is a temporary folder that a restart empties: the console would lose the Wii remote's grant (Comandament → Connectar again) and the saved resume code. ${fix('step 7')}`);
+  } else if (!laptopOnly) {
+    problems.push(`the laptop's console isn't open in its own profile: it hosts the Wii remote (optional). Open it with the runbook's command (step 7)`);
+  }
+  if (problems.length) return check('Laptop', 'Chrome profiles', 'warn', problems.join('; '));
+  const seen = [show && `show ${userDataDir(show)}`, consoleChrome && `console ${userDataDir(consoleChrome)}`].filter(Boolean);
+  if (!seen.length) return check('Laptop', 'Chrome profiles', 'pass', 'no show or console window to check yet (the Browser and Console checks say why)');
+  return check('Laptop', 'Chrome profiles', 'pass', `they survive a restart: ${seen.join(', ')}`);
 }
 
 // ---- the network and the cloud ----------------------------------------------------------------------------
@@ -487,13 +526,14 @@ const WII_BATTERY_LOW = 0.2;
 const WII_DROPS_WARN = 2;
 
 /**
- * The Wii remote, as the relay last heard from the console that hosts it (it pairs with this laptop's Chrome).
+ * The Wii remote, as the relay last heard from the console that hosts it (paired with this laptop by MacWiiPair,
+ * connected in its Console's Chrome).
  * Optional: the console does everything it does, so nothing here fails. It has no signal strength, but the host
  * counts its drops over the last 10 minutes (`drops`, summed over hosts): from 2, it's at the edge of its range.
  * The runbook's walk test is still the range check.
  */
 export function wiiRemoteCheck(status: RemoteStatus | null, nowMs: number): Check {
-  if (!status) return check('Network', 'Wii remote', 'warn', 'no Wii remote connected (optional: the console does everything it does). It pairs with the console on this laptop (night runbook, step 7)');
+  if (!status) return check('Network', 'Wii remote', 'warn', "no Wii remote connected (optional: the console does everything it does). Pair it once with MacWiiPair and its SYNC button, then on this laptop's console: Comandament → Connectar (night runbook, step 7)");
   const minutes = Math.max(0, Math.round((nowMs - status.sinceMs) / 60_000));
   const battery = status.battery === null ? 'battery unknown' : `battery ${Math.round(status.battery * 100)}%`;
   const lastDrop = typeof status.lastDropMs === 'number' ? `, the latest ${Math.max(0, Math.round((nowMs - status.lastDropMs) / 60_000))} min ago` : '';

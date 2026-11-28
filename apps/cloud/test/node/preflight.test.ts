@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import * as c from '../../laptop/preflight/checks.ts';
 import { VOICE_CUES, roundCardPrice, type GamePlan } from '@quina/protocol';
 import { PLAN } from '../support/plan.ts';
+import { CHROME, HELPER, psLine } from '../support/chrome.ts';
+import { RUNBOOK_COMMANDS, SHOW_CHROME_FLAGS } from '../../laptop/chrome-profiles.ts';
 
 const device = (name: string, transport: string, extra: Record<string, string> = {}) => ({
   SPAudioDataType: [{ _items: [{ _name: 'MacBook Pro Microphone', coreaudio_device_transport: 'coreaudio_device_type_builtin' }, { _name: name, coreaudio_default_audio_output_device: 'spaudio_yes', coreaudio_device_transport: `coreaudio_device_type_${transport}`, ...extra }] }],
@@ -38,18 +40,66 @@ test('power, disk and the browser', () => {
   assert.equal(c.diskCheck(0.5e9).status, 'fail');
   assert.equal(c.diskCheck(3e9).status, 'warn');
   assert.equal(c.diskCheck(50e9).status, 'pass');
-  const chrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-  const flags = '--disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows';
-  assert.equal(c.browserCheck([`${chrome} --user-data-dir=/tmp/quina-show --autoplay-policy=no-user-gesture-required ${flags} --kiosk http://localhost:5174/show/?autostart=1`]).status, 'pass');
+  // The runbook's command (step 5), as ps shows it; then the same with a flag left out.
+  const show = psLine(RUNBOOK_COMMANDS.show);
+  const without = (flag: string) => show.replace(` ${flag}`, '');
+  assert.equal(c.browserCheck([show]).status, 'pass');
+  assert.match(c.browserCheck([show]).detail, /kiosk/);
   // Without the throttling flags a covered window stalls the show: fail.
-  assert.equal(c.browserCheck([`${chrome} --user-data-dir=/tmp/quina-show --autoplay-policy=no-user-gesture-required --kiosk http://localhost:5174/show/`]).status, 'fail');
-  assert.equal(c.browserCheck([`${chrome} --user-data-dir=/tmp/quina-show --autoplay-policy=no-user-gesture-required --disable-background-timer-throttling --kiosk http://localhost:5174/show/`]).status, 'fail');
+  assert.equal(c.browserCheck([without('--disable-renderer-backgrounding')]).status, 'fail');
+  assert.equal(c.browserCheck([without('--disable-renderer-backgrounding').replace(' --disable-backgrounding-occluded-windows', '')]).status, 'fail');
   // The flags but no autoplay: the page waits for a click.
-  assert.equal(c.browserCheck([`${chrome} --user-data-dir=/tmp/quina-show ${flags} --kiosk http://localhost:5174/show/`]).status, 'warn');
-  // Only someone's everyday Chrome: not the show's.
-  assert.equal(c.browserCheck([`${chrome} --profile-directory=Default`]).status, 'warn');
-  assert.equal(c.browserCheck([chrome, `${chrome} Helper (Renderer) --type=renderer`]).status, 'warn');
+  assert.equal(c.browserCheck([without('--autoplay-policy=no-user-gesture-required')]).status, 'warn');
+  // Found by its profile alone (the address typed in later), and last year's /tmp command by its address.
+  assert.equal(c.browserCheck([`${CHROME} --user-data-dir=/Users/tech/Library/Application Support/Quina/chrome-show --autoplay-policy=no-user-gesture-required ${SHOW_CHROME_FLAGS.join(' ')}`]).status, 'pass');
+  assert.equal(c.browserCheck([`${CHROME} --user-data-dir=/tmp/quina-show --autoplay-policy=no-user-gesture-required ${SHOW_CHROME_FLAGS.join(' ')} --kiosk http://localhost:5174/show/?autostart=1`]).status, 'pass');
+  // A profile merely named like it is not the show's.
+  assert.equal(c.browserCheck([`${CHROME} --user-data-dir=/Users/tech/chrome-show-old`]).status, 'warn');
+  // Only someone's everyday Chrome, the console, a helper or a headless tool: not the show's.
+  assert.equal(c.browserCheck([`${CHROME} --profile-directory=Default`]).status, 'warn');
+  assert.equal(c.browserCheck([psLine(RUNBOOK_COMMANDS.console)]).status, 'warn');
+  assert.equal(c.browserCheck([CHROME, `${HELPER} --type=renderer --user-data-dir=/Users/tech/Library/Application Support/Quina/chrome-show --kiosk`]).status, 'warn');
+  assert.equal(c.browserCheck([`${CHROME} --headless=new --remote-debugging-port=9401 --user-data-dir=/var/folders/h7/x/T/quina-shoot-KeO5ZC --hide-scrollbars --no-first-run about:blank`]).status, 'warn');
   assert.equal(c.browserCheck(['/usr/bin/zsh']).status, 'warn');
+});
+
+test('Chrome profiles: both outside /tmp pass; a temporary or everyday profile, or no laptop console, warns', () => {
+  const tmp = ['/tmp', '/private/tmp', '/var/folders/h7/x/T'];
+  const show = psLine(RUNBOOK_COMMANDS.show);
+  const consoleLine = psLine(RUNBOOK_COMMANDS.console);
+  const helper = `${HELPER} --type=gpu-process --user-data-dir=/tmp/quina-show --gpu-preferences=WAAAAAAAAACgAACBAAAAAAAAAAAAAGAAQA`;
+  const both = c.chromeProfilesCheck([show, helper, consoleLine, CHROME], false, tmp);
+  assert.equal(both.status, 'pass');
+  assert.equal(both.group, 'Laptop');
+  assert.match(both.detail, /show \/Users\/tech\/Library\/Application Support\/Quina\/chrome-show, console .*chrome-console/);
+  // Last year's /tmp commands: each names what a restart would cost.
+  const oldShow = `${CHROME} --user-data-dir=/tmp/quina-show --autoplay-policy=no-user-gesture-required ${SHOW_CHROME_FLAGS.join(' ')} --kiosk http://localhost:5174/show/?autostart=1`;
+  const oldConsole = `${CHROME} --user-data-dir=/tmp/quina-console --app=http://localhost:5174/console/`;
+  const tmpShow = c.chromeProfilesCheck([oldShow, consoleLine], false, tmp);
+  assert.equal(tmpShow.status, 'warn');
+  assert.match(tmpShow.detail, /\/tmp\/quina-show .*display offset, the Interval's place and its own copy of the Game \(the link's copy still resumes the Game\).*step 5/);
+  const tmpConsole = c.chromeProfilesCheck([show, oldConsole], false, tmp);
+  assert.equal(tmpConsole.status, 'warn');
+  assert.match(tmpConsole.detail, /\/tmp\/quina-console .*the Wii remote's grant .*saved resume code.*step 7/);
+  assert.equal(c.chromeProfilesCheck([oldShow, oldConsole], true, tmp).detail.split('; ').length, 2, 'both named');
+  // /private/tmp and the user's temporary folder are emptied too.
+  assert.equal(c.chromeProfilesCheck([show.replace('/Users/tech/Library/Application Support/Quina', '/private/tmp'), consoleLine], false, tmp).status, 'warn');
+  assert.equal(c.chromeProfilesCheck([show, consoleLine.replace('/Users/tech/Library/Application Support/Quina', '/var/folders/h7/x/T')], false, tmp).status, 'warn');
+  // The show in the everyday profile (no --user-data-dir).
+  const everyday = c.chromeProfilesCheck([`${CHROME} --autoplay-policy=no-user-gesture-required ${SHOW_CHROME_FLAGS.join(' ')} --kiosk http://localhost:5174/show/?autostart=1`, consoleLine], false, tmp);
+  assert.equal(everyday.status, 'warn');
+  assert.match(everyday.detail, /everyday Chrome profile/);
+  // No laptop console: a warning with the tablet; with --laptop-only the Console check's FAIL says it already.
+  const noConsole = c.chromeProfilesCheck([show], false, tmp);
+  assert.equal(noConsole.status, 'warn');
+  assert.match(noConsole.detail, /console isn't open in its own profile.*Wii remote/);
+  assert.equal(c.chromeProfilesCheck([show], true, tmp).status, 'pass');
+  // The show not running is the Browser check's: not reported again.
+  assert.equal(c.chromeProfilesCheck([consoleLine], false, tmp).status, 'pass');
+  assert.equal(c.chromeProfilesCheck([], true, tmp).status, 'pass');
+  assert.match(c.chromeProfilesCheck([], true, tmp).detail, /nothing|no show or console/);
+  // A headless tool's Chrome in the temporary folder is neither window.
+  assert.equal(c.chromeProfilesCheck([show, consoleLine, `${CHROME} --headless=new --user-data-dir=/var/folders/h7/x/T/quina-shoot-KeO5ZC about:blank`], false, tmp).status, 'pass');
 });
 
 const line = (...ids: number[]) => ids.map((id) => ({ id }));
@@ -400,6 +450,7 @@ test('the Wii remote: optional, so it only warns; connected, battery, and when i
   assert.match(c.wiiRemoteCheck({ connected: true, battery: 0.8, sinceMs: now, drops: 0, lastDropMs: null }, now).detail, /no drops in the last 10 min/);
   assert.equal(c.wiiRemoteCheck({ connected: true, battery: 0.22, sinceMs: now }, now).status, 'pass', "the console's own low mark is 20 %");
   assert.equal(c.wiiRemoteCheck(null, now).status, 'warn');
+  assert.match(c.wiiRemoteCheck(null, now).detail, /Pair it once with MacWiiPair and its SYNC button, then on this laptop's console: Comandament → Connectar/);
 });
 
 test('card prices (U5): every card type a round plays has a price and a known rule', () => {

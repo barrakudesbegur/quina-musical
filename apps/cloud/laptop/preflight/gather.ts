@@ -203,7 +203,9 @@ async function laptopChecks(o: PreflightOptions): Promise<checks.Check[]> {
   const disk = fs.statfsSync(DATA);
   out.push(checks.diskCheck(disk.bavail * disk.bsize));
   out.push(checks.distCheck(distProblem(path.join(REPO, 'apps/show/dist'), REPO)));
-  out.push(checks.browserCheck(((await shell('ps', ['-axo', 'command'])) ?? '').split('\n')));
+  const processes = ((await shell('ps', ['-axo', 'command'])) ?? '').split('\n');
+  out.push(checks.browserCheck(processes));
+  out.push(checks.chromeProfilesCheck(processes, o.laptopOnly === true));
   return out;
 }
 
