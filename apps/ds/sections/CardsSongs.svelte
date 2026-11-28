@@ -130,10 +130,12 @@
     <h3>D1 · PlayerCard</h3>
     <p class="ds-gallery__note">
       Played songs fade a little so the ones to come stand out (#70); titles hyphenate and stop at two lines (#71). The count pill
-      shows only where songs are counted (<code>showRemaining</code>, #72), a rosette at 0; DEMPEUS / ASSEGUT take the same place,
-      compact too (#73). The song playing now (#74; here «Cuídate») is marked very clearly (§8 Y1): its cover at full strength,
+      shows only where songs are counted (<code>showRemaining</code>, #72), at 0 a rosette in a full circle (an icon alone is never a
+      pill); DEMPEUS / ASSEGUT take the same place, beside the number on the header's one line, compact too (#73; a size smaller
+      on a card under 22rem, as on these). The song playing now (#74; here «Cuídate») is marked very clearly (§8 Y1): its cover at full strength,
       no veil, the design system's 4 px running orange ring, slightly see-through (85 %), with its glow, uncut. A card holding it
-      keeps its count, in an orange pill ringed by the same running dashes (card-playing). No near-win marking any more (§8 Y1).
+      keeps its count, in an orange pill ringed by the same running dashes (card-playing); on the warm colours (corn, red, pink,
+      orange) the pill gets a paper halo and paper dashes, so it never melts into the band. No near-win marking any more (§8 Y1).
     </p>
     <div class="ds-gallery__grid ds-gallery__grid--cards">
       {#snippet c1()}
@@ -149,7 +151,7 @@
           {@render grid(2, false, false)}
         </PlayerCard>
       {/snippet}
-      {@render cell('glow (a win): ringed in the card’s own colour; 0 to go: the rosette; a long name', c2)}
+      {@render cell('glow (a win): ringed in the card’s own colour; 0 to go: the rosette, in a full circle; a long name', c2)}
       {#snippet c3()}
         <PlayerCard identity={5} name="Tieta" number="#88" glow="green" data-stand="standing">
           {#snippet mark()}<span class="swatch"><CardMark identity={5} decorative /></span>{/snippet}
@@ -181,6 +183,13 @@
         </PlayerCard>
       {/snippet}
       {@render cell('the black card (identity 9, R10): its mark outlined in paper; holding the song playing now', c6)}
+      {#snippet c7()}
+        <PlayerCard identity={6} name="Corona" number="#215" showRemaining remaining={2} remainingLabel="En falten 2" countColor="orange" countRing="running">
+          {#snippet mark()}<span class="swatch"><CardMark identity={6} decorative /></span>{/snippet}
+          {@render grid(6)}
+        </PlayerCard>
+      {/snippet}
+      {@render cell('the orange card (identity 6) holding the song playing now: the orange pill gets a paper halo and paper dashes, so it doesn’t melt into its band', c7)}
     </div>
     <h4>Long names (R9): the name field's 20 letters, a mark's own name</h4>
     <div class="ds-gallery__grid ds-gallery__grid--cards">
@@ -201,7 +210,7 @@
       {#snippet k2()}<PlayerCard identity={3} name="Pare" number="#201" compact data-stand="seated">{#snippet mark()}<span class="swatch"><CardMark identity={3} decorative /></span>{/snippet}{#snippet status()}<span class="player-card__stand"><span class="stand-badge" data-state="seated">Assegut</span></span>{/snippet}</PlayerCard>{/snippet}
       {@render cell('compact, ASSEGUT (#73)', k2)}
       {#snippet k3()}<PlayerCard identity={8} name="Neu" number="#312" compact showRemaining remaining={0} remainingLabel="No en falta cap">{#snippet mark()}<span class="swatch"><CardMark identity={8} decorative /></span>{/snippet}</PlayerCard>{/snippet}
-      {@render cell('compact, white, 0 to go', k3)}
+      {@render cell('compact, white, 0 to go: the round rosette', k3)}
       {#snippet k4()}<PlayerCard identity={9} name="Barret" number="#404" compact>{#snippet mark()}<span class="swatch"><CardMark identity={9} decorative /></span>{/snippet}</PlayerCard>{/snippet}
       {@render cell('compact, black, not counting', k4)}
     </div>

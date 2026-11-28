@@ -7,7 +7,8 @@
   Props say what it draws: `identity` (1–10: its colour --card-color-N; 8 is the white card, 9 the black one),
   `name`, `number`, `showNumber`, `compact` (the header band alone, a resting row), `glow` (gold: your song, a win or
   a card just saved; green: a card standing), `sunk` (the seated look: lowered, tilted, veiled), and the header's count
-  pill: `showRemaining` with `remaining` (the songs the card still needs; at 0 a rosette, «complete: claim it», #72)
+  pill: `showRemaining` with `remaining` (the songs the card still needs; at 0 a rosette, «complete: claim it», #72, in a
+  full circle: an icon alone is never a pill)
   and `remainingLabel` (its accessible words), `countColor` (the pill's fill: paper, or orange with white figures) and
   `countRing` (`running`: CardCell's dashes run round the pill; 27 Nov, §8 Y1: the card holding the song playing now
   keeps its count and gets attention). Slots: `mark` (the card's mark, data drawn by the app), `status` (the
@@ -68,6 +69,8 @@
   }: Props = $props();
 
   const counting = $derived(showRemaining && remaining !== null);
+  /** The pill holds only an icon (the rosette at 0): it is a full circle then, never a pill (the user's canvas comment). */
+  const iconOnly = $derived(remaining === 0);
 </script>
 
 <div {...rest} class="player-card-wrap {className}" data-compact={compact || undefined} data-sunk={sunk || undefined}>
@@ -85,6 +88,7 @@
         <span
           class="player-card__count"
           data-done={remaining === 0 || undefined}
+          data-icon-only={iconOnly || undefined}
           data-color={countColor === 'paper' ? undefined : countColor}
           role="img"
           aria-label={remainingLabel ?? String(remaining)}

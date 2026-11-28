@@ -3,8 +3,8 @@
  * phone's, in apps/player/player.css, since only the phone draws a player's card).
  *
  * The count pill (#72): the songs the card still needs, a number in a paper pill with no label or icon, at the header's
- * right end; at 0 a gold pill with the rosette (complete: claim it). The DEMPEUS / ASSEGUT pill takes the same place
- * in the Desgraciat round (#73), in the compact card too.
+ * right end; at 0 a gold circle with the rosette (complete: claim it; an icon alone is always a full circle). The
+ * DEMPEUS / ASSEGUT pill takes the same place in the Desgraciat round (#73), in the compact card too.
  */
 
 @layer components {
@@ -32,8 +32,15 @@
 }
 
 .player-card__count[data-done] {
-  padding: 0 0.25rem;
   background: var(--color-gold);
+}
+
+/* An icon alone (the rosette at 0) is a full circle, the pill's height both ways (28 Nov evening, the user's canvas
+   comment: "when icon only, should still be fully round"); figures keep the pill. */
+.player-card__count[data-icon-only] {
+  width: 2rem;
+  min-width: 0;
+  padding: 0;
 }
 
 /* The attention look (27 Nov, §8 Y1; ANIMATIONS.md \`card-playing\`): the card holds the song playing now. The count
@@ -67,6 +74,21 @@
   stroke: var(--palette-solid, var(--color-orange));
   stroke-width: var(--count-ring-w);
   stroke-dasharray: 6 4;
+}
+
+/* On the warm card colours the orange pill and its orange dashes melt into the header band (28 Nov evening, Frontend's
+   nit on the orange card, identity 6, whose --card-color-6 is the pill's own orange; checked on all ten): the orange
+   (6), the pink (5, 1.2:1 against the orange), the red (3) and the corn (1) give the pill a paper halo filling the gap
+   to its dashes, and the dashes run in paper (ANIMATIONS.md `card-playing`). The cool and dark colours, and the white
+   card, keep the plain look: the orange reads on them. */
+.player-card:is([data-identity='1'], [data-identity='3'], [data-identity='5'], [data-identity='6']) .player-card__count[data-color='orange'] {
+  box-shadow:
+    0 0 0 var(--count-halo, 3px) var(--color-paper),
+    0 2px 0 var(--count-halo, 3px) var(--color-line);
+}
+
+.player-card:is([data-identity='1'], [data-identity='3'], [data-identity='5'], [data-identity='6']) .player-card__count-ring rect {
+  stroke: var(--color-paper);
 }
 
 /* In step with the cell's ring (\`cell-playing\`: one dash period per 1.6 s); still under reduced motion. */
