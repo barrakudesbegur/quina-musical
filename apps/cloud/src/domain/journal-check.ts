@@ -76,6 +76,7 @@ const settings: FieldCheck = (value) => {
     autoSounds: optional(autoSounds),
     volumes: optional(volumes),
     remoteShake: optional(boolean),
+    announceWins: optional(boolean),
   });
 };
 

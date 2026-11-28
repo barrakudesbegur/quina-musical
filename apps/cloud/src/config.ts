@@ -31,6 +31,15 @@ export const CLOUD = Object.freeze({
     /** How long a .jxl URL that answered with the fallback (no JXL yet) may be cached. */
     fallbackForJxlMaxAgeS: 300,
   },
+  /**
+   * The phones' beat (PublicState.beat) is sent again for the same engine beat only when its downbeat, on the cloud's
+   * clock, moved this many ms or more from the one last sent. The clock offset (domain/clock.ts) only steps down, to a
+   * new smallest (received − sent) sample, by a few ms once settled: this keeps those steps from re-sending the beat to
+   * every phone, while the engine's own re-anchors (drift beyond about 30 ms, a landing, a loop re-cue, a Pausa resume)
+   * always pass. Phones stay within this of the projector, and a slow drift corrects itself once it passes it, since the
+   * comparison is with the last value sent. A new bpm or metre is always sent.
+   */
+  beatResendMs: 10,
   /** The GameRoom is placed near the venue (Begur, Catalonia). */
   locationHint: 'weur' as DurableObjectLocationHintName,
 });

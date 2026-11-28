@@ -68,6 +68,23 @@ test('a new Game resets the rounds but keeps the edition: plan, banner, sound de
   assert.equal(fresh.edition, '26');
 });
 
+test("the phones' LÍNIA!/QUINA! switch and the beat: on and none at first, applied as sent, reset by a new Game", () => {
+  const empty = emptyPublicState('26');
+  assert.equal(empty.announceWins, true);
+  assert.equal(empty.beat, null);
+  const beat = { bpm: 124, beatsPerBar: 4, downbeatAtMs: 1_000 };
+  const state = deepFreeze(applyPublic(empty, [{ kind: 'announceWins', announceWins: false }, { kind: 'beat', beat }]));
+  assert.equal(state.announceWins, false);
+  assert.deepEqual(state.beat, beat);
+  const after = applyPublic(state, [{ kind: 'announceWins', announceWins: true }, { kind: 'beat', beat: null }]);
+  assert.equal(after.announceWins, true);
+  assert.equal(after.beat, null);
+  // They are the Game's: a new Game starts with the announcements on and no beat.
+  const fresh = newGamePublicState(state, 'game-2');
+  assert.equal(fresh.announceWins, true);
+  assert.equal(fresh.beat, null);
+});
+
 test('followFeed: a snapshot, then deltas in order; a gap or a delta first means reconnect', () => {
   const snapshot = { v: PROTOCOL_VERSION, type: 'public.state', seq: 7, nowMs: 0, state: emptyPublicState('26') };
   const delta = (seq: number) => ({ v: PROTOCOL_VERSION, type: 'public.delta', seq, nowMs: 0, changes: [round1] });

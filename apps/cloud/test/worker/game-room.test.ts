@@ -218,6 +218,38 @@ describe('the laptop and the phones', () => {
     expect(view.state.winners).toHaveLength(2);
   });
 
+  it("the phones' LÍNIA!/QUINA! switch comes from the journal's settings, and is rebuilt with its Game after a switch or a restart", async () => {
+    // Switched off, as the engine journals it: every entry with the Game's settings carries it.
+    const off = new JournalBuilder('g-quiet').settings().startRound().land(1).entries.map((e) =>
+      'settings' in e ? ({ ...e, settings: { ...e.settings, announceWins: false } } as JournalEntry) : e,
+    );
+    const { client } = await laptop('g-quiet');
+    await upload(client, 'g-quiet', off);
+    const p = await phone();
+    let view = await p.view();
+    expect(view.state.announceWins).toBe(false);
+    expect(view.state.beat).toBeNull();
+    expect(JSON.stringify(p.seen)).not.toContain('"settings"');
+
+    // Another Game has its own: on, as its journal doesn't say.
+    await upload(client, 'g-loud', new JournalBuilder('g-loud').settings().startRound().entries);
+    view = await p.view();
+    expect(view.state.gameId).toBe('g-loud');
+    expect(view.state.announceWins).toBe(true);
+
+    // Back to the first Game: rebuilt from its journal.
+    client.send({ v, type: 'link.hello', clientId: 'test-laptop', gameId: 'g-quiet', lastSeq: off.length, sentAtMs: now() });
+    expect(await client.next()).toMatchObject({ type: 'cloud.welcome', gameId: 'g-quiet' });
+    expect(await client.next()).toMatchObject({ type: 'cloud.consoles' });
+    expect(await client.next()).toMatchObject({ type: 'cloud.plan' });
+    view = await p.view();
+    expect(view.state.gameId).toBe('g-quiet');
+    expect(view.state.announceWins).toBe(false);
+
+    await evictDurableObject(roomOf(env), { webSockets: 'close' }); // a restart: only SQLite remains
+    expect((await (await phone()).view()).state.announceWins).toBe(false);
+  });
+
   it('live events move the Spin, with its landing song (D277); the private fields never reach the phones', async () => {
     const game = new JournalBuilder('g-spin').startRound().land(1);
     const { client } = await laptop('g-spin');

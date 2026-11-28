@@ -169,6 +169,10 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
   assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, volumes: { master: 100, laterSlider: 300 } } }).ok, 'a slider added later');
   // The remote's shake switch (D148): a boolean, absent in an older journal.
   assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, remoteShake: false } }).ok, 'the shake switch off');
+  // The phones' LÍNIA!/QUINA! switch: a boolean, absent in an older journal (absent means on).
+  assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, announceWins: false } }).ok, 'the announcements off');
+  assert.ok(checkJournalEntry({ ...started, settings: { ...changed.settings, announceWins: true } }).ok, 'the announcements on, at a round start');
+  assert.equal('announceWins' in changed.settings, false, 'the builder writes an older journal: no announceWins');
   // The automatic sounds (D237): `autoSounds` since, `finalLapStinger` and `voicesOn` before; a sound added later passes.
   assert.equal('finalLapStinger' in changed.settings, false, 'the builder writes what the engine writes now');
   assert.ok(checkJournalEntry({ ...changed, settings: { ...changed.settings, autoSounds: { ...AUTO_SOUNDS_DEFAULT, voices: false } } }).ok, 'autoSounds, no finalLapStinger');
@@ -179,6 +183,8 @@ test('the entry check: types of known fields, extra fields allowed, unknown kind
     ['a volume as text', { ...started, settings: { ...changed.settings, volumes: { songs: '80' } } }],
     ['volumes as a list', { ...changed, settings: { ...changed.settings, volumes: [80] } }],
     ['the shake switch as text', { ...changed, settings: { ...changed.settings, remoteShake: 'on' } }],
+    ['the announcements as text', { ...changed, settings: { ...changed.settings, announceWins: 'on' } }],
+    ['the announcements null', { ...started, settings: { ...changed.settings, announceWins: null } }],
     ['an automatic sound as text', { ...changed, settings: { ...changed.settings, autoSounds: { voices: 'yes' } } }],
     ['autoSounds not an object', { ...changed, settings: { ...changed.settings, autoSounds: true } }],
     ['autoSounds as a list', { ...started, settings: { ...changed.settings, autoSounds: [true] } }],

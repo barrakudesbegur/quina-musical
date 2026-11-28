@@ -1,10 +1,11 @@
 // The public projection: phones learn the landings, scenes, Check results and winning cards, and nothing private.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { defaultCardType, emptyRecord, extendJournal, PROTOCOL_VERSION, type GameRecord, type JournalEntry, type ShowEvent, type ShowState } from '@quina/protocol';
+import { defaultCardType, emptyRecord, extendJournal, PROTOCOL_VERSION, type GameRecord, type JournalEntry, type JournalSettings, type ShowEvent, type ShowState } from '@quina/protocol';
 import { projectEntry, projectEvent, type ProjectionContext } from '../../src/domain/projection.ts';
 import { applyPublic, emptyPublicState, PUBLIC_FEED, type PublicChange, type PublicSpin, type PublicState } from '@quina/protocol';
 import { JournalBuilder } from '../support/journal-builder.ts';
+import { CLOUD } from '../../src/config.ts';
 
 const OFFSET = 250;
 const ctx: ProjectionContext = { toCloudMs: (ms) => ms + OFFSET };
@@ -94,6 +95,45 @@ test('a manual resume brings the round back whole, its counted songs only, strai
   assert.equal(state.scene, 'play');
   assert.equal(state.interval, null);
   assert.deepEqual(forbiddenKeys(state), []);
+});
+
+/** The entry with its settings changed, as an engine that journals these would write it. */
+function withSettings(entry: JournalEntry, changes: Partial<JournalSettings>): JournalEntry {
+  assert.ok('settings' in entry, `${entry.kind} has settings`);
+  return { ...entry, settings: { ...entry.settings, ...changes } } as JournalEntry;
+}
+
+test("the phones' LÍNIA!/QUINA! switch goes public from the Game's settings, only when it changes; absent means on", () => {
+  const b = new JournalBuilder('g-announce');
+  b.settings().settings({ announceWins: false }).settings({ announceWins: false, pace: 20, autoAdvance: false }).settings().settings({ announceWins: true });
+  const { state, changes } = project(b.entries);
+  assert.deepEqual(changes, [
+    { kind: 'announceWins', announceWins: false },
+    { kind: 'announceWins', announceWins: true }, // an entry without it: on again
+  ]);
+  assert.equal(state.announceWins, true);
+  assert.deepEqual(forbiddenKeys(changes), []);
+  // A feed state stored before announceWins lacks it: absent there means on too.
+  const { announceWins: _, ...stored } = emptyPublicState('26');
+  assert.deepEqual(project(new JournalBuilder('g-old').settings({ announceWins: true }).entries, stored).changes, []);
+  assert.deepEqual(project(new JournalBuilder('g-old').settings({ announceWins: false }).entries, stored).changes, [{ kind: 'announceWins', announceWins: false }]);
+});
+
+test("a round started or resumed carries the Game's settings: its announceWins goes public, nothing else of them", () => {
+  const started = new JournalBuilder('g-announce-start').startRound();
+  const off = started.entries.map((e) => (e.kind === 'round.started' ? withSettings(e, { announceWins: false }) : e));
+  const fromStart = project(off);
+  assert.deepEqual(fromStart.changes.filter((c) => c.kind === 'announceWins'), [{ kind: 'announceWins', announceWins: false }]);
+  assert.equal(fromStart.state.announceWins, false);
+  assert.deepEqual(forbiddenKeys(fromStart.state), []);
+  assert.deepEqual(project(started.entries).changes.filter((c) => c.kind === 'announceWins'), [], 'absent at the start: on, as it was');
+
+  const resumed = new JournalBuilder('g-announce-resume').resume(2, 3);
+  const fromResume = project(resumed.entries.map((e) => (e.kind === 'round.resumed' ? withSettings(e, { announceWins: false }) : e)));
+  assert.deepEqual(fromResume.changes.filter((c) => c.kind === 'announceWins'), [{ kind: 'announceWins', announceWins: false }]);
+  // Off, then a resume with it on: back on.
+  const back = project(resumed.entries.map((e) => (e.kind === 'round.resumed' ? withSettings(e, { announceWins: true }) : e)), fromStart.state);
+  assert.deepEqual(back.changes.filter((c) => c.kind === 'announceWins'), [{ kind: 'announceWins', announceWins: true }]);
 });
 
 test('the round being introduced is public before its Shuffle, and goes once it starts', () => {
@@ -398,6 +438,53 @@ test("from the engine's state only the pause, the Interval and the rounded Game 
   ]);
   assert.deepEqual(projectEvent(applyPublic(state, made), show, ctx), [], 'the same state again changes nothing');
   assert.deepEqual(forbiddenKeys(made), []);
+});
+
+test("the beat of the song heard goes public on the cloud's clock; the clock offset's small steps don't re-send it", () => {
+  const show = (beat: unknown) =>
+    ({ v: PROTOCOL_VERSION, type: 'state', pause: null, interval: null, schedule: { gameEndMs: 0 }, transition: null, suspense: null, beat }) as unknown as ShowState;
+  const offsetBy = (ms: number): ProjectionContext => ({ toCloudMs: (t) => t + OFFSET + ms });
+  const start = applyPublic(emptyPublicState('26'), [{ kind: 'gameEnd', gameEndMs: 0 }]);
+  // A beat with fields this cloud doesn't know: only the three named go out.
+  const heard = { bpm: 124, beatsPerBar: 4, downbeatAtMs: 10_000, songId: 7, nextDownbeatAtMs: 99 };
+  const first = projectEvent(start, show(heard), ctx);
+  assert.deepEqual(first, [{ kind: 'beat', beat: { bpm: 124, beatsPerBar: 4, downbeatAtMs: 10_000 + OFFSET } }]);
+  const sent = applyPublic(start, first);
+  assert.deepEqual(projectEvent(sent, show(heard), ctx), [], 'the same beat again changes nothing');
+
+  // The offset steps down to a new smallest sample: under beatResendMs it stays, from there it goes.
+  const step = CLOUD.beatResendMs;
+  assert.equal(step, 10);
+  assert.deepEqual(projectEvent(sent, show(heard), offsetBy(-(step - 1))), []);
+  assert.deepEqual(projectEvent(sent, show(heard), offsetBy(step - 1)), []);
+  assert.deepEqual(projectEvent(sent, show(heard), offsetBy(-step)), [{ kind: 'beat', beat: { bpm: 124, beatsPerBar: 4, downbeatAtMs: 10_000 + OFFSET - step } }]);
+  // Compared with the last value sent: a slow drift goes once it adds up to the threshold.
+  assert.deepEqual(projectEvent(sent, show({ ...heard, downbeatAtMs: 10_000 + 6 }), offsetBy(-2)), [], '4 ms off what phones have');
+  assert.equal(projectEvent(sent, show({ ...heard, downbeatAtMs: 10_000 + 6 }), offsetBy(4)).length, 1, '10 ms off what phones have');
+  // The engine's own re-anchor (a landing: its downbeat is the landAtMs, ahead) always goes.
+  assert.deepEqual(projectEvent(sent, show({ ...heard, downbeatAtMs: 25_000 }), ctx), [{ kind: 'beat', beat: { bpm: 124, beatsPerBar: 4, downbeatAtMs: 25_000 + OFFSET } }]);
+
+  // A new tempo or metre always goes, even on the same downbeat.
+  assert.deepEqual(projectEvent(sent, show({ ...heard, bpm: 124.5 }), ctx), [{ kind: 'beat', beat: { bpm: 124.5, beatsPerBar: 4, downbeatAtMs: 10_000 + OFFSET } }]);
+  assert.deepEqual(projectEvent(sent, show({ ...heard, beatsPerBar: 3 }), ctx), [{ kind: 'beat', beat: { bpm: 124, beatsPerBar: 3, downbeatAtMs: 10_000 + OFFSET } }]);
+
+  // No song heard: the beat goes; a song again: it comes back.
+  assert.deepEqual(projectEvent(sent, show(null), ctx), [{ kind: 'beat', beat: null }]);
+  assert.deepEqual(projectEvent(sent, show(undefined), ctx), [{ kind: 'beat', beat: null }], 'an older engine has no beat');
+  assert.deepEqual(projectEvent(start, show(null), ctx), []);
+  // An older engine's state has no `beat` at all: nothing while phones have none, from a feed state stored before it too.
+  const older = { v: PROTOCOL_VERSION, type: 'state', pause: null, interval: null, schedule: { gameEndMs: 0 }, transition: null, suspense: null } as unknown as ShowState;
+  assert.deepEqual(projectEvent(start, older, ctx), []);
+  const { beat: _, ...stored } = start;
+  assert.deepEqual(projectEvent(stored, older, ctx), []);
+  assert.deepEqual(projectEvent(stored, show(heard), ctx), first);
+  assert.deepEqual(forbiddenKeys(first), []);
+});
+
+test("the engine's state never makes the announcements public: they come only from the journal's settings", () => {
+  const show = { v: PROTOCOL_VERSION, type: 'state', pause: null, interval: null, schedule: { gameEndMs: 0 }, transition: null, suspense: null, beat: null, game: { announceWins: false, pace: 20 } } as unknown as ShowState;
+  const start = applyPublic(emptyPublicState('26'), [{ kind: 'gameEnd', gameEndMs: 0 }]);
+  assert.deepEqual(projectEvent(start, show, ctx), []);
 });
 
 test("the paced Check's events and its private claim fields never reach phones (D108, D123; U79)", () => {

@@ -4,10 +4,13 @@
 // - live events: only the cases below, and only the fields named there; every other event is private.
 // Phones never get the Queue, the next song before a Spin, possible winners, the Phase, the real Heat, `roundEndMs`,
 // a Check's steps before its verdict, a claim's details, or winners' names. A Spin does carry its landing song from
-// its start (`targetId`, D277 for U206): phones reveal it only at `landAtMs`.
+// its start (`targetId`, D277 for U206): phones reveal it only at `landAtMs`. Of the Game's settings, only
+// `announceWins` (the phones' LÍNIA!/QUINA!); of the engine's state, besides the pause, Interval and Game end, only the
+// beat of the song heard (`beat`, never the incoming song's before its Spin's transition.scheduled).
 // Times arrive on the laptop's clock and leave on the cloud's (`toCloudMs`).
-import type { GameRecord, JournalEntry, ShowEvent, ShowState } from '@quina/protocol';
-import { DEFAULT_SIDE, defaultCardType, roundGameEnd, type PublicChange, type PublicRound, type PublicSpin, type PublicState } from '@quina/protocol';
+import type { GameRecord, JournalEntry, JournalSettings, ShowEvent, ShowState } from '@quina/protocol';
+import { DEFAULT_SIDE, defaultCardType, roundGameEnd, type PublicBeat, type PublicChange, type PublicRound, type PublicSpin, type PublicState } from '@quina/protocol';
+import { CLOUD } from '../config.ts';
 
 export interface ProjectionContext {
   /** A laptop-clock epoch ms on the cloud's clock. */
@@ -39,6 +42,7 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
       if (state.intro) changes.push({ kind: 'intro', intro: null });
       if (state.spin && ctx.toCloudMs(entry.atMs) >= state.spin.startAtMs) changes.push({ kind: 'spin', spin: null }); // not a late upload's
       if (state.check) changes.push({ kind: 'check', check: null });
+      changes.push(...announceWinsChange(state, entry.settings));
       return changes;
     }
     case 'round.resumed': {
@@ -66,6 +70,7 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
       if (state.check) changes.push({ kind: 'check', check: null });
       if (state.interval) changes.push({ kind: 'interval', interval: null });
       if (state.scene !== 'play') changes.push({ kind: 'scene', scene: 'play' });
+      changes.push(...announceWinsChange(state, entry.settings));
       return changes;
     }
     case 'song.landed': {
@@ -128,10 +133,12 @@ export function projectEntry(state: PublicState, entry: JournalEntry, record: Ga
       const shown = claim && state.check && state.check.cardId === claim.cardId && state.check.result === 'pending';
       return shown ? [{ kind: 'check', check: null }] : [];
     }
+    case 'settings.changed':
+      // Only announceWins: Pace, auto-advance and the Phase placeholder would hint at the Phase.
+      return announceWinsChange(state, entry.settings);
     case 'prizes.revealed': // the GameRoom publishes the plan again, with this round's prizes (it holds the full plan)
     case 'winner.noted': // names and notes are private
     case 'cards.set': // the cards in play are the organizers' business
-    case 'settings.changed': // Pace, auto-advance and the Phase placeholder would hint at the Phase
     case 'finale.set': // the Desgraciat's finalists: whether phones see the finale is U150; its wins come as claims
       return [];
     default:
@@ -176,8 +183,8 @@ export function projectEvent(state: PublicState, event: ShowEvent, ctx: Projecti
 }
 
 /**
- * From the engine's full state, only the pause, the Interval and the Game's end, rounded; and the Spin stops
- * when the engine has nothing in flight (Panic and a new round end a Spin without `transition.cancelled`).
+ * From the engine's full state, only the pause, the Interval, the Game's end, rounded, and the beat; and the Spin
+ * stops when the engine has nothing in flight (Panic and a new round end a Spin without `transition.cancelled`).
  */
 function projectState(state: PublicState, show: ShowState, ctx: ProjectionContext): PublicChange[] {
   const changes: PublicChange[] = [];
@@ -189,7 +196,30 @@ function projectState(state: PublicState, show: ShowState, ctx: ProjectionContex
   if (interval?.nextRound !== state.interval?.nextRound || interval?.guideEndMs !== state.interval?.guideEndMs) changes.push({ kind: 'interval', interval });
   const gameEndMs = roundGameEnd(ctx.toCloudMs(show.schedule.gameEndMs));
   if (gameEndMs !== state.gameEndMs) changes.push({ kind: 'gameEnd', gameEndMs });
+  changes.push(...beatChange(state, show, ctx));
   return changes;
+}
+
+/** The phones' LÍNIA!/QUINA! switch from the Game's settings, when it changed (absent means on, as an older journal). */
+function announceWinsChange(state: PublicState, settings: JournalSettings): PublicChange[] {
+  const announceWins = settings.announceWins ?? true;
+  return announceWins === (state.announceWins ?? true) ? [] : [{ kind: 'announceWins', announceWins }];
+}
+
+/**
+ * The beat of the song heard, on the cloud's clock (an older engine sends none: no beat). Sent when it starts or
+ * stops, on a new bpm or metre, or when its downbeat moved CLOUD.beatResendMs or more from the one last sent: the
+ * clock offset's small steps don't reach every phone, the engine's re-anchors do.
+ */
+function beatChange(state: PublicState, show: ShowState, ctx: ProjectionContext): PublicChange[] {
+  const heard = show.beat ?? null;
+  const beat: PublicBeat | null = heard && { bpm: heard.bpm, beatsPerBar: heard.beatsPerBar, downbeatAtMs: ctx.toCloudMs(heard.downbeatAtMs) };
+  const sent = state.beat ?? null;
+  const same =
+    beat === null || sent === null
+      ? beat === sent
+      : beat.bpm === sent.bpm && beat.beatsPerBar === sent.beatsPerBar && Math.abs(beat.downbeatAtMs - sent.downbeatAtMs) < CLOUD.beatResendMs;
+  return same ? [] : [{ kind: 'beat', beat }];
 }
 
 /** The card's side a round plays (D178), for phones to mark that face: only when it isn't 1, as the journal has it. */

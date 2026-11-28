@@ -119,6 +119,18 @@ export interface PublicInterval {
   guideEndMs: number;
 }
 
+/** The pulse of the song the room hears (the protocol's BeatInfo) on the cloud's clock, for the phones' marks to bob
+ * in time. Never the incoming song's beat before its Spin's transition.scheduled (which makes the landing song public). */
+export interface PublicBeat {
+  /** Beats per minute as heard. */
+  bpm: number;
+  /** Beats in a bar (4 for almost every song; 3 and 2 exist). */
+  beatsPerBar: number;
+  /** A bar's first beat, epoch ms on the cloud's clock: normally a recent one (in the past); ahead of now only for a
+   * Spin's landing. A phone counts beats from it, forwards or backwards. */
+  downbeatAtMs: number;
+}
+
 /** Whether the show laptop is connected to the cloud, and since when. */
 export interface PublicLink {
   online: boolean;
@@ -159,6 +171,12 @@ export interface PublicState {
   notice: string | null;
   /** Admin's default for interface sounds; a player's own choice wins. */
   soundsDefault: boolean;
+  /** The phones' «LÍNIA!»/«QUINA!» over a card that completes one (the Game's settings, GameSettings.announceWins).
+   * Optional in the type only: a feed state stored before it, or an older cloud, lacks it, and absent means true. */
+  announceWins?: boolean;
+  /** The pulse of the song heard, for the phones' marks; null when no song is heard. Optional in the type only: a feed
+   * state stored before it, or an older cloud, lacks it, and absent means no beat. */
+  beat?: PublicBeat | null;
 }
 
 /** One change to the public state. The cloud and the phones apply them with the same `applyPublic`. */
@@ -181,7 +199,9 @@ export type PublicChange =
   | { kind: 'gameEnd'; gameEndMs: number | null }
   | { kind: 'plan'; plan: PublicPlan | null }
   | { kind: 'notice'; notice: string | null }
-  | { kind: 'sounds'; soundsDefault: boolean };
+  | { kind: 'sounds'; soundsDefault: boolean }
+  | { kind: 'announceWins'; announceWins: boolean }
+  | { kind: 'beat'; beat: PublicBeat | null };
 export type PublicChangeKind = PublicChange['kind'];
 
 /** The whole public state: on connect, and whenever the Game changes. */
@@ -224,10 +244,13 @@ export function emptyPublicState(edition: string): PublicState {
     plan: null,
     notice: null,
     soundsDefault: true,
+    announceWins: true,
+    beat: null,
   };
 }
 
-/** A fresh Game in the same edition: the Game's own parts reset, the edition's (plan, notice, sounds, link) stay. */
+/** A fresh Game in the same edition: the Game's own parts reset (announceWins and the beat among them), the edition's
+ * (plan, notice, sounds, link) stay. */
 export function newGamePublicState(previous: PublicState, gameId: string | null): PublicState {
   return {
     ...emptyPublicState(previous.edition),
@@ -296,6 +319,10 @@ function applyOne(state: PublicState, change: PublicChange): PublicState {
       return { ...state, notice: change.notice };
     case 'sounds':
       return { ...state, soundsDefault: change.soundsDefault };
+    case 'announceWins':
+      return { ...state, announceWins: change.announceWins };
+    case 'beat':
+      return { ...state, beat: change.beat };
     default:
       change satisfies never;
       return state;
