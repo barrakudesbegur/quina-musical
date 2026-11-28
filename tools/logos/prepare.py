@@ -47,6 +47,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import shutil
 import subprocess
 import sys
@@ -65,7 +66,12 @@ DIE_CUT_CLI = Path(__file__).resolve().parent / "die-cut-cli.ts"
 TOLERANCE = 0.10  # max channel difference from the background colour that still counts as background
 EDGE_BAND = 0.004  # the band unblended round an "edges" cut, as a share of the longer side (at least 2 px)
 NOISE = (0.06, 0.45)  # colour-to-alpha: below the first, background (JPEG noise); above the second, fully opaque
-STICKER_SIDE = 1024  # the sticker is made from the logo at this longer side (the rim is a share of it)
+# Every sticker file is at one common scale, so the screens show them all at one zoom (the user, 28 Nov: "always
+# proportional to each other", "adjust the sizes of each so they look visually uniform"): the same rim in pixels,
+# and each sticker's white shape about the same area, a long logo's a little more so its letters don't get tiny.
+STICKER_AREA = 160_000  # px², the white shape of a sticker whose logo is as long as it's tall (about 450 px across)
+STICKER_RIM = 20  # px, round every sticker: 5 % of √STICKER_AREA
+STICKER_ELONGATION = 0.25  # a logo n times longer than it's tall gets n^this times the area
 SMALL_SIDE = 400  # a source whose longer side is under this is reported as small
 INK_CONTRAST = 4.5  # a recoloured box colour is darkened until it reads on white at least this well (WCAG AA)
 HOLES = 0.02  # "edges" also clears enclosed background patches up to this share of the image (letters' counters)
@@ -316,18 +322,68 @@ def convex_backing(stuck: Image.Image, supersample: int = 4) -> Image.Image:
     return Image.alpha_composite(backing, stuck)
 
 
-def sticker(transparent: Image.Image, work: Path, reach: float | None = None) -> Image.Image:
-    """The die-cut from packages/ui/components/die-cut.ts, at STICKER_SIDE."""
-    k = STICKER_SIDE / max(transparent.size)
-    logo = transparent.resize((max(1, round(transparent.width * k)), max(1, round(transparent.height * k))), Image.Resampling.LANCZOS)
+def die_cut(logo: Image.Image, work: Path, rim: float, reach: float | None) -> Image.Image:
+    """packages/ui/components/die-cut.ts on one logo (rim and reach as shares of its longer side)."""
     raw_in, raw_out = work / "in.rgba", work / "out.rgba"
     raw_in.write_bytes(logo.tobytes())
+    args = [str(rim)] + ([str(reach)] if reach else [])
     result = subprocess.run(
-        ["node", str(DIE_CUT_CLI), str(raw_in), str(logo.width), str(logo.height), str(raw_out)] + ([str(reach)] if reach else []),
+        ["node", str(DIE_CUT_CLI), str(raw_in), str(logo.width), str(logo.height), str(raw_out), *args],
         check=True, capture_output=True, text=True,
     )
     size = json.loads(result.stdout)
     return Image.frombytes("RGBA", (size["width"], size["height"]), raw_out.read_bytes())
+
+
+def white_area(stuck: Image.Image) -> int:
+    return int((np.asarray(stuck)[..., 3] > 127).sum())
+
+
+def sticker(transparent: Image.Image, work: Path, reach: float | None = None, shape: str | None = None) -> Image.Image:
+    """The logo's sticker at the common scale: sized so its white shape has the target area, with a STICKER_RIM rim."""
+    if shape not in (None, "convex"):
+        raise ValueError(f"unknown sticker shape {shape!r}")
+    w, h = transparent.size
+    target = STICKER_AREA * (max(w, h) / min(w, h)) ** STICKER_ELONGATION
+    k = math.sqrt(target / (w * h))
+    for _ in range(5):
+        logo = transparent.resize((max(1, round(w * k)), max(1, round(h * k))), Image.Resampling.LANCZOS)
+        stuck = die_cut(logo, work, STICKER_RIM / max(logo.size), reach)
+        if shape == "convex":
+            stuck = convex_backing(stuck)
+        area = white_area(stuck)
+        if abs(area / target - 1) < 0.015:
+            break
+        k *= math.sqrt(target / area)
+    return stuck
+
+
+def together(stickers: list[tuple[str, Image.Image]], out: Path, zoom: float = 0.5, width: int = 2600) -> Path:
+    """Every sticker at the common scale (× zoom), in rows on the projector's navy, to judge them side by side."""
+    gap, pad = 28, 36
+    scaled = [(name, s.resize((round(s.width * zoom), round(s.height * zoom)), Image.Resampling.LANCZOS)) for name, s in stickers]
+    rows, row, x = [], [], pad
+    for item in scaled:
+        if row and x + item[1].width > width - pad:
+            rows.append(row)
+            row, x = [], pad
+        row.append(item)
+        x += item[1].width + gap
+    if row:
+        rows.append(row)
+    height = pad * 2 + sum(max(s.height for _, s in r) for r in rows) + gap * (len(rows) - 1)
+    sheet = Image.new("RGBA", (width, height), NAVY + (255,))
+    y = pad
+    for r in rows:
+        tall = max(s.height for _, s in r)
+        x = (width - (sum(s.width for _, s in r) + gap * (len(r) - 1))) // 2
+        for _, s in r:
+            sheet.alpha_composite(s, (x, y + (tall - s.height) // 2))
+            x += s.width + gap
+        y += tall + gap
+    path = out / "stickers-together.png"
+    sheet.convert("RGB").save(path, optimize=True)
+    return path
 
 
 # ---------- the comparison sheet ----------
@@ -452,13 +508,10 @@ def main() -> int:
                     if px is not None:
                         transparent = to_image(px)
                         transparent.save(out / "transparent" / f"{logo.id}.png", optimize=True)
-                        stuck = sticker(transparent, Path(tmp), (logo.sticker or {}).get("reach"))
-                        shape = (logo.sticker or {}).get("shape")
-                        if shape == "convex":
-                            stuck = convex_backing(stuck)
-                            done.notes.append("convex sticker")
-                        elif shape is not None:
-                            raise ValueError(f"{logo.id}: unknown sticker shape {shape!r}")
+                        settings = logo.sticker or {}
+                        stuck = sticker(transparent, Path(tmp), settings.get("reach"), settings.get("shape"))
+                        if settings:
+                            done.notes.append("sticker " + ", ".join(f"{k} {v}" for k, v in settings.items()))
                         stuck.save(out / "sticker" / f"{logo.id}.png", optimize=True)
                         upload.append({"id": logo.id, "logoFile": f"{logo.id}.png"})
             else:
@@ -472,6 +525,7 @@ def main() -> int:
             print(f"{logo.id:28} {done.background or '-':10} {'; '.join(done.notes)}")
 
     paths = comparison(rows, out)
+    paths.append(together([(r[0].logo.name, r[3]) for r in rows if r[3] is not None], out))
     if not only:
         (out / "report.md").write_text("\n".join(report) + "\n")
         (out / "upload.json").write_text(json.dumps({"sponsors": upload}, indent=2) + "\n")
