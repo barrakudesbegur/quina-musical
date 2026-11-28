@@ -42,6 +42,12 @@ export const S = {
   addCard: 'Cartró',
   /** Those buttons' name for screen readers. */
   addCardLabel: 'Afegir un cartró',
+  /** The home's empty state (no cards, 28 Nov): its heading, plural on purpose (a phone can follow several cards), and
+   *  its two buttons, the camera first. The buttons' names for screen readers add «del cartró» to the words shown. */
+  emptyTitle: 'Afegir cartrons',
+  emptyScan: 'Escanejar el QR',
+  emptyWrite: 'Escriure el número',
+  emptyWriteLabel: 'Escriure el número del cartró',
   /** The hint to the card holding the song, off screen (card-hint): its name is spoken, never drawn. */
   cardHint: (card: string) => `Veure ${card}, que té aquesta cançó`,
   /** The add-card drawer's title (board Mobil-Afegir-Estats). */
@@ -94,8 +100,8 @@ export const S = {
 
   // Cards
   cardsTitle: 'Els teus cartrons',
+  /** Ajustos' card list with no cards (MenuView). */
   noCards: 'Encara no tens cap cartró.',
-  noCardsHint: 'Escaneja el codi QR del teu cartró amb la càmera del mòbil, o escriu-ne el número.',
   notPlaying: 'No juguen en aquesta quina',
   /** Which printed type a round plays (card-types.json's name, "Cartró normal"), so a card that rests is explained. */
   unknownCard: 'No trobem aquest cartró.',

@@ -12,8 +12,9 @@ export type Drawer =
   | { kind: 'horari' }
   /** The player's cards (rename, reorder, remove, add), sounds, last year's card, "Esborrar dades" (D87: was "Menú"). */
   | { kind: 'ajustos' }
-  /** "Afegir cartró": the icon and the number pad. */
-  | { kind: 'pad' }
+  /** "Afegir cartró": the icon and the number pad; `scan`: the camera already open over it (the empty state's «Escanejar
+   *  el QR», D290). */
+  | { kind: 'pad'; scan?: true }
   /** Last year's card: what changed and what to do. */
   | { kind: 'anyPassat' }
   /** The iPhone's «Instal·la l'app»: the steps to add it to the Home Screen (D221). */

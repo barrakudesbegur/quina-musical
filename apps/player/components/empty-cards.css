@@ -1,0 +1,74 @@
+/*
+ * The home's empty state (EmptyCards; D290, 28 Nov): «Afegir cartrons» as an outlined title on the night (Londrina in
+ * capitals, the ink stroke and drop of the home's other titles), then the two floating pills, each its own width,
+ * centred, the main one on top. The view centres it in its free space (home.css › the empty state). No motion.
+ */
+
+@layer app {
+.empty-cards {
+  container-type: inline-size;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-5);
+  padding-block: var(--space-2);
+  text-align: center;
+}
+
+.empty-cards > .empty-cards__title {
+  margin: 0;
+  font-family: var(--font-display);
+  /* the welcome's size, smaller in a narrow column (a 320 px phone), so it stays on one line */
+  font-size: clamp(var(--player-text-title), 13.5cqi, var(--player-text-hero));
+  font-weight: var(--font-weight-strong);
+  line-height: 1;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: var(--title-tracking);
+  -webkit-text-stroke: var(--title-stroke) var(--color-line);
+  paint-order: stroke fill;
+  text-shadow: var(--title-drop);
+  text-wrap: balance;
+}
+
+.empty-cards__actions {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-4);
+  max-width: 100%;
+}
+
+/* ---- centred in the view's free space: under the drum (or its strip) and the switch, above the corners --------- */
+/* The home marks it (AraHome: `data-empty`, the view shown is the empty state). The column under the header then fills
+   the scroll box's height, and each level down passes the rest on to the view (a row of `1fr`), which centres the
+   empty state; taller than the room (a small phone, the Before's welcome), it simply flows and the box scrolls. The
+   view waiting beside it (absolute, `home-swipe`) keeps its own height. */
+.player__main:has(> .ara[data-empty]) {
+  display: flex;
+  flex-direction: column;
+}
+
+.ara[data-empty] {
+  flex-grow: 1;
+  grid-template-rows: auto 1fr;
+}
+
+.ara[data-empty] > .ara__swipe {
+  grid-template-rows: auto 1fr;
+}
+
+.ara[data-empty] .ara__view[data-active] {
+  display: grid;
+  align-self: stretch;
+}
+
+.ara[data-empty] .ara__view[data-active] > :is(.cards, .history) {
+  display: grid;
+  align-content: center;
+}
+
+/* Their own width (a phone's Button fills its row otherwise), never wider than the column. */
+.empty-cards__actions > .button {
+  width: auto;
+  max-width: 100%;
+}
+}

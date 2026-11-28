@@ -12,7 +12,6 @@
   import { ninoUrl } from '../../../packages/ui/ninos.ts';
   import SponsorList from '../../../packages/ui/components/SponsorList.svelte';
   import { S } from '../strings.ts';
-  import AddCardPrompt from './AddCardPrompt.svelte';
   import Countdown from './Countdown.svelte';
   import ClockText from './ClockText.svelte';
   import PrizeLines from './PrizeLines.svelte';
@@ -74,10 +73,8 @@
   style:--player-sticker-stand-up={sticker('standUp', app.focusRound)}
 >
   {#if app.scene === 'before'}
+    <!-- With no cards, the call to add them is the views' empty state under the switch (EmptyCards, D290). -->
     <h2 class="now__heading">{S.welcome}</h2>
-    {#if !app.data.cards.length}
-      <AddCardPrompt onadd={() => app.open({ kind: 'pad' })} />
-    {/if}
     {#if startAtMs}
       <p class="now__when">
         {#if startAtMs - app.cloudNow > 0 && startAtMs - app.cloudNow < HOUR}

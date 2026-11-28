@@ -144,6 +144,7 @@
         <NumberPad
           cards={app.data.cards}
           printed={app.catalog?.cards ?? null}
+          scan={drawer.scan}
           onadd={(id, identity, name) => app.addCard(id, true, identity, name, true)}
           onsee={(id) => app.seeCard(id)}
           onclose={closeTop}

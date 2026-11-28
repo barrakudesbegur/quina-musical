@@ -13,15 +13,21 @@
   import { S } from '../strings.ts';
   import CardMark from './CardMark.svelte';
   import SongTile from '../../../packages/ui/components/SongTile.svelte';
+  import { showsEmptyCards } from '../logic/empty-cards.ts';
+  import EmptyCards from './EmptyCards.svelte';
 
   let { app }: { app: PlayerApp } = $props();
   const history = $derived(historyOf(app.state));
   const marks = $derived(markedIdentities(app.views));
+  /** No cards and no song yet: the empty state takes the view (D290; logic/empty-cards.ts). */
+  const empty = $derived(showsEmptyCards('historial', app.data.cards.length, history?.landings.length ?? 0));
 </script>
 
 <section class="history">
   <h2 class="history__heading">{S.historyTitle}</h2>
-  {#if !history?.landings.length}
+  {#if empty}
+    <EmptyCards onscan={() => app.open({ kind: 'pad', scan: true })} onwrite={() => app.open({ kind: 'pad' })} />
+  {:else if !history?.landings.length}
     <p class="history__empty">{S.noHistory}</p>
   {:else}
     <p class="history__round-title">{S.roundName({ number: history.round, kind: history.kind }, app.plan)} · {S.songCount(history.landings.length)}</p>

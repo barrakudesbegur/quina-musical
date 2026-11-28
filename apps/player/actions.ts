@@ -8,13 +8,20 @@ import { S } from './strings.ts';
 export type PlayerPreset = Omit<ButtonPreset, 'color'> & { readonly color: ButtonColor };
 
 export const PLAYER = {
-  /** «+ Cartró» where a list of cards ends or is empty (AddCardPrompt, CardsList, LegacyNotice). */
+  /** «+ Cartró» on last year's card's notice (LegacyNotice). */
   addCard: { color: 'orange', size: 'l', icon: 'plus', label: S.addCard },
   /**
    * «+ Cartró» floating at the end of the cards list (D188, D218): a quiet pill, navy on the night sky with the floating
    * shadow, since it claims less attention than the cards (the user's phone test, 27 Nov). The home places it.
    */
   addCardFloating: { color: 'navy', floating: true, size: 's', icon: 'plus', label: S.addCard, sound: 'floating' },
+  /**
+   * The home's empty state (no cards, 28 Nov; EmptyCards): two floating pills, centred. «Escanejar el QR» is the main
+   * one, big and in the add colour; it opens «Afegir cartró» with the camera already over it.
+   */
+  emptyScan: { color: 'orange', floating: true, size: 'l', icon: 'qr-code', label: S.emptyScan, sound: 'floating' },
+  /** …and «Escriure el número», the quiet navy pill (as the floating «+ Cartró»): «Afegir cartró» on its number pad. */
+  emptyWrite: { color: 'navy', floating: true, size: 's', icon: 'hash', label: S.emptyWrite, sound: 'floating' },
   /** The same in Ajustos: the smaller rounded rectangle (D189, D201). */
   addCardSmall: { color: 'orange', size: 's', icon: 'plus', label: S.addCard },
   /**

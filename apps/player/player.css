@@ -757,7 +757,6 @@
 }
 
 /* Panels (night blue, inked) and paper pieces. */
-.add-prompt,
 .shuffle,
 .now__summary,
 .legacy-notice {
@@ -1172,21 +1171,6 @@
     inset 0 -7px 0 var(--color-accent-edge),
     inset 0 4px 0 rgb(255 255 255 / 0.45),
     var(--shadow-piece);
-}
-
-.add-prompt {
-  display: grid;
-  gap: var(--space-3);
-  padding: var(--space-4);
-}
-
-.add-prompt__text {
-  font-size: var(--text-lg);
-  font-weight: var(--font-weight-strong);
-}
-
-.add-prompt__hint {
-  color: var(--color-text-soft);
 }
 
 /* A round starts: "Quina 4", big and tilted, with a nino waving. */

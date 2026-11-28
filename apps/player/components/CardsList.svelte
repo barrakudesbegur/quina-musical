@@ -2,7 +2,7 @@
   // Cartrons: the player's cards that count in this round as grids, then the others as their headers alone, three to a
   // row (D289). With 2+ playing cards they collapse into tiles that open the card (CardTiles, §8 Y2 option A); with one,
   // the full card shows, as before. The cards simply scroll (the stacking scroll waits for the user). «+ Cartró» floats over the home (AraHome, D218); with no cards the
-  // empty view keeps its own. Naming and removing cards is in the menu. Cards never reorder, in the Desgraciat round
+  // view shows the empty state instead (EmptyCards, D290). Naming and removing cards is in the menu. Cards never reorder, in the Desgraciat round
   // too: people find their card by its place.
   // `end` is the list's last spot, where «+ Cartró» used to be: kept for «Instal·la l'app» (D221, the PWA's work stream
   // W): AraHome passes InstallPrompt, which shows only while the phone can install.
@@ -12,7 +12,8 @@
   import { standUpPlace } from '../logic/desgraciat.ts';
   import { S } from '../strings.ts';
   import CardTile from '../../../packages/ui/components/CardTile.svelte';
-  import AddCardPrompt from './AddCardPrompt.svelte';
+  import { showsEmptyCards } from '../logic/empty-cards.ts';
+  import EmptyCards from './EmptyCards.svelte';
   import CardPanel from './CardPanel.svelte';
   import CardTiles from './CardTiles.svelte';
   import Swatch from './Swatch.svelte';
@@ -32,8 +33,8 @@
 
 <section class="cards" bind:this={section}>
   <h2 class="cards__heading">{S.cardsTitle}</h2>
-  {#if !app.data.cards.length}
-    <AddCardPrompt onadd={() => app.open({ kind: 'pad' })} />
+  {#if showsEmptyCards('cartrons', app.data.cards.length, 0)}
+    <EmptyCards onscan={() => app.open({ kind: 'pad', scan: true })} onwrite={() => app.open({ kind: 'pad' })} />
   {:else}
     {#if app.tiles}
       <CardTiles {app} {active} />

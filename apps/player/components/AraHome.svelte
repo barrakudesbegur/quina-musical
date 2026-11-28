@@ -45,6 +45,8 @@
     type SwipePlan,
   } from '../logic/home-swipe.ts';
   import { ARA_VIEWS, type AraView } from '../logic/tabs.ts';
+  import { showsEmptyCards } from '../logic/empty-cards.ts';
+  import { historyOf } from '../logic/view.ts';
   import { bobOn, bobStyle, bobTiming, keepTiming, type BobTiming } from '../logic/beat.ts';
   import { BobWatcher } from '../device/bob.ts';
   import CardsList from './CardsList.svelte';
@@ -77,6 +79,8 @@
   /** The top shows the drum (and so sticks and collapses); the other scenes and the pause just scroll. */
   const drum = $derived(!app.paused && !['before', 'roundStart', 'interval', 'after'].includes(app.scene));
   const reduced = $derived(app.reducedMotion);
+  /** The view shown is the empty state (no cards, D290): it is centred in the free space under the switch (empty-cards.css). */
+  const empty = $derived(showsEmptyCards(shown, app.data.cards.length, historyOf(app.state)?.landings.length ?? 0));
   const pos = $derived(frame ? frame.pos : viewPos(shown));
   const addShare = $derived(frame ? frame.cartrons : shown === 'cartrons' ? 1 : 0);
   /** The song playing now (the latest landing, while the round plays) and the phone's playing cards that hold it. */
@@ -464,6 +468,7 @@
   bind:this={root}
   data-view={shown}
   data-drum={drum || undefined}
+  data-empty={empty || undefined}
   data-swiping={frame ? 'true' : undefined}
   data-anim="home-swipe"
   data-beat={bobbing || undefined}

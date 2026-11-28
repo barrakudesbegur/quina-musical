@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import Button from '../../../packages/ui/components/Button.svelte';
   import TextField from '../../../packages/ui/components/TextField.svelte';
   import TextLink from '../../../packages/ui/components/TextLink.svelte';
@@ -33,6 +34,7 @@
   let {
     cards,
     printed,
+    scan = false,
     onadd,
     onsee,
     onclose,
@@ -41,6 +43,8 @@
     cards: readonly SavedCard[];
     /** The printed cards by number (the catalogue), or null while it loads (then any possible number is typed). */
     printed: ReadonlyMap<number, unknown> | null;
+    /** Open with the camera already over the pad (the empty state's «Escanejar el QR», D290; `qr-scan`). */
+    scan?: boolean;
     /** Saves the card and leaves the drawer open (`pad-saved`); returns the error to show, or null. */
     onadd: (id: number, identity: number, name: string) => string | null;
     /** "Veure'l", «Fet»: every drawer closes and that card shows on the home screen. */
@@ -58,6 +62,16 @@
   /** The camera's drawer is over the pad (D141): mounted while `scanning`, closing (silently) once `scanOpen` goes. */
   let scanning = $state(false);
   let scanOpen = $state(false);
+  // Opened from the empty state's «Escanejar el QR» (D290): the camera stacks over the pad in the next frame, once the
+  // pad's own dialog is in the top layer (opened in the same frame, the camera's dialog would end up under it).
+  onMount(() => {
+    if (!scan) return;
+    const raf = requestAnimationFrame(() => {
+      scanning = true;
+      scanOpen = true;
+    });
+    return () => cancelAnimationFrame(raf);
+  });
   /** A QR has just filled the number in: the field's green ring (`qr-found`). */
   let found = $state(0);
   /** The leave question is open; `proceed` closes the drawer the way the player asked ("‹" or ✕). */

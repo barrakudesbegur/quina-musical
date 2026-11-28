@@ -2,7 +2,7 @@
   // What floats over the home, outside its masked scroll box (so the fades at the screen's edges never hide it), as the
   // home tells it (logic/home-ui.svelte.ts):
   // - «+ Cartró» between the corners on Cartrons (D188, D218; `add-card-float`): the quiet navy preset, following the
-  //   swipe's share; only with 1 … max − 1 cards, never during a Celebration (the empty view keeps its own).
+  //   swipe's share; only with 1 … max − 1 cards, never during a Celebration (with no cards the empty state offers its own two, EmptyCards, D290).
   // - The hint to the card holding the playing song when none shows on Cartrons (§8 Y2; `card-hint`): a paper pill with
   //   the arrow and that card's mark, no words (its name is spoken), at the bottom above «+ Cartró» or under the strip
   //   at the top; the arrow nudges towards the card; a tap scrolls to the card (`drum-pick`).

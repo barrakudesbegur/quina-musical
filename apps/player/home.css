@@ -64,7 +64,7 @@
 
 /* The part after each view's heading (named, not `*`: a universal last part was checked against every element of the
    page; `:where()` keeps the weight it had). */
-.ara :is(.history, .cards) > :first-child + :where(.history__empty, .history__round-title, .add-prompt, .cards__list) {
+.ara :is(.history, .cards) > :first-child + :where(.history__empty, .history__round-title, .empty-cards, .cards__list) {
   margin-top: 0;
 }
 
