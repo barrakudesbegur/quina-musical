@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D296**, **U231**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D297**, **U240**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -20,6 +20,16 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
   - every change lands in code, mockups and the design system together (D236);
   - the UI code rules (D215);
   - web UI work loads modern-web-guidance first.
+
+## Now (28 Nov, night): the verified list
+
+**[whats-left.md](whats-left.md) is the one list of what's missing,** by area and priority (P0 before the cards on 4–5 Dec, P1 before the tech rehearsal, P2 before the night), with the plan for the sessions (phases A–D). It comes from the sessions' «What's left» lists checked again by this orchestrator's agents, without seeing them, on a frozen build of 943b651f: the projector, the console, the phone (on the production path), the setup and the night's flow, the cards, the playlists. Evidence: temp/verify-28nov/ (git-ignored). How the check was run, for the next one: build once with `npx vite build --outDir <scratch>/dist` in apps/show, copy data/link's cloud-plan.json, media and manifests into a scratch link folder, and start each agent's relay with `QUINA_LINK_DIR=<copy> node relay/server.ts --dist --dist-dir <scratch>/dist --port <own port> --repertoire 2026 [--test]`.
+
+- **Logged today:** D295 (the cards are «Apaïsat sense portades»; the A3 layout stays for one or two test sheets), D296 (the playlists confirmed final, unchanged since D269).
+- **Asked the user, waiting:** U231–U236 (which board for each other projector scene), U237 (the phones of those who didn't win), U238 (four quality flags), U239 (the A3 test sheets' numbers), and again U173 (starting the night from the doors' big button) and U163 («de N»); and the go for the plan.
+- **Not yet briefed:** the sessions. On the user's go, brief phase A (whats-left.md › The plan) to each, and check each pushed item with a verify agent before it counts as done.
+- **Peers seen on 28 Nov night:** quina-musical-e0, -f5 and -cd (started around 5:20 pm, roles not yet confirmed) and the idle -79.
+- **The orchestrator's worktree** is now `.claude/worktrees/orchestrator` (the old `orchestrator-timeline` was gone).
 
 ## Read this first (28 Nov, after the user's realistic test)
 

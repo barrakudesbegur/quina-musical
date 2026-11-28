@@ -8,6 +8,49 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
+### U231 · The projector before the night: which board (D294)
+The 28 Nov redraw replaced agreed boards with as-built ones. Before the night: the pre-redraw `Abans-28nov-Projector-Abans` has a blue-bulb garland across the top; the current `Projector-Abans` (and the live screen) has none. Both otherwise the same; the Desgraciat's sad face has no circle either way (D23).
+- (a) The pre-redraw board, with the garland (the orchestrator's recommendation: the agreed in-play look has a garland too).
+- (b) The current board, no garland.
+
+### U232 · The projector's Check: which boards (D294)
+For `Comprovacio`, `Comprovacio-Fallida` and `Comprovacio-Revisio`. D283's thick centred marks and D117's reveals stopping at the ✗ live only in the current boards.
+- (a) The current boards: thick centred ✓s, the playing song with the running dashed ring and ▷ (as on the phones), the falling nino; drawn on the agreed look's starfield and ink-stroked type (the recommendation: they already hold D283 and D117).
+- (b) The pre-redraw boards with D283's marks added: a solid glowing ring and an equaliser badge on the playing song, the squashed nino.
+
+### U233 · The projector's Line Celebration: which board (D294)
+- (a) The current `Projector-Linia`: «LÍNIA!» over the drum's victory lap, the garland, slow paper rain (the recommendation: screens.md asks for the drum's victory lap).
+- (b) The pre-redraw: «LÍNIA!» high on a starry ray field, static confetti, no drum or garland, other ninos.
+
+### U234 · The Desgraciat's finale: which board (D294)
+- (a) The current `Projector-Desgraciat-Final`: a costume pose per finalist, the bulb garland, paper rain; drawn after D180–D187 (the recommendation).
+- (b) The pre-redraw: three plain tinted figures, an oval-lamp garland, a curved cover row; drawn before D180–D187.
+
+### U235 · The Descans on the projector: which board (D294)
+Two boards show it; the redraw left `Projector-MitjaPart` unchanged.
+- (a) `Projector-Descans`: no garland, the cyan ring, «Descans» (D149), Londrina capitals marked not built; what's live (the recommendation: the later board, after D149).
+- (b) `Projector-MitjaPart`: the blue garland, a lilac «min».
+
+### U236 · «QUINA POTRA!» on the projector: which board (D294)
+Either way the prize card gives way to the sponsors' logos (D285).
+- (a) `Projector-Desgraciat-Potra`: the gold capitals plate, the drum's victory lap and the garland, slow paper rain; what's live (the recommendation: the same victory lap as the other Celebrations).
+- (b) `Projector-Desgraciat-Dempeus` (unchanged by the redraw): an orange mixed-case plate, a prize card with a gift box, no drum.
+
+### U237 · A confirmed win on the phones of those who didn't win
+Today every phone shows the full Celebration («QUINA!», confetti, ninos, the prize), as D242, D285 and the boards draw it. screens.md says a confirmed win "only celebrates on a phone that holds the winning card", and D32's reason is "people don't care who won unless it's them". The orchestrator's verify run (28 Nov) flagged that a player may read «QUINA!» on their own phone as "I won".
+- (a) Only the winner's phone celebrates; the other phones keep their cards, with a small «Línia!» or «Quina!» notice (the recommendation: the grandmother test).
+- (b) Every phone shows the full Celebration, as now.
+
+### U238 · Four songs flagged for quality, before the cards
+No decision is recorded for #90 and #117 (low bitrate: 117 and 114 kbps) or #18 and #83 (remix titles; data/out/repertoires/2026/quality.json). #73 and #133 were kept. A swap needs a download, prep, an R2 push and new cards before 4 Dec.
+- (a) Keep all four (the recommendation, unless one sounds bad to the user; D270 already says #117 is the right song).
+- (b) The user listens and names the ones to swap.
+
+### U239 · The A3 test sheets' card numbers (D295)
+One or two A3 sheets hold 6–12 cards. If their numbers are also sold on A4, two players hold the same card and can claim at the same moment.
+- (a) The A3 sheets repeat numbers from the end of each run, and those A4 sheets are kept off sale (the recommendation: no new cards in the system, and D264's first-digit rule holds).
+- (b) The A3 sheets get new numbers past #699 (new cards in cards.json; breaks the first-digit rule).
+
 ### U230 · Where the install button goes on the phone (replaces U193)
 U193's reading put the install button in the spot the empty list's big add-card button left once a phone had cards. D290 removed that spot: a phone with no cards shows a centred heading and two floating buttons, gone at the first card. And the user's condition, "only if +card button is not showing", now holds exactly when there are no cards. Only where the browser can install the app and it isn't installed; never on iPhones (Ajustos there).
 - (a) Once the phone has cards: a quiet row «Instal·lar l'app» at the end of the Cartrons list, under the last card. Frontend's recommendation: the empty state stays about cards, and it reaches people once they're settled in.
