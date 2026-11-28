@@ -11,6 +11,7 @@ import { CA } from '../../../packages/ui/i18n/ca.ts';
 import type { AdminPlanStore, SaveFailure, SaveResult } from '../data/admin-plan-store.ts';
 import { checkPlanDraft } from '../logic/plan-check.ts';
 import { blankPlan, removeSponsor, renameSponsor } from '../logic/plan-edit.ts';
+import type { LoadFailure } from '../logic/status.ts';
 import { MANAGE_CONFIG } from '../config.ts';
 import { DEFAULT_RULES } from '../strings.ts';
 
@@ -24,7 +25,7 @@ export type SaveStatus =
   | { kind: 'unavailable' };
 
 /** Whether the plan is there to edit: loading it from the cloud or the relay, loaded, or it couldn't be loaded. */
-export type LoadPhase = { kind: 'loading' } | { kind: 'ready' } | { kind: 'failed'; detail: string };
+export type LoadPhase = { kind: 'loading' } | { kind: 'ready' } | { kind: 'failed'; failure: LoadFailure };
 
 const json = (plan: GamePlan | null) => JSON.stringify(plan);
 
@@ -108,15 +109,16 @@ export class PlanSession {
     if (!this.store.remote || this.phase.kind === 'ready') return;
     this.phase = { kind: 'loading' };
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const timeout = new Promise<{ ok: false; detail: string }>((resolve) => {
-      timer = setTimeout(() => resolve({ ok: false, detail: `no answer in ${MANAGE_CONFIG.planLoadTimeoutMs / 1000} s` }), MANAGE_CONFIG.planLoadTimeoutMs);
+    const timeout = new Promise<'timeout'>((resolve) => {
+      timer = setTimeout(() => resolve('timeout'), MANAGE_CONFIG.planLoadTimeoutMs);
     });
     const got = await Promise.race([this.store.loadRemote(), timeout]);
     clearTimeout(timer);
     // A push (or this answer, through the store's subscribers) may have loaded it meanwhile.
     if (this.isReady()) return;
-    if (got.ok) this.adopt(got.plan, got.savedAtMs);
-    else this.phase = { kind: 'failed', detail: got.detail };
+    if (got === 'timeout') this.phase = { kind: 'failed', failure: { cause: 'timeout', seconds: MANAGE_CONFIG.planLoadTimeoutMs / 1000 } };
+    else if (got.ok) this.adopt(got.plan, got.savedAtMs);
+    else this.phase = { kind: 'failed', failure: { cause: 'answer', detail: got.detail } };
   }
 
   private isReady(): boolean {

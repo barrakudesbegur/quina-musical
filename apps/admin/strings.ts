@@ -5,7 +5,11 @@ import { CA } from '../../packages/ui/i18n/ca.ts';
 import { roundTitle, roundTitleOf, type CheatSheet, type PrizeReveal } from '../../packages/ui/plan.ts';
 import type { CheatSheetCopy } from './logic/cheatsheet.ts';
 import type { Route } from './logic/route.ts';
+import type { StoreKind } from './data/admin-plan-store.ts';
 
+/** Where the plan is kept and what the socket connects to: the cloud, or the show's laptop (its relay). */
+const placeOf = (where: StoreKind) => (where === 'cloud' ? 'el núvol' : 'el portàtil del show');
+const capital = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 /** "1, 2 i 3". */
 const joinCa = (items: readonly (string | number)[]): string =>
@@ -14,6 +18,8 @@ const joinCa = (items: readonly (string | number)[]): string =>
 export const S = {
   pageTitle: 'Admin · Quina Musical',
   heading: 'Admin',
+  /** After the title in the header while the plan on screen was refused or failed to save. */
+  headingUnsaved: '(sense desar)',
   /** A round's name: "Quina 4" by its Quina number, "Quina Especial", "Quina del Desgraciat" (plan.ts roundTitle). */
   round: roundTitle,
   /** With the night's total: "Quina 4 de 8" (what the total counts is pending U163); a special round has none. */
@@ -29,8 +35,9 @@ export const S = {
   } satisfies Record<Route | 'label', string>,
 
   conn: {
-    connecting: 'Connectant amb el relay…',
-    offline: 'Sense connexió amb el relay',
+    /** The socket's other end: the cloud when Admin is served from it, else the show's laptop (its relay). */
+    connecting: (where: StoreKind) => `Connectant amb ${placeOf(where)}…`,
+    offline: (where: StoreKind) => `Sense connexió amb ${placeOf(where)}`,
     noShow: 'Connectat, però la pantalla del show no està oberta',
     online: 'Connectat al show',
     demo: (name: string) => `Demo «${name}»: les ordres no fan res`,
@@ -39,8 +46,10 @@ export const S = {
   save: {
     saved: (time: string) => `Desat a les ${time}`,
     /** A plan loaded from where it's kept, not changed since. */
-    loaded: (where: 'cloud' | 'relay' | 'local' | 'demo' | 'unavailable') =>
+    loaded: (where: StoreKind) =>
       where === 'cloud' ? 'Desat al núvol' : where === 'relay' ? 'Desat al portàtil del show' : 'Desat en aquest navegador',
+    /** No plan anywhere yet: the blank one on screen is only sent once edited. */
+    nothingSaved: 'Encara no hi ha cap pla desat',
     pending: 'Canvis per desar…',
     invalid: (n: number) => `${plural(n, 'error', 'errors')}: no es desa fins que es corregeixin`,
     quota: "No s'ha pogut desar: l'emmagatzematge del navegador és ple (segurament pels logos). Treu o redueix algun logo, i exporta el JSON com a còpia.",
@@ -48,16 +57,25 @@ export const S = {
     error: (detail: string) => `No s'ha pogut desar: ${detail}`,
     demo: 'Mode demo: els canvis no es desen',
     /** Before the cloud's or the relay's plan has arrived: nothing to show or edit yet. */
-    loading: (where: 'cloud' | 'relay' | 'local' | 'demo' | 'unavailable') => (where === 'cloud' ? 'Carregant el pla del núvol…' : 'Carregant el pla del portàtil del show…'),
+    loading: (where: StoreKind) => (where === 'cloud' ? 'Carregant el pla del núvol…' : 'Carregant el pla del portàtil del show…'),
     loadFailed: "No s'ha pogut carregar el pla",
-    loadFailedHelp: (detail: string) => `No es mostra ni es desa res fins que el pla es carregui: així no se'n pot desar un de buit al damunt. (${detail})`,
+    /** Why it couldn't load, as a sentence (logic/status.ts loadFailureText picks one). */
+    loadFailedWhy: {
+      timeout: (where: StoreKind, seconds: number) => `${capital(placeOf(where))} no ha respost en ${seconds} segons.`,
+      status: (where: StoreKind, code: string) => `${capital(placeOf(where))} ha respost amb un error (${code}).`,
+      badPlan: (where: StoreKind) => `El pla que hi ha ${where === 'cloud' ? 'al núvol' : 'al portàtil del show'} no passa la comprovació.`,
+      badAnswer: (where: StoreKind) => `${capital(placeOf(where))} no ha respost amb un pla.`,
+      network: (where: StoreKind) => `No s'ha pogut connectar amb ${placeOf(where)}.`,
+    },
+    loadFailedHelp: "No es mostra ni es desa res fins que el pla es carregui: així no se'n pot desar un de buit al damunt.",
     retry: 'Tornar-ho a provar',
     /** A save refused because the plan changed elsewhere since this page loaded it. */
     stale: "No s'ha desat: el pla ha canviat en un altre lloc des que l'has obert",
     staleHelp: "Torna a carregar la pàgina per veure el pla d'ara. Els canvis que has fet aquí des de l'últim desat es perdran; si els vols, copia'ls abans des d'«Importar i exportar».",
     reload: 'Tornar a carregar la pàgina',
-    conflict: 'El pla ha canviat en una altra pestanya mentre editaves aquí.',
-    conflictLoad: 'Carregar el pla de l’altra pestanya',
+    /** Another tab or another device saved it (the cloud and the relay push it to every Admin). */
+    conflict: 'El pla ha canviat en un altre lloc mentre editaves aquí.',
+    conflictLoad: 'Carregar el pla nou',
     conflictKeep: 'Mantenir el meu',
   },
 

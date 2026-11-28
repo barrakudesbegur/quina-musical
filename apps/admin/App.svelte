@@ -11,6 +11,8 @@
   import type { CardTypes } from './logic/cards-preview.ts';
   import { MANAGE_CONFIG } from './config.ts';
   import { S } from './strings.ts';
+  import { headerTitle, loadFailureText } from './logic/status.ts';
+  import Notice from '../../packages/ui/components/Notice.svelte';
   import StatusBar from './components/StatusBar.svelte';
   import PlanErrors from './components/PlanErrors.svelte';
   import PlanMeta from './components/PlanMeta.svelte';
@@ -61,7 +63,7 @@
 
 <div class="manage" data-route={route} data-density="console" data-ground="night">
   <header class="manage__header">
-    <h1 class="manage__title">{S.heading} · {session.current?.title ?? ''}</h1>
+    <h1 class="manage__title">{headerTitle(session.current?.title, session.status.kind === 'failed')}</h1>
     <StatusBar {show} {session} />
   </header>
 
@@ -96,13 +98,11 @@
   <main class="manage__main">
     {#if session.phase.kind === 'loading'}
       <!-- Nothing editable until the plan is here (whats-left 7.1). The badge above says it in words. -->
-      <section class="panel manage__loading" aria-labelledby="plan-loading">
-        <p id="plan-loading">{S.save.loading(session.store.kind)}</p>
-        <progress aria-labelledby="plan-loading"></progress>
-      </section>
+      <!-- The design system's waiting note (Notice, its stepping dots), not read aloud: the header's badge says it. -->
+      <Notice layout="note" color="navy" fill="solid" progress="dots" live="off" text={S.save.loading(session.store.kind)} />
     {:else if session.phase.kind === 'failed'}
       <section class="manage__loading notice notice--error" role="alert">
-        <p><strong>{S.save.loadFailed}.</strong> {S.save.loadFailedHelp(session.phase.detail)}</p>
+        <p><strong>{S.save.loadFailed}.</strong> {loadFailureText(session.phase.failure, session.store.kind)} {S.save.loadFailedHelp}</p>
         <div class="panel__actions">
           <button type="button" onclick={() => void session.load()}>{S.save.retry}</button>
         </div>
@@ -144,9 +144,6 @@
   .manage__loading {
     display: grid;
     gap: var(--space-2);
-  }
-  .manage__loading progress {
-    inline-size: 100%;
   }
   }
 </style>

@@ -8,6 +8,7 @@ import { CloudPlanStore, type FetchLike } from '../../../../../packages/ui/data/
 import { SAMPLE_PLAN } from '../../../../../packages/ui/fixtures/plan.ts';
 import type { GamePlan } from '../../../../../packages/ui/plan.ts';
 import { AdminPlanStore, MemoryLogoStore } from '../../../../admin/data/admin-plan-store.ts';
+import { headerTitle } from '../../../../admin/logic/status.ts';
 
 registerSvelteModules();
 const { PlanSession } = await import('../../../../admin/state/plan-session.svelte.ts');
@@ -118,7 +119,7 @@ test('a plan that fails to load shows the failure with nothing editable and noth
   const { s, stop } = session(server);
   try {
     await sleep(200);
-    assert.deepEqual(s.phase, { kind: 'failed', detail: 'HTTP 503' });
+    assert.deepEqual(s.phase, { kind: 'failed', failure: { cause: 'answer', detail: 'HTTP 503' } });
     assert.equal(s.current, null);
     await sleep(AUTOSAVE_MS + 200);
     assert.deepEqual(server.puts(), []);
@@ -140,9 +141,11 @@ test('with no plan anywhere yet, Admin starts from a blank one and sends it only
     assert.equal(s.phase.kind, 'ready');
     assert.equal(s.draft.rounds.length, 1);
     assert.deepEqual(server.puts(), [], 'a blank plan is never sent on its own');
+    assert.equal(s.savedPlan, null, 'nothing saved yet: the badge must not say «Desat…» (7.5)');
     s.draft.title = 'La primera';
     await sleep(AUTOSAVE_MS + 200);
     assert.deepEqual(server.puts().map((r) => [r.base, r.body?.title]), [['none', 'La primera']]);
+    assert.equal(s.savedPlan?.title, 'La primera');
   } finally {
     stop();
   }
@@ -159,6 +162,7 @@ test('a save not based on the plan there now is refused: the session says so and
     assert.deepEqual(server.puts().map((r) => r.base), ['5000']);
     assert.equal(s.stale, true);
     assert.equal(s.status.kind === 'failed' && s.status.reason, 'stale');
+    assert.equal(headerTitle(s.current?.title, s.status.kind === 'failed'), 'Admin · Des d’aquí (sense desar)', 'the header says the title on screen is not saved');
     assert.equal(server.state.plan?.title, 'Quina Quina 3', "the other device's plan stays");
     s.draft.title = 'Encara des d’aquí';
     await sleep(AUTOSAVE_MS + 200);

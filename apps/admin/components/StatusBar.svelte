@@ -1,9 +1,9 @@
-<!-- Connection to the relay and the show, and whether the plan is saved. -->
+<!-- Connection to the cloud or the show's laptop, and whether the plan is saved (words: logic/status.ts). -->
 <script lang="ts">
   import type { ShowStore } from '../../../packages/ui/client/show.svelte.ts';
   import { formatClock } from '../../../packages/rules/time.ts';
   import type { PlanSession } from '../state/plan-session.svelte.ts';
-  import { S } from '../strings.ts';
+  import { connBadge, saveBadge } from '../logic/status.ts';
 
   let { show, session }: { show: ShowStore; session: PlanSession } = $props();
 
@@ -13,32 +13,12 @@
     if (show.connected) wasConnected = true;
   });
 
-  const conn = $derived.by((): { text: string; status: 'ok' | 'warn' | 'error' | 'calm' } => {
-    if (show.demo) return { text: S.conn.demo(show.demo), status: 'calm' };
-    if (!show.connected) return { text: wasConnected ? S.conn.offline : S.conn.connecting, status: 'error' };
-    if (!show.showOnline) return { text: S.conn.noShow, status: 'warn' };
-    return { text: S.conn.online, status: 'ok' };
-  });
-
-  const save = $derived.by((): { text: string; status: 'ok' | 'warn' | 'error' | 'calm' } => {
-    if (session.phase.kind === 'loading') return { text: S.save.loading(session.store.kind), status: 'calm' };
-    if (session.phase.kind === 'failed') return { text: S.save.loadFailed, status: 'error' };
-    const s = session.status;
-    switch (s.kind) {
-      case 'saved':
-        return { text: s.atMs ? S.save.saved(formatClock(s.atMs)) : S.save.loaded(session.store.kind), status: 'ok' };
-      case 'pending':
-        return { text: S.save.pending, status: 'calm' };
-      case 'invalid':
-        return { text: S.save.invalid(s.count), status: 'warn' };
-      case 'failed':
-        return { text: s.reason === 'quota' ? S.save.quota : s.reason === 'stale' ? S.save.stale : S.save.error(s.detail), status: 'error' };
-      case 'demo':
-        return { text: S.save.demo, status: 'calm' };
-      case 'unavailable':
-        return { text: S.save.unavailable, status: 'error' };
-    }
-  });
+  const conn = $derived(
+    connBadge({ demo: show.demo, connected: show.connected, wasConnected, showOnline: show.showOnline, where: session.store.kind }),
+  );
+  const save = $derived(
+    saveBadge({ phase: session.phase.kind, status: session.status, where: session.store.kind, hasSavedPlan: session.savedPlan !== null, clock: formatClock }),
+  );
 </script>
 
 <div class="status-bar" role="status" aria-live="polite">
