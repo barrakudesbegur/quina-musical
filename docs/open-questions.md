@@ -15,6 +15,12 @@ No decision is recorded for #90 and #117 (low bitrate: 117 and 114 kbps) or #18 
 
 **The user picked (b) on 28 Nov:** "i will do it now, keep a question open on what is the conclusion". Open until the user says which, if any, to swap.
 
+### U245 · Songs landing while the claim pad is open
+On a claim the presenters press Parlem first, then «Comprovar cartró» (game-rules › Claims). The agreed board (Consola-Comprovacio-Ritme ①) draws the claim pad over Parlem, Aguanta and Següent, so a presenter who opens the pad first can't stop the songs while typing the numbers (only the Wii remote's −/+ can; «Torna a la quina» throws the typed numbers away). Found on 28 Nov (whats-left 2.1).
+- (a) The pad keeps Parlem, Aguanta and Següent on screen: a new pad board at the three sizes, then the build.
+- (b) Opening the pad turns Parlem on by itself; it stays on after «Torna a la quina», and «Següent» ends it as usual (the orchestrator's recommendation: it is the rule, with no extra tap under pressure, and it fits the phone's small screen).
+- (c) Keep the agreed board and the rule «Parlem first».
+
 ### U244 · The Phase when no cards in play are entered
 Found on 28 Nov (whats-left 2.12): the console's Heat meter stayed empty in the realistic test because no sold cards were entered (Menú → «Cartrons venuts»), which the runbook never says. Without cards in play the engine guesses the Phase from a count of 20 songs from the night's start that never restarts, so from about the 20th song every round is in its final Phase, and that's why «Auto» stopped at every song (2.8). The runbook gets the step, and the console a warning when a round has no cards in play (drawn for the user first).
 - (a) Without cards in play the Phase stays early and the Heat empty, with the console's warning (the orchestrator's recommendation: one way, no guess, and the warning makes the presenters enter the cards).
