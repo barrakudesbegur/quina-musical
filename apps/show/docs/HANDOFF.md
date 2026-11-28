@@ -11,7 +11,7 @@ The single place to resume the sound engine's work from. It was first written wh
 
 ## Now (kept current at each milestone)
 
-- **28 Nov, evening: the sponsor-logo rule (Backend's proposal, agreed with the Orchestrator, for D287's stickers), committed in the worktree, NOT pushed.** `LOGO_PATH_RE` (`/media/<32 hex>.png|jpg`) in packages/protocol/plan.ts; `checkGamePlan(json)` reads any other logo as null, `{ write: true }` refuses it (the relay's local save uses it; Backend: PUT /api/plan, link.plan, the edition tool). Waits on Frontend's fixture in `tests/ui/admin/cloud-store.test.ts` (its fake upload path `/media/abc.png` → a 32-hex key): then rebase, test, push, send both the sha.
+- **28 Nov, evening: the sponsor-logo rule (Backend's proposal, agreed with the Orchestrator, for D287's stickers), pushed as 284b8d0a on Frontend's fixture fix f3f0b3f1.** `LOGO_PATH_RE` (`/media/<32 hex>.png|jpg`) in packages/protocol/plan.ts; `checkGamePlan(json)` reads any other logo as null, `{ write: true }` refuses it (the relay's local save uses it; Backend: PUT /api/plan, link.plan, the edition tool). Backend switches its writes to `{ write: true }`; Frontend's phone demo (`?demo=prizes`, SVG data-URL logos, nulled by the player's planOf) puts its logos back after planOf in demo mode, on their side: no protocol exception.
 
 - **28 Nov, late: Frontend's two phone requests (the collapsed cards, D286 follow-up, approved by the user; the Orchestrator logs it). Shapes agreed with Frontend; Backend told.**
   - `game.announceWins?: boolean` (default true, `setGame { announceWins }`, journaled with the settings like remoteShake): phones show «LÍNIA!»/«QUINA!» over a card's map until the next song lands; presenters can switch it off.
