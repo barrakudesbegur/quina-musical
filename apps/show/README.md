@@ -53,7 +53,7 @@ Relative paths are relative to the repo root; absolute ones work too.
 | Remote | http://localhost:5174/show/remote/ (or `http://<LAN IP>:5174/show/remote/` on a tablet or phone) | Next, Back, Hold, Hold music, Pace, sound effects, Schedule, cards in play, possible winners |
 | Report | http://localhost:5174/data/report.md | Analysis flags and audition queue |
 
-For a projector without the click: `open -na "Google Chrome" --args --user-data-dir=/tmp/quina-show --autoplay-policy=no-user-gesture-required --kiosk "http://localhost:5174/show/?autostart=1"`.
+For a projector without the click: `open -na "Google Chrome" --args --user-data-dir="$HOME/Library/Application Support/Quina/chrome-show" --no-first-run --no-default-browser-check --autoplay-policy=no-user-gesture-required --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --kiosk "http://localhost:5174/show/?autostart=1"` (as docs/night-runbook.md step 5 has it). The profile lives outside /tmp, which macOS empties at every restart (the display offset and the show page's own Game copy went with it once); keep the quotes and `$HOME`, since zsh splits on the space and doesn't expand `~` after `=`.
 
 **Show keys:**
 - → / Enter: Next (it also releases a Suspense). ←: Back. Space: Hold / release. S: Suspense. M: Hold music. Esc: Panic.
