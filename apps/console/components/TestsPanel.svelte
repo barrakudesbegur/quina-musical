@@ -38,7 +38,7 @@
   <span class="menu-group__field" id="{uid}-round">{S.tests.round}</span>
   <div class="choice-group" role="group" aria-labelledby="{uid}-round">
     {#each rounds as r (r.number)}
-      <MiniButton size="s" label={S.round(r, model.plan)} pressed={r.number === round?.number} onclick={() => (picked = r.number)} />
+      <MiniButton size="s" label={S.roundShort(r, model.plan)} pressed={r.number === round?.number} onclick={() => (picked = r.number)} />
     {/each}
   </div>
 

@@ -875,7 +875,7 @@ export const S = {
     round: 'Ronda',
     intro: 'Anar a la presentació',
     introNote: 'La ronda triada surt al projector, sense cap cançó comptada.',
-    songs: 'Cançons ja comptades',
+    songs: 'Comptades',
     songsValue: (n: number) => (n === 1 ? '1 cançó' : `${n} cançons`),
     songsLess: 'Una cançó menys',
     songsMore: 'Una cançó més',
