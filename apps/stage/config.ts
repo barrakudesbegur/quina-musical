@@ -55,6 +55,8 @@ export const STAGE = Object.freeze({
    * - The Desgraciat round: `standUp`, a hands-up nino beside the round's name at its intro ("everyone stand up"; its
    *   Celebration's ninos are `finale.celebration`); `checkFallen`, the sitting nino beside a fallen card's big ✗
    *   (`check-fallen`: the card sat down).
+   * - `pause`: the meditating nino over «Tornem de seguida» while the presenters' Pausa is on; it breathes
+   *   (ANIMATIONS.md › pause).
    */
   stickers: Object.freeze({
     checkFailed: 'failedCheck' as NinoMoment | null,
@@ -62,6 +64,7 @@ export const STAGE = Object.freeze({
     standUp: 'standUp' as NinoMoment | null,
     before: 'before' as NinoMoment | null,
     interval: 'break' as NinoMoment | null,
+    pause: 'pause' as NinoMoment | null,
   }),
   /**
    * The Desgraciat's finale on stage (board Projector-Desgraciat-Final; ANIMATIONS.md › The finale on stage):

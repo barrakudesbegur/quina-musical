@@ -15,6 +15,7 @@ import { loopRepeats, panTiming, sponsorPage, stripRows } from '../model/sponsor
 import { logoTileElement } from '../../../packages/ui/components/sponsors-dom.ts';
 import { ninoFor, type NinoMoment } from '../../../packages/ui/concepts.ts';
 import { ninoElement, setNino } from '../../../packages/ui/components/nino-dom.ts';
+import { LINE_ICONS, pathOf } from '../../../packages/ui/icons/line.ts';
 
 /** The round's name (RoundView's): "Quina 4", "Quina Especial" or "Quina del Desgraciat". */
 export class RoundTitle {
@@ -292,21 +293,17 @@ export function starIcon(className: string): SVGSVGElement {
   return svg;
 }
 
-/** The Quina del Desgraciat's sad face: two eyes and a frown in ink, on a paper disc (colours from stage.css). */
+/** The Quina del Desgraciat's sad face: the icon registry's `sad-face`, two eyes and a frown in ink with no circle
+ *  round them (D23; colours from stage.css). */
 export function sadIcon(className: string): SVGSVGElement {
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('class', `sad-icon ${className}`.trim());
   svg.setAttribute('viewBox', '0 0 24 24');
   svg.setAttribute('aria-hidden', 'true');
-  const face = document.createElementNS(SVG_NS, 'circle');
-  face.setAttribute('class', 'sad-icon__face');
-  face.setAttribute('cx', '12');
-  face.setAttribute('cy', '12');
-  face.setAttribute('r', '10.5');
   const features = document.createElementNS(SVG_NS, 'path');
   features.setAttribute('class', 'sad-icon__ink');
-  features.setAttribute('d', 'M8.5 8.5v2.2M15.5 8.5v2.2M7.5 17.5c1.3-2.2 2.8-3.1 4.5-3.1s3.2.9 4.5 3.1');
-  svg.append(face, features);
+  features.setAttribute('d', LINE_ICONS['sad-face'].map(pathOf).join(''));
+  svg.append(features);
   return svg;
 }
 

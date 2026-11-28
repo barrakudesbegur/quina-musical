@@ -346,6 +346,8 @@
   inset: 0;
   display: grid;
   place-items: center;
+  align-content: center;
+  gap: var(--space-5);
   background: var(--color-bg);
   transition: opacity var(--stage-dur-pause) var(--ease-out);
 }
@@ -357,6 +359,11 @@
 
 .stage__pause.is-entering {
   transition: none;
+}
+
+.stage__pause-nino {
+  height: 22rem;
+  width: auto;
 }
 
 .stage__pause-text {
@@ -745,12 +752,6 @@
 }
 
 /* The Quina del Desgraciat's sad face: ink features on an ice-blue disc. */
-.sad-icon__face {
-  fill: var(--color-cyan);
-  stroke: var(--color-line);
-  stroke-width: 2;
-}
-
 .sad-icon__ink {
   fill: none;
   stroke: var(--color-line);

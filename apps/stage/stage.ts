@@ -34,6 +34,8 @@ import { busSource, clientSource, type LinkState, type StageEvent, type StageSou
 import { STAGE_TEXT } from './strings.ts';
 import { stageView, type AfterView, type BeforeView, type StageView } from './view.ts';
 import { h, playAnim, setData, setHidden, setVar } from './render/dom.ts';
+import { ninoFor } from '../../packages/ui/concepts.ts';
+import { ninoElement } from '../../packages/ui/components/nino-dom.ts';
 import type { SceneEnv, SceneRenderer } from './render/scene.ts';
 import { AfterScene } from './render/after.ts';
 import { BeforeScene } from './render/before.ts';
@@ -152,7 +154,10 @@ class Stage {
 
     // Layers: backdrop (everything but the drum's band) · the band · its cover · the scaled box · the link dot.
     this.slot = h('div', { class: 'stage__drum-slot', attrs: { 'aria-hidden': 'true' } }, h('p', 'stage__drum-label', STAGE_TEXT.drumPlaceholder));
-    this.pause = h('div', { class: 'stage__pause', hidden: true }, h('p', 'stage__pause-text', STAGE_TEXT.pause));
+    // The Pausa (ANIMATIONS.md › pause): the meditating nino breathes over «Tornem de seguida» (still with reduced motion).
+    const pauseMoment = STAGE.stickers.pause;
+    const pauseNino = pauseMoment ? ninoElement({ pose: ninoFor(pauseMoment, 0), motion: 'breathe' }, 'sticker stage__pause-nino') : null;
+    this.pause = h('div', { class: 'stage__pause', hidden: true }, pauseNino, h('p', 'stage__pause-text', STAGE_TEXT.pause));
     this.box = h('div', 'stage__box', ...Object.values(this.scenes).map((s) => s.root), this.pause);
     this.link = h('div', { class: 'stage__link', hidden: true, attrs: { role: 'status' } }, h('span', 'stage__link-text'));
     root.classList.add('stage-root');
