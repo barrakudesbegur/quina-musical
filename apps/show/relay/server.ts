@@ -36,6 +36,7 @@ import {
 } from '@quina/protocol';
 import { distProblem } from './build-stamp.ts';
 import { TEST_MODE_BANNER, relayAcceptsCommand, relayModeMessage } from './gate.ts';
+import { defaultRouteInterface, describeAddress, lanAddresses, type LanAddress } from './lan.ts';
 import { LaptopPlan, type CurrentPlan } from './plan.ts';
 import { CACHE, DEFAULT_REPERTOIRE, LINK, MEDIA, OUT, REPERTOIRE_ENV, PREP, REPO, SHOW, display, loadRepertoire, type Repertoire } from './repertoire.ts';
 
@@ -54,6 +55,8 @@ const USE_DIST = args.includes('--dist');
 /** Rehearsal test runs only, never on the night: the test tools (TEST_COMMANDS) go through, and every socket hears so
  * (`relay.mode`). */
 const TEST_MODE = args.includes('--test');
+/** With --lan, how often the relay checks whether the laptop's address changed (and prints the console URL again). */
+const LAN_RECHECK_MS = 10_000;
 const REPERTOIRE: Repertoire = repertoireOrExit(argValue('--repertoire', process.env[REPERTOIRE_ENV] || DEFAULT_REPERTOIRE));
 const ANALYSIS_DIR = path.join(REPERTOIRE.dataDir, 'analysis');
 
@@ -644,16 +647,40 @@ function broadcast(message: RelayClients | RelayPlan) {
   for (const [socket, info] of clients) if (info.role !== 'unknown' && socket.readyState === socket.OPEN) socket.send(text);
 }
 
+/** The laptop's addresses now, best first (relay/lan.ts). */
+const currentLan = async () => lanAddresses(os.networkInterfaces(), await defaultRouteInterface());
+
+/** The console's pairing URL on the best address, and the other addresses the tablets might reach the laptop on. */
+function printLan(addresses: LanAddress[], why: string | null) {
+  const [best, ...others] = addresses;
+  if (why) console.log(why);
+  if (!best) {
+    console.log('No network address: join the hotspot or the Wi-Fi, and the console URL will be printed here.');
+    return;
+  }
+  console.log(`Console for the presenters (pairs with the token): http://${best.address}:${PORT}/console/?t=${TOKEN}  [${describeAddress(best)}]`);
+  console.log(`  (dev test remote: http://${best.address}:${PORT}/show/remote/?t=${TOKEN})`);
+  if (others.length) console.log(`  other addresses of this laptop: ${others.map(describeAddress).join(', ')}`);
+}
+
 server.listen(PORT, HOST, () => {
-  const lan = Object.values(os.networkInterfaces()).flat().find((i) => i && i.family === 'IPv4' && !i.internal)?.address;
   const mode = USE_DIST ? 'dist/' : 'Vite dev';
   console.log(`show relay (${mode}) on http://localhost:${PORT}/show/  (audition: /show/audition.html, Admin: /admin/)`);
-  if (LAN && lan) {
-    console.log(`Console for the presenters (pairs with the token): http://${lan}:${PORT}/console/?t=${TOKEN}`);
-    console.log(`  (dev test remote: http://${lan}:${PORT}/show/remote/?t=${TOKEN})`);
-  }
-  else console.log('This laptop only. Start with --lan to let the hotspot\'s tablets and phones pair.');
+  if (!LAN) console.log('This laptop only. Start with --lan to let the hotspot\'s tablets and phones pair.');
   console.log(`repertoire ${REPERTOIRE.name} (${display(REPERTOIRE.manifest)}): ${repertoireStatus()}`);
-  // Last, so it is what the screen shows.
-  if (TEST_MODE) console.warn(TEST_MODE_BANNER);
+  void (async () => {
+    if (LAN) {
+      let lan = await currentLan();
+      printLan(lan, null);
+      // The laptop may change networks while the relay runs (a hotspot, the venue's Wi-Fi, a VPN): print the URL again.
+      setInterval(async () => {
+        const now = await currentLan();
+        if (now[0]?.address === lan[0]?.address) return;
+        lan = now;
+        printLan(now, `The laptop's network changed (${new Date().toLocaleTimeString()}):`);
+      }, LAN_RECHECK_MS).unref();
+    }
+    // Last, so it is what the screen shows.
+    if (TEST_MODE) console.warn(TEST_MODE_BANNER);
+  })();
 });
