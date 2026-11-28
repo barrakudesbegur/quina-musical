@@ -75,7 +75,7 @@
     {"id": "brava-social-media", "name": "Brava Social Media", "file": "drive:Brava Social Media.PNG", "background": "all", "ink": {"color": "box"}},
     {"id": "recutrans", "name": "Recutrans", "file": "drive:recutrans.png", "background": "edges"},
     {"id": "installacions-poch", "name": "Instal·lacions Poch", "file": "found:poch.jpeg", "background": "edges", "note": "the better file found on 28 Nov"},
-    {"id": "do2", "name": "DO2", "file": "drive:DO2.jpg", "crop": [0.05, 0.05, 0.95, 0.82], "background": "light-ink", "luma": [170, 235], "ink": {"color": "box"}, "sticker": {"reach": 0.18}, "note": "cropped above the card's names and phone numbers"},
+    {"id": "do2", "name": "DO2", "file": "drive:DO2.jpg", "crop": [0.05, 0.05, 0.95, 0.58], "background": "light-ink", "luma": [170, 235], "ink": {"color": "box"}, "note": "only the name: the card's slogan, services, names and phone numbers cropped off"},
     {"id": "ricard-cuadrado", "name": "Ricard Cuadrado Construccions i Reformes", "file": "drive:Ricard Cuadrado CiR.jpg", "background": "edges"},
     {"id": "construccions-bolivar", "name": "Construccions Bolívar", "file": "drive:Construccions Bolívar.jpg", "background": "edges"},
     {"id": "galeria-mas-comangau", "name": "Mas Comangau", "file": "drive:Galena Mas Comangau.png", "background": "edges", "sticker": {"reach": 0.18}}
