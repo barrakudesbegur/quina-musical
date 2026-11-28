@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D287**, **U230**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D288**, **U230**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -37,7 +37,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 
 **The sessions:**
 - **Sound engine:** important tasks only. Done today: the README's Chrome profile (9c5ef734), split mode marked a nice-to-have (9d1cb3ac), D277's public Spin target and the Pausa volume fix (a2d0b4af).
-- **Frontend:** at most two agents in parallel. Boards for D285 (the Celebration's sponsor logos, the animated fireworks C, the collapsed cards, A leading with the user's details (D286; open: the count rule, and whether the phone announces a Line or Quina); none is a go to build), the phone's edge-to-edge and scroll fixes. Also working on: D277's phone drum, drawing every undrawn screen (D236), D283's thick Check marks on the projector, 16:10 on the projector (D276), D278's near-win sound, D279's items. The canvas redraw is done (v117, v118).
+- **Frontend:** at most two agents in parallel. Boards for D285/D287 (the Celebration's sponsor logos as packed stickers, a shared packing module with tests, the animated fireworks C, the collapsed cards, A leading with the user's details (D286; open: the count rule, and whether the phone announces a Line or Quina); none is a go to build), the phone's edge-to-edge and scroll fixes. Also working on: D277's phone drum, drawing every undrawn screen (D236), D283's thick Check marks on the projector, 16:10 on the projector (D276), D278's near-win sound, D279's items. The canvas redraw is done (v117, v118).
 - **Backend:** queue empty apart from D277's feed (Frontend's request) and the held D282; it waits for U204's time. Done today: the Chrome profiles out of /tmp (f63af09f), the plan's title «Quina Quina! 3» uploaded (D280).
 - **The card design session (quina-musical-d1):** its work is done except U212. Its handoff is tools/card-mockup/HANDOFF.md, the spec tools/card-mockup/README.md, the canvas https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392. Decisions D250–D272.
 
