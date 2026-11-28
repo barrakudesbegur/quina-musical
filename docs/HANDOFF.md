@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D291**, **U231**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D292**, **U231**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -36,6 +36,8 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 **Chrome's audio clock stopped on this Mac (28 Nov):** the user's fix is to quit every Chrome (including a kiosk from the 27 Nov production test, profile /tmp/quina-show, and that test's relay), then `sudo killall coreaudiod`, then a reboot. Backend's production e2e was red until its Chrome ran with `--disable-audio-output` (057ff2a); D277 then deployed (c9865a9e). D284 adds detection: Sound engine's part (0dd44efe) and Backend's preflight FAIL (1a9714c) are on main; Frontend's Console banner is on main (1fa4ef60).
 
 **Today's production test (D288, U204 answered):** it starts 30 minutes after the deploy and the laptop setup are live, with the collapsed cards, the beat bob, `announceWins` and `beat`; the show page in a plain window. Afterwards Backend re-uploads the plan with 27 Dec's times. Chrome's audio clock runs again on this Mac (Backend's probe). The collapsed cards and the beat bob are approved to build (D289).
+
+**To model, design and build after Frontend's current work (the user, 28 Nov: "dont make him lose focus now"): the night's opening, from the doors to the first round.** In today's production test the show jumped straight into the round, without the doors' card-selling state and its music, and the round's intro music (Zelda's «Parasail Minigame», show-and-music.md › Each round's intro) played while the presenters talked over the intro. To model: the doors phase (card sales, its music, the doors voices, U97); the intro music's span (U99); maybe a special audio for the presenters coming on stage ("i dont know what yet"); D291's Enrere on the first song (undo the round's start); and "the start event should not be shown in the presenter screen, it belongs to the console" (asked the user which screen and which event). Don't brief Frontend before it finishes its list.
 
 **The sessions:**
 - **Sound engine:** important tasks only. Done today: the README's Chrome profile (9c5ef734), split mode marked a nice-to-have (9d1cb3ac), D277's public Spin target and the Pausa volume fix (a2d0b4af).
