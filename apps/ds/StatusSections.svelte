@@ -14,6 +14,8 @@
   import Plate from '../../packages/ui/components/Plate.svelte';
   import Ring from '../../packages/ui/components/Ring.svelte';
   import SponsorList from '../../packages/ui/components/SponsorList.svelte';
+  import StickerCollage from '../../packages/ui/components/StickerCollage.svelte';
+  import { boxObstacle } from '../../packages/ui/components/sticker-collage.ts';
   import StickerTitle from '../../packages/ui/components/StickerTitle.svelte';
   import Toast from '../../packages/ui/components/Toast.svelte';
   import Notice from '../../packages/ui/components/Notice.svelte';
@@ -53,6 +55,32 @@
     { name: 'Cava', logo: logo(140, 140, '#7D4BC4', 'CAVA') },
     { name: 'Llibreria', logo: logo(320, 90, '#17132B', 'LLIBRES') },
   ];
+
+  /** The collage's stand-ins: logos of every shape on transparency, as sponsors send them (a wordmark, a ring badge with
+   * its hole, a crest, a boxed logo, a thin wide one), and two with no logo yet. Real logos never go in the repo. */
+  const shape = (w: number, h: number, body: string): string =>
+    `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${body}</svg>`)}`;
+  const word = (x: number, y: number, size: number, fill: string, text: string) =>
+    `<text x="${x}" y="${y}" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="${size}" fill="${fill}">${text}</text>`;
+  const COLLAGE: SponsorLogo[] = [
+    { name: 'Forn del poble', logo: shape(320, 150, word(160, 70, 64, '#C45A00', 'FORN') + word(160, 132, 46, '#C45A00', 'DEL POBLE')) },
+    { name: 'Botiga d’esports', logo: shape(200, 200, `<circle cx="100" cy="100" r="88" fill="none" stroke="#2D8FC4" stroke-width="26"/>${word(100, 118, 52, '#17132B', 'BE')}`) },
+    { name: 'Gelats', logo: shape(380, 120, word(190, 92, 96, '#C42F7A', 'GELATS')) },
+    { name: 'Restaurant del port', logo: shape(150, 210, `<path d="M10 10h130v110c0 50-40 76-65 86C50 196 10 170 10 120Z" fill="#157140"/>${word(75, 120, 54, '#fff', 'RP')}`) },
+    { name: 'Cava', logo: shape(170, 150, `<rect width="170" height="150" rx="10" fill="#7D4BC4"/>${word(85, 92, 48, '#fff', 'CAVA')}`) },
+    { name: 'Barrakudes', logo: null },
+    { name: 'Llibreria', logo: shape(520, 90, word(260, 70, 72, '#17132B', 'LLIBRERIA')) },
+    { name: 'Fleca', logo: shape(170, 170, `<circle cx="85" cy="85" r="80" fill="#FFC531"/>${word(85, 100, 40, '#17132B', 'FLECA')}`) },
+    { name: 'Ferreteria i Subministraments Industrials de Begur', logo: null },
+    { name: 'Pàdel', logo: shape(260, 160, `<rect x="4" y="4" width="252" height="152" rx="30" fill="#17132B"/>${word(130, 100, 56, '#3EE07F', 'PÀDEL')}`) },
+  ];
+  /** The demo Celebration on the projector (the 1440 × 1080 box, drawn at 60 %): the title tilted −5°, the round's plate,
+   * two ninos at the bottom corners; the module keeps off their boxes, and grows the collage from under the plate. */
+  const SCENE = { title: { x: 330, y: 168, width: 780, height: 262 }, plate: { x: 555, y: 486, width: 330, height: 132 }, left: { x: 48, y: 760, width: 230, height: 270 }, right: { x: 1162, y: 760, width: 230, height: 270 } };
+  const SCENE_OBSTACLES = [boxObstacle(SCENE.title, -5), boxObstacle(SCENE.plate, 2), boxObstacle(SCENE.left, -4), boxObstacle(SCENE.right, 5)].map((o) => ({ points: o.points.map((q) => ({ x: q.x - 32, y: q.y - 32 })) }));
+  let collageCount = $state(5);
+  let collageSeed = $state(1);
+  let collageRun = $state(0);
 
   const MOMENTS = Object.keys(NINO_FOR) as NinoMoment[];
   const PLATES: PlateColor[] = ['gold', 'orange', 'slate', 'periwinkle', 'live', 'snow', 'red'];
@@ -377,6 +405,49 @@
       {@render cell(sponsor.logo ? 'a logo, contained' : 'no logo yet: the name', l)}
     {/each}
   </div>
+  <h3>Sticker collage</h3>
+  <p class="ds-prose">
+    A Celebration’s sponsors (D285, D287), as die-cut stickers made in the browser from each logo (<code>logo-sticker.ts</code>, <code>die-cut.ts</code>:
+    the logo untouched, a white rim of 5 % with its holes filled, no keyline) and packed together by <code>sticker-collage.ts</code> round what the box
+    holds, by their real shapes: every sticker the same area, the headline’s sponsor 30 % more; never under the floor
+    ({projector ? 'the SponsorStrip’s 240 × 150 tile' : '112 × 70, the phone’s logo tile'}), bigger for fewer; tilted 3–9°, a wordmark less; the white rims may
+    overlap, never a logo. The same seed (the Celebration’s key) draws the same collage. They slap on one at a time from the headline outward
+    ({projector ? 'from 900 ms, 110 ms apart' : 'from 200 ms, 80 ms apart'}); reduced motion: they fade in together. A sponsor with no logo gets its name.
+  </p>
+  <div class="ds-s__collage-bar">
+    {#each [1, 3, 5, 6, 10] as n (n)}
+      <Button size="xs" color="navy" label={String(n)} pressed={collageCount === n} sound="small" onclick={() => (collageCount = n)} />
+    {/each}
+    <Button size="xs" color="purple" label="Another Celebration" sound="small" onclick={() => collageSeed++} />
+    <Button size="xs" color="grey" label="Replay the entry" sound="small" onclick={() => collageRun++} />
+  </div>
+  {#key `${collageRun}`}
+    {#if projector}
+      <div class="ds-s__collage-stage">
+        <div class="ds-s__collage-scene">
+          <div class="ds-s__collage-title" style:left="{SCENE.title.x}px" style:top="{SCENE.title.y}px" style:width="{SCENE.title.width}px" style:height="{SCENE.title.height}px">
+            <StickerTitle text="Quina!" size="hero" color="gold" fit />
+          </div>
+          <div class="ds-s__collage-plate" style:left="{SCENE.plate.x}px" style:top="{SCENE.plate.y}px" style:width="{SCENE.plate.width}px" style:height="{SCENE.plate.height}px">
+            <Plate color="gold" size="l" label="Quina 3" />
+          </div>
+          <div class="ds-s__collage-nino" style:left="{SCENE.left.x}px" style:top="{SCENE.left.y}px" style:height="{SCENE.left.height}px"><Nino pose="mans-adalt" size={SCENE.left.height} tilt={-4} motion="none" /></div>
+          <div class="ds-s__collage-nino" style:left="{SCENE.right.x}px" style:top="{SCENE.right.y}px" style:height="{SCENE.right.height}px"><Nino pose="angel" size={SCENE.right.height} tilt={5} motion="none" /></div>
+          <div class="ds-s__collage-box">
+            <StickerCollage sponsors={COLLAGE.slice(0, collageCount)} seed="3:bingo@{collageSeed}" look="projector" obstacles={SCENE_OBSTACLES} focus={{ x: 720 - 32, y: 830 - 32 }} label="Patrocinadors del premi" />
+          </div>
+        </div>
+      </div>
+    {:else}
+      <div class="ds-s__collage-phone">
+        <StickerCollage sponsors={COLLAGE.slice(0, collageCount)} seed="3:bingo@{collageSeed}" look="phone" grow={1200} label="Patrocinadors del premi" />
+      </div>
+    {/if}
+  {/key}
+  <p class="ds-gallery__note">
+    The stand-in logos are drawn here; the boards (Projector-Celebracio-Stickers) show the real 2025 logos. Not yet placed in the stage’s or the
+    phone’s Celebration (design only until the user says so).
+  </p>
 </section>
 
 <!-- ---- G5 · QrBlock --------------------------------------------------------------------------------------------- -->
@@ -530,6 +601,67 @@
   .ds-s__qr {
     width: 34.25rem;
     max-width: 100%;
+  }
+
+  .ds-s__collage-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-block: var(--space-2) var(--space-4);
+  }
+
+  .ds-s__collage-bar :global(.button) {
+    width: auto;
+  }
+
+  /* The projector's 1440 × 1080 box at 60 %: the module packs in the box's own px (a transform doesn't change them). */
+  .ds-s__collage-stage {
+    width: 864px;
+    max-width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg, #18204a);
+  }
+
+  .ds-s__collage-scene {
+    position: relative;
+    width: 1440px;
+    height: 1080px;
+    transform: scale(0.6);
+    transform-origin: 0 0;
+  }
+
+  .ds-s__collage-title,
+  .ds-s__collage-plate,
+  .ds-s__collage-nino {
+    position: absolute;
+    display: grid;
+    place-items: center;
+  }
+
+  .ds-s__collage-title {
+    rotate: -5deg;
+  }
+
+  .ds-s__collage-plate {
+    rotate: 2deg;
+  }
+
+  .ds-s__collage-box {
+    position: absolute;
+    inset: 32px;
+    display: grid;
+  }
+
+  .ds-s__collage-phone {
+    display: grid;
+    width: 342px;
+    max-width: 100%;
+    height: 420px;
+    padding: var(--space-3) 0;
+    border-radius: var(--radius-lg);
+    background: var(--color-bg, #18204a);
   }
   }
 </style>

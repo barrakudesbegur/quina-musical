@@ -1,0 +1,99 @@
+/*
+ * G4 · StickerCollage (D285, D287): a Celebration's sponsors as die-cut stickers (logo-sticker.ts, die-cut.ts), packed
+ * round the title by sticker-collage.ts. Each sticker is placed by the module (left, top, size and tilt inline); here
+ * only its look and its entry. The look is the ninos': the white die-cut, no keyline, the hard drop shadow, tilted.
+ * The entry (ANIMATIONS.md › celebrate ⑤, the row to add with this): from `--collage-start`, one at a time in the
+ * module's entry order (the headline, then outward from it), `--collage-gap` apart: each slaps on from 1.3× while
+ * turning 8° onto its tilt, `--collage-slap` on --ease-bounce (it dips to about 0.97 and settles), its opacity 0 → 1
+ * in the first 80 ms. Reduced motion: all fade in together at `--collage-start`, 200 ms, at their tilt. The logos'
+ * own pixels are never filtered or tinted (the Orchestrator's rule): only the drop shadow is drawn under them.
+ * Every size and time is a variable set in :where(), so an app's context (the phone: from 200 ms, 80 ms apart) tunes it.
+ */
+
+@layer components {
+:where(.sticker-collage) {
+  --collage-start: 900ms;
+  --collage-gap: 110ms;
+  --collage-slap: 320ms;
+  --collage-drop: drop-shadow(0 10px 0 rgb(10 14 38 / 0.55));
+}
+
+:where([data-density='phone'], [data-density='console']) :where(.sticker-collage) {
+  --collage-start: 200ms;
+  --collage-gap: 80ms;
+  --collage-drop: drop-shadow(0 6px 0 rgb(10 14 38 / 0.55));
+}
+
+.sticker-collage {
+  position: relative;
+  min-height: 0;
+}
+
+.sticker-collage__sticker {
+  position: absolute;
+  box-sizing: border-box;
+  display: block;
+  margin: 0;
+  rotate: var(--tilt, 0deg);
+  filter: var(--collage-drop);
+  pointer-events: none;
+  user-select: none;
+  animation: sticker-collage-in 200ms var(--ease-out) var(--collage-start) both;
+}
+
+img.sticker-collage__sticker {
+  object-fit: fill;
+}
+
+/* A sponsor with no logo yet: its name on a white die-cut of its own, up to three lines. */
+.sticker-collage__name {
+  display: grid;
+  place-items: center;
+  padding: 6% 9%;
+  border-radius: 999px;
+  background: var(--color-white);
+  color: var(--color-ink);
+}
+
+.sticker-collage__name > span {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  font-family: var(--font-body);
+  /* three lines fill the sticker's height (`--h`, its height, set with its place) */
+  font-size: calc(var(--h, 4.375rem) * 0.2);
+  font-weight: 900;
+  line-height: 1.05;
+  text-align: center;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :where([data-density='projector'], [data-motion='full']) .sticker-collage__sticker {
+    --at: calc(var(--collage-start) + var(--order, 0) * var(--collage-gap));
+    animation:
+      sticker-collage-in 80ms var(--ease-out) var(--at) both,
+      sticker-collage-slap var(--collage-slap) var(--ease-bounce) var(--at) both;
+  }
+}
+
+@keyframes sticker-collage-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes sticker-collage-slap {
+  from {
+    scale: 1.3;
+    rotate: calc(var(--tilt, 0deg) + var(--turn, 8deg));
+  }
+  to {
+    scale: 1;
+    rotate: var(--tilt, 0deg);
+  }
+}
+}
