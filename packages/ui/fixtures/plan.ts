@@ -117,7 +117,7 @@ export const SAMPLE_PLAN: GamePlan = {
   v: 3,
   edition: '26',
   // As the real 2026 plan (data/editions/2026.plan.json); «Quina Quina 3» beside «Quina 3» read as the name plus the round.
-  title: 'Quina Musical',
+  title: 'Quina Quina! 3',
   prizeReveal: 'perRound',
   sponsors: SPONSORS,
   rounds: Array.from({ length: 8 }, (_, i) => {
