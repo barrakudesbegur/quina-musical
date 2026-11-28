@@ -24,9 +24,12 @@ Resume the Frontend's work from this file. Keep it current at every milestone, b
   - The canvas then looked close to the app while the app had never reached the agreed design. I treated "board matches code" as progress.
   - The same redraw quietly dropped agreed phone designs: the countdown rings before the start and in the Descans, «El teu premi d'aquesta nit», and the readable three-level QR stack.
 - **Tests can't catch any of this.** The 1042 UI tests never mount a component or open a browser, so they stayed green throughout.
-- **First decision for the user:** which projector look is agreed?
-  - (a) the pre-redraw boards (`Abans-28nov-Projector-*`; the user's complaint points here);
-  - (b) the current boards plus their «NOT BUILT YET» items.
+- **Answered (the user, 28 Nov):** "«Before the redraw (28 Nov) · Projector · in play» is the correct one".
+  - The agreed main play screen is `Abans-28nov-Projector-Joc.dc.html`. It's back on the canvas's Projector page (v131), titled "THE AGREED LOOK".
+  - The redrawn as-built `Projector-Joc` is in the Archive, titled "As built (28 Nov), NOT the agreed look".
+  - The user named only the in-play board. For the other scenes with a pre-redraw version, ask before swapping, because some later agreed changes (U225's thick Check marks) live only in the redrawn boards:
+    - `Abans-28nov-Projector-{Abans, Comprovacio, Comprovacio-Fallida, Comprovacio-Revisio, Desgraciat-Dempeus, Desgraciat-Final, Linia, MitjaPart}`.
+  - Projector-Desgraciat-Joc should follow the agreed in-play look.
 
 ### 1. The projector (apps/stage, `/show/`), board by board (projector.md)
 | Board | Status | What differs (short) |
