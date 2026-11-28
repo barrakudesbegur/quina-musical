@@ -1619,7 +1619,7 @@ By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: requi
 The user sorts the playlists with an online tool, and asked to "check the order is right and use that for the ids". That tool sorts letter by letter, ignoring spaces and punctuation, and both final playlists are exactly in its order (Sound engine, 27 Nov). So the ids follow the playlists as they are, and U58's convention is letter by letter, not the word-by-word default. Pool 1 is 1–70 and pool 2 starts at 71.
 By: the orchestrator, applying the user's instruction of 25 Nov. Source: Sound engine's report of 27 Nov. Amends: D103. Lives in: requirements/songs-and-cards.md › The pool.
 
-### D239 · A song the presenters let play loops; it never hands over by itself · 2026-11-27 · Active; amended by D318; Parlem Pending (U205)
+### D239 · A song the presenters let play loops; it never hands over by itself · 2026-11-27 · Active; amended by D318
 "When the presenter lets a song play it should always loop and not switch to pause music." The user's test ran a 25 Nov build, but Sound engine found the rule broken in today's code in two places, now being fixed:
 - Aguanta on a song with no 4- or 8-bar phrase in reach;
 - manual advance with no Hold, at the song's end.
