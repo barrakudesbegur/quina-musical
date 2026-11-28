@@ -495,15 +495,53 @@ export function relayCheck(repertoire: string, answer: { ok: boolean; name?: str
   return check('Network', 'Relay', 'pass', `up, repertoire ${repertoire}`);
 }
 
+/**
+ * The show page on the relay: exactly one. A second one (an old kiosk left from a test, another profile, a tab)
+ * gets every command too and sends its own state, so the consoles can follow its old Game: that fails.
+ */
 export function showPageCheck(clients: readonly { role: string }[] | null): Check {
   if (!clients) return check('Network', 'Show page', 'warn', "couldn't ask the relay who is connected");
-  if (!clients.some((c) => c.role === 'show')) return check('Network', 'Show page', 'warn', 'the show page is not open (or not connected to the relay)');
+  const shows = clients.filter((c) => c.role === 'show').length;
+  if (shows === 0) return check('Network', 'Show page', 'warn', 'the show page is not open (or not connected to the relay)');
+  if (shows > 1) {
+    return check('Network', 'Show page', 'fail',
+      `${shows} show pages are connected to the relay: each one gets every command, and the consoles can follow the wrong one's Game. ` +
+      `Close every show page but the projector's (an old kiosk window from a test, a show page in another Chrome profile or tab), ` +
+      `or quit every Chrome (⌘Q) and open the show page again with step 5's command (night runbook)`);
+  }
   const others = clients.filter((c) => c.role !== 'show').map((c) => c.role);
   return check('Network', 'Show page', 'pass', `connected${others.length ? `; also on the relay: ${others.join(', ')}` : ''}`);
 }
 
-/** The show page's `state` as far as the preflight reads it (ShowState's `audioStalled`, D284). */
-export type ShowStateLike = Pick<ShowState, 'audioStalled'>;
+/** The show page's `state` as far as the preflight reads it: the audio clock (D284) and where its Game is. */
+export type ShowStateLike = Pick<ShowState, 'audioStalled'> & Partial<Pick<ShowState, 'scene' | 'status' | 'round' | 'queue' | 'pause'>>;
+
+const STATUS_WORDS: Record<ShowState['status'], string> = {
+  locked: "waiting for the click on the projector's screen",
+  idle: 'stopped',
+  playing: 'playing',
+  transition: 'in a Transition',
+  hold: 'on Hold',
+};
+
+/** Where the show page's Game is, in a few words: "round 3 of 12, 14 songs counted of 70, playing". */
+export function describeShowGame(state: ShowStateLike, roundsInPlan: number | null): string {
+  const n = state.round?.number ?? 0;
+  const round = `round ${n}${roundsInPlan ? ` of ${roundsInPlan}` : ''}${state.round?.kind === 'desgraciat' ? ' (the Desgraciat)' : ''}`;
+  const songs = (state.queue?.position ?? -1) + 1;
+  const counted = state.queue ? `${songs} song${songs === 1 ? '' : 's'} counted of ${state.queue.length}` : null;
+  const where = {
+    before: 'before the night (the doors)',
+    roundStart: `${round}, its start (the intro and the Shuffle)`,
+    play: [round, counted].filter(Boolean).join(', '),
+    check: `${round}, a Check`,
+    celebration: `${round}, a Celebration`,
+    interval: `the Break after round ${n}`,
+    after: 'the end of the night',
+  }[state.scene ?? 'before'];
+  const status = state.status && (state.status === 'locked' || state.scene === 'play') ? `, ${STATUS_WORDS[state.status]}` : '';
+  return `${where}${state.pause ? ', in a Pause' : ''}${status}`;
+}
 
 /**
  * The show page's audio clock (D284): its engine runs on the audio clock, so a context "running" whose time stands
@@ -685,11 +723,32 @@ export function linkCheck(status: LinkStatusFile | null, nowMs: number): Check {
   return check('Cloud', 'Cloud link', 'pass', 'online, journal in sync');
 }
 
-/** Which Game the laptop and the cloud are on, and the edition. */
-export function gameCheck(link: LinkStatusFile | null, cloudCurrent: { gameId: string; seq: number } | null, edition: string | null): Check {
-  const here = link?.gameId ? `Game ${link.gameId}, ${link.journalled} entries here` : 'no Game on this laptop yet';
+/** What the relay says about the show page, for the Game check: how many are connected, and the state it last sent. */
+export interface ShowPageView {
+  connected: number;
+  state: ShowStateLike | null;
+  roundsInPlan: number | null;
+}
+
+/**
+ * Which Game the laptop and the cloud are on, and the edition. The show page's own state on the relay says where its
+ * Game is (`show`; null when the relay couldn't be asked); the link's status file, which Game its journal copy holds.
+ * Either can be missing: the link not running, or no show page.
+ */
+export function gameCheck(
+  link: LinkStatusFile | null,
+  cloudCurrent: { gameId: string; seq: number } | null,
+  edition: string | null,
+  show: ShowPageView | null,
+): Check {
+  const page = !show ? "couldn't ask the relay for the show page"
+    : show.connected === 0 ? 'no show page connected'
+    : show.connected > 1 ? `${show.connected} show pages connected (the Show page check)`
+    : !show.state ? "the show page hasn't sent its state yet"
+    : `the show page: ${describeShowGame(show.state, show.roundsInPlan)}`;
+  const copy = link?.gameId ? `the link's copy: Game ${link.gameId}, ${link.journalled} entries` : link ? 'the link has no Game yet' : 'no link status';
   const there = cloudCurrent ? `the cloud's current Game ${cloudCurrent.gameId} (${cloudCurrent.seq} entries)` : 'none in the cloud';
-  const detail = `edition ${edition ?? '?'}; ${here}; ${there}`;
+  const detail = `edition ${edition ?? '?'}; ${page}; ${copy}; ${there}`;
   if (!edition) return check('Cloud', 'Game', 'warn', `${detail}: no edition known (no cloud and no Game plan)`);
   if (link?.gameId && cloudCurrent && link.gameId !== cloudCurrent.gameId) return check('Cloud', 'Game', 'warn', `${detail}. Different Games: a rehearsal? The night starts with a fresh show page (?fresh=1)`);
   return check('Cloud', 'Game', 'pass', detail);

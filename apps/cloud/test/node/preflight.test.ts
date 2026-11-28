@@ -322,6 +322,10 @@ test('the relay, the LAN and the cloud', () => {
   assert.equal(c.relayCheck('default', { ok: false, error: 'ECONNREFUSED' }).status, 'fail');
   assert.equal(c.showPageCheck([{ role: 'show' }, { role: 'tablet' }]).status, 'pass');
   assert.equal(c.showPageCheck([{ role: 'tablet' }]).status, 'warn');
+  // A stale second show page (an old kiosk from a test) gets every command too: fail, and say how to close it.
+  const two = c.showPageCheck([{ role: 'show' }, { role: 'tablet' }, { role: 'show' }]);
+  assert.equal(two.status, 'fail');
+  assert.match(two.detail, /^2 show pages are connected.*step 5's command/);
   assert.equal(c.lanCheck(null, false).status, 'warn');
   assert.equal(c.lanCheck('http://192.168.1.2:5174/console/', false).status, 'fail');
   assert.equal(c.cloudCheck('https://x', { ok: false, error: 'timeout' }, '26').status, 'fail');
@@ -399,9 +403,25 @@ test('the cloud link and the Game', () => {
   assert.equal(c.linkCheck({ ...status, uploader: { kind: 'stopped', reason: 'conflict' } }, now).status, 'fail');
   assert.equal(c.linkCheck({ ...status, cloud: 'replaced' }, now).status, 'fail');
   assert.equal(c.linkCheck({ ...status, pending: 3 }, now).status, 'warn');
-  assert.equal(c.gameCheck(status, { gameId: 'g1', seq: 40 }, '26').status, 'pass');
-  assert.equal(c.gameCheck(status, { gameId: 'rehearsal', seq: 300 }, '26').status, 'warn');
-  assert.equal(c.gameCheck(status, null, null).status, 'warn');
+  const noPage: c.ShowPageView = { connected: 0, state: null, roundsInPlan: 12 };
+  assert.equal(c.gameCheck(status, { gameId: 'g1', seq: 40 }, '26', noPage).status, 'pass');
+  assert.equal(c.gameCheck(status, { gameId: 'rehearsal', seq: 300 }, '26', noPage).status, 'warn');
+  assert.equal(c.gameCheck(status, null, null, null).status, 'warn');
+  // Where the Game is comes from the show page's own state, not the link's copy: never "no Game" with a round on.
+  const playing: c.ShowStateLike = { scene: 'play', status: 'playing', round: { number: 1, kind: 'normal', startedAtMs: 0, targetEndMs: 0, lineConfirmed: false }, queue: { position: 2, length: 70 }, pause: null };
+  const inRound = c.gameCheck(null, null, '26', { connected: 1, state: playing, roundsInPlan: 12 });
+  assert.equal(inRound.status, 'pass');
+  assert.equal(inRound.detail, 'edition 26; the show page: round 1 of 12, 3 songs counted of 70, playing; no link status; none in the cloud');
+  assert.match(c.gameCheck({ ...status, gameId: null }, null, '26', { connected: 1, state: { scene: 'before', status: 'idle' }, roundsInPlan: 12 }).detail, /the show page: before the night \(the doors\); the link has no Game yet/);
+  assert.match(c.gameCheck(status, null, '26', { connected: 1, state: { scene: 'before', status: 'locked' }, roundsInPlan: 12 }).detail, /before the night \(the doors\), waiting for the click on the projector's screen; the link's copy: Game g1, 40 entries/);
+  assert.match(c.gameCheck(status, null, '26', { connected: 2, state: playing, roundsInPlan: 12 }).detail, /2 show pages connected \(the Show page check\)/);
+  assert.match(c.gameCheck(status, null, '26', noPage).detail, /no show page connected/);
+  assert.match(c.gameCheck(status, null, '26', null).detail, /couldn't ask the relay/);
+  assert.equal(c.describeShowGame({ ...playing, scene: 'interval', round: { ...playing.round!, number: 6 } }, 12), 'the Break after round 6');
+  assert.equal(c.describeShowGame({ ...playing, scene: 'check', round: { ...playing.round!, number: 12, kind: 'desgraciat' }, status: 'hold' }, 12), 'round 12 of 12 (the Desgraciat), a Check');
+  assert.equal(c.describeShowGame({ ...playing, pause: { sinceMs: 0, overlay: true } }, null), 'round 1, 3 songs counted of 70, in a Pause, playing');
+  assert.equal(c.describeShowGame({ ...playing, queue: { position: 0, length: 70 } }, 12), 'round 1 of 12, 1 song counted of 70, playing');
+  assert.equal(c.describeShowGame({ ...playing, queue: { position: -1, length: 70 }, status: 'idle' }, 12), 'round 1 of 12, 0 songs counted of 70, stopped');
   assert.equal(c.exitCode([{ group: 'Repertoire', name: 'x', status: 'warn', detail: '' }]), 0);
   assert.equal(c.exitCode([{ group: 'Repertoire', name: 'x', status: 'fail', detail: '' }]), 1);
 });

@@ -125,14 +125,26 @@ async function lanAddress(): Promise<checks.LanAddress | null> {
   return checks.lanAddressFrom(route, os.networkInterfaces());
 }
 
+/** The relay as the Network and Cloud checks see it: its answer to /api/repertoire, and who is on it (null when down). */
+interface RelayFacts {
+  answer: Awaited<ReturnType<typeof getJson>>;
+  view: Awaited<ReturnType<typeof relayView>>;
+}
+
+async function relayFacts(relay: string): Promise<RelayFacts> {
+  const answer = await getJson(`${relay}/api/repertoire`, {}, 3000);
+  return { answer, view: answer.ok ? await relayView(relay) : null };
+}
+
 export async function runPreflight(o: PreflightOptions): Promise<checks.Check[]> {
   const out: checks.Check[] = [];
   const repertoire = loadRepertoire(o.repertoire);
   const want = (group: checks.Check['group']) => !o.only || o.only.includes(group);
+  const relay = want('Network') || want('Cloud') ? await relayFacts(o.relay) : null;
   if (want('Repertoire')) out.push(...(await repertoireChecks(o, repertoire)));
   if (want('Laptop')) out.push(...(await laptopChecks(o)));
-  if (want('Network')) out.push(...(await networkChecks(o, repertoire.name)));
-  if (want('Cloud')) out.push(...(await cloudChecks(o, repertoire)));
+  if (want('Network') && relay) out.push(...(await networkChecks(o, repertoire.name, relay)));
+  if (want('Cloud') && relay) out.push(...(await cloudChecks(o, repertoire, relay.view)));
   return out;
 }
 
@@ -221,11 +233,9 @@ async function laptopChecks(o: PreflightOptions): Promise<checks.Check[]> {
   return out;
 }
 
-async function networkChecks(o: PreflightOptions, repertoireName: string): Promise<checks.Check[]> {
+async function networkChecks(o: PreflightOptions, repertoireName: string, { answer: relayAnswer, view }: RelayFacts): Promise<checks.Check[]> {
   const out: checks.Check[] = [];
-  const relayAnswer = await getJson(`${o.relay}/api/repertoire`, {}, 3000);
   out.push(checks.relayCheck(repertoireName, { ok: relayAnswer.ok, name: (relayAnswer.body as { name?: string } | undefined)?.name, error: relayAnswer.error }));
-  const view = relayAnswer.ok ? await relayView(o.relay) : null;
   out.push(checks.showPageCheck(view?.clients ?? null));
   out.push(checks.consoleCheck(view?.clients ?? null, o.laptopOnly === true));
   const audioClock = checks.audioClockCheck(view?.clients ?? null, view?.state ?? null, Date.now());
@@ -239,7 +249,7 @@ async function networkChecks(o: PreflightOptions, repertoireName: string): Promi
   return out;
 }
 
-async function cloudChecks(o: PreflightOptions, repertoire: Repertoire): Promise<checks.Check[]> {
+async function cloudChecks(o: PreflightOptions, repertoire: Repertoire, view: RelayFacts['view']): Promise<checks.Check[]> {
   const out: checks.Check[] = [];
   // The cloud's plan as the link keeps it ({ savedAtMs, plan }); the relay serves the newest to the screens.
   const plan = (readJson(path.join(o.dataDir, CLOUD_PLAN_FILE)) as { plan?: unknown } | null)?.plan ?? null;
@@ -264,7 +274,11 @@ async function cloudChecks(o: PreflightOptions, repertoire: Repertoire): Promise
     out.push(checks.usageCheck(stats.ok ? (stats.body as checks.CloudStats) : null, Date.now()));
   }
   out.push(checks.linkCheck(link, Date.now()));
-  out.push(checks.gameCheck(link, cloudCurrent, edition));
+  const rounds = (plan as { rounds?: unknown[] } | null)?.rounds;
+  const show: checks.ShowPageView | null = view
+    ? { connected: view.clients.filter((c) => c.role === 'show').length, state: view.state, roundsInPlan: Array.isArray(rounds) ? rounds.length : null }
+    : null;
+  out.push(checks.gameCheck(link, cloudCurrent, edition, show));
   out.push(checks.planCheck(plan, checks.printedByType(printedCards(repertoire).cards)));
   const prices = checks.cardPricesCheck(printedCards(repertoire).types, plan);
   if (prices) out.push(prices);
