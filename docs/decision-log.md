@@ -1859,3 +1859,17 @@ By: the orchestrator, on Sound engine's proposal (Sound engine: the check and th
 - **The Quina Celebration's fireworks** (ANIMATIONS.md `celebrate`, board Projector-Focs-Propostes): C, shells going off behind «QUINA!», and animated. An animated board first, then the ANIMATIONS.md row; not a go to build yet.
 - **Not decided:** the phone's collapsed cards (§8 Y2). A leads, but the user wants more variants first: a card with 1 song left, with all, with none; a card with a Line, before and after the prize is given; cards that don't match the round's type (Especial). The user thinks the remaining-songs counts on the proposals are wrong, and worries players won't know they can tap a card. Frontend draws affordance options. No code.
 By: the user (to Frontend). Source: Frontend's report of 28 Nov. Amends: D242. Lives in: requirements/screens.md › Projector, Player app.
+
+### D286 · The collapsed cards: A leads, with the user's details · 2026-11-28 · Active; the final pick Pending
+Boards only; not a go to build. A (§8 Y2) is polished before the final decision; B, C and D aren't iterated unless A is dropped.
+- **The tile:** no card number at its foot; the map fills the tile with equal margins on every side.
+- **A Line:** the «Línia» badge sits on the line itself, only until the presenters validate it; after that, nothing special.
+- **A full card:** a «QUINA!» card replaces the map in the same space. If a song passes before the claim, the animated header stays.
+- **The count pill:** no running ring in A. An icon-only pill is a full circle.
+- **Cards not playing this round:** 3 columns, the header only, an ✗ instead of the count pill.
+- **One card only:** the phone shows the full card (confirmed).
+- **Showing that a card opens:** T3, it opens once by itself, but with a hand-drawn scribble, an arrow and a few words instead of a tooltip.
+- **New proposal:** an animated fire under a card with 1 song left, on the mini card and the full card.
+- **Undecided:** whether the phone announces a Line or a Quina, or only marks the card as usual. The user's worry: players get lazy and let the app play for them. The boards show both. Also open: the pill's count rule (the fewest songs a line needs until a Line is given, then every song left; or always every song left).
+- **Canvas fixes, in code now:** the phone's Check ribbon moves off the now-playing card and gets smaller; the winner's «Quina potra!» card header fits on one line.
+By: the user (to Frontend, on canvas v123). Source: Frontend's report of 28 Nov. Lives in: requirements/screens.md › Player app.
