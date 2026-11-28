@@ -4,7 +4,8 @@
 //
 // API
 //   computeCheck(input)        → { outcome, row, otherRows, steps: [{ songId, landed }], revealUntil, markedCard, completeSince, warnings }
-//   stepSound(song, kind, timing) → what one revealed song sounds like, and for how long
+//   stepSound(song, kind, timing) → what one revealed song sounds like, and how long its reveal lasts (a ✓'s song plays
+//                                   on past it until it is cut: audio/check.ts)
 //
 // Rules (docs/show-ui-and-platform-decisions.md › Check):
 //   - unknownCard: a number outside the generated cards; wrongType: a card of another type than the round's
@@ -60,18 +61,21 @@ export interface CheckResult {
 }
 
 export interface CheckTiming {
+  /** A ✓'s reveal: it paces the automatic reveal; its song plays on until the next reveal, a step back or the cue. */
   stepSec: number;
   missSec: number;
   /** A standing Check's ✓ (a song that hasn't landed): a short knock. */
   stillSec: number;
 }
 
-/** What a step sounds like: a landed song's snippet, the "broken record" (a Line's or Bingo's missing song), or the
- * standing Check's knock (a song that hasn't landed: good for that claim). */
+/** What a step sounds like: a landed song from its hook ('snippet': its snippet starts it, the full song plays on), the
+ * "broken record" (a Line's or Bingo's missing song), or the standing Check's knock (a song that hasn't landed: good for
+ * that claim). */
 export type StepSound = 'snippet' | 'miss' | 'still';
 
 export interface TimedStep extends CheckSong {
   at: number;
+  /** How long the reveal lasts (a ✓'s song sounds on until it is cut). */
   durationSec: number;
   sound: StepSound;
 }
@@ -133,7 +137,7 @@ export function computeCheck({ allCards, cardId, kind, cardType, side = 1, cards
   return { outcome, row, otherRows: completed.filter((i) => i !== row), steps: shown, revealUntil: until(shown, true), markedCard, completeSince, warnings };
 }
 
-/** What one revealed song sounds like: a landed song always plays its snippet (in a standing Check, as the proof that
+/** What one revealed song sounds like: a landed song always plays from its hook (in a standing Check, as the proof that
  * sank the card); a Line's or Bingo's missing one the broken record; a standing Check's song that hasn't landed a knock. */
 export function stepSound(song: CheckSong, kind: WinKind, timing: CheckTiming): { sound: StepSound; durationSec: number } {
   const sound: StepSound = song.landed ? 'snippet' : kind === 'standing' ? 'still' : 'miss';

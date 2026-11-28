@@ -236,7 +236,13 @@ const signatures = new SignatureStore(ctx);
 const blends = new BlendStore(ctx);
 const preverbs = new PreverbStore();
 const snippets = new SnippetStore(ctx);
-const checkPlayer = new CheckPlayer(graph, snippets, FLOW.check);
+// A Check's full songs: one the round has decoded (or is decoding) already, else the Check's own small window, so its
+// reveals never evict the round's current, incoming or prefetched songs from `loader`.
+const checkSongs = new SongLoader(ctx);
+const checkPlayer = new CheckPlayer(graph, snippets, {
+  ensure: (id) => (loader.entries.has(id) ? loader.ensure(id) : checkSongs.ensure(id)),
+  retain: (ids) => checkSongs.retain(ids),
+}, FLOW.check);
 const winningLoop = new WinningLoop(graph);
 clock.extraLatencySec = graph.processingLatencySec;
 const bus = new Bus<ShowEvent>({ role: 'show' });
@@ -503,7 +509,7 @@ function apply(effect: Effect): void {
       blends.retain([effect.aSongId]);
       return void blends.prepare(effect);
     case 'checkReveal':
-      return checkPlayer.reveal(effect.claimId, effect.step);
+      return checkPlayer.reveal(effect.claimId, effect.step, effect.nextSongId);
     case 'checkDuck':
       return checkPlayer.duck(effect.on);
     case 'cancelCheck':
@@ -1091,6 +1097,7 @@ function tick(): void {
   drum.scheduleTicks(now);
   drumRoll.tick(now);
   for (const player of allSets()) player.tick();
+  checkPlayer.tick();
   const due = rt.tasks.filter((task) => task.at <= now);
   if (due.length) {
     rt.tasks = rt.tasks.filter((task) => task.at > now);
@@ -1124,7 +1131,7 @@ function emitHealth(): void {
     atMs: Date.now(),
     ...clock.latencyMs(),
     contextState: ctx.state,
-    decodedMB: loader.decodedMB(),
+    decodedMB: loader.decodedMB() + checkSongs.decodedMB(),
     jsHeapMB: hasMemoryInfo(performance) ? Math.round(performance.memory.usedJSHeapSize / 1e6) : null,
     longTasks,
     holdMusic: holdMusic.title,
@@ -1224,7 +1231,7 @@ function renderHud(audible = clock.audible()): void {
     wheel ? `drum ${wheel.method} scale ${wheel.scale.toFixed(3)} laps ${wheel.laps.toFixed(2)} · ${wheel.cards} cards · solved in ${wheel.solveMs.toFixed(1)} ms` : '',
     `phase ${show.phaseName()} from ${show.game.phaseOverride ? 'override' : show.phaseModel.plan ? `cards (${show.phaseModel.valid.length} valid, towards ${show.phaseModel.kind}, heat ${show.phaseStep(show.position + 1)?.heat?.toFixed(2) ?? '—'})` : 'placeholder'}`,
     `pace ${show.game.pace} s${show.game.paceLocked ? ' (locked)' : ''} · nudge ×${show.nudge.toFixed(2)} · auto ${show.game.autoAdvance ? 'on' : 'off'}${show.timers.autoAt ? ` in ${(show.timers.autoAt - ctx.currentTime).toFixed(1)} s` : ''}`,
-    `audio out ${lat.outputLatencyMs} ms base ${lat.baseLatencyMs} ms · display offset ${clock.displayOffsetMs} ms · decoded ${loader.decodedMB()} MB`,
+    `audio out ${lat.outputLatencyMs} ms base ${lat.baseLatencyMs} ms · display offset ${clock.displayOffsetMs} ms · decoded ${loader.decodedMB() + checkSongs.decodedMB()} MB`,
   ];
   $('hud').textContent = lines.filter(Boolean).join('\n');
 }

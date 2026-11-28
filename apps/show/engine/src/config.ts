@@ -748,22 +748,48 @@ export const FLOW = Object.freeze({
   check: Object.freeze({
     /** A press's reveal sounds this far ahead, so the sound and every screen meet (ADR 0002). */
     revealLeadSec: 0.08,
-    /** A ✓ reveal: the landed song's hook snippet (tools/prep/snippets.py cuts 3 s). */
+    /** A ✓ reveal's pace (an automatic reveal comes this long, plus `gapSec`, after it; the screens' "playing" mark).
+     * Its sound runs on: the landed song from its hook's pickup until the next reveal, a step back or the cue. */
     stepSec: 2.5,
     /** A ✗ reveal: the short "broken record" sound. */
     missSec: 1.2,
     /** A standing Check's ✓ (the Desgraciat round: the song hasn't landed): a short knock. 12 of them take ~11 s. */
     stillSec: 0.55,
-    /** Automatic reveal (checkAuto): the silence between one reveal's sound and the next. */
+    /** Automatic reveal (checkAuto): the pause after a ✗ or a knock before the next reveal (a ✓'s song plays through it). */
     gapSec: 0.35,
     /** After a cue, the next queued card's Check comes on screen by itself this long after (its cue shows meanwhile). */
     nextCardSec: 3,
     /** The song or Hold music under the Check, far down. */
     duckDb: -32,
     duckFadeSec: 0.4,
-    /** Snippets play at their loudness-normalised level plus this. */
+    /** A ✓'s song plays at its snippet's loudness-normalised level (data/snippets/index.json `gainDb`) plus this. */
     snippetDb: -2,
-    snippetFadeSec: 0.25,
+    /** The next reveal or a step back cuts the sound playing this fast. */
+    cutFadeSec: 0.06,
+    /** The Check's end (its cue, Pausa, Panic, the Check leaving the screen) and a step back to none: the revealed
+     * song fades out over this, under the fanfare, instead of clicking off. */
+    endFadeSec: 0.5,
+    /** A ✓ starts on its snippet at once (/snippets/<id>.flac, 3 s from the pickup) and hands over to the full song,
+     * sample-aligned, as soon as the song is decoded: a linear crossfade this long (the same samples on both sides). */
+    handoverSec: 0.05,
+    /** The handover is scheduled this far ahead of the audio clock. */
+    handoverLeadSec: 0.05,
+    /** Near its end the song repeats its last phrase, as a song left playing does anywhere else (D239, LOOP: the same
+     * phrase, the same tail, the same crossfade). A song with no beat grid, and the snippet (until the song is decoded,
+     * or when it can't be), jump back to the hook's pickup instead, with an equal-power crossfade this long. */
+    pickupXfadeSec: 0.15,
+    /** The next pass is scheduled this long before its jump. */
+    loopAheadSec: 1,
+    /** The song's audio counts as dead (trailing silence, the end of a fade-out) once its RMS over windows of
+     * `tailWindowSec` stays `tailDropDb` under the hook's (its first `tailRefSec`): the loop ends before then, even
+     * when that is earlier than LOOP.stayTailSec before the song's end. */
+    tailWindowSec: 0.25,
+    tailDropDb: -12,
+    tailRefSec: 3,
+    /** The snippet's own fade-out (tools/prep/snippets.py, 0.15 s) and a margin: its passes jump back before it. */
+    snippetTailSec: 0.2,
+    /** A late start (a slow fetch) joins its pass as far in as the reveal is old, unless that leaves less than this. */
+    lateMinAheadSec: 0.5,
     brokenDb: -8,
     stillDb: -12,
   }),

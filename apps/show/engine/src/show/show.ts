@@ -333,12 +333,14 @@ export interface PrepareBlendEffect {
   beatsPerBar: number;
   tight: boolean;
 }
-/** One revealed song of a Check at `step.at`: its hook snippet (/snippets/<id>.flac), the "broken record" or the knock.
- * A sound still playing from the reveal before stops. */
+/** One revealed song of a Check at `step.at`: a landed song from its hook's pickup (its snippet, then the full song),
+ * playing on until the next reveal, a step back or the Check's end; the "broken record" or the knock. A sound still
+ * playing from the reveal before stops. `nextSongId`: the next reveal's landed song, decoded meanwhile (else null). */
 export interface CheckRevealEffect {
   type: 'checkReveal';
   claimId: string;
   step: TimedStep;
+  nextSongId: number | null;
 }
 /** The music under a Check (the song or Hold music) goes far down (`FLOW.check.duckDb`) or comes back up. */
 export interface CheckDuckEffect {
@@ -2681,7 +2683,7 @@ export class Show {
       cardType: this.allCards.find((c) => c.id === claim.cardId)?.type ?? null, side: this.round.side,
       startAtMs: this.env.nowMs(), total: result.steps.length, revealed: [], auto: false, cue: null, reviewing,
     };
-    // A Claim under review comes back from where it was (D121): its earlier reveals as marks, no snippet replayed, the
+    // A Claim under review comes back from where it was (D121): its earlier reveals as marks, no song replayed, the
     // next reveal waiting for a press. Only while the card still checks the same way (a Back can change it).
     const marks = reviewing ? this.reviewMarks.get(claim.claimId) : undefined;
     this.reviewMarks.delete(claim.claimId);
@@ -2752,7 +2754,8 @@ export class Show {
     else this.reveal(run, claim);
   }
 
-  /** Reveal the Check's next song (its snippet, the broken record or the knock), just ahead so sound and screens meet. */
+  /** Reveal the Check's next song (the song from its hook on, the broken record or the knock), just ahead so sound and
+   * screens meet. */
   reveal(run: CheckRun, claim: ClaimInfo) {
     const k = run.info.revealed.length;
     const song = run.songs[k];
@@ -2761,7 +2764,8 @@ export class Show {
     const { sound, durationSec } = stepSound(song, claim.kind, FLOW.check);
     // From the first reveal the music goes far down under the sounds (U85: as before, for now).
     if (k === 0) this.out.push({ type: 'checkDuck', on: true });
-    this.out.push({ type: 'checkReveal', claimId: claim.claimId, step: { ...song, at, durationSec, sound } });
+    const next = run.until != null && k < run.until ? run.songs[k + 1] : undefined;
+    this.out.push({ type: 'checkReveal', claimId: claim.claimId, step: { ...song, at, durationSec, sound }, nextSongId: next?.landed ? next.songId : null });
     const step: CheckStep = { songId: song.songId, landed: song.landed, atMs: this.env.toEpochMs(at), durationMs: Math.round(durationSec * 1000) };
     run.info.revealed.push(step);
     run.awaitPress = false;
@@ -2773,8 +2777,8 @@ export class Show {
 
   /**
    * "Enrere" inside a Check (D127, D134): the mark at `step`, the last revealed, goes, and that cell is next again; the
-   * previous song's snippet replays, or at none the music from before the Check comes back up. Auto turns off for this
-   * Check. Only while revealing: a press that doesn't match is ignored, silently.
+   * previous song plays again from its hook, or at none the music from before the Check comes back up. Auto turns off
+   * for this Check. Only while revealing: a press that doesn't match is ignored, silently.
    */
   checkBack(claimId: string, step: number) {
     const run = this.check;
@@ -2797,7 +2801,8 @@ export class Show {
     }
     const at = now + FLOW.check.revealLeadSec;
     const { sound, durationSec } = stepSound(prev, claim.kind, FLOW.check);
-    this.out.push({ type: 'checkReveal', claimId, step: { ...prev, at, durationSec, sound } });
+    const next = run.songs[step];
+    this.out.push({ type: 'checkReveal', claimId, step: { ...prev, at, durationSec, sound }, nextSongId: next?.landed ? next.songId : null });
     run.soundEndAt = at + durationSec;
   }
 
@@ -4079,7 +4084,7 @@ export class Show {
   // ---------------------------------------------------------------------------------- the beat
   /**
    * The grid the room hears now (`state.beat`) and the deck it comes from, or null when no song is heard: Pausa, Hold
-   * music, scene music (a bed), a Check's reveals (its snippets over the music, far down), no song, or a song with no
+   * music, scene music (a bed), a Check's reveals (its revealed songs over the music, far down), no song, or a song with no
    * grid. Parlem and the voice cues' dips still count as heard. A Spin's is the incoming song's from the outgoing one's
    * exit start on (from its start without one), anchored on the landing: never before its `transition.scheduled`, which
    * comes with the Spin. A held Suspense's is the outgoing song's while it plays on (its phrase loop, or until its exit

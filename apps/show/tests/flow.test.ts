@@ -146,6 +146,8 @@ test('a whole round: Line claimed, revealed press by press, cued and celebrated;
   const reveal = find(first, 'checkReveal');
   assert.ok(reveal);
   assert.deepEqual([reveal.step.songId, reveal.step.sound, reveal.step.durationSec], [rows[0][0], 'snippet', FLOW.check.stepSec]);
+  const second = h.show.check?.songs[1];
+  assert.equal(reveal.nextSongId, second?.landed ? second.songId : null, "the next ✓'s song, decoded meanwhile");
   const [revealed] = emitted(first, 'check.revealed');
   assert.equal(revealed.index, 0);
   assert.equal(revealed.step.atMs, h.env.toEpochMs(reveal.step.at), 'the projector and the audio share the time');
@@ -496,7 +498,7 @@ test('a discarded Review: no sound, the next card, or the round back in plain Pa
   assert.deepEqual(replayJournal(journalOf(h.log)), h.show.record());
 });
 
-test('Enrere inside a Check (D127, D134): one step back a press, the previous snippet again, auto off for that Check only', () => {
+test('Enrere inside a Check (D127, D134): one step back a press, the previous song again, auto off for that Check only', () => {
   const h = flow();
   landSongs(h, 4);
   h.send('claim', { cardId: card.id });
@@ -505,7 +507,9 @@ test('Enrere inside a Check (D127, D134): one step back a press, the previous sn
   assert.equal(h.show.snapshot().check?.auto, true);
   const back = h.send('checkBack', { claimId: 'cl-1', step: 2 });
   assert.deepEqual(emitted(back, 'check.unrevealed').map((e) => e.index), [2]);
-  assert.equal(find(back, 'checkReveal')?.step.songId, rows[0][1], 'the previous song\'s snippet replays');
+  assert.equal(find(back, 'checkReveal')?.step.songId, rows[0][1], 'the previous song plays again');
+  const undone = h.show.check?.songs[2];
+  assert.equal(find(back, 'checkReveal')?.nextSongId, undone?.landed ? undone.songId : null, 'the song stepped back from is next again');
   assert.equal(h.show.check?.info.revealed.length, 2);
   assert.equal(h.show.snapshot().check?.auto, false, 'auto off for this Check');
   assert.equal(h.show.checkAutoOn, true, 'the toggle itself stays on');
