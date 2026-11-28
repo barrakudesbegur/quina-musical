@@ -23,7 +23,7 @@ apps/admin/
   index.html, main.ts   entry: show client, plan session, command tracker → App.svelte
   App.svelte            header, tabs, one view per hash
   components/           one component per section; markup and looks only
-  state/                reactive glue (.svelte.ts): PlanSession (draft, check, autosave, other tabs), CommandTracker
+  state/                reactive glue (.svelte.ts): PlanSession (loading, draft, check, autosave, other tabs), CommandTracker
   logic/                pure, tested in apps/show/tests/ui/admin/: cards preview, plan checks and diff, plan edits,
                         logo pixel pipeline, cheat-sheet model, command log, Winners, exports, routes
   data/                 I/O: plan store adapter (logos, failures), logo canvas glue, files, local settings
@@ -34,9 +34,11 @@ apps/admin/
 
 ## How the plan is saved
 
+- **Loaded first (whats-left 7.1).** Served from the cloud or the relay, Admin shows «Carregant el pla…» and nothing editable until the plan arrives (`GET /api/plan` or the socket's `relay.plan`, whichever comes first), and nothing is saved before. If it can't load it (an error, or no answer in 15 s), it says so with «Tornar-ho a provar», never a blank plan; a late answer still loads it. Only when there is no plan anywhere does it start from a blank one, and that is sent only once edited.
+- **Based on a version.** Every save names the `savedAtMs` it was loaded at (or last saved), in `x-quina-plan-base`. If the plan changed elsewhere since, the cloud or the relay refuses it (409): Admin says «No s'ha desat: el pla ha canviat en un altre lloc…», asks to reload, and saves nothing more until it does, or until the newer plan arrives and the person picks it or keeps their own edits.
 - **Autosave, valid plans only.** A plan is saved through the `PlanStore` (`packages/ui/data/plan-store.ts`, localStorage today, a cloud store later) 0.6 s after the last edit, but only when it passes the check. Otherwise Admin lists every error with its path and keeps the draft in memory. Leaving the page with unsaved edits asks first.
 - **Logos.** A cleaned logo is a WebP data URL in `Sponsor.logo`. The shared validator only accepts logo paths of up to 500 characters, and a plan it refuses would read as "no plan" on every other screen. So Admin stores data-URL logos beside the plan (key `quina.manage.logos.v1`, by sponsor id), stores the plan with `logo: null` for them, and puts them back on load. Export and import carry them inline. When the Platform session moves logos to R2, `logo` becomes a short URL and this goes away by itself: a plan the shared validator accepts is always stored whole.
-- **Another tab** saved a different plan: if this page has no unsaved edits, it loads it. Otherwise it asks which one wins.
+- **Another tab or device** saved a different plan: if this page has no unsaved edits, it loads it. Otherwise it asks which one wins, and saves nothing until then.
 
 ## Defined failures
 
@@ -45,6 +47,8 @@ apps/admin/
 | Invalid JSON in the import | "No és JSON vàlid" with the parser's position. Nothing changes |
 | A plan that fails the check | Every error with its JSON path (import or editing). Nothing is saved; the draft is kept |
 | Browser storage full (big logos) | "Emmagatzematge ple". The plan without the new logos is still saved, and the draft is kept. Logos over 200 KB are refused before that |
+| The plan can't be loaded (cloud or relay) | «No s'ha pogut carregar el pla» with the reason and «Tornar-ho a provar». Nothing editable, nothing saved |
+| A save refused as stale (409) | «No s'ha desat: el pla ha canviat en un altre lloc des que l'has obert», with «Tornar a carregar la pàgina». The draft stays, and saving stops |
 | Browser refuses storage (private mode) | Says so permanently, and asks before the page is closed. Export still works |
 | Relay disconnected | The status bar says so, and every command button is disabled. Setup keeps working |
 | Show page not open | Same: the relay would drop the command, so it is not sent |

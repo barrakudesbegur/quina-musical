@@ -3,6 +3,7 @@
 import { identityLabel, requireAccess, type AccessEnv } from './access.ts';
 import { CLOUD } from './config.ts';
 import { findRoute, jxlUploadKey, mediaId, SYNC_METHODS, syncTarget, wantsJxl, type SyncTarget } from './domain/routes.ts';
+import { PLAN_BASE_HEADER, parsePlanBase } from './domain/plan-versions.ts';
 import {
   BLOB_PAGE,
   blobKey,
@@ -57,6 +58,9 @@ export default {
     switch (route.name) {
       case 'plan': {
         if (request.method === 'GET') return json({ plan: await room.getPlan(), savedAtMs: await room.getPlanSavedAtMs() });
+        // Every save says which version it replaces: a page that never loaded the plan can't overwrite it (7.1).
+        const base = parsePlanBase(request.headers.get(PLAN_BASE_HEADER));
+        if (base === undefined) return json({ ok: false, errors: [`${PLAN_BASE_HEADER}: the savedAtMs of the plan this save is based on (from GET /api/plan), or "none"`] }, {}, 400);
         const body = await readBody(request, CLOUD.maxPlanBytes);
         if (body === null) return text(413, `a plan of at most ${CLOUD.maxPlanBytes / 1024} KB`);
         let parsed: unknown;
@@ -65,8 +69,8 @@ export default {
         } catch {
           return json({ ok: false, errors: ['plan: not JSON'] }, {}, 400);
         }
-        const saved = await room.setPlan(parsed);
-        return json(saved, {}, saved.ok ? 200 : 400);
+        const saved = await room.setPlan(parsed, base);
+        return json(saved, {}, saved.ok ? 200 : saved.stale ? 409 : 400);
       }
       case 'upload': {
         if (request.method === 'GET') return json({ media: await room.listMedia() });

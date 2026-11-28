@@ -460,7 +460,15 @@ describe('consoles through the cloud', () => {
 });
 
 describe('the Game plan and its media (Admin)', () => {
-  const put = (body: unknown, url = `${BASE}/api/plan`) => SELF.fetch(url, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: typeof body === 'string' ? body : JSON.stringify(body) });
+  /** A save as Admin makes it: based on the version there now. */
+  const put = async (body: unknown, url = `${BASE}/api/plan`) => {
+    const { savedAtMs } = (await (await SELF.fetch(`${BASE}/api/plan`)).json()) as { savedAtMs: number | null };
+    return putAt(body, savedAtMs === null ? 'none' : String(savedAtMs), url);
+  };
+  /** A save based on version `base` (a header value), or with no header at all. */
+  const putAt = (body: unknown, base: string | null, url = `${BASE}/api/plan`) =>
+    SELF.fetch(url, { method: 'PUT', headers: { 'content-type': 'application/json', ...(base === null ? {} : { 'x-quina-plan-base': base }) }, body: typeof body === 'string' ? body : JSON.stringify(body) });
+  const savedAt = async () => ((await getJson('/api/plan')) as { savedAtMs: number | null }).savedAtMs;
 
   it('Admin saves a checked plan; phones and the laptop get it; Admin reads it back', async () => {
     const { client: link } = await laptop(null);
@@ -587,6 +595,46 @@ describe('the Game plan and its media (Admin)', () => {
     // Another edition's plan is refused.
     link.send({ v, type: 'link.plan', plan: { ...PLAN, edition: '25' }, savedAtMs: now(), sentAtMs: now() });
     expect(await link.next()).toMatchObject({ type: 'cloud.refused' });
+  });
+
+  it('a save not based on the plan there now is refused (409), whatever it carries: never a blank plan over the real one (7.1)', async () => {
+    expect((await put(PLAN)).status).toBe(200);
+    const loaded = await savedAt();
+    expect(loaded).toBeTypeOf('number');
+    const blank: GamePlan = { ...PLAN, title: 'Quina Musical', rounds: PLAN.rounds.slice(0, 1), sponsors: [] };
+
+    // Admin's page that never loaded the plan thinks there is none; another loaded it before a newer save.
+    const never = await putAt(blank, 'none');
+    expect(never.status).toBe(409);
+    expect(await never.json()).toMatchObject({ ok: false, stale: true, savedAtMs: loaded });
+    expect((await putAt(blank, String((loaded ?? 0) - 1))).status).toBe(409);
+    // A save that doesn't say what it replaces, or says it badly, is refused before anything is read.
+    expect((await putAt(blank, null)).status).toBe(400);
+    expect((await putAt(blank, 'latest')).status).toBe(400);
+    expect((await getJson<{ plan: GamePlan }>('/api/plan')).plan).toEqual(PLAN);
+
+    // Based on the version it loaded: saved, with the new version in the answer, which the next save is based on.
+    const edited = await putAt({ ...PLAN, title: 'Editada' }, String(loaded));
+    expect(edited.status).toBe(200);
+    const { savedAtMs: next } = (await edited.json()) as { savedAtMs: number };
+    expect(next).toBeGreaterThan(loaded ?? Infinity);
+    expect(await savedAt()).toBe(next);
+    expect((await putAt(PLAN, String(loaded))).status).toBe(409); // the same base twice: the second is stale
+    expect((await putAt(PLAN, String(next))).status).toBe(200);
+  });
+
+  it('a plan stored before versions were kept loads as version 0, and a save based on it goes through', async () => {
+    expect((await put(PLAN)).status).toBe(200);
+    await runInDurableObject(roomOf(env), (_room: GameRoom, state) => {
+      const body = JSON.parse(String(state.storage.sql.exec('SELECT body FROM snapshot WHERE id = 1').one().body)) as Record<string, unknown>;
+      const { planSavedAtMs: _gone, ...older } = body;
+      state.storage.sql.exec('UPDATE snapshot SET body = ? WHERE id = 1', JSON.stringify(older));
+    });
+    await evictDurableObject(roomOf(env), { webSockets: 'close' });
+    expect(await getJson('/api/plan')).toEqual({ plan: PLAN, savedAtMs: 0 });
+    expect((await putAt(PLAN, 'none')).status).toBe(409);
+    expect((await putAt({ ...PLAN, title: 'Després' }, '0')).status).toBe(200);
+    expect((await put(PLAN)).status).toBe(200);
   });
 
   it('logos: a PNG or JPEG by content hash, its JPEG XL beside it, public and immutable; never WebP or SVG', async () => {

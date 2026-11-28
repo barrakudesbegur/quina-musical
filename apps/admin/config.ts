@@ -6,6 +6,9 @@ export const MANAGE_CONFIG = Object.freeze({
   defaultEdition: '26',
   /** Wait this long after the last edit before saving a valid plan. */
   autosaveDelayMs: 600,
+  /** Served from the cloud or the relay: how long to wait for the plan before saying it couldn't load (with a retry).
+   * A late answer still loads it. */
+  planLoadTimeoutMs: 15_000,
   /** localStorage keys Admin owns (the plan itself uses ui/data/plan-store.ts's key). */
   storage: Object.freeze({
     /** Sponsor logos as data URLs, kept beside the plan until the shared validator accepts them inline. */

@@ -21,6 +21,8 @@
   });
 
   const save = $derived.by((): { text: string; status: 'ok' | 'warn' | 'error' | 'calm' } => {
+    if (session.phase.kind === 'loading') return { text: S.save.loading(session.store.kind), status: 'calm' };
+    if (session.phase.kind === 'failed') return { text: S.save.loadFailed, status: 'error' };
     const s = session.status;
     switch (s.kind) {
       case 'saved':
@@ -30,7 +32,7 @@
       case 'invalid':
         return { text: S.save.invalid(s.count), status: 'warn' };
       case 'failed':
-        return { text: s.reason === 'quota' ? S.save.quota : S.save.error(s.detail), status: 'error' };
+        return { text: s.reason === 'quota' ? S.save.quota : s.reason === 'stale' ? S.save.stale : S.save.error(s.detail), status: 'error' };
       case 'demo':
         return { text: S.save.demo, status: 'calm' };
       case 'unavailable':

@@ -75,16 +75,20 @@ test("--start is Begur's wall clock, winter or summer, whatever the laptop's zon
 });
 
 /** A cloud that answers GET with `stored` and records every PUT. */
-function fakeCloud(stored: unknown, refuse = false) {
+function fakeCloud(stored: unknown, refuse = false, changed = false) {
   const puts: unknown[] = [];
+  const bases: (string | undefined)[] = [];
   const impl = (async (_url: string | URL | Request, init?: RequestInit) => {
     if (init?.method === 'PUT') {
+      const base = (init.headers as Record<string, string>)['x-quina-plan-base'];
+      bases.push(base);
+      if (changed || base !== '1795547101343') return Response.json({ ok: false, stale: true, savedAtMs: 1795547109999, errors: ['plan: changed'] }, { status: 409 });
       puts.push(JSON.parse(String(init.body)));
       return Response.json(refuse ? { ok: false, errors: ['plan.rounds: no'] } : { ok: true, plan: JSON.parse(String(init.body)) }, { status: refuse ? 400 : 200 });
     }
     return Response.json({ plan: stored, savedAtMs: 1795547101343 });
   }) as typeof fetch;
-  return { impl, puts };
+  return { impl, puts, bases };
 }
 
 test('upload: shows the change and stops without --yes; with it, saves the old plan first, then replaces it', async () => {
@@ -109,6 +113,7 @@ test('upload: shows the change and stops without --yes; with it, saves the old p
     assert.equal(saved.savedAtMs, 1795547101343);
     assert.ok(checkGamePlan(planOf(saved)).ok, 'the backup uploads back as it is');
     assert.deepEqual(real.puts, [plan]);
+    assert.deepEqual(real.bases, ['1795547101343'], 'based on the version it read');
 
     const same = fakeCloud({ ...plan, volumes: { master: 90 } });
     assert.equal((await uploadPlan({ cloud: 'https://cloud.test', headers: {}, plan, backupDir: dir, yes: true, fetch: same.impl, log: () => {} })).uploaded, false);
@@ -118,6 +123,10 @@ test('upload: shows the change and stops without --yes; with it, saves the old p
       uploadPlan({ cloud: 'https://cloud.test', headers: {}, plan, backupDir: dir, yes: true, fetch: fakeCloud(old, true).impl, log: () => {} }),
       /refused the plan \(HTTP 400\):\n {2}plan\.rounds: no\nIts old plan is unchanged, and saved in /,
     );
+    // Admin saved between the read and the upload: refused, nothing replaced.
+    const raced = fakeCloud(old, false, true);
+    await assert.rejects(uploadPlan({ cloud: 'https://cloud.test', headers: {}, plan, backupDir: dir, yes: true, fetch: raced.impl, log: () => {} }), /changed after it was read/);
+    assert.equal(raced.puts.length, 0);
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }

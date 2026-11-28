@@ -32,6 +32,7 @@ import {
 } from '@quina/protocol';
 import type { AccessEnv } from './access.ts';
 import type { EditionExport, GameSummary, MediaItem, MediaSave, PhonesNow, PlanSave, ResumeResult, RoomStats, SettingSave } from './api.ts';
+import type { PlanVersion } from './domain/plan-versions.ts';
 import { CLOUD } from './config.ts';
 import { nextClockOffset, toCloudMs } from './domain/clock.ts';
 import { flaggedDecisions } from './domain/flags.ts';
@@ -519,16 +520,25 @@ export class GameRoom extends DurableObject<RoomEnv> {
     return this.planSavedAtMs();
   }
 
-  /** Save the whole plan: checked with the protocol's checkGamePlan, for this edition only. Everyone gets it. */
-  setPlan(json: unknown): PlanSave {
+  /**
+   * Save the whole plan, based on version `base` (the savedAtMs it was loaded at; null: there was none): refused
+   * when the plan here is another version, so a page that never loaded it, or loaded an older one, can't replace
+   * it. Checked with the protocol's checkGamePlan, for this edition only. Everyone gets it.
+   */
+  setPlan(json: unknown, base: PlanVersion): PlanSave {
     this.counted();
+    const own = this.planSavedAtMs();
+    if (base !== own) {
+      return { ok: false, stale: true, savedAtMs: own, errors: [`plan: changed since this save's version (${base ?? 'none'}); it is ${own ?? 'none'} now: load it again`] };
+    }
     const check = this.checkPlan(json);
     if (!check.ok) return check;
     // The volumes stay the cloud's: only the tablet's sliders change them, through the journal (domain/volumes.ts).
     const plan = keepingVolumes(check.plan, this.room.plan ?? null);
     // Never older than the plan it replaces, so a laptop's copy saved a moment ago can't win over it.
-    this.adoptPlan(plan, Math.max(Date.now(), (this.planSavedAtMs() ?? 0) + 1));
-    return { ok: true, plan };
+    const savedAtMs = Math.max(Date.now(), (own ?? 0) + 1);
+    this.adoptPlan(plan, savedAtMs);
+    return { ok: true, plan, savedAtMs };
   }
 
   /**

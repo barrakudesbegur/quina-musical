@@ -19,15 +19,15 @@ export interface PlanStore {
   /**
    * A plan pushed by the relay or the cloud (`relay.plan`, on every hello and whenever Admin saves). It is
    * checked like any other plan; subscribers hear about it only when it changed. Stores that only read this
-   * browser's storage (demo) don't take pushes.
+   * browser's storage (demo) don't take pushes. `savedAtMs` is the push's version (the cloud store keeps it).
    */
-  receive?(plan: unknown): void;
+  receive?(plan: unknown, savedAtMs?: unknown): void;
 }
 
 /** Follow the relay's plan pushes on a client (the console, a standalone stage). Returns an unsubscribe function. */
-export function followPlanPushes(client: { on(listener: (event: { type: string; plan?: unknown }) => void): () => void }, store: PlanStore): () => void {
+export function followPlanPushes(client: { on(listener: (event: { type: string; plan?: unknown; savedAtMs?: unknown }) => void): () => void }, store: PlanStore): () => void {
   return client.on((event) => {
-    if (event.type === 'relay.plan') store.receive?.(event.plan ?? null);
+    if (event.type === 'relay.plan') store.receive?.(event.plan ?? null, event.savedAtMs ?? null);
   });
 }
 

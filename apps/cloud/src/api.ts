@@ -28,8 +28,14 @@ export interface RoomStats {
   rowsWritten: number;
 }
 
-/** The answer to PUT /api/plan, and to the GameRoom's setPlan. */
-export type PlanSave = { ok: true; plan: GamePlan } | { ok: false; errors: string[] };
+/**
+ * The answer to PUT /api/plan, and to the GameRoom's setPlan. `stale` (HTTP 409): the save was based on another
+ * version than the plan there now (`savedAtMs`); Admin tells the person to reload.
+ */
+export type PlanSave =
+  | { ok: true; plan: GamePlan; savedAtMs: number }
+  | { ok: false; errors: string[]; stale?: false }
+  | { ok: false; errors: string[]; stale: true; savedAtMs: number | null };
 
 /** The answer to POST /api/media (the fallback) and PUT /api/media/<key>.jxl: where it is served, and its key. */
 export type MediaSave = { ok: true; path: string; key: string } | { ok: false; status: 404 | 413 | 415 | 507; error: string };

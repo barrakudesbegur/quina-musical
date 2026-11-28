@@ -46,15 +46,21 @@ test("the laptop's plan follows both files and saves a checked local plan", () =
     assert.equal(heard.length, 1);
 
     // A save on the laptop's network: checked, for the cloud's edition, and never older than what it replaces.
-    assert.equal(laptop.saveLocal({ ...PLAN, rounds: 'many' }, 2000).ok, false);
+    // Not based on the laptop's plan now (a page that never loaded it, or an older one): refused, nothing written.
+    assert.deepEqual(laptop.saveLocal(titled('blank'), 2000, null), { ok: false, stale: true, savedAtMs: 1000, errors: ["plan: changed since this save's version (none); it is 1000 now: load it again"] });
+    assert.equal(laptop.saveLocal(titled('older'), 2000, 999).ok, false);
+    assert.equal(fs.existsSync(path.join(dir, LOCAL_PLAN_FILE)), false);
+    assert.equal(heard.length, 1);
+    assert.equal(laptop.saveLocal({ ...PLAN, rounds: 'many' }, 2000, 1000).ok, false);
     // A logo that isn't an uploaded one is refused on the laptop too (D287's stickers), not quietly dropped.
-    const foreign = laptop.saveLocal({ ...PLAN, sponsors: [{ id: 'x', name: 'X', logo: 'https://example.com/x.png' }] }, 2000);
+    const foreign = laptop.saveLocal({ ...PLAN, sponsors: [{ id: 'x', name: 'X', logo: 'https://example.com/x.png' }] }, 2000, 1000);
     assert.equal(foreign.ok, false);
     assert.match(foreign.ok ? '' : foreign.errors.join(), /plan\.sponsors\[0\]\.logo/);
-    assert.deepEqual(laptop.saveLocal({ ...PLAN, edition: '99' }, 2000), { ok: false, errors: ["plan.edition: the cloud's plan is for edition " + PLAN.edition] });
-    const saved = laptop.saveLocal(titled('local'), 500); // this laptop's clock is behind the cloud's save
+    assert.deepEqual(laptop.saveLocal({ ...PLAN, edition: '99' }, 2000, 1000), { ok: false, errors: ["plan.edition: the cloud's plan is for edition " + PLAN.edition] });
+    const saved = laptop.saveLocal(titled('local'), 500, 1000); // this laptop's clock is behind the cloud's save
     assert.ok(saved.ok);
     assert.equal(saved.savedAtMs, 1001);
+    assert.equal(laptop.saveLocal(titled('again'), 600, 1000).ok, false, 'the same base twice: the second is stale');
     assert.equal(laptop.current().plan?.title, 'local');
     assert.equal(heard.length, 2);
     assert.equal(parseStoredPlan(JSON.parse(fs.readFileSync(path.join(dir, LOCAL_PLAN_FILE), 'utf8')))?.plan?.title, 'local');
@@ -66,6 +72,10 @@ test("the laptop's plan follows both files and saves a checked local plan", () =
     laptop.reload();
     assert.equal(laptop.current().plan?.title, 'cloud 2');
     assert.equal(heard.length, 3);
+    // The link wrote the cloud's copy a moment ago, before the poll saw it: the save is checked against that.
+    write(dir, CLOUD_PLAN_FILE, { savedAtMs: 6000, plan: titled('cloud, just now') });
+    assert.deepEqual(laptop.saveLocal(titled('over it'), 7000, 5000), { ok: false, stale: true, savedAtMs: 6000, errors: ["plan: changed since this save's version (5000); it is 6000 now: load it again"] });
+    assert.equal(laptop.current().plan?.title, 'cloud, just now');
 
     // The link drops the local file once the cloud has settled it; a broken file reads as none.
     fs.rmSync(path.join(dir, LOCAL_PLAN_FILE));
@@ -82,7 +92,7 @@ test('with no link folder yet, a local save makes it', () => {
   try {
     const laptop = new LaptopPlan(dir, () => {});
     assert.deepEqual(laptop.current(), { plan: null, savedAtMs: null });
-    const saved = laptop.saveLocal(PLAN, 42);
+    const saved = laptop.saveLocal(PLAN, 42, null);
     assert.ok(saved.ok && saved.savedAtMs === 42);
     assert.equal(laptop.current().plan?.title, PLAN.title);
   } finally {

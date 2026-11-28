@@ -21,7 +21,7 @@ class FullLogoStore implements LogoStore {
 test('a plan with an inline logo is stored loadable by every screen, and loads back whole', () => {
   const plans = new MemoryPlanStore();
   const store = new AdminPlanStore(plans, new MemoryLogoStore(), 'local');
-  assert.deepEqual(store.save(withLogo()), { ok: true });
+  assert.deepEqual(store.save(withLogo(), null), { ok: true });
   const shared = plans.load();
   assert.ok(shared);
   assert.equal(checkGamePlan(shared).ok, true, 'what other screens read passes the shared validator');
@@ -32,7 +32,7 @@ test('a plan with an inline logo is stored loadable by every screen, and loads b
 test('a full storage is reported, and the plan itself is still saved', () => {
   const plans = new MemoryPlanStore();
   const store = new AdminPlanStore(plans, new FullLogoStore(), 'local');
-  const result = store.save(withLogo());
+  const result = store.save(withLogo(), null);
   assert.deepEqual(result, { ok: false, reason: 'quota', detail: '' });
   assert.equal(plans.load()?.rounds.length, SAMPLE_PLAN.rounds.length);
 });
@@ -41,9 +41,9 @@ test('subscribers get the joined plan', () => {
   const store = new AdminPlanStore(new MemoryPlanStore(), new MemoryLogoStore(), 'demo');
   const seen: unknown[] = [];
   const stop = store.subscribe((p) => seen.push(p?.sponsors[0].logo));
-  store.save(withLogo());
+  store.save(withLogo(), null);
   stop();
-  store.save(SAMPLE_PLAN);
+  store.save(SAMPLE_PLAN, null);
   assert.deepEqual(seen, [LOGO]);
 });
 

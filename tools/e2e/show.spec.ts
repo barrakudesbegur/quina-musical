@@ -15,7 +15,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import type { PublicMessage, ShowState } from '@quina/protocol';
-import { PLAN, SECRET_PRIZE } from '../../apps/cloud/test/support/plan.ts';
+import { PLAN, SECRET_PRIZE, savePlan } from '../../apps/cloud/test/support/plan.ts';
 import { Phone, startCloud, type Cloud } from './support/cloud.ts';
 import { REPO, hasPreparedRepertoire, startRelay, type Relay } from './support/relay.ts';
 import { Remote } from './support/remote.ts';
@@ -58,7 +58,7 @@ test.beforeAll(async () => {
   // Admin's plan in the cloud: round 2's prizes stay secret until its intro (perRound). Both rounds are normal,
   // like the show this test plays (cards 1-300 in play).
   const plan = { ...PLAN, rounds: PLAN.rounds.map((r) => ({ ...r, kind: 'normal' as const, cardType: 'normal' })) };
-  const saved = await fetch(`${cloud.server.http}/api/plan`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(plan) });
+  const saved = await savePlan(cloud.server.http, plan);
   if (!saved.ok) throw new Error(`the cloud refused the test plan: ${saved.status} ${await saved.text()}`);
   phone = new Phone(`${cloud.server.ws}/feed?cards=${CARDS.join(',')}`);
 });

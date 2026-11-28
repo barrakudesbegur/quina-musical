@@ -1,6 +1,7 @@
 // Send an edition's plan to the cloud by hand (D116): show what changes, save the cloud's current plan to a
 // timestamped local backup (U69 (b): gitignored, like the link folder it lives in), then replace it.
-// Without `yes` it stops after showing the change, so nothing is ever replaced blind.
+// Without `yes` it stops after showing the change, so nothing is ever replaced blind. The save is based on the
+// version it read (`x-quina-plan-base`), so if Admin saved in between, the cloud refuses it and nothing is lost.
 import fs from 'node:fs';
 import path from 'node:path';
 import { checkGamePlan, type GamePlan } from '@quina/protocol';
@@ -67,11 +68,14 @@ export async function uploadPlan(o: UploadOptions): Promise<UploadResult> {
 
   const put = await fetchImpl(url, {
     method: 'PUT',
-    headers: { ...o.headers, 'content-type': 'application/json' },
+    headers: { ...o.headers, 'content-type': 'application/json', 'x-quina-plan-base': body.savedAtMs == null ? 'none' : String(body.savedAtMs) },
     body: JSON.stringify(o.plan),
     signal: AbortSignal.timeout(20_000),
   });
   const answer = (await put.json().catch(() => null)) as { ok?: boolean; errors?: string[] } | null;
+  if (put.status === 409) {
+    throw new Error(`the cloud's plan changed after it was read (someone saved in Admin?): nothing was replaced. Run the upload again to see the change.\nThe copy read is saved in ${backup}.`);
+  }
   if (!put.ok || !answer?.ok) {
     throw new Error(`the cloud refused the plan (HTTP ${put.status})${answer?.errors?.length ? `:\n  ${answer.errors.join('\n  ')}` : ''}\nIts old plan is unchanged, and saved in ${backup}.`);
   }

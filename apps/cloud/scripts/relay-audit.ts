@@ -178,7 +178,9 @@ try {
   // The Game plan from the hotspot (plan B: Admin saves on the laptop with no cloud): only with the relay token.
   const putPlan = async (body: string, token: string | null) => {
     try {
-      const headers: Record<string, string> = { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) };
+      // Based on the laptop's plan now (read from this machine), as Admin's saves are.
+      const { savedAtMs } = (await (await fetch(`http://127.0.0.1:${port}/api/plan`)).json()) as { savedAtMs: number | null };
+      const headers: Record<string, string> = { 'content-type': 'application/json', 'x-quina-plan-base': savedAtMs === null ? 'none' : String(savedAtMs), ...(token ? { authorization: `Bearer ${token}` } : {}) };
       return (await fetch(`http://${lan}:${port}/api/plan`, { method: 'PUT', headers, body })).status;
     } catch (error) {
       return String(error);

@@ -4,6 +4,9 @@
 //   local-plan.json  a plan saved on the laptop's network with no cloud (PUT /api/plan on the relay).
 // The newest `savedAtMs` wins (the cloud's on a tie). The relay serves it as /cloud/plan.json and pushes it to
 // every paired screen as `relay.plan`; once the cloud is back, the link uploads a newer local plan to it.
+// The newest plan's `savedAtMs` is its version, as in the cloud: a save names the version it was based on
+// (`x-quina-plan-base`, spelt as apps/cloud/src/domain/plan-versions.ts and Admin spell it) and is refused when the
+// laptop's plan is another one by then (whats-left 7.1).
 import fs from 'node:fs';
 import path from 'node:path';
 import { checkGamePlan, type GamePlan } from '@quina/protocol';
@@ -55,7 +58,22 @@ function writeWhole(file: string, value: unknown): void {
   fs.renameSync(`${file}.tmp`, file);
 }
 
-export type LocalSave = { ok: true; plan: GamePlan; savedAtMs: number } | { ok: false; errors: string[] };
+/** The header a save names its base version in: the savedAtMs it loaded, or `none`. */
+export const PLAN_BASE_HEADER = 'x-quina-plan-base';
+
+/** The header's version (null: `none`), or undefined when it is missing or not one. */
+export function parsePlanBase(header: string | string[] | undefined): number | null | undefined {
+  if (typeof header !== 'string') return undefined;
+  const value = header.trim();
+  if (value === 'none') return null;
+  return /^\d{1,16}$/.test(value) ? Number(value) : undefined;
+}
+
+/** `stale`: based on another version than the laptop's plan now (`savedAtMs`). */
+export type LocalSave =
+  | { ok: true; plan: GamePlan; savedAtMs: number }
+  | { ok: false; errors: string[]; stale?: false }
+  | { ok: false; errors: string[]; stale: true; savedAtMs: number | null };
 
 /**
  * The laptop's plan: the newest of the two files, followed as they change (polled, so it works before the link
@@ -92,10 +110,14 @@ export class LaptopPlan {
   }
 
   /**
-   * Save a plan made on the laptop's network: checked like the cloud checks it, and for the same edition as the
-   * cloud's copy when there is one. It becomes the newest plan at once.
+   * Save a plan made on the laptop's network, based on version `base` (what Admin loaded; null: there was none):
+   * refused if the laptop's plan is another version now. Checked like the cloud checks it, and for the same edition
+   * as the cloud's copy when there is one. It becomes the newest plan at once.
    */
-  saveLocal(json: unknown, nowMs: number): LocalSave {
+  saveLocal(json: unknown, nowMs: number, base: number | null): LocalSave {
+    this.reload(); // the link may have written the cloud's copy since the last poll
+    const own = this.currentPlan.savedAtMs;
+    if (base !== own) return { ok: false, stale: true, savedAtMs: own, errors: [`plan: changed since this save's version (${base ?? 'none'}); it is ${own ?? 'none'} now: load it again`] };
     const check = checkGamePlan(json, { write: true });
     if (!check.ok) return check;
     const cloud = readStoredPlan(path.join(this.dir, CLOUD_PLAN_FILE));

@@ -37,7 +37,7 @@ import {
 import { distProblem } from './build-stamp.ts';
 import { TEST_MODE_BANNER, relayAcceptsCommand, relayModeMessage } from './gate.ts';
 import { defaultRouteInterface, describeAddress, lanAddresses, type LanAddress } from './lan.ts';
-import { LaptopPlan, type CurrentPlan } from './plan.ts';
+import { LaptopPlan, PLAN_BASE_HEADER, parsePlanBase, type CurrentPlan } from './plan.ts';
 import { CACHE, DEFAULT_REPERTOIRE, LINK, MEDIA, OUT, REPERTOIRE_ENV, PREP, REPO, SHOW, display, loadRepertoire, type Repertoire } from './repertoire.ts';
 
 const args = process.argv.slice(2);
@@ -343,14 +343,17 @@ async function handlePlanApi(req: http.IncomingMessage, res: http.ServerResponse
   if (!isThisMachine(req.socket.remoteAddress) && !hasToken(req.headers.authorization)) return json(403, { ok: false, errors: ['pair this device with the relay token first'] });
   if (req.method === 'GET') return json(200, PLAN.current());
   if (req.method !== 'PUT') return json(405, { ok: false, errors: ['GET or PUT'] });
+  // Every save says which version it replaces: a page that never loaded the plan can't overwrite it (7.1).
+  const base = parsePlanBase(req.headers[PLAN_BASE_HEADER]);
+  if (base === undefined) return json(400, { ok: false, errors: [`${PLAN_BASE_HEADER}: the savedAtMs of the plan this save is based on (from GET /api/plan), or "none"`] });
   let body: unknown;
   try {
     body = JSON.parse(await readBody(req, 512 * 1024));
   } catch (error) {
     return json(400, { ok: false, errors: [`not a JSON plan of at most 512 KB: ${String(error)}`] });
   }
-  const saved = PLAN.saveLocal(body, Date.now());
-  json(saved.ok ? 200 : 400, saved);
+  const saved = PLAN.saveLocal(body, Date.now(), base);
+  json(saved.ok ? 200 : saved.stale ? 409 : 400, saved);
 }
 
 /** Whether an `authorization` header carries the relay token. */

@@ -12,7 +12,7 @@ import { freePort, startDevServer, type DevServer } from '../../loadtest/dev-ser
 import { followFeed, type PublicView } from '@quina/protocol';
 import type { EditionExport } from '../../src/api.ts';
 import { JournalBuilder } from '../support/journal-builder.ts';
-import { PLAN } from '../support/plan.ts';
+import { PLAN, savePlan } from '../support/plan.ts';
 import { tempDir } from '../support/temp.ts';
 
 const v = PROTOCOL_VERSION;
@@ -201,7 +201,7 @@ test("the laptop keeps Admin's Game plan on disk, so it has it with no internet"
   try {
     link.start();
     await until('the link on the cloud', () => link.status().cloud === 'online');
-    const saved = await fetch(`${server.http}/api/plan`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(PLAN) });
+    const saved = await savePlan(server.http, PLAN);
     assert.equal(saved.status, 200);
     await until('the plan on disk', () => fs.existsSync(file) && read().plan?.title === PLAN.title);
     assert.deepEqual(read().plan, PLAN);
@@ -227,7 +227,7 @@ test("the plan's logos are copied to the laptop, with their JPEG XL when there i
     const jxl = new Uint8Array([0xff, 0x0a, 5, 5]);
     assert.equal((await fetch(`${server.http}/api/media/${withJxl.key}.jxl`, { method: 'PUT', headers: { 'content-type': 'image/jxl' }, body: jxl })).status, 201);
     const plan = { ...PLAN, sponsors: [{ id: 'forn', name: 'Forn', logo: withJxl.path }, { id: 'croak', name: 'Croak', logo: withoutJxl.path }] };
-    assert.equal((await fetch(`${server.http}/api/plan`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(plan) })).status, 200);
+    assert.equal((await savePlan(server.http, plan)).status, 200);
     link.start();
     await until('the logos on disk', () => fs.existsSync(path.join(dir, `${withJxl.key}.png`)) && fs.existsSync(path.join(dir, `${withoutJxl.key}.png`)) && fs.existsSync(path.join(dir, `${withJxl.key}.jxl`)));
     assert.deepEqual(new Uint8Array(fs.readFileSync(path.join(dir, `${withJxl.key}.jxl`))), jxl);
@@ -247,7 +247,7 @@ test("a plan saved on the laptop with no cloud goes up when the cloud is back, a
   const link = makeLink(relay.url, server.ws);
   const local = path.join(link.journal.dir, 'local-plan.json');
   const cloudPlan = async () => ((await (await fetch(`${server.http}/api/plan`)).json()) as { plan: typeof PLAN | null }).plan;
-  const put = (plan: typeof PLAN) => fetch(`${server.http}/api/plan`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(plan) });
+  const put = (plan: typeof PLAN) => savePlan(server.http, plan);
   try {
     assert.equal((await put(PLAN)).status, 200);
     // Saved on the laptop (the relay's PUT /api/plan writes this file) while the link was away.

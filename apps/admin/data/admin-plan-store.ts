@@ -7,7 +7,7 @@
 //   refuses (private mode), or anything else, so the page can keep the draft and say why.
 import type { GamePlan } from '../../../packages/ui/plan.ts';
 import { LocalPlanStore, type PlanStore } from '../../../packages/ui/data/plan-store.ts';
-import { CloudPlanStore, listMedia, uploadMedia, uploadMediaJxl, type FetchLike, type MediaList, type MediaResult } from '../../../packages/ui/data/cloud-plan.ts';
+import { CloudPlanStore, listMedia, uploadMedia, uploadMediaJxl, type FetchLike, type MediaList, type MediaResult, type PlanLoad, type PlanVersion } from '../../../packages/ui/data/cloud-plan.ts';
 import { isLocalHost } from '../../../packages/ui/client/endpoints.ts';
 import { relayTokenForPage } from '../../../packages/ui/client/pairing.ts';
 import { isInlineLogo, planForStorage, planFromStorage } from '../logic/plan-check.ts';
@@ -19,9 +19,13 @@ export interface LogoStore {
   save(logos: Record<string, string>): void;
 }
 
-export type SaveFailure = 'quota' | 'error';
-/** `saved`: the plan as the store kept it, when that differs from what was sent (cloud: logos became paths). */
-export type SaveResult = { ok: true; saved?: GamePlan } | { ok: false; reason: SaveFailure; detail: string };
+/** `stale`: the cloud or the relay refused the save because its plan changed since this page loaded it. */
+export type SaveFailure = 'quota' | 'stale' | 'error';
+/**
+ * `saved`: the plan as the store kept it, when that differs from what was sent (cloud: logos became paths).
+ * `savedAtMs`: the cloud's or the relay's version of it, the base of the next save (absent: a local store).
+ */
+export type SaveResult = { ok: true; saved?: GamePlan; savedAtMs?: PlanVersion } | { ok: false; reason: SaveFailure; detail: string };
 
 /** A full localStorage, in every browser's spelling. */
 export function isQuotaError(e: unknown): boolean {
@@ -149,7 +153,6 @@ export class AdminPlanStore {
     if (!demo && typeof location !== 'undefined' && !isLocalHost(location.hostname)) {
       const fetchImpl: FetchLike = (input, init) => fetch(input, { ...init, credentials: 'same-origin' });
       const store = new CloudPlanStore(fetchImpl);
-      void store.refresh();
       return new AdminPlanStore(store, new MemoryLogoStore(), 'cloud', { store, fetchImpl });
     }
     if (!demo && typeof location !== 'undefined' && typeof fetch !== 'undefined') {
@@ -158,7 +161,6 @@ export class AdminPlanStore {
       const fetchImpl: FetchLike = (input, init) =>
         fetch(input, { ...init, cache: 'no-store', credentials: 'same-origin', headers: { ...init?.headers, ...(token ? { authorization: `Bearer ${token}` } : {}) } });
       const store = new CloudPlanStore(fetchImpl);
-      void store.refresh();
       return new AdminPlanStore(store, storageWritable() ? new LocalLogoStore() : new MemoryLogoStore(), 'relay', { store, fetchImpl });
     }
     const local = new AdminPlanStore(new LocalPlanStore(), new LocalLogoStore(), storageWritable() ? 'local' : 'unavailable');
@@ -167,8 +169,26 @@ export class AdminPlanStore {
     return new AdminPlanStore(new MemoryPlanStore(local.load()), new MemoryLogoStore(), demo ? 'demo' : 'unavailable');
   }
 
+  /** The cloud and the relay: the plan is only known once fetched (or pushed), so the page waits for it. */
+  get remote(): boolean {
+    return this.cloud !== null;
+  }
+
+  /** Fetch the plan from the cloud or the relay, with this browser's logos joined in. Never throws. */
+  async loadRemote(): Promise<PlanLoad> {
+    if (!this.cloud) return { ok: false, detail: 'no cloud' };
+    const got = await this.cloud.refresh();
+    if (!got.ok || !got.plan) return got;
+    return { ...got, plan: this.withLogos(got.plan) };
+  }
+
+  /** The version of the plan `load()` gives: the cloud's or the relay's savedAtMs; null for local stores. */
+  version(): PlanVersion {
+    return this.cloud?.version() ?? null;
+  }
+
   /** Cloud: upload inline (data URL) logos as media (PNG, then its JPEG XL), then save the whole plan. Never throws. */
-  private async saveToCloud(plan: GamePlan): Promise<SaveResult> {
+  private async saveToCloud(plan: GamePlan, base: PlanVersion): Promise<SaveResult> {
     const cloud = this.cloud;
     const fetchImpl = this.fetchImpl;
     if (!cloud || !fetchImpl) return { ok: false, reason: 'error', detail: 'no cloud' };
@@ -187,9 +207,9 @@ export class AdminPlanStore {
       sponsors.push({ ...s, logo: up.path });
     }
     const toSave = { ...plan, sponsors };
-    const put = await cloud.put(toSave);
-    if (!put.ok) return { ok: false, reason: 'error', detail: put.errors.slice(0, 3).join(' · ') };
-    return { ok: true, saved: put.plan };
+    const put = await cloud.put(toSave, base);
+    if (!put.ok) return putFailure(put);
+    return { ok: true, saved: put.plan, savedAtMs: put.savedAtMs };
   }
 
   /** The cloud's media library, for the logo picker; only in the cloud (the relay has no library). */
@@ -215,14 +235,18 @@ export class AdminPlanStore {
   load(): GamePlan | null {
     try {
       const plan = this.plans.load();
-      return plan ? planFromStorage(plan, this.logos.load()) : null;
+      return plan ? this.withLogos(plan) : null;
     } catch {
       return null;
     }
   }
 
+  private withLogos(plan: GamePlan): GamePlan {
+    return planFromStorage(plan, this.logos.load());
+  }
+
   /** Relay: logos not uploaded yet stay in this browser; the rest of the plan goes to the relay. Never throws. */
-  private async saveToRelay(plan: GamePlan): Promise<SaveResult> {
+  private async saveToRelay(plan: GamePlan, base: PlanVersion): Promise<SaveResult> {
     const relay = this.cloud;
     if (!relay) return { ok: false, reason: 'error', detail: 'no relay' };
     const { plan: stored, logos } = planForStorage(plan);
@@ -231,16 +255,16 @@ export class AdminPlanStore {
     } catch (e) {
       return failure(e);
     }
-    const put = await relay.put(stored);
-    if (!put.ok) return { ok: false, reason: 'error', detail: put.errors.slice(0, 3).join(' · ') };
-    return { ok: true };
+    const put = await relay.put(stored, base);
+    if (!put.ok) return putFailure(put);
+    return { ok: true, savedAtMs: put.savedAtMs };
   }
 
   /** Store a valid plan. Local: logos go first (they are the big part, so a full storage shows up there).
-   * Cloud and relay: asynchronous. */
-  save(plan: GamePlan): SaveResult | Promise<SaveResult> {
-    if (this.kind === 'cloud') return this.saveToCloud(plan);
-    if (this.kind === 'relay') return this.saveToRelay(plan);
+   * Cloud and relay: asynchronous, and refused when their plan is no longer version `base`. */
+  save(plan: GamePlan, base: PlanVersion): SaveResult | Promise<SaveResult> {
+    if (this.kind === 'cloud') return this.saveToCloud(plan, base);
+    if (this.kind === 'relay') return this.saveToRelay(plan, base);
     const { plan: stored, logos } = planForStorage(plan);
     let logoFailure: SaveResult | null = null;
     try {
@@ -257,10 +281,14 @@ export class AdminPlanStore {
     return logoFailure ?? { ok: true };
   }
 
-  /** Called with the joined plan when it changes (another tab, or this page's own save). */
-  subscribe(listener: (plan: GamePlan | null) => void): () => void {
-    return this.plans.subscribe(() => listener(this.load()));
+  /** Called with the joined plan and its version when either changes (a push, another tab, this page's own save). */
+  subscribe(listener: (plan: GamePlan | null, version: PlanVersion) => void): () => void {
+    return this.plans.subscribe(() => listener(this.load(), this.version()));
   }
+}
+
+function putFailure(put: { errors: string[]; stale: boolean }): SaveResult {
+  return { ok: false, reason: put.stale ? 'stale' : 'error', detail: put.errors.slice(0, 3).join(' · ') };
 }
 
 function failure(e: unknown): SaveResult {

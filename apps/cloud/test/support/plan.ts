@@ -27,3 +27,13 @@ export const PLAN: GamePlan = {
   schedule: { startAtMs: null, roundMinutes: 25, intervalMinutes: 10 },
   cheatSheet: { claimRules: ['El primer que canta guanya'], specialRoundRules: ['Només compten els cartons especials'] },
 };
+
+/**
+ * Save a plan as Admin does: read the version there now (GET /api/plan), then PUT based on it
+ * (`x-quina-plan-base`). The response, as fetch gives it.
+ */
+export async function savePlan(origin: string, plan: unknown, headers: Record<string, string> = {}): Promise<Response> {
+  const got = (await (await fetch(`${origin}/api/plan`, { headers })).json()) as { savedAtMs: number | null };
+  const base = got.savedAtMs === null ? 'none' : String(got.savedAtMs);
+  return fetch(`${origin}/api/plan`, { method: 'PUT', headers: { ...headers, 'content-type': 'application/json', 'x-quina-plan-base': base }, body: JSON.stringify(plan) });
+}

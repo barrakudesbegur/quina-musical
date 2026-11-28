@@ -31,6 +31,7 @@ export const ROUTES: Readonly<Record<string, Route>> = Object.freeze({
   // The laptop's service token may read it (a spare laptop's setup fetches it without connecting as the show
   // laptop, which would take over from the one playing) and save it: the edition tool sends the edition's plan up by
   // hand with it (D116, D227), as the link could already do (link.plan). A token of its own for agents is U63.
+  // A PUT names the version it was based on (domain/plan-versions.ts): a stale one is refused (409).
   '/api/plan': { name: 'plan', websocket: false, access: ANYONE_SIGNED_IN, methods: ['GET', 'PUT'] },
   /**
    * Admin's media: POST a logo or prize picture (the body is the PNG or JPEG fallback, `?name=` optional; answers

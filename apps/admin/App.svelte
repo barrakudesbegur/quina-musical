@@ -83,8 +83,31 @@
     </div>
   {/if}
 
+  <!-- Refused as stale: reload. Once the newer plan has arrived, the choice above replaces this. -->
+  {#if session.stale && !session.external}
+    <div class="manage__conflict notice notice--error no-print" role="alert">
+      <p><strong>{S.save.stale}.</strong> {S.save.staleHelp}</p>
+      <div class="panel__actions">
+        <button type="button" onclick={() => location.reload()}>{S.save.reload}</button>
+      </div>
+    </div>
+  {/if}
+
   <main class="manage__main">
-    {#if route === 'preparacio'}
+    {#if session.phase.kind === 'loading'}
+      <!-- Nothing editable until the plan is here (whats-left 7.1). The badge above says it in words. -->
+      <section class="panel manage__loading" aria-labelledby="plan-loading">
+        <p id="plan-loading">{S.save.loading(session.store.kind)}</p>
+        <progress aria-labelledby="plan-loading"></progress>
+      </section>
+    {:else if session.phase.kind === 'failed'}
+      <section class="manage__loading notice notice--error" role="alert">
+        <p><strong>{S.save.loadFailed}.</strong> {S.save.loadFailedHelp(session.phase.detail)}</p>
+        <div class="panel__actions">
+          <button type="button" onclick={() => void session.load()}>{S.save.retry}</button>
+        </div>
+      </section>
+    {:else if route === 'preparacio'}
       <PlanErrors errors={session.errors} />
       <PlanMeta {session} printed={printedTypes} />
       <CardsInPlay {show} {commands} {cardTypes} {catalogFailed} types={knownTypes} />
@@ -117,6 +140,13 @@
     margin: var(--space-3) var(--space-4) 0;
     display: grid;
     gap: var(--space-2);
+  }
+  .manage__loading {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .manage__loading progress {
+    inline-size: 100%;
   }
   }
 </style>

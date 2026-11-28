@@ -47,6 +47,15 @@ export const S = {
     unavailable: 'Aquest navegador no deixa desar (mode privat?). Exporta el JSON abans de tancar.',
     error: (detail: string) => `No s'ha pogut desar: ${detail}`,
     demo: 'Mode demo: els canvis no es desen',
+    /** Before the cloud's or the relay's plan has arrived: nothing to show or edit yet. */
+    loading: (where: 'cloud' | 'relay' | 'local' | 'demo' | 'unavailable') => (where === 'cloud' ? 'Carregant el pla del núvol…' : 'Carregant el pla del portàtil del show…'),
+    loadFailed: "No s'ha pogut carregar el pla",
+    loadFailedHelp: (detail: string) => `No es mostra ni es desa res fins que el pla es carregui: així no se'n pot desar un de buit al damunt. (${detail})`,
+    retry: 'Tornar-ho a provar',
+    /** A save refused because the plan changed elsewhere since this page loaded it. */
+    stale: "No s'ha desat: el pla ha canviat en un altre lloc des que l'has obert",
+    staleHelp: "Torna a carregar la pàgina per veure el pla d'ara. Els canvis que has fet aquí des de l'últim desat es perdran; si els vols, copia'ls abans des d'«Importar i exportar».",
+    reload: 'Tornar a carregar la pàgina',
     conflict: 'El pla ha canviat en una altra pestanya mentre editaves aquí.',
     conflictLoad: 'Carregar el pla de l’altra pestanya',
     conflictKeep: 'Mantenir el meu',
