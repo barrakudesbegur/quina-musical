@@ -198,16 +198,21 @@
   }
 }
 
-.ara[data-drum] > .ara__swipe {
-  --strip-fade-gap: 0.25rem; /* see-through this far under the strip's bottom edge */
-  --strip-fade: 1.5rem; /* then the fade */
-  --strip-fade-reach: 100lvh; /* how far the gradient reaches past the swipe's edges */
-  --strip-fade-line: calc(var(--strip-fade-reach) + var(--ara-fade-at, 0px) + var(--home-scroll) + var(--strip-fade-gap));
-  animation: home-scroll linear both;
-  animation-timeline: scroll(nearest block);
-  animation-range: 0px 100000px;
-  mask: linear-gradient(to bottom, transparent var(--strip-fade-line), #000 calc(var(--strip-fade-line) + var(--strip-fade))) 0
-    calc(-1 * var(--strip-fade-reach)) / 100% calc(100% + 2 * var(--strip-fade-reach)) no-repeat no-clip;
+/* Only where scroll-driven animations run (Chrome, Safari 26+): in an older Safari the animation ends at once and holds
+   `--home-scroll` at 100000px, so the mask hid the switch and both views (an iPhone in the user's live test, 28 Nov).
+   There the content simply runs on under the strip, the 27 Nov look. */
+@supports (animation-timeline: scroll()) {
+  .ara[data-drum] > .ara__swipe {
+    --strip-fade-gap: 0.25rem; /* see-through this far under the strip's bottom edge */
+    --strip-fade: 1.5rem; /* then the fade */
+    --strip-fade-reach: 100lvh; /* how far the gradient reaches past the swipe's edges */
+    --strip-fade-line: calc(var(--strip-fade-reach) + var(--ara-fade-at, 0px) + var(--home-scroll) + var(--strip-fade-gap));
+    animation: home-scroll linear both;
+    animation-timeline: scroll(nearest block);
+    animation-range: 0px 100000px;
+    mask: linear-gradient(to bottom, transparent var(--strip-fade-line), #000 calc(var(--strip-fade-line) + var(--strip-fade))) 0
+      calc(-1 * var(--strip-fade-reach)) / 100% calc(100% + 2 * var(--strip-fade-reach)) no-repeat no-clip;
+  }
 }
 
 :root[data-home-mask='under'] .ara[data-drum] > .ara__swipe {
