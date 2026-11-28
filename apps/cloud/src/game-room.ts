@@ -548,9 +548,13 @@ export class GameRoom extends DurableObject<RoomEnv> {
     this.save();
   }
 
-  /** checkGamePlan, for this edition only. */
+  /**
+   * checkGamePlan for a plan being saved (PUT /api/plan, link.plan), for this edition only: in write mode, so a
+   * sponsor logo that isn't an upload here (`LOGO_PATH_RE`) is refused, never silently dropped. A stored plan reads
+   * leniently (on load), so it always loads.
+   */
   private checkPlan(json: unknown): ReturnType<typeof checkGamePlan> {
-    const check = checkGamePlan(json);
+    const check = checkGamePlan(json, { write: true });
     if (!check.ok) return check;
     if (check.plan.edition !== this.env.EDITION) return { ok: false, errors: [`plan.edition: this cloud serves edition ${this.env.EDITION}`] };
     return check;

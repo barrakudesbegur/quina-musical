@@ -653,6 +653,11 @@ describe('the Game plan and its media (Admin)', () => {
 
     // The logo as a player page resolves it: on the page's own origin. (Here the Worker never sees the static pages;
     // test/node/static.e2e.test.ts fetches the page and the logo from one `wrangler dev` origin.)
+    // A save naming a logo that isn't an upload here is refused (write mode), never silently dropped.
+    const offSite = await put({ ...PLAN, sponsors: [{ ...PLAN.sponsors[0], logo: 'https://example.com/logo.png' }] });
+    expect(offSite.status).toBe(400);
+    expect(await offSite.text()).toMatch(/sponsors\[0\]\.logo/);
+
     const pageUrl = 'https://quina.example/26/123';
     const logoUrl = new URL(logo, pageUrl);
     expect(logoUrl.origin).toBe(new URL(pageUrl).origin);

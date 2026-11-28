@@ -45,6 +45,10 @@ test('a round on a side its card type lacks stops the upload; an empty pool only
   assert.ok(noPool2.warnings.length > 0 && noPool2.warnings.every((w) => /pool 2, which has no songs/.test(w)));
 
   assert.match(checkPlan(SOURCE, { cardTypes: null }).warnings[0]!, /pass --repertoire/);
+  const source = SOURCE as { sponsors: { logo: string | null }[] };
+  const offSite = checkPlan({ ...source, sponsors: [{ ...source.sponsors[0]!, logo: 'https://example.com/logo.png' }, ...source.sponsors.slice(1)] }, { cardTypes: null });
+  assert.equal(offSite.plan, null, 'a logo that is not an upload stops the upload');
+  assert.match(offSite.errors.join('; '), /plan\.sponsors\[0\]\.logo/);
   const bad = checkPlan({ ...(SOURCE as object), rounds: [] }, { cardTypes: null });
   assert.equal(bad.plan, null);
   assert.ok(bad.errors.length > 0);

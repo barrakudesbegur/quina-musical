@@ -27,7 +27,8 @@ export function planOf(json: unknown): unknown {
 }
 
 export function checkPlan(json: unknown, context: PlanContext): PlanReport {
-  const read = checkGamePlan(planOf(json));
+  // Write mode: a sponsor logo that isn't an upload to the cloud (/media/<hash>.png|jpg) stops the upload.
+  const read = checkGamePlan(planOf(json), { write: true });
   if (!read.ok) return { plan: null, errors: read.errors, warnings: [] };
   const { plan } = read;
   if (!context.cardTypes) return { plan, errors: [], warnings: ["no card types to check the rounds' sides against (pass --repertoire)"] };
