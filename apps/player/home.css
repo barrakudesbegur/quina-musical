@@ -165,8 +165,9 @@
    from just under the strip's bottom edge upwards, a short fade under it. The line is fixed on the screen: AraHome
    measures it in the swipe's coordinates at scroll 0 (`--ara-fade-at`), and the box's own scroll, as a scroll-driven
    length (`--home-scroll`, the scroll in px over a range far longer than any page), moves the mask by as much as the
-   content scrolls, in the same frame. The gradient reaches past the swipe's bottom edge (no-clip, 2 rem taller), so the
-   last card's drop isn't cut. Not motion: it runs whatever the motion preference. `&mask=under` (demos only, main.ts)
+   content scrolls, in the same frame. The gradient reaches a screen's height past the swipe's top and bottom edges
+   (no-clip): the last card's drop isn't cut, and the switch, which a swipe can lift above the swipe's own top, stays
+   drawn below the line. Not motion: it runs whatever the motion preference. `&mask=under` (demos only, main.ts)
    shows the 27 Nov look for comparison: the content runs on under the strip. */
 @property --home-scroll {
   syntax: '<length>';
@@ -187,12 +188,13 @@
 .ara[data-drum] > .ara__swipe {
   --strip-fade-gap: 0.25rem; /* see-through this far under the strip's bottom edge */
   --strip-fade: 1.5rem; /* then the fade */
-  --strip-fade-line: calc(var(--ara-fade-at, 0px) + var(--home-scroll) + var(--strip-fade-gap));
+  --strip-fade-reach: 100lvh; /* how far the gradient reaches past the swipe's edges */
+  --strip-fade-line: calc(var(--strip-fade-reach) + var(--ara-fade-at, 0px) + var(--home-scroll) + var(--strip-fade-gap));
   animation: home-scroll linear both;
   animation-timeline: scroll(nearest block);
   animation-range: 0px 100000px;
-  mask: linear-gradient(to bottom, transparent var(--strip-fade-line), #000 calc(var(--strip-fade-line) + var(--strip-fade))) 0 0 / 100%
-    calc(100% + 2rem) no-repeat no-clip;
+  mask: linear-gradient(to bottom, transparent var(--strip-fade-line), #000 calc(var(--strip-fade-line) + var(--strip-fade))) 0
+    calc(-1 * var(--strip-fade-reach)) / 100% calc(100% + 2 * var(--strip-fade-reach)) no-repeat no-clip;
 }
 
 :root[data-home-mask='under'] .ara[data-drum] > .ara__swipe {
