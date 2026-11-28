@@ -28,7 +28,7 @@ After the tech rehearsal comes the code freeze (timeline.md), so P1 must be done
 
 | # | P | What's wrong | Source | Owner |
 |---|---|---|---|---|
-| 1.1 | P0 | **The runbook's show page `?autostart=1` lands round 1's first song at the «Start show» click:** no doors, no intro, no public Shuffle; round 1 plays the Queue drawn secretly at boot. The user's "jumped straight into a round". `next` and `newRound` are also accepted before the night. Fix: no autostart on the night; the engine refuses play commands before the night starts; a round's Queue is drawn at its Shuffle (main.ts:1237, show.ts:864-866, scenes.ts:65,73, night-runbook.md:14, chrome-profiles.ts:37) | V (all), F, S, B | Sound engine; Backend for the runbook and the command |
+| 1.1 | P0 | **The runbook's show page `?autostart=1` lands round 1's first song at the «Start show» click:** no doors, no intro, no public Shuffle; round 1 plays the Queue drawn secretly at boot. The user's "jumped straight into a round". `next` and `newRound` are also accepted before the night. Fix: no autostart on the night; the engine refuses play commands before the night starts; a round's Queue is drawn at its Shuffle (main.ts:1237, show.ts:864-866, scenes.ts:65,73, night-runbook.md:14, chrome-profiles.ts:37) **28 Nov night:** the launch command has no autostart (7dc3ec0a, verify running); the engine side is being built. | V (all), F, S, B | Sound engine; Backend for the runbook and the command |
 | 1.2 | P0 | **The engine counts 5 rounds; the plan has 12** (config.ts:194): the console's «Quina 6 de 5» (no total at all, D305), «Era l'última quina» from round 5, a dead «Quines en total» stepper; after the last round the projector says «SEGÜENT: QUINA 13 DE 12» and offers round 13 | V, F, S | Sound engine; Frontend's panels |
 | 1.3 | P0 | **Starting the night is hidden in the menu** (☰ → «Començar la nit»); the doors' big button is «Llançament», the throw song. The user couldn't find it | V, F, B | Frontend (D304: the doors' big button, a tap only) |
 | 1.4 | P1 | **The doors are silent:** no doors music set; `before`, a resumed Game and a reloaded show page are silent until Next. Against "the music never stops" (show-and-music.md) | V, S | Sound engine; the music, U97 |
@@ -40,8 +40,8 @@ After the tech rehearsal comes the code freeze (timeline.md), so P1 must be done
 
 | # | P | What's wrong | Source | Owner |
 |---|---|---|---|---|
-| 2.1 | P0 | **The claim pad hides Parlem, Aguanta and Següent, and songs keep landing while numbers are typed** (fairness; game-rules: the presenters stop new songs on a claim) | V, F | Frontend |
-| 2.2 | P0 | **False winners after a discarded Bingo:** the button read «CELEBREM! el #76 i el #261 han guanyat», #76 being the Line's winner; the projector showed an empty screen (logic/check.ts:230-232) | V (new) | Frontend |
+| 2.1 | P0 | **The claim pad hides Parlem, Aguanta and Següent, and songs keep landing while numbers are typed** (fairness; game-rules: the presenters stop new songs on a claim) **28 Nov night:** the agreed pad board covers the cluster; asked the user (U245). | V, F | Frontend |
+| 2.2 | P0 | **False winners after a discarded Bingo:** the button read «CELEBREM! el #76 i el #261 han guanyat», #76 being the Line's winner; the projector showed an empty screen (logic/check.ts:230-232) **Built (1b5b803a):** the console named every valid Claim once no Check was on screen; the projector kept a faded card on an empty Check scene (now the round shows while an earlier pass waits for «Celebrem!»). The engine was right. Verify pending. | V (new) | Frontend |
 | 2.3 | P0 | **Parlem shows as on (striped) at every intro, Interval and Celebration**, and a tap there ends a Line's Celebration straight into the next song (D117: Parlem only ducks) | V, F, S | Frontend and Sound engine |
 | 2.4 | P0 | **Engine presenter actions reproduced wrong by Sound engine:** Back after a Check's cue leaves the round stuck; Pausa from Aguanta blocks Next; the two-level lock refuses every other console's hold; `newRound` kills the intro track; Aguanta in a Spin's last 0.15 s becomes Parlem; Parlem off over Hold music lands a song; `newRound` mid-play throws the round away. V found the plain cases of Parlem, Pausa and Aguanta right | S | Sound engine |
 | 2.5 | P1 | «Següent» names the pre-drawn Queue's song at the doors, intros and breaks, then another after the Shuffle | V, F | Sound engine (1.1) and Frontend |
@@ -51,7 +51,7 @@ After the tech rehearsal comes the code freeze (timeline.md), so P1 must be done
 | 2.9 | P1 | Sizes: at 1194×834 the doors, Celebration and Pausa pages overflow (header and cluster scroll away); on a 390 px phone the cluster takes a third of the screen and the Check's buttons fall off it | V, F | Frontend |
 | 2.10 | P1 | Not built: the remote's drawing (Comandament, D93), the voices and drum roll (Veus-Redoble, D198), Horari in the menu, D291 | V, F | Frontend, Sound engine |
 | 2.11 | P2 | The menu's «Xuleta del pla B» can't close; generic «ara no es pot fer»; the header keeps the finished round; tablet-portrait header clipping; «Llançament» after every round; Pace messages before the night | V, F | Frontend |
-| 2.12 | P1 | **The Heat meter (the thermometer) didn't work** in the user's realistic test: to reproduce first | the user | Frontend, Sound engine |
+| 2.12 | P1 | **The Heat meter (the thermometer) didn't work** in the user's realistic test: to reproduce first **Cause found (28 Nov):** no sold cards were entered, which the runbook never said (now it does); without them the Phase is a 20-song guess from the night's start that never resets, which also explains 2.8. U244 asks what the Phase does without cards; the console's warning is on the boards page. | the user | Frontend, Sound engine |
 
 ## 3. The projector
 
@@ -106,9 +106,9 @@ What works, seen live on the production path: the QR link, the pad, the scan, th
 
 | # | P | What's wrong | Source | Owner |
 |---|---|---|---|---|
-| 6.1 | P0 | **The preflight, `setup:laptop`, the README's relay command and `media pull` default to last year's repertoire:** following the runbook, the preflight FAILs and says to restart on last year's songs; a spare laptop pulls the wrong media | V, F, B | Backend |
-| 6.2 | P0 | **The runbook:** never says how to start the night or when to enter the sold cards; its "press Next" after a relaunch is wrong (the click lands a song); its "laptop lost its Game" row is a dead end (autostart disables «Recuperar al portàtil», and the resume is refused until the sold cards are entered again, with a half-English message); Admin wants only the code, not "the code and the song" | V | Backend; Frontend for Admin's message |
-| 6.3 | P0 | The preflight says "no Game on this laptop yet" with round 1 playing, and passes a stale second show page | V, B | Backend |
+| 6.1 | P0 | **The preflight, `setup:laptop`, the README's relay command and `media pull` default to last year's repertoire:** following the runbook, the preflight FAILs and says to restart on last year's songs; a spare laptop pulls the wrong media **Built (d43c4177, in 7dc3ec0a):** `NIGHT_REPERTOIRE` in apps/show/relay/repertoire.ts is the one place; `default` only when named. Verify running. | V, F, B | Backend |
+| 6.2 | P0 | **The runbook:** never says how to start the night or when to enter the sold cards; its "press Next" after a relaunch is wrong (the click lands a song); its "laptop lost its Game" row is a dead end (autostart disables «Recuperar al portàtil», and the resume is refused until the sold cards are entered again, with a half-English message); Admin wants only the code, not "the code and the song" **Rewritten (7dc3ec0a):** the start commands, «During the night» (starting the night, the sold cards before each Barreja), the restart rows. Verify running. | V | Backend; Frontend for Admin's message |
+| 6.3 | P0 | The preflight says "no Game on this laptop yet" with round 1 playing, and passes a stale second show page **Built (26a2e2df):** the Game line reads the show page's Game; «Show page» FAILs with two. Verify running. | V, B | Backend |
 | 6.4 | P1 | **A cold start is 4 terminals, about 10 commands, about 770 characters typed on the laptop and 53 on the tablet, about 11 clicks,** and a «START SHOW» click on the projector's own screen that no console can do. D282 (a Mac app, one start button) is on hold until the user resumes it | V, F, B | Backend, Frontend (D282) |
 | 6.4b | P0 | **The projector's «Start show» click** (D299): nothing on the projector starts the event; the click goes unless the audio can't start without it | V, the user | The user's setup session |
 | 6.4c | P1 | **The projector screen from a website** (D300), for a second projector on another computer and network | the user | The user's setup session |
@@ -119,7 +119,7 @@ What works, seen live on the production path: the QR link, the pad, the scan, th
 
 | # | P | What's wrong | Source | Owner |
 |---|---|---|---|---|
-| 7.1 | P0 | **Opening Admin can overwrite the cloud's plan with a blank one** when neither the plan nor the socket push arrive within 0.6 s; no save history (F reproduced it; V, with only the plan request delayed, lost nothing) | F | Frontend |
+| 7.1 | P0 | **Opening Admin can overwrite the cloud's plan with a blank one** when neither the plan nor the socket push arrive within 0.6 s; no save history (F reproduced it; V, with only the plan request delayed, lost nothing) **Built (068e0ceb, 52341dd7):** Admin loads before it edits or saves; saves carry `x-quina-plan-base`, a stale one gets 409; the cloud keeps the last 20 replaced plans (`npm run edition -- history`). Not deployed yet; verify and e2e running. Open: a laptop with no cloud copy can still push a newer local plan through `link.plan` (7.3). | F | Frontend |
 | 7.2 | P1 | The cheat sheet lacks the presenters' running order, the Desgraciat's and the special round's rules and the "+6 dB" note; it lists the debug keys D and H, calls Space «Espera», and its keys disagree with the console's; a presenter couldn't run the night from it | V, F | Frontend |
 | 7.3 | P1 | Preparació at this plan's size is about 58,000 px tall; three places edit the plan with no merge (the git file, the cloud's Admin, the laptop's Admin) | F | Frontend, Backend |
 | 7.4 | P1 | The cloud's plan holds the example prizes, not the organizers' (U18); two sponsors have no logo (U16); no organizer has used Admin's login yet | B | The user, the organizers |
@@ -131,11 +131,11 @@ The generator works today: the final cards in both layouts from repertoire 2026,
 
 | # | P | What's left | Source | Owner |
 |---|---|---|---|---|
-| 8.1 | P0 | D295's A4 card (`3x1-h-bw`) as the generator's default; the A3 layout kept for the test sheets | the user | Frontend |
-| 8.2 | P0 | data/repertoires/2026.json's `cardsJson` points at the «TEMPORARY not for print» folder and calls pool 2 provisional; apps/cards' README says to commit dist/ (last year's) and counts 136 songs; the card-mockup README and handoff are stale | V | Sound engine (the repertoire), Frontend (apps/cards) |
+| 8.1 | P0 | D295's A4 card (`3x1-h-bw`) as the generator's default; the A3 layout kept for the test sheets **Done, verified (d97d1f3e):** the A4 card is the default; `--layout a3-6` keeps the A3 card. | the user | Frontend |
+| 8.2 | P0 | data/repertoires/2026.json's `cardsJson` points at the «TEMPORARY not for print» folder and calls pool 2 provisional; apps/cards' README says to commit dist/ (last year's) and counts 136 songs; the card-mockup README and handoff are stale **Done (d97d1f3e):** apps/cards' README with the 4–5 Dec checklist, the repertoire's description, the card-mockup notes; `cardsJson` switches on 4–5 Dec; the generator now needs `--repertoire` (1156ba15). | V | Sound engine (the repertoire), Frontend (apps/cards) |
 | 8.3 | P0 | The four quality flags: #90, #117 (low bitrate), #18, #83 (remix titles). The user is listening (U238, (b), 28 Nov). A swap needs a download, prep, an R2 push and new cards before printing | V, S | The user |
-| 8.4 | P0 | The A3 test sheets repeat the last numbers of each run; those A4 cards stay off sale with the user (D306) | the user | Frontend (generate both), the user |
-| 8.5 | P0 | The proof sheet (D267), before 4 Dec: #100's nearly white cover, a QR scanned from paper, the duplex alignment on the shop's machine | V | The user, Frontend |
+| 8.4 | P0 | The A3 test sheets repeat the last numbers of each run; those A4 cards stay off sale with the user (D306) **Done, verified (d97d1f3e, D327):** `--test-sheets`, normal #394–399 and special #694–699. | the user | Frontend (generate both), the user |
+| 8.5 | P0 | The proof sheet (D267), before 4 Dec: #100's nearly white cover, a QR scanned from paper, the duplex alignment on the shop's machine **Proof made (1156ba15):** temp/cards-proof-2026/proof-{normal,especial}-{a4,a3}.pdf, one job per paper; the user prints it at the shop. The faint stamp sits 4.2 mm from the right cut edge (last year's place). | V | The user, Frontend |
 | 8.6 | P2 | The QR could be a size bigger at the same 16 mm (upper-case URL, version 2), once checked on real phones; a few artists keep Spotify's capitals | V | Frontend |
 
 ## 9. Songs and prep, before the tech rehearsal

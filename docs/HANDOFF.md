@@ -21,6 +21,13 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
   - the UI code rules (D215);
   - web UI work loads modern-web-guidance first.
 
+## Now (28 Nov, late night): Phase A under way
+
+- **Pushed:** the cards (d97d1f3e, 1156ba15: the A4 default, the A3 test sheets, the proof in temp/cards-proof-2026/, verified); the setup (7dc3ec0a: the night's repertoire by default, the preflight, no autostart, the runbook); Admin's blank-plan fix and plan history (52341dd7, **not deployed**: the cloud deploy must be from cf1c13e or later, f5's D318/D319, and after the e2e); the console's false winners (1b5b803a).
+- **Being built:** the engine's night start (1.1's engine side, D304, 2.5, 3.1, 1.6, newRound, the Plan B resume) and the round count, no totals, Parlem's display, 2.4, «Cartró correcte!» (1.2, D305, 2.3). Verifying: the setup, Admin.
+- **With the user:** the boards page for D302, D303, D308, D310, D315/D316 and the console's no-cards warning: https://claude.ai/code/artifact/392d0bf3-eee6-42d7-b647-4b66b9840fe8; U244 (the Phase without cards), U245 (the claim pad), U238.
+- **Other sessions:** quina-musical-79 (setup: D324–D326 logged; D300's design), quina-musical-f5 (pushed D318/D319 as cf1c13e9; the 14 Hold-music-outside-Pausa paths are with the user), quina-musical-e0 (logos: D320–D323 logged; U16).
+
 ## Now (28 Nov, night): the verified list, every question answered, ready to build
 
 **[whats-left.md](whats-left.md) is the one list of what's missing,** by area and priority (P0 before the cards on 4–5 Dec, P1 before the tech rehearsal, P2 before the night), with the plan (phases A–D). It comes from the sessions' «What's left» lists checked again by the orchestrator's agents, without seeing them, on a frozen build of 943b651f: the projector, the console, the phone (on the production path), the setup and the night's flow, the cards, the playlists. Evidence: temp/verify-28nov/ (git-ignored). **How to check a build (reuse it for every "done"):** in apps/show, `npx vite build --outDir <scratch>/dist`; copy data/link's cloud-plan.json, media, media-index.json and the manifests into a scratch link folder per agent; start each agent's relay with `QUINA_LINK_DIR=<copy> node relay/server.ts --dist --dist-dir <scratch>/dist --port <own port> --repertoire 2026 [--test]`; Playwright from the repo's node_modules, `channel: 'chrome'`, headless, `--autoplay-policy=no-user-gesture-required --disable-audio-output`. Never `npm run link` against quina-dev, never the real Chrome profiles or data/.
