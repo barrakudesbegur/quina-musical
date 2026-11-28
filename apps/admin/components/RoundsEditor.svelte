@@ -9,7 +9,6 @@
   import type { ShowStore } from '../../../packages/ui/client/show.svelte.ts';
   import { flowOf } from '../../../packages/ui/flow.ts';
   import type { PlanSession } from '../state/plan-session.svelte.ts';
-  import type { CommandTracker } from '../state/commands.svelte.ts';
   import { roundCardType, roundSide, sideWarnings, type RoundKind } from '@quina/protocol';
   import { cardTypeLabel, knownCardTypes, type PrintedCardType } from '../../../packages/ui/data/card-types.ts';
   import {
@@ -29,9 +28,8 @@
   import { errorsAt } from '../logic/plan-check.ts';
   import { S } from '../strings.ts';
   import PrizeFields from './PrizeFields.svelte';
-  import CommandStatus from './CommandStatus.svelte';
 
-  let { session, show, commands, printed = null }: { session: PlanSession; show: ShowStore; commands: CommandTracker; printed?: readonly PrintedCardType[] | null } = $props();
+  let { session, show, printed = null }: { session: PlanSession; show: ShowStore; printed?: readonly PrintedCardType[] | null } = $props();
 
   /** The types to pick from and name: card-types.json's (knownCardTypes). */
   const types = $derived(knownCardTypes(printed));
@@ -53,7 +51,6 @@
 
   /** The round whose "Treure" was pressed once, awaiting the second press. */
   let confirming = $state<number | null>(null);
-  const engineTotal = $derived(show.state?.game.roundsTotal ?? null);
   const planTotal = $derived(session.draft.rounds.length);
   const listErrors = $derived(session.errors.filter((e) => e.startsWith('plan.rounds:')));
   /** Rounds 1..locked are fixed: played, in play, or being introduced. */
@@ -171,13 +168,6 @@
     <button type="button" onclick={() => session.update((p) => ({ ...p, rounds: addRound(p.rounds, 'normal', types) }))}>+ {S.rounds.add}</button>
   </div>
 
-  {#if engineTotal !== null && engineTotal !== planTotal}
-    <div class="panel__actions rounds__sync">
-      <p class="notice notice--warn">{S.rounds.engineTotal(engineTotal, planTotal)}</p>
-      <button type="button" onclick={() => commands.send('setGame', null, { roundsTotal: planTotal })} disabled={!commands.canSend}>{S.rounds.syncTotal}</button>
-      <CommandStatus record={commands.last('setGame')} />
-    </div>
-  {/if}
 </section>
 
 <style>

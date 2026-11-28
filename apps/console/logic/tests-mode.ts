@@ -3,7 +3,7 @@
 //
 // The relay says it on every hello (`relay.mode { test }`, the protocol's RelayMode, always sent; true only when started
 // with `--test`; the cloud never forwards it). No message means an older relay, so not a test run: the card stays hidden.
-import { PROTOCOL_VERSION, defaultCardType, isRelayMode, type CommandFields, type RelayMode, type RoundKind } from '@quina/protocol';
+import { PROTOCOL_VERSION, isRelayMode, type CommandFields, type RelayMode, type RoundKind } from '@quina/protocol';
 import type { CatalogCard } from '../../../packages/ui/data/catalog.ts';
 import type { GamePlan } from '../../../packages/ui/plan.ts';
 import { roundCards } from './future.ts';
@@ -29,11 +29,10 @@ export interface TestRound {
   songs: number | null;
 }
 
-/** The plan's rounds in order (without a plan, 1 … `roundsTotal`, as normal rounds), each with its song count. */
-export function testRounds(plan: Pick<GamePlan, 'rounds'> | null, roundsTotal: number, printed: ReadonlyMap<number, CatalogCard> | null): TestRound[] {
-  const planned = plan?.rounds.length
-    ? [...plan.rounds].sort((a, b) => a.number - b.number).map((r) => ({ number: r.number, kind: r.kind, cardType: r.cardType, side: r.side ?? 1 }))
-    : Array.from({ length: Math.max(0, roundsTotal) }, (_, i) => ({ number: i + 1, kind: 'normal' as RoundKind, cardType: defaultCardType('normal'), side: 1 }));
+/** The plan's rounds in order (the night's rounds are the plan's, whats-left 1.2; none without one), each with its song
+ * count. */
+export function testRounds(plan: Pick<GamePlan, 'rounds'> | null, printed: ReadonlyMap<number, CatalogCard> | null): TestRound[] {
+  const planned = [...(plan?.rounds ?? [])].sort((a, b) => a.number - b.number).map((r) => ({ number: r.number, kind: r.kind, cardType: r.cardType, side: r.side ?? 1 }));
   return planned.map(({ number, kind, cardType, side }) => ({ number, kind, songs: printed ? songCount(printed, cardType, side) : null }));
 }
 

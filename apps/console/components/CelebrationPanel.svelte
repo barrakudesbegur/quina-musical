@@ -18,7 +18,8 @@
   const winners = $derived(celebrationWinners(flow.winners, celebration));
   const song = $derived(celebration ? songTitleOf(celebration.winningSongId, snap, model.catalog) : null);
   const isDefault = $derived(model.defaultAction?.control === 'interval');
-  const lastRound = $derived(snap !== null && celebration !== null && celebration.round >= snap.game.roundsTotal);
+  /** The night's last round (the plan's, whats-left 1.2): no Interval after it, only the end of the night. */
+  const lastRound = $derived(snap?.lastRound === true);
 </script>
 
 {#if celebration}
@@ -40,12 +41,14 @@
 
     {#if celebration.kind === 'line'}
       <p class="note">{S.celebration.continueLine}</p>
+    {:else if lastRound}
+      <p class="note">{S.celebration.lastRound}</p>
     {:else}
       <button type="button" class="action action--big" data-color="orange" data-anim="press" data-default={isDefault || undefined} data-ring={isDefault ? 'orange' : undefined} disabled={!model.can('interval')} onclick={() => model.act('interval')}>
         <Icon name="next" /><span>{S.celebration.toInterval}</span>
         {#if isDefault}<WiiBadge button="a" />{/if}
       </button>
-      <p class="note">{lastRound ? S.celebration.lastRound : S.celebration.toIntervalNote}</p>
+      <p class="note">{S.celebration.toIntervalNote}</p>
     {/if}
   </section>
 {/if}

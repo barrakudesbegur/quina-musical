@@ -191,7 +191,6 @@ export const PACE = Object.freeze({
 });
 
 export const SCHEDULE = Object.freeze({
-  roundsTotal: 5,
   /**
    * A round's songs when its Queue and cards in play aren't known yet (later rounds, or no cards in play): this
    * year's 70 songs a Part (D100), measured over 1,500 tie-free Shuffles of the draft cards, with 2025's 190 normal

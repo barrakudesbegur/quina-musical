@@ -846,7 +846,6 @@ export class Show {
       announceWins: true,
       songsUntilWinner: 20,
       phaseOverride: null,
-      roundsTotal: 5,
       nextRecipe: null,
       ...settings,
       autoSounds: autoSoundsOf(settings),
@@ -1004,6 +1003,7 @@ export class Show {
         const introduced = this.intro && this.intro.round === number && this.intro.kind === kind ? this.intro : null;
         const cardType = c.cardType ?? introduced?.cardType ?? defaultCardType(kind);
         const side = c.side ?? introduced?.side ?? this.plannedSide(number, kind, cardType);
+        if (this.pastLastRound(reqId, c.cmd, number)) break;
         if (this.roundPool(cardType, side) == null) this.reject(reqId, c.cmd, 'invalid', `card type ${cardType} has no side ${side}`);
         else this.newRound(number, kind, cardType, side);
         break;
@@ -1013,6 +1013,7 @@ export class Show {
         const number = c.number ?? (this.scene === 'before' ? this.round.number : this.round.number + 1);
         const cardType = c.cardType ?? defaultCardType(kind);
         const side = c.side ?? this.plannedSide(number, kind, cardType);
+        if (this.pastLastRound(reqId, c.cmd, number)) break;
         if (this.roundPool(cardType, side) == null) this.reject(reqId, c.cmd, 'invalid', `card type ${cardType} has no side ${side}`);
         else this.roundIntro(number, kind, cardType, side);
         break;
@@ -1645,10 +1646,10 @@ export class Show {
   /**
    * A journal's settings over the Game's: its sounds through autoSoundsOf (a journal from before D237 has only the old
    * `finalLapStinger` and `voicesOn`, which the Game no longer keeps), its volumes to the sliders. A journal from before
-   * U205 also has the Hold music switch and delay: ignored.
+   * U205 also has the Hold music switch and delay, and one from before whats-left 1.2 its own round count: ignored.
    */
   takeSettings(settings: JournalSettings) {
-    const { finalLapStinger: _old, voicesOn: _oldVoices, holdMusicOn: _oldSwitch, holdMusicAfterSec: _oldDelay, ...rest } = settings;
+    const { finalLapStinger: _old, voicesOn: _oldVoices, holdMusicOn: _oldSwitch, holdMusicAfterSec: _oldDelay, roundsTotal: _oldCount, ...rest } = settings;
     this.game = { ...this.game, ...rest, autoSounds: autoSoundsOf(settings) };
     this.takeVolumes(this.game);
   }
@@ -2605,9 +2606,10 @@ export class Show {
     }
     if (this.tickCheck(now)) changed = true;
     if (this.maybeAutoCheck()) changed = true;
-    // A Bingo's (or the last card standing's) Celebration flows into the Interval by itself, so the show never stalls.
+    // A Bingo's (or the last card standing's) Celebration flows into the Interval by itself, so the show never stalls;
+    // the night's last round has no Interval after it: its Celebration plays on until the presenters end the night.
     const c = this.celebration;
-    if (this.scene === 'celebration' && c != null && c.kind !== 'line' && !this.pause && this.env.nowMs() >= c.sinceMs + FLOW.celebration.toIntervalSec * 1000) {
+    if (this.scene === 'celebration' && c != null && c.kind !== 'line' && !this.pause && !this.isLastRound() && this.env.nowMs() >= c.sinceMs + FLOW.celebration.toIntervalSec * 1000) {
       this.startInterval();
       changed = true;
     }
@@ -3660,9 +3662,18 @@ export class Show {
     return this.flush();
   }
 
-  /** The round in play is the night's last: the plan's last round, else `game.roundsTotal` (D155). */
+  /** The round in play is the night's last: the plan's last round (D155, whats-left 1.2). Without a plan (a dev run) no
+   * round is: the night goes on until it is ended by hand. */
   isLastRound(): boolean {
-    return this.round.number >= (this.plan?.rounds.length || this.game.roundsTotal);
+    return this.plan != null && this.round.number >= this.plan.rounds.length;
+  }
+
+  /** A round past the plan's last (whats-left 1.2: after the last round comes only the end of the night), refused. */
+  pastLastRound(reqId: string | null, cmd: 'roundIntro' | 'newRound', number: number): boolean {
+    const total = this.plan?.rounds.length;
+    if (total == null || number <= total) return false;
+    this.reject(reqId, cmd, 'invalid', `the plan has ${total} rounds: after the last one comes the end of the night`);
+    return true;
   }
 
   /** The scene changes, or Panic: the throw song stops for good. */
@@ -4005,7 +4016,7 @@ export class Show {
     const est = scheduleEstimate({
       nowMs,
       round: { ...this.round, targetEndMs: this.round.targetEndMs + 1000 * this.targetShiftSec, songs: this.expectedSongs, firstPlays: this.firstPlaysLeft(), pool: this.round.pool },
-      game: { roundsTotal: this.game.roundsTotal },
+      game: {},
       position: this.position,
       pace: this.game.pace,
       phase: this.phaseName(),

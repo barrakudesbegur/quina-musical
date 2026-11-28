@@ -178,8 +178,6 @@ export const S = {
     removeLabel: (name: string) => `Treure la ${name}`,
     confirmRemove: 'Segur? Treure',
     add: 'Afegir una quina',
-    engineTotal: (engine: number, plan: number) => `El show compta ${engine} quines i el pla en té ${plan}.`,
-    syncTotal: 'Enviar el nombre de quines al show',
   },
 
   prize: {

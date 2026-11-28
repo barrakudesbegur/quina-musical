@@ -92,6 +92,8 @@ export function defaultAction(input: DefaultActionInput): DefaultAction | null {
       return next(input);
     case 'celebration':
       if (flow.celebration?.kind === 'line') return next(input);
+      // The night's last round has no Interval after it (whats-left 1.2): the night ends from the menu.
+      if (state.lastRound) return null;
       if (flow.celebration?.kind === 'bingo' || flow.celebration?.kind === 'standing') return { control: 'interval', command: { cmd: 'interval' }, enabled: can('interval') };
       return null;
     case 'interval':

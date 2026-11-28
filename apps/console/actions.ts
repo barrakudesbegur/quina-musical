@@ -134,8 +134,6 @@ export const MINI = {
   // ---- the menu and its dialogs
   labelSave: { label: S.menu.labelSave },
   nightStart: { color: 'orange', icon: 'play', label: S.menu.start },
-  roundsMinus: { size: 's', icon: 'minus' },
-  roundsPlus: { size: 's', icon: 'plus' },
   wiiConnect: { label: S.wii.connect },
   wiiOpen: { label: S.wii.open },
   wiiClose: { icon: 'close', label: S.wii.close },

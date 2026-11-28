@@ -129,7 +129,6 @@ export function baseState(now: number): FullState {
       autoAdvanceFinal: false,
       songsUntilWinner: 3,
       phaseOverride: null,
-      roundsTotal: 8,
       nextRecipe: null,
       autoSounds: { ...AUTO_SOUNDS_DEFAULT },
     },

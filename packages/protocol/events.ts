@@ -128,7 +128,6 @@ export interface GameSettings {
   /** Phase placeholder when no cards are in play. */
   songsUntilWinner: number;
   phaseOverride: PhaseName | null;
-  roundsTotal: number;
   nextRecipe: string | null;
   /**
    * The volume sliders, percent 0–VOLUME_MAX (`setVolume`, vocabulary.ts VOLUME_KEYS and volumeDb). The state always has
@@ -596,8 +595,8 @@ export interface ShowState {
    * journaled. Null when the clock is fine. Optional in the type only, as `voice`: the engine always sends it.
    */
   audioStalled?: { sinceMs: number } | null;
-  /** The round in play is the night's last (the plan's last round, else `game.roundsTotal`): the corn-seed storm's
-   * button shows in it (D155; SceneContext.lastRound). */
+  /** The round in play is the night's last: the plan's last round (whats-left 1.2; never without a plan). The corn-seed
+   * storm's button shows in it (D155; SceneContext.lastRound), and after it comes only the end of the night. */
   lastRound: boolean;
   /** The Desgraciat's finale while it's on, else null (D161, D166–D172). */
   finale: FinaleInfo | null;

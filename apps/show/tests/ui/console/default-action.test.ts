@@ -25,6 +25,12 @@ test('in play it is Següent; during a Spin Següent stays the default but is di
   assert.deepEqual(of('hold'), { control: 'next', command: { cmd: 'next' }, enabled: true }, 'Següent ends Parlem (D142)');
 });
 
+test("the night's last round's Celebration: no Interval after it, so no default (the night ends from the menu)", () => {
+  assert.equal(of('celebrationBingo')?.control, 'interval');
+  const last = { ...FIXTURES.celebrationBingo(NOW).state, lastRound: true };
+  assert.equal(defaultAction(input(last)), null);
+});
+
 test('a Check: the big button, with the step each press expects; nothing under review or between cards', () => {
   assert.deepEqual(of('checkStarted'), { control: 'check', command: { cmd: 'checkNext', args: { claimId: 'cl-5', step: 0 } }, enabled: true }, 'the first reveal');
   assert.deepEqual(of('check')?.command, { cmd: 'checkNext', args: { claimId: 'cl-5', step: 2 } });

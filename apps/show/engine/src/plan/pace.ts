@@ -199,12 +199,12 @@ export interface ScheduleArgs extends PaceArgs {
    * among the songs whose slots are still to come (roundRemainingSec).
    */
   round: { number: number; kind?: RoundKind; targetEndMs?: number | null; songs?: number | null; firstPlays?: number; pool?: string };
-  game: { roundsTotal?: number; targetEndMs?: number | null };
+  game: { targetEndMs?: number | null };
   position: number;
   lineConfirmed?: boolean;
   /** The presenters locked the Pace: later rounds keep it, else they start at the default (PACE.defaultSec). */
   locked?: boolean;
-  /** From the Game plan; without one, `game.roundsTotal` normal rounds with the default Interval and no Throws. */
+  /** From the Game plan (the night's rounds, whats-left 1.2); without one, only the round in play counts. */
   later?: LaterRounds | null;
   /** Each pool's songs left, for later rounds' expected first plays; a pool missing here counts none. */
   pools?: Readonly<Record<string, PoolLeft>> | null;
@@ -219,7 +219,7 @@ export function scheduleEstimate({ nowMs, round, game, position, pace, phase, li
   const roundEndMs = nowMs + 1000 * roundRemainingSec({ position, pace, phase, lineConfirmed, kind: round.kind, songs: round.songs, firstPlays: round.firstPlays, cfg, nudge });
   // Each later round at the Pace it starts with, its first plays drawn from what no round has played yet: rounds of
   // new songs are slower (D174).
-  const kinds = plan ? plan.kinds : Array.from({ length: Math.max(0, (game.roundsTotal ?? cfg.roundsTotal) - round.number) }, () => 'normal' as const);
+  const kinds = plan?.kinds ?? [];
   const laterPace = locked ? pace : PACE.defaultSec;
   // Each pool's unplayed songs, used up round by round as the rounds on it play.
   const unplayed = new Map(Object.entries(pools ?? {}).map(([id, p]) => [id, Math.max(0, Math.min(p.unplayed, p.songs))]));
@@ -230,7 +230,7 @@ export function scheduleEstimate({ nowMs, round, game, position, pace, phase, li
     const left = id != null ? unplayed.get(id) ?? 0 : 0;
     const firstPlays = p && p.songs > 0 ? (Math.min(songs, p.songs) * left) / p.songs : 0;
     if (id != null) unplayed.set(id, left - firstPlays);
-    return sec + (plan ? plan.intervalSec : cfg.intervalSec) + roundLengthSec({ pace: laterPace, kind, firstPlays, cfg });
+    return sec + (plan?.intervalSec ?? 0) + roundLengthSec({ pace: laterPace, kind, firstPlays, cfg });
   }, plan ? plan.throwsSec : 0);
   const gameEndMs = roundEndMs + 1000 * later;
   return {

@@ -83,6 +83,8 @@ test('the scene rules: what each scene accepts (the agreed table, plus `before` 
     // Parlem in every Celebration (D117).
     ['celebration (Line)', { scene: 'celebration', celebrating: 'line' }, ['next', 'hold', 'confirmLine', 'newRound', 'claim', 'celebrationMusic']],
     ['celebration (Bingo)', { scene: 'celebration', celebrating: 'bingo' }, ['hold', 'confirmLine', 'newRound', 'roundIntro', 'claim', 'celebrationMusic', 'interval']],
+    // After the night's last round comes only the end of the night (whats-left 1.2): no Interval, no next round's intro.
+    ['celebration (Bingo), the last round', { scene: 'celebration', celebrating: 'bingo', lastRound: true }, ['hold', 'confirmLine', 'newRound', 'claim', 'celebrationMusic']],
     ['interval', { scene: 'interval' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'intervalSet', 'throw']],
     ['after', { scene: 'after' }, ['newRound', 'roundIntro', 'resumeAt', 'intervalSkip', 'storm']],
     ['roundStart with a set still on', { scene: 'roundStart', intervalMusic: true }, ['next', 'newRound', 'intervalSkip']],
@@ -770,9 +772,21 @@ test('the throw song (D138): a tap starts it from its hook, stops it, resumes it
   assert.deepEqual(rejected(h.send('storm')), ['wrongScene'], 'the storm only after the Game');
 });
 
+/** A plan of `count` normal rounds (the night's rounds are the plan's, whats-left 1.2). */
+function planOf(count: number) {
+  const plan = checkGamePlan({
+    v: 3, edition: '26', title: 'Quina Quina', prizeReveal: 'perRound', sponsors: [],
+    rounds: Array.from({ length: count }, (_, i) => ({ number: i + 1, kind: 'normal', line: [], bingo: [] })),
+    schedule: { startAtMs: null, roundMinutes: 25, intervalMinutes: 3, throws: [] },
+    cheatSheet: { claimRules: [], specialRoundRules: [] },
+  });
+  assert.ok(plan.ok);
+  return plan.plan;
+}
+
 test('the corn-seed storm in the night\'s last round (D155): the round holds first, so nothing lands unheard under it', () => {
   const h = flow();
-  h.send('setGame', { roundsTotal: 1 });
+  h.show.setPlan(planOf(1));
   landSongs(h, 2);
   assert.equal(h.show.snapshot().lastRound, true);
   const position = h.show.position;
@@ -783,6 +797,7 @@ test('the corn-seed storm in the night\'s last round (D155): the round holds fir
   assert.equal(h.show.position, position, 'nothing landed');
   // Not in an earlier round.
   const e = flow(5);
+  e.show.setPlan(planOf(2));
   landSongs(e, 1);
   assert.equal(e.show.snapshot().lastRound, false);
   assert.deepEqual(rejected(e.send('storm')), ['wrongScene']);
@@ -961,4 +976,40 @@ test('prizes are revealed as a round is introduced and by the presenters, once e
   h.send('roundIntro', { number: 2 });
   const intro = journalOf(h.log).filter((e) => e.kind === 'prizes.revealed').at(-1);
   assert.ok(intro?.kind === 'prizes.revealed' && intro.round === 2 && intro.by === 'intro');
+});
+
+test("the night's rounds are the plan's (whats-left 1.2): after the last round's Bingo comes only the end of the night", () => {
+  const h = flow();
+  h.show.setPlan(planOf(12));
+  assert.equal(h.show.snapshot().lastRound, false, 'round 1 of 12');
+  assert.equal('roundsTotal' in h.show.snapshot().game, false, 'no round count of its own');
+  // Round 12, the last: its Bingo's Celebration has no Interval after it, by itself or by a press.
+  h.send('roundIntro', { number: 12 });
+  h.send('newRound');
+  h.send('next');
+  h.advance(FLOW.shuffleSec + 0.1);
+  h.until(() => h.show.status === 'playing' && h.show.position === 0);
+  landSongs(h, 13);
+  assert.deepEqual([h.show.round.number, h.show.snapshot().lastRound], [12, true]);
+  h.send('claim', { cardId: card.id, kind: 'bingo' });
+  h.pressCue();
+  assert.deepEqual([h.show.scene, h.show.celebration?.kind], ['celebration', 'bingo']);
+  h.advance(FLOW.celebration.toIntervalSec + 5);
+  assert.equal(h.show.scene, 'celebration', 'no Interval by itself');
+  assert.deepEqual(rejected(h.send('interval')), ['wrongScene']);
+  assert.deepEqual(rejected(h.send('roundIntro')), ['wrongScene'], 'no round 13 from the Celebration');
+  assert.deepEqual(rejected(h.send('newRound')), ['invalid'], 'nor its Shuffle');
+  // The end of the night, from the menu; a round 13 can't be introduced after it either (an earlier one can, D-undo).
+  h.send('endGame');
+  assert.equal(h.show.scene, 'after');
+  assert.deepEqual(rejected(h.send('roundIntro')), ['invalid']);
+  assert.deepEqual(rejected(h.send('roundIntro', { number: 12 })), []);
+  // An earlier round's Bingo still flows into its Interval.
+  const e = flow(5);
+  e.show.setPlan(planOf(12));
+  landSongs(e, 14);
+  e.send('claim', { cardId: card.id, kind: 'bingo' });
+  e.pressCue();
+  e.advance(FLOW.celebration.toIntervalSec + 0.1);
+  assert.deepEqual([e.show.scene, e.show.interval?.nextRound], ['interval', 2]);
 });

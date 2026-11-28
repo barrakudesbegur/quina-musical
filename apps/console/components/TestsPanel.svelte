@@ -20,7 +20,7 @@
   const model = getConsole();
   const uid = $props.id();
 
-  const rounds = $derived(testRounds(model.plan, model.show.state?.game.roundsTotal ?? 0, model.catalog?.cards ?? null));
+  const rounds = $derived(testRounds(model.plan, model.catalog?.cards ?? null));
   let picked = $state<number | null>(null);
   const round = $derived(rounds.find((r) => r.number === picked) ?? rounds.find((r) => r.number === model.show.state?.round.number) ?? rounds[0] ?? null);
   const max = $derived(testSongsMax(round));

@@ -111,7 +111,7 @@
       <PlanErrors errors={session.errors} />
       <PlanMeta {session} printed={printedTypes} />
       <CardsInPlay {show} {commands} {cardTypes} {catalogFailed} types={knownTypes} />
-      <RoundsEditor {session} {show} {commands} printed={printedTypes} />
+      <RoundsEditor {session} {show} printed={printedTypes} />
       <SponsorsEditor {session} />
       <SponsorImport {session} />
       {#if session.store.kind === 'cloud'}<LogoBulkUpload store={session.store} />{/if}

@@ -10,7 +10,6 @@ const COMMON = {
   autoAdvanceFinal: false,
   songsUntilWinner: 30,
   phaseOverride: null,
-  roundsTotal: 12,
 };
 
 /**

@@ -71,7 +71,8 @@ const RULES = {
   suspense: PLAY,
   confirmLine: ['before', 'play', 'celebration'],
   newRound: (c) => c.scene !== 'check',
-  roundIntro: (c) => c.scene === 'before' || c.scene === 'interval' || c.scene === 'after' || celebratingBingo(c),
+  // Not from the night's last round's Celebration: after it comes only the end of the night (whats-left 1.2).
+  roundIntro: (c) => c.scene === 'before' || c.scene === 'interval' || c.scene === 'after' || (celebratingBingo(c) && c.lastRound !== true),
   claim: ['play', 'check', 'celebration'],
   checkStart: ['check'],
   // The presenter-paced Check (D107–D110). A Claim under review waits in its Check scene with whatever was playing
@@ -83,7 +84,8 @@ const RULES = {
   reviewEnd: ['check'],
   // In a Check it picks the music the Celebration will start with (`state.celebrationChoice`).
   celebrationMusic: ['celebration', 'check'],
-  interval: celebratingBingo,
+  // Not after the night's last round (whats-left 1.2): its Celebration plays on until the end of the night.
+  interval: (c) => celebratingBingo(c) && c.lastRound !== true,
   // Whenever a music set plays: the Interval, `after`, Pausa.
   intervalSkip: (c) => c.intervalMusic ?? (c.paused || INTERVAL_MUSIC.includes(c.scene)),
   intervalSet: ['interval'],

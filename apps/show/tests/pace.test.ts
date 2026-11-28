@@ -58,7 +58,8 @@ test('schedule: a round started on its target has no Drift, and later rounds add
   const nowMs = 1_000_000;
   const pace = PACE.defaultSec;
   const round = { number: 1, targetEndMs: nowMs + 1000 * roundLengthSec({ pace }) };
-  const est = scheduleEstimate({ nowMs, round, game: { roundsTotal: 3 }, position: -1, pace, phase: 'early', lineConfirmed: false });
+  const later = { kinds: ['normal', 'normal'] as const, intervalSec: 150, throwsSec: 0 };
+  const est = scheduleEstimate({ nowMs, round, game: {}, position: -1, pace, phase: 'early', lineConfirmed: false, later: { ...later, kinds: [...later.kinds] } });
   assert.ok(Math.abs(est.roundDriftSec) < 0.05 * roundLengthSec({ pace }), `drift ${est.roundDriftSec}`);
   assert.ok(est.gameEndMs > est.roundEndMs + 2 * 1000 * roundLengthSec({ pace: 14 }));
   assert.equal(est.gameDriftSec, null);
@@ -86,10 +87,12 @@ test('auto-advance lands on the phrase boundary nearest the slot: 8 bars first, 
 test('the Schedule follows the plan: each round by its kind, the planned Interval, and the breaks still to come', () => {
   const nowMs = 1_700_000_000_000;
   const round = { number: 2, targetEndMs: null };
-  const base = { nowMs, round, game: { roundsTotal: 4 }, position: 9, pace: 14, phase: 'early', lineConfirmed: false } as const;
-  const none = scheduleEstimate(base);
-  const sameAsDefault = scheduleEstimate({ ...base, later: { kinds: ['normal', 'normal'], intervalSec: 150, throwsSec: 0 } });
-  assert.equal(sameAsDefault.gameEndMs, none.gameEndMs, 'two normal rounds and the default Interval: as without a plan');
+  const base = { nowMs, round, game: {}, position: 9, pace: 14, phase: 'early', lineConfirmed: false } as const;
+  // Without a plan only the round in play counts (the night's rounds are the plan's, whats-left 1.2).
+  const bare = scheduleEstimate(base);
+  assert.equal(bare.gameEndMs, bare.roundEndMs);
+  const none = scheduleEstimate({ ...base, later: { kinds: ['normal', 'normal'], intervalSec: 150, throwsSec: 0 } });
+  assert.ok(none.gameEndMs > bare.gameEndMs + 2 * 150_000, 'two normal rounds and their Intervals');
   const withBreak = scheduleEstimate({ ...base, later: { kinds: ['normal', 'normal'], intervalSec: 150, throwsSec: 300 } });
   assert.equal(withBreak.gameEndMs - none.gameEndMs, 300_000, 'a 5-minute break moves the end 5 minutes');
   const desgraciat = scheduleEstimate({ ...base, later: { kinds: ['desgraciat', 'normal'], intervalSec: 150, throwsSec: 0 } });

@@ -147,12 +147,6 @@
       <section class="menu-group" aria-labelledby="{uid}-night">
         <h3 class="menu-group__title" id="{uid}-night"><Icon name="moon" />{S.menu.night}</h3>
         {#if snap}
-          <div class="menu-group__row stepper">
-            <span class="stepper__label" id="{uid}-rounds">{S.menu.roundsTotal}</span>
-            <MiniButton {...MINI.roundsMinus} class="stepper__button" aria-label={S.menu.roundsMinus} disabled={!model.can('setGame') || snap.game.roundsTotal <= 1} onclick={() => model.act('setGame', { roundsTotal: snap.game.roundsTotal - 1 })} />
-            <output class="stepper__value" aria-labelledby="{uid}-rounds">{snap.game.roundsTotal}</output>
-            <MiniButton {...MINI.roundsPlus} class="stepper__button" aria-label={S.menu.roundsPlus} disabled={!model.can('setGame') || snap.game.roundsTotal >= 20} onclick={() => model.act('setGame', { roundsTotal: snap.game.roundsTotal + 1 })} />
-          </div>
           <p class="menu-end">
             <span class="menu-end__text">
               <span class="menu-end__label">{S.menu.gameEnd}</span>

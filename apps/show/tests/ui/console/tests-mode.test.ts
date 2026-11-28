@@ -78,18 +78,18 @@ const PLAN: Pick<GamePlan, 'rounds'> = {
 };
 
 test('the picker: the plan’s rounds in order, each with its songs from the printed cards', () => {
-  const rounds = testRounds(PLAN, 0, PRINTED);
+  const rounds = testRounds(PLAN, PRINTED);
   assert.deepEqual(rounds, [
     { number: 1, kind: 'normal', songs: 18 },
     { number: 2, kind: 'special', songs: 12 },
     { number: 3, kind: 'desgraciat', songs: 0 },
   ]);
-  assert.deepEqual(testRounds(PLAN, 0, null).map((r) => r.songs), [null, null, null], 'before cards.json loads');
-  assert.deepEqual(testRounds(null, 2, PRINTED), [{ number: 1, kind: 'normal', songs: 18 }, { number: 2, kind: 'normal', songs: 18 }], 'no plan: 1 … roundsTotal');
+  assert.deepEqual(testRounds(PLAN, null).map((r) => r.songs), [null, null, null], 'before cards.json loads');
+  assert.deepEqual(testRounds(null, PRINTED), [], 'no plan: no rounds to jump to (the night\'s rounds are the plan\'s)');
 });
 
 test('«Anar a la ronda N»: { round }; «després de K cançons»: { round, songs: K }, 0 … the round’s songs', () => {
-  const [first] = testRounds(PLAN, 0, PRINTED);
+  const [first] = testRounds(PLAN, PRINTED);
   assert.deepEqual(testJumpArgs(first!.number, null), { round: 1 });
   assert.deepEqual(testJumpArgs(first!.number, 0), { round: 1, songs: 0 }, 'K = 0 is sent, not dropped');
   assert.equal(testSongsMax(first!), 18);

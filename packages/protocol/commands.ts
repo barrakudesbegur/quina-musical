@@ -85,7 +85,6 @@ export const COMMANDS = Object.freeze({
     autoAdvanceFinal: { type: 'boolean', optional: true },
     songsUntilWinner: { type: 'integer', optional: true, min: 0, max: 999 },
     phaseOverride: { type: 'phase', optional: true, nullable: true },
-    roundsTotal: { type: 'integer', optional: true, min: 1, max: 20 },
     /** The remote's shake gesture on or off (D148), the same on every console. The engine only keeps it. */
     remoteShake: { type: 'boolean', optional: true },
     /** The phones' «LÍNIA!»/«QUINA!» over a card that completes one (GameSettings.announceWins, default true). The engine

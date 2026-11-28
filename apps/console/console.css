@@ -3814,34 +3814,6 @@ kbd {
   }
 }
 
-.stepper {
-  align-items: center;
-}
-
-.stepper__label {
-  flex: 1;
-}
-
-.menu-group .stepper__label {
-  font-size: var(--text-sm);
-  font-weight: var(--font-weight-strong);
-  white-space: nowrap;
-}
-
-
-.menu-group .stepper__value {
-  min-width: 2ch;
-  font-family: var(--font-display);
-  text-transform: uppercase;
-  font-size: 1.875rem;
-}
-
-.stepper__value {
-  min-width: 3ch;
-  font-size: var(--text-xl);
-  font-weight: var(--font-weight-strong);
-  text-align: center;
-}
 
 .link-list {
   display: flex;
