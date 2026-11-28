@@ -112,7 +112,8 @@ export class PlayerApp {
   banner = $state.raw<BannerState>(NO_BANNER);
 
   // ---- derived ------------------------------------------------------------------------------------------
-  plan = $derived(viewPlan(this.state, this.feed));
+  /** planOf's plan, dressed by a demo feed (DemoFeed.dressPlan); a closure, as `feed` is set in the constructor. */
+  plan = $derived.by(() => viewPlan(this.state, this.feed));
   round = $derived(currentRound(this.state));
   scene = $derived(this.state?.scene ?? 'before');
   focusRound = $derived(focusRoundNumber(this.state));
