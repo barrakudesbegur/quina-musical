@@ -47,6 +47,10 @@ test("the laptop's plan follows both files and saves a checked local plan", () =
 
     // A save on the laptop's network: checked, for the cloud's edition, and never older than what it replaces.
     assert.equal(laptop.saveLocal({ ...PLAN, rounds: 'many' }, 2000).ok, false);
+    // A logo that isn't an uploaded one is refused on the laptop too (D287's stickers), not quietly dropped.
+    const foreign = laptop.saveLocal({ ...PLAN, sponsors: [{ id: 'x', name: 'X', logo: 'https://example.com/x.png' }] }, 2000);
+    assert.equal(foreign.ok, false);
+    assert.match(foreign.ok ? '' : foreign.errors.join(), /plan\.sponsors\[0\]\.logo/);
     assert.deepEqual(laptop.saveLocal({ ...PLAN, edition: '99' }, 2000), { ok: false, errors: ["plan.edition: the cloud's plan is for edition " + PLAN.edition] });
     const saved = laptop.saveLocal(titled('local'), 500); // this laptop's clock is behind the cloud's save
     assert.ok(saved.ok);

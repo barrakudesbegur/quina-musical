@@ -233,3 +233,22 @@ test('the card price before a round: per regular round still to play, or the esp
   const ten = { rounds: Array.from({ length: 10 }, (_, i) => ({ number: i + 1, kind: 'normal' as const, cardType: 'normal', line: [], bingo: [] })) };
   assert.equal(roundCardPrice(ten, 1, normal), 1500);
 });
+
+test("a sponsor's logo is an uploaded one (D287's stickers draw it on a canvas): null when reading anything else, refused when writing", () => {
+  const uploaded = '/media/0106917b131317bbb9e97533af3b2a67.jpg';
+  // The plan's own sponsor (a prize names it) first, then one sponsor per logo.
+  const withLogos = (...logos: (string | null)[]) => ({ ...good(), sponsors: [...good().sponsors, ...logos.map((logo, i) => ({ id: `s-${i}`, name: `S ${i}`, logo }))] });
+  const outside = ['https://example.com/logo.png', '//cdn.example.com/a.png', '/media/../x.png', '/media/0106917B131317BBB9E97533AF3B2A67.jpg', '/media/0106917b131317bbb9e97533af3b2a67.webp', 'data:image/png;base64,AAAA'];
+  // Reading (a stored or cached plan): it still loads, without those logos.
+  const read = checkGamePlan(withLogos(uploaded, null, ...outside));
+  assert.equal(read.ok, true);
+  if (!read.ok) return;
+  assert.deepEqual(read.plan.sponsors.map((s) => s.logo), [null, uploaded, null, ...outside.map(() => null)]);
+  assert.deepEqual(checkGamePlan(read.plan, { write: true }), read, 'what reading leaves passes a write');
+  // Writing: each one outside is named, an uploaded one and null pass.
+  const written = checkGamePlan(withLogos(uploaded, null, ...outside), { write: true });
+  assert.equal(written.ok, false);
+  if (written.ok) return;
+  assert.deepEqual(written.errors.map((e) => e.split(':')[0]), outside.map((_, i) => `plan.sponsors[${i + 3}].logo`));
+  assert.equal(checkGamePlan(withLogos(uploaded, null), { write: true }).ok, true);
+});

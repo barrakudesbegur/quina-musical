@@ -96,7 +96,7 @@ export class LaptopPlan {
    * cloud's copy when there is one. It becomes the newest plan at once.
    */
   saveLocal(json: unknown, nowMs: number): LocalSave {
-    const check = checkGamePlan(json);
+    const check = checkGamePlan(json, { write: true });
     if (!check.ok) return check;
     const cloud = readStoredPlan(path.join(this.dir, CLOUD_PLAN_FILE));
     if (cloud?.plan && cloud.plan.edition !== check.plan.edition) return { ok: false, errors: [`plan.edition: the cloud's plan is for edition ${cloud.plan.edition}`] };

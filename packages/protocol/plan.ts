@@ -131,11 +131,28 @@ type Rec = Record<string, unknown>;
 const isRec = (v: unknown): v is Rec => typeof v === 'object' && v !== null && !Array.isArray(v);
 
 /**
+ * A sponsor's logo as Admin's and the edition tool's uploads store it (`/media/<32 hex>.png` or `.jpg`): on the same
+ * origin as every screen, so the stickers (D287) can draw it on a canvas and read its pixels. A logo on another origin
+ * without CORS would taint the canvas.
+ */
+export const LOGO_PATH_RE = /^\/media\/[0-9a-f]{32}\.(png|jpg)$/;
+
+export interface PlanCheckOptions {
+  /**
+   * A plan being written (Admin's PUT /api/plan, the link's `link.plan`, the relay's local save, the edition tool's
+   * upload): a sponsor's logo that isn't an uploaded one (LOGO_PATH_RE) is an error. Reading (the default: a stored
+   * plan, a cached one, the feed's) turns it into null instead, so a plan stored before the rule still loads.
+   */
+  write?: boolean;
+}
+
+/**
  * Check a Game plan, for example one pasted into Admin's import box. It never throws. It collects every
  * problem with its JSON path, so whoever prepared the file can fix them all at once. Unknown keys are errors,
- * so a typo can't silently drop a prize.
+ * so a typo can't silently drop a prize. A sponsor's logo must be an uploaded one (LOGO_PATH_RE): refused when
+ * writing, null when reading (`options.write`).
  */
-export function checkGamePlan(json: unknown): PlanCheck {
+export function checkGamePlan(json: unknown, { write = false }: PlanCheckOptions = {}): PlanCheck {
   const errors: string[] = [];
   const err = (path: string, msg: string) => errors.push(`${path}: ${msg}`);
 
@@ -198,7 +215,10 @@ export function checkGamePlan(json: unknown): PlanCheck {
     const id = str(s, 'id', path, { max: LIMITS.id });
     if (id !== null && !ID_RE.test(id)) err(`${path}.id`, 'use lowercase letters, digits and dashes');
     if (id !== null && sponsors.some((o) => o.id === id)) err(`${path}.id`, `repeats "${id}"`);
-    sponsors.push({ id: id ?? '', name: str(s, 'name', path) ?? '', logo: str(s, 'logo', path, { nullable: true, max: 500 }) });
+    const logo = str(s, 'logo', path, { nullable: true, max: 500 });
+    const uploaded = logo !== null && LOGO_PATH_RE.test(logo);
+    if (write && logo !== null && !uploaded) err(`${path}.logo`, 'must be a logo uploaded in Admin (/media/<32 hex digits>.png or .jpg), or null');
+    sponsors.push({ id: id ?? '', name: str(s, 'name', path) ?? '', logo: uploaded ? logo : null });
   });
   const sponsorIds = new Set(sponsors.map((s) => s.id));
 
