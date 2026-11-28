@@ -637,6 +637,36 @@ describe('the Game plan and its media (Admin)', () => {
     expect((await put(PLAN)).status).toBe(200);
   });
 
+  it('every save keeps the plan it replaced, the newest 20, with time and size; one comes back whole to restore it', async () => {
+    expect((await put({ ...PLAN, title: 'Abans' })).status).toBe(200);
+    const before = await savedAt();
+    expect((await put({ ...PLAN, title: 'Buit' })).status).toBe(200); // the bad save
+    const { history } = await getJson<{ history: { savedAtMs: number; replacedAtMs: number; bytes: number; title: string | null; rounds: number | null; sponsors: number | null }[] }>('/api/plan/history');
+    expect(history[0]).toMatchObject({ savedAtMs: before, title: 'Abans', rounds: PLAN.rounds.length, sponsors: PLAN.sponsors.length });
+    expect(history[0]?.bytes).toBe(new TextEncoder().encode(JSON.stringify({ ...PLAN, title: 'Abans' })).byteLength);
+    expect(history[0]?.replacedAtMs).toBeGreaterThanOrEqual(before ?? Infinity);
+    // Shaped like the edition tool's backups: { savedAtMs, plan }, so `edition upload <file>` restores it.
+    expect(await getJson(`/api/plan/history/${before}`)).toEqual({ savedAtMs: before, plan: { ...PLAN, title: 'Abans' } });
+    expect((await SELF.fetch(`${BASE}/api/plan/history/12345`)).status).toBe(404);
+
+    // The laptop's newer plan (link.plan) replaces it too, and is kept the same way.
+    const { client: link } = await laptop(null);
+    const buit = await savedAt();
+    link.send({ v, type: 'link.plan', plan: { ...PLAN, title: 'Del portàtil' }, savedAtMs: now(), sentAtMs: now() });
+    expect(await link.next()).toMatchObject({ type: 'cloud.plan', plan: { title: 'Del portàtil' } });
+    expect((await getJson<{ history: { savedAtMs: number; title: string }[] }>('/api/plan/history')).history[0]).toMatchObject({ savedAtMs: buit, title: 'Buit' });
+
+    for (let i = 0; i < 25; i++) expect((await put({ ...PLAN, title: `Versió ${i}` })).status).toBe(200);
+    const kept = (await getJson<{ history: { savedAtMs: number; title: string }[] }>('/api/plan/history')).history;
+    expect(kept).toHaveLength(20);
+    expect(kept[0]?.title).toBe('Versió 23');
+    expect(kept.map((h) => h.savedAtMs)).toEqual([...kept.map((h) => h.savedAtMs)].sort((a, b) => b - a));
+    await evictDurableObject(roomOf(env), { webSockets: 'close' }); // kept across a restart
+    expect((await getJson<{ history: unknown[] }>('/api/plan/history')).history).toHaveLength(20);
+    expect((await SELF.fetch('https://quina.example/api/plan/history')).status).toBe(403); // organizers only
+    expect((await put(PLAN)).status).toBe(200);
+  });
+
   it('logos: a PNG or JPEG by content hash, its JPEG XL beside it, public and immutable; never WebP or SVG', async () => {
     const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4]);
     const jxl = new Uint8Array([0xff, 0x0a, 9, 8, 7, 6]);

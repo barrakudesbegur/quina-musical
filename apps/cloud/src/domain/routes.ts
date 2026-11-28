@@ -2,7 +2,7 @@
 // (the player app, covers) never reach the Worker: wrangler.jsonc's `run_worker_first` lists only these paths.
 import type { AccessRule } from '../access.ts';
 
-export type RouteName = 'feed' | 'show' | 'console' | 'plan' | 'upload' | 'uploadJxl' | 'media' | 'sync' | 'games' | 'resume' | 'phones' | 'notice' | 'sounds' | 'ping' | 'export' | 'stats' | 'health';
+export type RouteName = 'feed' | 'show' | 'console' | 'plan' | 'planHistory' | 'upload' | 'uploadJxl' | 'media' | 'sync' | 'games' | 'resume' | 'phones' | 'notice' | 'sounds' | 'ping' | 'export' | 'stats' | 'health';
 
 export interface Route {
   name: RouteName;
@@ -34,6 +34,11 @@ export const ROUTES: Readonly<Record<string, Route>> = Object.freeze({
   // A PUT names the version it was based on (domain/plan-versions.ts): a stale one is refused (409).
   '/api/plan': { name: 'plan', websocket: false, access: ANYONE_SIGNED_IN, methods: ['GET', 'PUT'] },
   /**
+   * The plans saves replaced, newest first (time, size, title): GET /api/plan/history, and one of them whole at
+   * /api/plan/history/<savedAtMs> (PLAN_HISTORY_ROUTE), to restore it with the edition tool.
+   */
+  '/api/plan/history': { name: 'planHistory', websocket: false, access: ANYONE_SIGNED_IN, methods: GET },
+  /**
    * Admin's media: POST a logo or prize picture (the body is the PNG or JPEG fallback, `?name=` optional; answers
    * its /media/ path and key), GET the list for the picker. The laptop's token too: the edition tool uploads the
    * sponsors' logos with the plan that names them.
@@ -64,6 +69,10 @@ export const ROUTES: Readonly<Record<string, Route>> = Object.freeze({
 export const MEDIA_ROUTE: Route = Object.freeze({ name: 'media', websocket: false, access: null, methods: GET });
 const MEDIA_PATH = /^\/media\/([0-9a-f]{32})\.(webp|png|jpg|jxl)$/;
 
+/** One replaced plan, whole: GET /api/plan/history/<savedAtMs>. */
+export const PLAN_HISTORY_ROUTE: Route = Object.freeze({ name: 'planHistory', websocket: false, access: ANYONE_SIGNED_IN, methods: GET });
+const PLAN_HISTORY_PATH = /^\/api\/plan\/history\/(\d{1,16})$/;
+
 /** Admin attaches the JPEG XL to an uploaded fallback: PUT /api/media/<key>.jxl (the body is the JXL). */
 export const MEDIA_JXL_ROUTE: Route = Object.freeze({ name: 'uploadJxl', websocket: false, access: ANYONE_SIGNED_IN, methods: ['PUT'] });
 const MEDIA_JXL_PATH = /^\/api\/media\/([0-9a-f]{32})\.jxl$/;
@@ -92,6 +101,7 @@ export function findRoute(pathname: string): Route | null {
   if (Object.hasOwn(ROUTES, pathname)) return ROUTES[pathname] ?? null;
   if (SYNC_PATH.test(pathname)) return SYNC_ROUTE;
   if (MEDIA_JXL_PATH.test(pathname)) return MEDIA_JXL_ROUTE;
+  if (PLAN_HISTORY_PATH.test(pathname)) return PLAN_HISTORY_ROUTE;
   return MEDIA_PATH.test(pathname) ? MEDIA_ROUTE : null;
 }
 
@@ -104,6 +114,12 @@ export function syncTarget(pathname: string): SyncTarget | null {
   if (blobs) return { resource: 'blobs' };
   if (repertoire) return { resource: 'manifest', repertoire };
   return prune ? { resource: 'prune' } : { resource: 'overview' };
+}
+
+/** The version in a /api/plan/history/<savedAtMs> path, or null (the list). */
+export function planHistoryVersion(pathname: string): number | null {
+  const match = PLAN_HISTORY_PATH.exec(pathname);
+  return match ? Number(match[1]) : null;
 }
 
 /** The media id in a /media/ path, or null. */

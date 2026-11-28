@@ -2,7 +2,7 @@
 // edition's GameRoom. Static files never get here (wrangler.jsonc `run_worker_first`).
 import { identityLabel, requireAccess, type AccessEnv } from './access.ts';
 import { CLOUD } from './config.ts';
-import { findRoute, jxlUploadKey, mediaId, SYNC_METHODS, syncTarget, wantsJxl, type SyncTarget } from './domain/routes.ts';
+import { findRoute, jxlUploadKey, mediaId, planHistoryVersion, SYNC_METHODS, syncTarget, wantsJxl, type SyncTarget } from './domain/routes.ts';
 import { PLAN_BASE_HEADER, parsePlanBase } from './domain/plan-versions.ts';
 import {
   BLOB_PAGE,
@@ -71,6 +71,13 @@ export default {
         }
         const saved = await room.setPlan(parsed, base);
         return json(saved, {}, saved.ok ? 200 : saved.stale ? 409 : 400);
+      }
+      case 'planHistory': {
+        const version = planHistoryVersion(url.pathname);
+        if (version === null) return json({ history: await room.planHistory() });
+        const plan = await room.planVersion(version);
+        // As the edition tool's backups are shaped, so `npm run edition -- upload <file>` restores it.
+        return plan === null ? text(404, `no replaced plan saved at ${version}`) : json({ savedAtMs: version, plan });
       }
       case 'upload': {
         if (request.method === 'GET') return json({ media: await room.listMedia() });

@@ -17,6 +17,8 @@ export const CLOUD = Object.freeze({
   maxNoticeLength: 200,
   /** The largest Game plan Admin may save (bytes of JSON). Logos are files, never inside it. */
   maxPlanBytes: 256 * 1024,
+  /** How many replaced plans the GameRoom keeps (newest first, at most maxPlanBytes each), to restore a bad save. */
+  planHistory: 20,
   /**
    * Media Admin uploads (sponsor logos, prize pictures), kept in the GameRoom. Each is a pair, keyed by the
    * fallback's content hash: the PNG or JPEG at /media/<key>.png|.jpg and its JPEG XL at /media/<key>.jxl (the

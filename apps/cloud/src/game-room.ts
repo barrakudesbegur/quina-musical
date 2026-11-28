@@ -31,8 +31,8 @@ import {
   type ResumeToken,
 } from '@quina/protocol';
 import type { AccessEnv } from './access.ts';
-import type { EditionExport, GameSummary, MediaItem, MediaSave, PhonesNow, PlanSave, ResumeResult, RoomStats, SettingSave } from './api.ts';
-import type { PlanVersion } from './domain/plan-versions.ts';
+import type { EditionExport, GameSummary, MediaItem, MediaSave, PhonesNow, PlanHistoryItem, PlanSave, ResumeResult, RoomStats, SettingSave } from './api.ts';
+import { historyItem, type PlanVersion } from './domain/plan-versions.ts';
 import { CLOUD } from './config.ts';
 import { nextClockOffset, toCloudMs } from './domain/clock.ts';
 import { flaggedDecisions } from './domain/flags.ts';
@@ -523,7 +523,8 @@ export class GameRoom extends DurableObject<RoomEnv> {
   /**
    * Save the whole plan, based on version `base` (the savedAtMs it was loaded at; null: there was none): refused
    * when the plan here is another version, so a page that never loaded it, or loaded an older one, can't replace
-   * it. Checked with the protocol's checkGamePlan, for this edition only. Everyone gets it.
+   * it. Checked with the protocol's checkGamePlan, for this edition only. Everyone gets it; the plan it replaces
+   * goes to the history.
    */
   setPlan(json: unknown, base: PlanVersion): PlanSave {
     this.counted();
@@ -535,10 +536,35 @@ export class GameRoom extends DurableObject<RoomEnv> {
     if (!check.ok) return check;
     // The volumes stay the cloud's: only the tablet's sliders change them, through the journal (domain/volumes.ts).
     const plan = keepingVolumes(check.plan, this.room.plan ?? null);
+    this.keepReplacedPlan();
     // Never older than the plan it replaces, so a laptop's copy saved a moment ago can't win over it.
     const savedAtMs = Math.max(Date.now(), (own ?? 0) + 1);
     this.adoptPlan(plan, savedAtMs);
     return { ok: true, plan, savedAtMs };
+  }
+
+  /** The plans saves replaced, newest first. */
+  planHistory(): PlanHistoryItem[] {
+    this.counted();
+    return this.rows('SELECT saved_at_ms, replaced_at_ms, body FROM plan_history ORDER BY saved_at_ms DESC').map((r) => historyItem(Number(r.saved_at_ms), Number(r.replaced_at_ms), String(r.body)));
+  }
+
+  /** One replaced plan, as it was saved, or null. */
+  planVersion(savedAtMs: number): unknown {
+    this.counted();
+    const row = this.rows('SELECT body FROM plan_history WHERE saved_at_ms = ?', savedAtMs)[0];
+    return row ? (JSON.parse(String(row.body)) as unknown) : null;
+  }
+
+  /**
+   * Before a save (Admin's, the edition tool's, the laptop's link.plan) replaces the plan: keep it, and only the
+   * newest CLOUD.planHistory. The volumes folding in (foldVolumes) aren't saves and keep nothing.
+   */
+  private keepReplacedPlan(): void {
+    const plan = this.room.plan;
+    if (!plan) return;
+    this.rows('INSERT INTO plan_history (saved_at_ms, replaced_at_ms, body) VALUES (?, ?, ?) ON CONFLICT (saved_at_ms) DO NOTHING', this.planSavedAtMs() ?? 0, Date.now(), JSON.stringify(plan));
+    this.rows('DELETE FROM plan_history WHERE saved_at_ms NOT IN (SELECT saved_at_ms FROM plan_history ORDER BY saved_at_ms DESC LIMIT ?)', CLOUD.planHistory);
   }
 
   /**
@@ -615,7 +641,10 @@ export class GameRoom extends DurableObject<RoomEnv> {
     const savedAtMs = Math.min(ctx.toCloudMs(link.savedAtMs), now);
     const own = this.planSavedAtMs();
     const same = JSON.stringify(plan) === JSON.stringify(this.room.plan ?? null);
-    if (!same && (own === null || savedAtMs > own)) return this.adoptPlan(plan, savedAtMs);
+    if (!same && (own === null || savedAtMs > own)) {
+      this.keepReplacedPlan();
+      return this.adoptPlan(plan, savedAtMs);
+    }
     this.reply(ws, { type: 'cloud.plan', plan: this.room.plan ?? null, savedAtMs: own });
   }
 
@@ -806,6 +835,8 @@ export class GameRoom extends DurableObject<RoomEnv> {
     this.rows('CREATE TABLE IF NOT EXISTS media_jxl (id TEXT PRIMARY KEY, bytes BLOB NOT NULL, at_ms REAL NOT NULL) WITHOUT ROWID');
     // Today's usage against the free plan's limits (domain/usage.ts): one row a day, saved now and then.
     this.rows('CREATE TABLE IF NOT EXISTS usage (day TEXT PRIMARY KEY, body TEXT NOT NULL) WITHOUT ROWID');
+    // The plans saves replaced (setPlan), by their version: at most CLOUD.planHistory rows of at most maxPlanBytes.
+    this.rows('CREATE TABLE IF NOT EXISTS plan_history (saved_at_ms REAL PRIMARY KEY, replaced_at_ms REAL NOT NULL, body TEXT NOT NULL) WITHOUT ROWID');
   }
 
   private load(): RoomSnapshot {

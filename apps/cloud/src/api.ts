@@ -37,6 +37,8 @@ export type PlanSave =
   | { ok: false; errors: string[]; stale?: false }
   | { ok: false; errors: string[]; stale: true; savedAtMs: number | null };
 
+export type { PlanHistoryItem } from './domain/plan-versions.ts';
+
 /** The answer to POST /api/media (the fallback) and PUT /api/media/<key>.jxl: where it is served, and its key. */
 export type MediaSave = { ok: true; path: string; key: string } | { ok: false; status: 404 | 413 | 415 | 507; error: string };
 

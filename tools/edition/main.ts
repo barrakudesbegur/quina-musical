@@ -3,6 +3,7 @@
 //   npm run edition -- check <file> [--repertoire 2026]
 //   npm run edition -- upload <file> [--repertoire 2026] [--start "2026-11-27 19:00"] [--cloud https://…] [--yes]
 //   npm run edition -- logos <plan file> --from <list.json> --dir <folder> [--cloud https://…] [--yes]
+//   npm run edition -- history [<savedAtMs>] [--cloud https://…]
 // <file> is a plan source (data/editions/2026.plan.json, a GamePlan), an edition file (checked whole with the
 // protocol's checkEdition, then its `plan`), or a backup this tool saved (data/link/backups/…, to undo an upload).
 // - build: the plan source, the repertoire's songs with their pools and its printed card types and cards, in one
@@ -14,9 +15,10 @@
 //   a test, without touching the file.
 // - logos: each sponsor's logo file (`--from`: a JSON whose `sponsors` have `id` and `logoFile`, in `--dir`), shrunk
 //   to the cloud's limit and uploaded; with --yes, the plan file gets their /media/ paths.
+// - history: the plans saves replaced in the cloud (the newest 20: when, size, title, rounds, sponsors); with a
+//   savedAtMs, that one saved to data/link/backups/, to restore with `upload <that file> --yes`.
 // The cloud and the laptop's service token come from apps/cloud/.env.link, as for the link and the media sync.
-// Not yet (U68–U75 are with the user): the cards as uploaded data, the cloud keeping every replaced version, a
-// rehearsal reset.
+// Not yet (U68–U75 are with the user): the cards as uploaded data, a rehearsal reset.
 import fs from 'node:fs';
 import path from 'node:path';
 import { printedCardTypes, poolSongCounts } from '../../apps/cloud/laptop/preflight/checks.ts';
@@ -42,6 +44,7 @@ const usage = [
   'usage: npm run edition -- build <repertoire> [--plan <plan source>] [--out <edition file>]',
   '       npm run edition -- check|upload <file> [--repertoire NAME] [--start "YYYY-MM-DD HH:MM"] [--cloud https://…] [--yes]',
   '       npm run edition -- logos <plan file> --from <list.json> --dir <folder> [--cloud https://…] [--yes]',
+  '       npm run edition -- history [<savedAtMs>] [--cloud https://…]',
 ].join('\n');
 const fail = (message: string): never => {
   console.error(message);
@@ -131,10 +134,34 @@ function build(name: string): void {
   console.log(`${path.relative(CALLER, out)}: repertoire ${edition.repertoire}, ${edition.plan.rounds.length} rounds, ${edition.songs.length} songs, ${edition.cards?.length ?? 0} cards${result.warnings.length ? `, ${result.warnings.length} warning(s)` : ''}.`);
 }
 
+/** The cloud's replaced plans, or one of them saved as a backup file `upload` takes. */
+async function history(version: string | undefined): Promise<void> {
+  const { cloud, headers } = cloudAccess();
+  const get = async (url: string) => {
+    const res = await fetch(url, { headers, signal: AbortSignal.timeout(20_000) });
+    if (!res.ok) return fail(`${url}: HTTP ${res.status} ${(await res.text()).slice(0, 200)}`);
+    return res.json() as Promise<unknown>;
+  };
+  if (version === undefined) {
+    const { history: items } = (await get(`${cloud}/api/plan/history`)) as { history: { savedAtMs: number; replacedAtMs: number; bytes: number; title: string | null; rounds: number | null; sponsors: number | null }[] };
+    if (!items.length) return void console.log(`${cloud}: no replaced plan kept yet.`);
+    const when = (ms: number) => new Date(ms).toISOString().replace('T', ' ').replace(/\.\d+Z$/, ' UTC');
+    for (const h of items) console.log(`${h.savedAtMs}  saved ${when(h.savedAtMs)}, replaced ${when(h.replacedAtMs)}  ${(h.bytes / 1024).toFixed(1)} KB  «${h.title ?? '?'}», ${h.rounds ?? '?'} round(s), ${h.sponsors ?? '?'} sponsor(s)`);
+    return void console.log('To restore one: npm run edition -- history <savedAtMs>, then npm run edition -- upload <the file it writes> --yes');
+  }
+  if (!/^\d{1,16}$/.test(version)) return fail(usage);
+  const kept = await get(`${cloud}/api/plan/history/${version}`);
+  fs.mkdirSync(BACKUPS, { recursive: true });
+  const file = path.join(BACKUPS, `${new URL(cloud).host.replace(/[^a-z0-9.-]/gi, '_')}-plan-history-${version}.json`);
+  fs.writeFileSync(file, `${JSON.stringify({ cloud, ...(kept as object) }, null, 2)}\n`, { mode: 0o600 });
+  console.log(`saved to ${file}. To restore it: npm run edition -- upload ${file} --yes`);
+}
+
 const isEditionFile = (json: unknown): boolean => Boolean(json) && typeof json === 'object' && 'songs' in (json as object) && 'repertoire' in (json as object);
 
 async function main(): Promise<void> {
   const [action, file] = args;
+  if (action === 'history') return history(file?.startsWith('--') ? undefined : file);
   if (!file || (action !== 'build' && action !== 'check' && action !== 'upload' && action !== 'logos')) return fail(usage);
   if (action === 'logos') return logos(file);
   if (action === 'build') return build(file);
