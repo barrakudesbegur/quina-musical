@@ -61,6 +61,11 @@
   height: 100%;
 }
 
+/* Under «LÍNIA!» or «QUINA!» the map is hidden: its marks don't bob (no animation nobody sees). */
+.player .card-tile[data-stamped] .card-tile__bob {
+  animation: none;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   :where(.player[data-motion='full']) .card-tile__mark[data-anim='mark-in'] {
     animation: player-kernel-drop var(--dur-mark-in) var(--ease-out) var(--stagger, 0ms) both;
