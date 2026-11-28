@@ -3183,13 +3183,14 @@
 /* The confetti's canvas is G3's (packages/ui/components/confetti.css). */
 
 /* Just under the garland and the safe area, where the home's content starts fading (§8 Y3: it sat too far down, under
-   the header). The toast is the generic Toast (packages/ui/components/toast.css), a passing notice hugging its words,
+   the header), and under the header row or the drum's strip when they show there (28 Nov: `--toast-clear`, from the
+   home). The toast is the generic Toast (packages/ui/components/toast.css), a passing notice hugging its words,
    centred: a card's green with its mark, any other on paper. It takes no taps (`toast-drop`). */
 .toast-slot {
   position: fixed;
   left: var(--player-gutter, 1rem);
   right: var(--player-gutter, 1rem);
-  top: calc(env(safe-area-inset-top, 0px) + var(--player-garland-height) - 0.25rem);
+  top: max(calc(env(safe-area-inset-top, 0px) + var(--player-garland-height) - 0.25rem), calc(var(--toast-clear, 0px) + 0.25rem));
   z-index: var(--z-toast);
   display: grid;
   justify-items: center;

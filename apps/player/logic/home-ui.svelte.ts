@@ -15,6 +15,9 @@ export interface HomeUi {
   hintTop: number;
   /** Scroll to the first card holding the playing song (AraHome's `drum-pick`). */
   pick: (() => void) | null;
+  /** While a toast shows: where the header row or the drum's strip ends, the lower of the two (px from the screen's
+   *  top; 0 when neither shows), so the toast sits under them (`toast-drop`, 28 Nov). */
+  topClear: number;
 }
 
-export const homeUi: HomeUi = $state({ addShare: 0, following: false, hint: null, hintTop: 0, pick: null });
+export const homeUi: HomeUi = $state({ addShare: 0, following: false, hint: null, hintTop: 0, pick: null, topClear: 0 });

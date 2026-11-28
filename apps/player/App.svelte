@@ -7,6 +7,7 @@
   import { PLAYER_CONFIG } from './config.ts';
   import type { PlayerApp } from './model.svelte.ts';
   import { depthOf, drawerOrigin } from './logic/drawers.ts';
+  import { homeUi } from './logic/home-ui.svelte.ts';
   import AppHeader from './components/AppHeader.svelte';
   import AraHome from './components/AraHome.svelte';
   import Celebration from './components/Celebration.svelte';
@@ -176,5 +177,5 @@
     </DrawerFrame>
   {/each}
 
-  <Toast toast={app.toast} />
+  <Toast toast={app.toast} clear={app.drawers.length ? 0 : homeUi.topClear} />
 </div>

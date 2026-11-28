@@ -125,6 +125,7 @@
       cancelAnimationFrame(hintRaf);
       homeUi.hint = null;
       homeUi.pick = null;
+      homeUi.topClear = 0;
     };
   });
 
@@ -156,7 +157,18 @@
     hintRaf = requestAnimationFrame(() => {
       hintRaf = 0;
       updateHint();
+      if (app.toast) updateClear();
     });
+  }
+
+  /** Where the header row or the drum's strip ends, whichever shows lower under the garland (`toast-drop`): the strip
+   *  shows on Cartrons and, on Historial, once the drum has stuck under the garland. Read only while a toast shows. */
+  function updateClear(): void {
+    const header = headEls()[0]?.getBoundingClientRect().bottom ?? 0;
+    const topRect = drum ? top?.getBoundingClientRect() : undefined;
+    const strip = topRect && (shown === 'cartrons' || topRect.top <= stickyTop + 1) ? topRect.top + stripPx() : 0;
+    // The toast's CSS keeps it under the garland whatever this says (a header scrolled away ends above the screen).
+    homeUi.topClear = Math.round(Math.max(0, header, strip));
   }
 
   /** On Cartrons, with the song on a card none of which shows: which way it is (`card-hint`). */
@@ -176,6 +188,10 @@
     homeUi.hint = side && first ? { side, identity: first.identity, cardId: first.id } : null;
   }
 
+  // A toast comes in: place it under the header or the strip at once (then on every scroll while it shows).
+  $effect(() => {
+    if (app.toast) untrack(() => scheduleHint());
+  });
   $effect(() => {
     homeUi.addShare = addShare;
     homeUi.following = frame !== null;

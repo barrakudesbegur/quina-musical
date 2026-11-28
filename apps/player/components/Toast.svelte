@@ -7,7 +7,9 @@
   import type { ToastNote } from '../model.svelte.ts';
   import CardMark from './CardMark.svelte';
 
-  let { toast }: { toast: ToastNote | null } = $props();
+  /** `clear`: where the header row or the drum's strip ends (px from the top), so the toast sits under them; 0: just
+   *  under the garland (`toast-drop`). */
+  let { toast, clear = 0 }: { toast: ToastNote | null; clear?: number } = $props();
 
   /** `toast-drop`'s exit: it fades out rising 6 px (only fading with reduced motion or Data Saver, D209). */
   function leave(node: Element) {
@@ -16,7 +18,7 @@
   }
 </script>
 
-<div class="toast-slot" role="status" aria-live="polite" data-state={toast ? 'shown' : 'hidden'}>
+<div class="toast-slot" role="status" aria-live="polite" data-state={toast ? 'shown' : 'hidden'} style:--toast-clear={clear > 0 ? `${clear}px` : undefined}>
   {#if toast}
     {@const identity = toast.identity}
     {#if identity !== null}
