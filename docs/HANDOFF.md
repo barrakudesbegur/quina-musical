@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D291**, **U230**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D291**, **U231**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -57,13 +57,14 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 **Waiting on the user (open-questions.md › Decisions), most useful first:**
 - U212: the organizers pick the card, «Quadrat amb portades» (the default) or «Apaïsat sense portades»; the cards are made on 4–5 Dec, after a proof sheet;
 - U188: only the Wii dialog's tap outside is left (U225 answered: D283, thick marks on the projector's Check);
+- U230: where the phone's install button goes (replaces U193, after D290);
 - U214: the grill format only in a card design session (the default), or plain questions there too;
 - U205 (Parlem's 40 s Hold music), U207 (✕ in a stack);
 - U194 (push), U196 (App Clip), U197 (TWA): the research says pass; U195 (uncollected prizes);
 - U202, U203: the console's in-game admin and second-console sync (they matter more now: the tech drives from a phone at the table, D281);
 - U55 (old song data on the laptop), U56 (faster hook approval) and U14 (approving the hooks), before the rehearsals;
 - U68–U75: the edition file's details (built and passing; not committed until U75);
-- older ones: U157–U160, U163, U166, U168, U169, U173, U176–U179, U181, U193, U36–U39, U12, U50, U79, U97/U99, U103–U114, U128, U129, U136–U139, U150, U85, U89.
+- older ones: U157–U160, U163, U166, U168, U169, U173, U176–U179, U181, U36–U39, U12, U50, U79, U97/U99, U103–U114, U128, U129, U136–U139, U150, U85, U89.
 - User tasks: U220 (try the Wii remote with MacWiiPair, and the Chrome restart check), U191 (ask the presenters about the notebook), U19 (the real-device checks), U126, U65, U64, U16, U18, U20, U13. Also: the canvas's old versions still hold a WhatsApp paragraph pasted by mistake (never in git); only the user can check who the canvas is shared with.
 
 **Sound engine's later item:** the Pausa, break and Hold music into the repertoire (D268's part C), designed with Backend before the rehearsals.

@@ -8,6 +8,12 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
+### U230 · Where the install button goes on the phone (replaces U193)
+U193's reading put the install button in the spot the empty list's big add-card button left once a phone had cards. D290 removed that spot: a phone with no cards shows a centred heading and two floating buttons, gone at the first card. And the user's condition, "only if +card button is not showing", now holds exactly when there are no cards. Only where the browser can install the app and it isn't installed; never on iPhones (Ajustos there).
+- (a) Once the phone has cards: a quiet row «Instal·lar l'app» at the end of the Cartrons list, under the last card. Frontend's recommendation: the empty state stays about cards, and it reaches people once they're settled in.
+- (b) While the phone has no cards: a small third link under «Escanejar el QR» and «Escriure el número».
+- (c) Only in Ajustos, never on the home.
+
 ### U97, U99 · Music for each moment (D129)
 - **U97 · The doors and the end:** (a) for now the pop playlist for the doors, the breaks and the end, until each gets its own (the end in that playlist's order); (b) give the playlists now.
 - **U99 · The intro music's span:** (a) from the round's intro until its first song lands, over the Shuffle; (b) only the intro. Rounds without a choice use (a) Parasail Minigame, or (b) the Pausa music.
@@ -165,11 +171,6 @@ Admin isn't at hand on stage. The proposal for the console:
 Today every console already shares the show's state live: songs, Holds, claims, Checks, winners. A second console could also mirror the screen itself, so it shows the same tab, an open claim pad and the number being typed.
 - (a) The show's state only, as today, plus the hold locks. Each console keeps its own tabs and pads, so the tech can look something up without moving the presenters' screen.
 - (b) Mirror the screen too.
-
-### U193 · Where the install button goes on the phone's home (D221)
-The user: "where we put the add card button, when he doesn't have any, we could put the install button there (only would show if can install and +card button is not showing)". The reading: when a player has no cards, the cards list shows its big add-card button. Once they have cards, the floating «+ Cartró» takes over adding (D218, D220), and that same spot in the list shows the install button instead, only when the browser can install the app and it isn't installed yet. Never on iPhones (Ajustos only).
-- (a) Yes, that.
-- (b) Something else (say what).
 
 ### U188 · A tap outside the console's Wii dialog
 The menu now closes on a tap outside (D279: the user reported it as a bug). Left open: the Wii dialog.
@@ -333,6 +334,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U193 · Where the install button goes** (2026-11-28): replaced by U230, since D290 removed the spot it relied on.
 - **U204 · The realistic run's times** (2026-11-28) → D288: today's test starts 30 minutes after the deploy and the laptop setup are live; 27 Dec's times go back afterwards.
 - **U225 · The ✗ in the Check's cells** (2026-11-28) → D283: thick on the projector's Check; the console's stay.
 - **U221 · Where the laptop sits; U229 · the backup remote** (2026-11-28) → D281: at the tech's table with the mixer; the user's pick of backup.
