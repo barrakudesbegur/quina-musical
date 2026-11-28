@@ -78,6 +78,17 @@ context stays in `app`. When you write an app rule that a component must still b
   worktree whose `node_modules` links to another checkout, the dev server refuses the font files and every width
   differs: it says so.
 
+## Browser floor
+
+The night's oldest browsers are Safari 18.0 (iOS / iPadOS 18: many phones, maybe the console's iPad) and Chrome on
+Android from two years back: `FLOOR` in `baseline.ts`. Playwright's WebKit is newer than that, so the browser tests
+can't show what's missing there; `apps/show/tests/ui/ds/baseline-lint.test.ts` reads the source instead. A feature
+newer than the floor that can hide content or break layout where it's missing (`GUARDED_CSS`: scroll-driven
+animations, anchor positioning…) sits inside an `@supports` that tests it, with a fallback beside it in
+`@supports not (…)`; a script feature (`GUARDED_JS`) is tested in the same file. Harmless ones (`ALLOWED_CSS`) go
+anywhere. An escape the lint can't see carries `/* baseline-ok: <why> */`. Support facts come from the
+modern-web-guidance Baseline data; to raise the floor, change `FLOOR` and drop what the lint then lists.
+
 ## Checks
 
 ```sh
