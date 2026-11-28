@@ -15,6 +15,11 @@ No decision is recorded for #90 and #117 (low bitrate: 117 and 114 kbps) or #18 
 
 **The user picked (b) on 28 Nov:** "i will do it now, keep a question open on what is the conclusion". Open until the user says which, if any, to swap.
 
+### U244 · The Phase when no cards in play are entered
+Found on 28 Nov (whats-left 2.12): the console's Heat meter stayed empty in the realistic test because no sold cards were entered (Menú → «Cartrons venuts»), which the runbook never says. Without cards in play the engine guesses the Phase from a count of 20 songs from the night's start that never restarts, so from about the 20th song every round is in its final Phase, and that's why «Auto» stopped at every song (2.8). The runbook gets the step, and the console a warning when a round has no cards in play (drawn for the user first).
+- (a) Without cards in play the Phase stays early and the Heat empty, with the console's warning (the orchestrator's recommendation: one way, no guess, and the warning makes the presenters enter the cards).
+- (b) Keep the guess, restarted at each round.
+
 ### U230 · Where the install button goes on the phone (replaces U193)
 U193's reading put the install button in the spot the empty list's big add-card button left once a phone had cards. D290 removed that spot: a phone with no cards shows a centred heading and two floating buttons, gone at the first card. And the user's condition, "only if +card button is not showing", now holds exactly when there are no cards. Only where the browser can install the app and it isn't installed; never on iPhones (Ajustos there).
 - (a) Once the phone has cards: a quiet row «Instal·lar l'app» at the end of the Cartrons list, under the last card. Frontend's recommendation: the empty state stays about cards, and it reaches people once they're settled in.
