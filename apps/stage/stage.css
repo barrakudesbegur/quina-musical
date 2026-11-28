@@ -844,6 +844,9 @@
   flex: none;
   height: 12rem;
   width: auto;
+  /* Taller than the name: it takes no more of the row than the name does, so the prize under it fits the screen (it
+     was cut 29 px at the bottom). It reaches up to the drum's band, never into it, and down beside the prize. */
+  margin-block: calc(-1 * var(--space-4)) calc(var(--stage-text-xl) - 12rem + var(--space-4));
   rotate: 6deg;
 }
 
