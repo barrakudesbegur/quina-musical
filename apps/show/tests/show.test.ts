@@ -145,14 +145,17 @@ test("auto-advance lands on the phrases near each song's own slot: a first play 
   near(gaps.slice(7), first, 'round 2, the new songs');
 });
 
-test('Hold ducks the song, a long Hold hands over to Hold music, and releasing moves on', () => {
+test('Hold ducks the song, a long Parlem keeps it (U205), the Hold music button hands over, and releasing moves on', () => {
   const h = setup();
   startAndLand(h);
   const out = h.send('hold');
   assert.equal(h.show.status, 'hold');
   assert.deepEqual(find(out, 'duck'), { type: 'duck', db: volumeDb(VOLUME_DEFAULTS.songsParlem), seconds: HOLD.duckSec }, 'the songsParlem slider');
   assert.equal(h.show.timers.autoAt, null);
-  const later = h.advance(h.show.game.holdMusicAfterSec + 0.1);
+  const long = h.advance(60);
+  assert.equal(find(long, 'songToHoldMusic'), undefined, 'Parlem never hands over by itself');
+  assert.ok(h.show.current, 'the song plays on, ducked');
+  const later = h.send('holdMusic');
   assert.equal(get(later, 'songToHoldMusic').mood, 'hold');
   assert.equal(h.show.current, null);
   assert.equal(h.show.holdMusic, true);
@@ -225,17 +228,20 @@ test('Back during a Spin cancels it; the outgoing song stays if its exit had not
   assert.ok(!find(out, 'holdMusic'));
 });
 
-test('Back late in a Spin (exit under way) cancels into Hold music; within 0.15 s of the landing it undoes right after', () => {
+test('Back late in a Spin (exit under way) brings the outgoing song back, ducked (U205); within 0.15 s of the landing it undoes right after', () => {
   const h = setup();
   startAndLand(h);
+  const a = h.show.current;
   h.send('next');
   const t = h.show.transition;
   assert.ok(t && t.aExitStart != null, 'the Spin rides the outgoing song');
   h.advance(t.aExitStart - h.clock.t + 0.1);
   const out = h.send('back');
-  assert.equal(get(out, 'cancelTransition').keepOutgoing, false);
-  assert.equal(h.show.holdMusic, true);
-  assert.equal(h.show.current, null);
+  assert.equal(get(out, 'cancelTransition').keepOutgoing, true);
+  assert.ok(get(out, 'cancelTransition').recueA);
+  assert.equal(h.show.holdMusic, false);
+  assert.equal(h.show.current?.songId, a?.songId);
+  assert.equal(h.show.hold?.reason, 'back');
 
   const h2 = setup({ seed: 3 });
   startAndLand(h2);
@@ -541,15 +547,12 @@ test('Aguanta (hold without ducking): the song stays at full volume, nothing adv
   assert.equal(find(stay, 'duck'), undefined, 'not ducked');
   assert.equal(h.show.snapshot().hold?.ducked, false);
   assert.equal(h.show.timers.autoAt, null, 'auto-advance waits');
-  assert.equal(h.show.timers.holdMusicAt, null, 'no timed switch to Hold music');
-  // Parlem in place: ducked, and Hold music may take over after its delay.
+  // Parlem in place: ducked.
   const talk = h.send('hold', { duck: true });
   assert.equal(get(talk, 'duck').db, volumeDb(VOLUME_DEFAULTS.songsParlem));
   assert.equal(h.show.snapshot().hold?.ducked, true);
-  assert.ok(h.show.timers.holdMusicAt != null);
-  // Back to Aguanta: full volume again, the timer gone.
+  // Back to Aguanta: full volume again.
   assert.equal(get(h.send('hold', { duck: false }), 'duck').db, 0);
-  assert.equal(h.show.timers.holdMusicAt, null);
   assert.equal(h.show.status, 'hold', 'switching never releases');
   // Releasing moves on as after any Hold.
   h.send('hold', { on: false });
@@ -639,20 +642,28 @@ test("a song left playing with auto-advance off loops its last phrase and never 
   assert.equal(h.show.position, 1);
 });
 
-test('Aguanta pressed in the outro, after the 40 s look-ahead: the song still loops, jumping back on its next downbeat (D239)', () => {
-  const h = setup({ seed: 6, settings: { holdMusicOn: false } });
+test('a song left past its loop (Next from the loop, then Back) still loops (D239, U205)', () => {
+  const h = setup({ seed: 6, settings: { autoAdvance: false } });
   startAndLand(h);
-  h.send('hold'); // Parlem first: the ducked song plays on, no loop
   const cur = h.show.current;
   assert.ok(cur);
-  const endAt = cur.endCtx;
-  h.until(() => h.clock.t >= endAt - 10, 400);
-  const loopNow = () => h.show.loop; // read afresh (not narrowed by the check before)
-  assert.equal(loopNow(), null);
-  h.send('hold', { duck: false }); // Aguanta 10 s before the end
+  // Its loop, then Next from the loop's last second: the deck plays on past the phrase, into the outro.
+  h.until(() => h.show.loop != null, 400);
+  const phrase = h.show.loop?.phrase;
+  assert.ok(phrase);
+  const pos = () => cur.offset + (h.clock.t - cur.startCtx) * cur.rate;
+  h.until(() => pos() > phrase.toSec - 1 && pos() < phrase.toSec - 0.5, 60);
+  assert.ok(find(h.send('next'), 'startTransition'));
+  assert.equal(h.show.loop, null);
+  h.until(() => pos() > phrase.toSec + 1.5, 10);
+  assert.ok(h.show.transition, 'the Spin still runs');
+  const back = h.send('back');
+  assert.equal(get(back, 'cancelTransition').keepOutgoing, true, 'the song stays');
+  assert.equal(h.show.hold?.reason, 'back');
   h.advance(0.05);
-  const loop = loopNow();
-  assert.ok(loop && loop.purpose === 'stay', 'a loop at once');
+  const loop = h.show.loop as { phrase: { fromSec: number; toSec: number; outSec?: number }; purpose: string } | null;
+  assert.ok(loop && loop.purpose === 'stay', 'a loop at once, in the ducked Hold');
+  const endAt = h.clock.t + 20;
   const out = h.until(() => h.clock.t > endAt + 60, 400);
   assert.equal(find(out, 'songToHoldMusic'), undefined, 'never runs out');
   assert.equal(h.show.current?.songId, cur.songId);
@@ -689,31 +700,48 @@ test('Aguanta during a Spin whose exit started: the outgoing song comes back on 
   assert.ok(h.show.loop?.purpose === 'stay');
 });
 
-test('Parlem pressed during a Spin whose exit started still hands over to Hold music', () => {
-  const h = setup({ seed: 6 });
-  startAndLand(h);
-  h.until(() => {
-    const t = h.show.transition;
-    return t != null && t.aExitStart != null && h.clock.t > t.aExitStart + 0.1 && t.T - h.clock.t > 1;
-  }, 200);
-  const out = h.send('hold', { on: true });
-  assert.equal(get(out, 'cancelTransition').keepOutgoing, false);
-  assert.equal(get(out, 'cancelTransition').recueA, undefined);
-  assert.equal(h.show.current, null);
-  assert.equal(h.show.holdMusic, true);
+test('Parlem or Back during a Spin whose exit started: the outgoing song comes back, ducked, and loops; no Hold music (U205)', () => {
+  for (const cmd of ['hold', 'back'] as const) {
+    const h = setup({ seed: 6 });
+    startAndLand(h);
+    const a = h.show.current;
+    assert.ok(a);
+    h.until(() => {
+      const t = h.show.transition;
+      return t != null && t.aExitStart != null && h.clock.t > t.aExitStart + 0.1 && t.T - h.clock.t > 1;
+    }, 200);
+    const out = cmd === 'hold' ? h.send('hold', { on: true }) : h.send('back');
+    const cancel = get(out, 'cancelTransition');
+    assert.equal(cancel.keepOutgoing, true, cmd);
+    assert.ok(cancel.recueA, `${cmd}: A is re-cued`);
+    assert.equal(find(out, 'songToHoldMusic'), undefined);
+    assert.equal(find(out, 'holdMusic'), undefined);
+    assert.equal(h.show.current?.songId, a.songId);
+    assert.equal(h.show.hold?.ducked, true, `${cmd}: ducked`);
+    assert.equal(h.show.hold?.reason, cmd === 'hold' ? 'cancel' : 'back');
+    const endAt = a.endCtx;
+    const later = h.until(() => h.clock.t > endAt + 30, 600);
+    assert.equal(find(later, 'songToHoldMusic'), undefined, `${cmd}: never runs out`);
+    assert.ok(h.show.loop?.purpose === 'stay', `${cmd}: it loops`);
+  }
 });
 
-test("a song that runs out (Parlem) hands over HOLD.runOutLeadSec before its audio dies, not at its file's end", () => {
+test("Parlem over a song with a long dead tail: it loops before its audio dies and never hands over to Hold music (U205)", () => {
   const deadFor = 15; // a long silent tail, as YMCA's
-  const h = setup({ seed: 6, settings: { holdMusicOn: false }, env: { audibleEndSec: (id) => (analyses.get(id)?.source.durationSec ?? 0) - deadFor } });
+  const h = setup({ seed: 6, env: { audibleEndSec: (id) => (analyses.get(id)?.source.durationSec ?? 0) - deadFor } });
   startAndLand(h);
   h.send('hold');
   const cur = h.show.current;
   assert.ok(cur);
-  const audibleAt = cur.endCtx - deadFor / cur.rate;
-  const out = h.until(() => h.show.holdMusic, 400);
-  assert.ok(find(out, 'songToHoldMusic'));
-  assert.ok(Math.abs(h.clock.t - (audibleAt - HOLD.runOutLeadSec)) < 0.05, `handed over at ${h.clock.t}, the audio dies at ${audibleAt}`);
+  const analysis = analyses.get(cur.songId);
+  assert.ok(analysis);
+  const endAt = cur.endCtx;
+  const out = h.until(() => h.clock.t > endAt + 60, 600);
+  assert.equal(find(out, 'songToHoldMusic'), undefined);
+  assert.equal(h.show.holdMusic, false);
+  const loop = h.show.loop;
+  assert.ok(loop && loop.purpose === 'stay');
+  assert.ok(loop.phrase.toSec <= analysis.source.durationSec - deadFor + 1e-9, 'it jumps back before the audio dies');
 });
 
 test('the drum only ever shows songs still to play (and the last landing under the pointer), in the drum order: Next, Back, Hold, Aguanta and Suspense', () => {

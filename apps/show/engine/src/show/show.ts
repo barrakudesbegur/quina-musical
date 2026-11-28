@@ -268,8 +268,8 @@ export interface CancelTransitionEffect {
   drum: { insertId: number | null; selectId: number | null; ids: number[] };
   /** A cancelled Suspense (D144): its build backs out and fades instead of stopping at once. */
   backOut?: boolean;
-  /** Aguanta pressed after A's exit started (D239): A comes back from its exit, re-cued so song second `offset` plays
-   * at `at` (where its own clock says it is), and plays on at full volume. */
+  /** A Spin cancelled after A's exit started (Aguanta, Parlem or Back; D239, U205): A comes back from its exit, re-cued so
+   * song second `offset` plays at `at` (where its own clock says it is), and plays on in the Hold the cancel enters. */
   recueA?: { at: number; offset: number };
 }
 export interface DuckEffect {
@@ -336,9 +336,10 @@ export interface PrepareBlendEffect {
   beatsPerBar: number;
   tight: boolean;
 }
-/** One revealed song of a Check at `step.at`: a landed song from its hook's pickup (its snippet, then the full song),
- * playing on until the next reveal, a step back or the Check's end; the "broken record" or the knock. A sound still
- * playing from the reveal before stops. `nextSongId`: the next reveal's landed song, decoded meanwhile (else null). */
+/** One revealed song of a Check at `step.at`: the song from its hook's pickup (its snippet, then the full song), playing
+ * on until the next reveal, a step back or the Check's end, a ✗'s breaking after FLOW.check.missBreakAfterSec; or a
+ * standing Check's knock. A sound still playing from the reveal before stops. `nextSongId`: the next reveal's song when
+ * it plays one (not a knock), decoded meanwhile (else null). */
 export interface CheckRevealEffect {
   type: 'checkReveal';
   claimId: string;
@@ -590,10 +591,9 @@ export interface SongInfo {
   pools?: readonly string[];
 }
 
-/** Audio-clock times of the pending automatic Next and of the switch to Hold music. */
+/** Audio-clock time of the pending automatic Next. */
 export interface Timers {
   autoAt: number | null;
-  holdMusicAt: number | null;
 }
 
 /**
@@ -726,7 +726,7 @@ export class Show {
   beat: BeatPublication = NO_BEAT;
   /** The rounds whose prizes were revealed, and how (the journal's `prizes.revealed`). */
   prizesRevealed: { round: number; by: 'presenters' | 'intro' }[] = [];
-  timers: Timers = { autoAt: null, holdMusicAt: null };
+  timers: Timers = { autoAt: null };
   /** This round's landings as the planner remembers them (its rotation memory); the state shows their HistoryEntry part. */
   history: (HistoryEntry & PlanMemory)[] = [];
   landings: Landing[] = [];
@@ -844,9 +844,7 @@ export class Show {
       songsUntilWinner: 20,
       phaseOverride: null,
       roundsTotal: 5,
-      holdMusicAfterSec: HOLD.holdMusicAfterSec,
       nextRecipe: null,
-      holdMusicOn: true,
       ...settings,
       autoSounds: autoSoundsOf(settings),
     };
@@ -1189,11 +1187,6 @@ export class Show {
       this.next(null);
       this.emitState();
     }
-    if (this.status === 'hold' && this.timers.holdMusicAt != null && now >= this.timers.holdMusicAt) {
-      this.timers.holdMusicAt = null;
-      this.toHoldMusic();
-      this.emitState();
-    }
     const cur = this.current;
     if (cur && !this.transition && !this.pending) {
       if (this.status === 'playing') {
@@ -1207,6 +1200,7 @@ export class Show {
           this.emitState();
         }
       } else if (this.status === 'hold' && !this.looping(cur) && now >= this.runOutAt(cur)) {
+        // Only a song with no beat grid to loop (stayLoop): Hold music rather than silence.
         this.toHoldMusic();
         this.emitState();
       }
@@ -1490,7 +1484,7 @@ export class Show {
     this.holdMusic = false;
     this.bed = bed;
     this.heatSample = null;
-    this.timers = { autoAt: null, holdMusicAt: null };
+    this.timers = { autoAt: null };
     this.history = [];
     this.nudge = 1;
     this.stingerClimbs.clear();
@@ -1645,10 +1639,11 @@ export class Show {
 
   /**
    * A journal's settings over the Game's: its sounds through autoSoundsOf (a journal from before D237 has only the old
-   * `finalLapStinger` and `voicesOn`, which the Game no longer keeps), its volumes to the sliders.
+   * `finalLapStinger` and `voicesOn`, which the Game no longer keeps), its volumes to the sliders. A journal from before
+   * U205 also has the Hold music switch and delay: ignored.
    */
   takeSettings(settings: JournalSettings) {
-    const { finalLapStinger: _old, voicesOn: _oldVoices, ...rest } = settings;
+    const { finalLapStinger: _old, voicesOn: _oldVoices, holdMusicOn: _oldSwitch, holdMusicAfterSec: _oldDelay, ...rest } = settings;
     this.game = { ...this.game, ...rest, autoSounds: autoSoundsOf(settings) };
     this.takeVolumes(this.game);
   }
@@ -1832,7 +1827,7 @@ export class Show {
     if (!A) this.current = null;
     this.status = 'transition';
     this.hold = null;
-    this.timers = { autoAt: null, holdMusicAt: null };
+    this.timers = { autoAt: null };
     const removeId = this.position >= 0 ? this.queue[this.position] : null;
     // Hold music, or the Interval's or Celebration's music, gives way to the build.
     const spinSeed = drumSpinSeed(seed);
@@ -1930,7 +1925,7 @@ export class Show {
     if (hover.length) this.prefetch();
     this.status = 'transition';
     this.hold = null;
-    this.timers = { autoAt: null, holdMusicAt: null };
+    this.timers = { autoAt: null };
     // A Spin already took the last song off the drum and stopped what played before it.
     const removeId = !spin && this.position >= 0 ? this.queue[this.position] : null;
     // The Spin's build and B's part stop where the Suspense takes over: at once over A, else where A's exit ends.
@@ -2190,7 +2185,6 @@ export class Show {
     if (!hold || hold.ducked === duck || !this.current || this.holdMusic) return;
     hold.ducked = duck;
     this.out.push({ type: 'duck', db: duck ? this.parlemDb() : 0, seconds: duck ? HOLD.duckSec : HOLD.releaseSec });
-    this.timers.holdMusicAt = duck && this.game.holdMusicOn !== false ? Math.max(this.env.now() + 1, hold.since + this.game.holdMusicAfterSec) : null;
   }
 
   release(reqId: string | null) {
@@ -2220,25 +2214,22 @@ export class Show {
     this.hold = { since: now, reason, ducked: true };
     this.timers.autoAt = null;
     if (music || !this.current) {
-      this.timers.holdMusicAt = null;
       if (this.current) this.toHoldMusic();
       else this.startHoldMusic(now + musicDelaySec);
     } else if (!duck) {
-      // Aguanta: the song keeps playing at full volume; no Hold music takes over.
+      // Aguanta: the song keeps playing at full volume.
       this.hold.ducked = false;
-      this.timers.holdMusicAt = null;
     } else {
+      // Parlem: the song plays on ducked, and loops near its end as in Aguanta; it never hands over to Hold music
+      // by itself (U205: the user, 28 Nov).
       this.out.push({ type: 'duck', db: this.parlemDb(), seconds: HOLD.duckSec });
-      // With Hold music off the ducked song stays (it still hands over if it runs out).
-      this.timers.holdMusicAt = this.game.holdMusicOn === false ? null : now + this.game.holdMusicAfterSec;
     }
   }
 
   leaveHold(seconds: number) {
     if (this.current) this.out.push({ type: 'duck', db: 0, seconds });
     this.hold = null;
-    this.timers.holdMusicAt = null;
-    // Leaving Aguanta: the song plays on from the phrase it is in, into the rest of it.
+    // Leaving the Hold: the song plays on from the phrase it is in, into the rest of it.
     if (this.loop?.purpose === 'stay') this.loop = null;
   }
 
@@ -2252,9 +2243,8 @@ export class Show {
   tickStay(now: number) {
     const cur = this.current;
     if (!cur || this.loop || this.holdMusic || this.transition || this.pending || this.suspense) return;
-    const leftPlaying = this.status === 'hold'
-      ? this.hold != null && !this.hold.ducked
-      : this.status === 'playing' && !this.autoAdvanceAllowed();
+    // Any Hold over the song (Aguanta, Parlem ducked), or auto-advance off with nobody pressing Next.
+    const leftPlaying = this.status === 'hold' ? this.hold != null : this.status === 'playing' && !this.autoAdvanceAllowed();
     if (!leftPlaying || now < cur.endCtx - LOOP.stayLookSec) return;
     const analysis = this.env.analysis(cur.songId);
     if (!analysis) return;
@@ -2326,7 +2316,6 @@ export class Show {
 
   /** Hold music of `mood` now: the song washes out into it, or other music (another mood, a bed) cross-fades to it. */
   switchToHoldMusic(mood: HoldMood) {
-    this.timers.holdMusicAt = null;
     if (this.current) {
       this.out.push({ type: 'songToHoldMusic', fadeSec: 3, mood });
       this.current = null;
@@ -2386,10 +2375,10 @@ export class Show {
     this.prefetch();
   }
 
-  // Cancel the running Spin `t` (Back or Hold pressed during it). The outgoing song stays if its exit move
-  // has not started; otherwise Hold music takes over. Aguanta (`stay`) keeps it even after its exit started: a song
-  // the presenters let play loops (D239), so it comes back from its exit at full volume. Too close to the landing,
-  // act right after it (Aguanta then holds the song that lands).
+  // Cancel the running Spin `t` (Back or Hold pressed during it). The outgoing song stays, even after its exit
+  // started (it comes back from its exit on its own clock): at full volume for Aguanta (`stay`), ducked in the Hold
+  // that Parlem or Back enter, and it loops as a song left playing does (D239, U205). Too close to the landing, act
+  // right after it (Aguanta then holds the song that lands).
   cancel(t: Transition, reason: 'back' | 'hold', { stay = false }: { stay?: boolean } = {}) {
     const now = this.env.now();
     if (t.T - now < HOLD.cancelMinSec) {
@@ -2399,7 +2388,7 @@ export class Show {
     const aPlaying = t.fromSongId != null && t.aExitStart != null && this.current?.songId === t.fromSongId;
     const exitAhead = aPlaying && t.aExitStart! > now + 0.05;
     const cur = this.current;
-    const recueA = stay && aPlaying && !exitAhead && cur && this.env.analysis(cur.songId)
+    const recueA = aPlaying && !exitAhead && cur && this.env.analysis(cur.songId)
       ? { at: now + HOLD.recueLeadSec, offset: cur.offset + (now + HOLD.recueLeadSec - cur.startCtx) * cur.rate }
       : null;
     const keepOutgoing = exitAhead || recueA != null;
@@ -2427,10 +2416,6 @@ export class Show {
     for (const key of SET_GAME_FIELDS) assignDefined(this.game, fields, key);
     this.journal({ kind: 'settings.changed', settings: this.journalSettings() });
     this.rescheduleAuto();
-    // Hold music switched on or off in a Hold with the song ducked: its timed switch goes or comes back.
-    if (fields.holdMusicOn != null && this.status === 'hold' && this.hold && this.current && !this.holdMusic) {
-      this.timers.holdMusicAt = fields.holdMusicOn ? Math.max(this.env.now() + 1, this.hold.since + this.game.holdMusicAfterSec) : null;
-    }
   }
 
   rescheduleAuto() {
@@ -2461,7 +2446,7 @@ export class Show {
     this.holdMusic = false;
     this.bed = null;
     this.loop = null;
-    this.timers = { autoAt: null, holdMusicAt: null };
+    this.timers = { autoAt: null };
     this.status = 'idle';
   }
 
@@ -2579,7 +2564,7 @@ export class Show {
   flowHold(reason: HoldReason) {
     this.status = 'hold';
     this.hold = { since: this.hold?.since ?? this.env.now(), reason, ducked: this.hold?.ducked ?? true };
-    this.timers = { autoAt: null, holdMusicAt: this.timers.holdMusicAt };
+    this.timers = { autoAt: null };
   }
 
   tickFlow(now: number) {
@@ -2783,7 +2768,7 @@ export class Show {
     else this.reveal(run, claim);
   }
 
-  /** Reveal the Check's next song (the song from its hook on, the broken record or the knock), just ahead so sound and
+  /** Reveal the Check's next song (the song from its hook on, a ✗'s breaking, or the knock), just ahead so sound and
    * screens meet. */
   reveal(run: CheckRun, claim: ClaimInfo) {
     const k = run.info.revealed.length;
@@ -2794,7 +2779,8 @@ export class Show {
     // From the first reveal the music goes far down under the sounds (U85: as before, for now).
     if (k === 0) this.out.push({ type: 'checkDuck', on: true });
     const next = run.until != null && k < run.until ? run.songs[k + 1] : undefined;
-    this.out.push({ type: 'checkReveal', claimId: claim.claimId, step: { ...song, at, durationSec, sound }, nextSongId: next?.landed ? next.songId : null });
+    const nextSongId = next && stepSound(next, claim.kind, FLOW.check).sound !== 'still' ? next.songId : null;
+    this.out.push({ type: 'checkReveal', claimId: claim.claimId, step: { ...song, at, durationSec, sound }, nextSongId });
     const step: CheckStep = { songId: song.songId, landed: song.landed, atMs: this.env.toEpochMs(at), durationMs: Math.round(durationSec * 1000) };
     run.info.revealed.push(step);
     run.awaitPress = false;
@@ -2831,7 +2817,8 @@ export class Show {
     const at = now + FLOW.check.revealLeadSec;
     const { sound, durationSec } = stepSound(prev, claim.kind, FLOW.check);
     const next = run.songs[step];
-    this.out.push({ type: 'checkReveal', claimId, step: { ...prev, at, durationSec, sound }, nextSongId: next?.landed ? next.songId : null });
+    const nextSongId = next && stepSound(next, claim.kind, FLOW.check).sound !== 'still' ? next.songId : null;
+    this.out.push({ type: 'checkReveal', claimId, step: { ...prev, at, durationSec, sound }, nextSongId });
     run.soundEndAt = at + durationSec;
   }
 
@@ -3148,7 +3135,6 @@ export class Show {
     this.celebration = celebration;
     this.setScene('celebration');
     this.flowHold('claim');
-    this.timers.holdMusicAt = null;
     const now = this.env.now();
     this.out.push({ type: 'sfx', name: FLOW.celebration.fanfare, at: now + 0.05, volume: 'winFx' });
     this.out.push({ type: 'sfx', name: FLOW.celebration.impact, at: now + 0.05, volume: 'winFx' });
@@ -3205,7 +3191,6 @@ export class Show {
     const levelDb = choice === 'winningSong' ? c.winningSongDb : choice === 'victory' ? c.victoryDb : HOLD.holdMusicLevelDb;
     this.out.push({ type: 'celebrationMusic', choice, songId: this.celebration?.winningSongId ?? null, hookId: this.winningHook, at, fadeSec: c.musicFadeSec, levelDb });
     this.current = null;
-    this.timers.holdMusicAt = null;
     this.holdMusic = choice === 'holdMusic';
     this.holdMusicMood = 'hold';
     this.bed = choice === 'holdMusic' ? null : choice;
@@ -3267,7 +3252,6 @@ export class Show {
    */
   playIntervalMusic(set: MusicSet) {
     this.flowHold('music');
-    this.timers.holdMusicAt = null;
     if (this.bed === 'interval' && this.bedSet === set) return;
     this.out.push({ type: 'intervalMusic', set, at: this.env.now(), fadeSec: INTERVAL.fadeInSec, levelDb: INTERVAL.volumeDb });
     this.current = null;
@@ -3283,7 +3267,6 @@ export class Show {
    */
   playIntroMusic() {
     this.flowHold('music');
-    this.timers.holdMusicAt = null;
     if (this.bed === 'intro') return;
     this.out.push({ type: 'introMusic', at: this.env.now(), fadeSec: INTRO.fadeInSec, levelDb: INTRO.levelDb });
     this.current = null;
@@ -3760,7 +3743,6 @@ export class Show {
     }
     if (this.loop) this.loop.nextAt += d;
     if (this.hold) this.hold.since += d;
-    if (this.timers.holdMusicAt != null) this.timers.holdMusicAt += d;
     if (this.timers.autoAt != null) this.timers.autoAt += d;
     if (this.heatSample) this.heatSample.at += d;
     if (this.celebration) this.celebration.sinceMs += d * 1000;
@@ -4047,7 +4029,7 @@ export class Show {
       atMs: this.env.nowMs(),
       status: this.status,
       pending: this.pending ? 'next' : null,
-      hold: this.hold ? { sinceMs: this.env.toEpochMs(this.hold.since), reason: this.hold.reason, holdMusic: this.holdMusic, holdMusicAtMs: toMs(this.timers.holdMusicAt), ducked: this.hold.ducked } : null,
+      hold: this.hold ? { sinceMs: this.env.toEpochMs(this.hold.since), reason: this.hold.reason, holdMusic: this.holdMusic, ducked: this.hold.ducked } : null,
       holdMusic: this.holdMusic,
       current: cur ? { ...this.songRef(cur.songId), hookId: cur.hookId, firstPlay: this.isFirstPlay(cur.songId), posSec: round2(cur.offset + (now - cur.startCtx) * cur.rate), endsAtMs: toMs(cur.endCtx) } : null,
       beat: this.beat.info ? { ...this.beat.info } : null,

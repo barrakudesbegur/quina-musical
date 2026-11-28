@@ -133,8 +133,7 @@ function tickCountdown() {
   else if (s?.status === 'playing' && s.autoAtMs) text = `Next spin in ${Math.max(0, (s.autoAtMs - Date.now()) / 1000).toFixed(0)} s`;
   else if (s?.status === 'hold' && s.hold) {
     const held = Math.round((Date.now() - s.hold.sinceMs) / 1000);
-    const toMusic = s.hold.holdMusicAtMs ? ` · Hold music in ${Math.max(0, Math.round((s.hold.holdMusicAtMs - Date.now()) / 1000))} s` : '';
-    text = `Holding ${held} s${toMusic}`;
+    text = `Holding ${held} s`;
   }
   $('countdown').textContent = text;
 }

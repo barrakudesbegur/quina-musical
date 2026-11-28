@@ -11,7 +11,6 @@ const COMMON = {
   songsUntilWinner: 30,
   phaseOverride: null,
   roundsTotal: 12,
-  holdMusicAfterSec: 25,
 };
 
 /**

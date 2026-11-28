@@ -48,7 +48,7 @@ test('Parlem and Aguanta: a Hold by its mode, with since and whether Hold music 
   const talk = ring(fixture('hold'));
   assert.deepEqual([talk.state, talk.badge, talk.sinceMs, talk.holdMusic], ['talk', 'talk', NOW - 12_000, false]);
   const s = fixture('hold');
-  const long = ring({ ...s, holdMusic: true, hold: { ...s.hold!, holdMusic: true, holdMusicAtMs: null } });
+  const long = ring({ ...s, holdMusic: true, hold: { ...s.hold!, holdMusic: true } });
   assert.deepEqual([long.state, long.holdMusic], ['talk', true]);
   const stay = ring({ ...s, hold: { ...s.hold!, ducked: false } });
   assert.deepEqual([stay.state, stay.badge], ['stay', 'stay']);
@@ -68,7 +68,7 @@ test('a Check in progress names its card; a failed Check plays error music until
 
 test('a Claim hold through the Celebration is not a Check', () => {
   const s = fixture('celebration');
-  const held = { ...s, status: 'hold' as const, hold: { sinceMs: NOW - 1_000, reason: 'claim' as const, holdMusic: false, holdMusicAtMs: null } };
+  const held = { ...s, status: 'hold' as const, hold: { sinceMs: NOW - 1_000, reason: 'claim' as const, holdMusic: false } };
   assert.equal(ring(held).state, 'talk');
 });
 

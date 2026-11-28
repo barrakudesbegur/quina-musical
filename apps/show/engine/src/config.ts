@@ -211,19 +211,18 @@ export const HOLD = Object.freeze({
   /** A Hold's duck glides over this long; how deep is the songsParlem slider (D139: its default is −14 dB). */
   duckSec: 0.5,
   releaseSec: 1,
-  /** A long Hold switches to Hold music after this many seconds. */
-  holdMusicAfterSec: 40,
   holdMusicLevelDb: -12,
   holdMusicFadeInSec: 2,
-  /** A song still playing in a Hold hands over to Hold music this long before its file ends, at the latest… */
+  /** A song that can't loop (no beat grid) hands over to Hold music this long before its file ends, at the latest… */
   songEndMarginSec: 2.5,
   /** …and this long before its audio dies (Env.audibleEndSec: its trailing silence and the end of its fade left out),
    * so Hold music is up before the song is gone. */
   runOutLeadSec: 2,
-  /** A song washing out into Hold music (a run-out, Parlem's long Hold, a cancelled Spin): Hold music starts as soon
+  /** A song washing out into Hold music (a run-out, the Hold music button, Back, a failed Check): Hold music starts as soon
    * as its loop is ready and comes up over this long, while the song fades out under it over the handover's 3 s. */
   handoverInSec: 1.5,
-  /** Aguanta during a Spin whose exit started (D239): the outgoing song is re-cued this far ahead, on its own clock. */
+  /** A Spin cancelled after its exit started (Aguanta, Parlem, Back): the outgoing song is re-cued this far ahead, on its
+   * own clock. */
   recueLeadSec: 0.06,
   /** …with a crossfade this long from what its exit left. */
   recueFadeSec: 0.03,
@@ -767,11 +766,34 @@ export const FLOW = Object.freeze({
     /** A ✓ reveal's pace (an automatic reveal comes this long, plus `gapSec`, after it; the screens' "playing" mark).
      * Its sound runs on: the landed song from its hook's pickup until the next reveal, a step back or the cue. */
     stepSec: 2.5,
-    /** A ✗ reveal: the short "broken record" sound. */
-    missSec: 1.2,
+    /** A ✗ reveal's pace, as a ✓'s: the screens stamp its mark as its tape breaks (`missBreakAfterSec`), and under auto
+     * the cue comes this long plus `gapSec` after it. Its song runs on, broken, until the cue, a step back or the end. */
+    missSec: 2.5,
+    /** A ✗ plays its song like a ✓, at the same level; this long after the reveal the tape breaks (`brokenTape`). */
+    missBreakAfterSec: 2,
+    /** The ✗'s broken tape (audio/fx/broken-tape.ts): at its onset (`onsetSec`) the tape groans down `groanSemitones`
+     * and back to speed (a growing delay: the speed overall never changes), then stays worn out: a slow wow
+     * (±`wowDepthSec` of delay at `wowHz`, about ±12 cents) and a little flutter, muffled (low-passed; the high-pass
+     * only below the bass, which carries the level), a little saturated, then trimmed by `makeupDb` (the saturation's
+     * small-signal gain less the low-pass's loss) so it plays as loud as a ✓: on 12 test songs −0.8 to +1.0 dB, and
+     * 8 dB less bright on average. Sad, not harsh: it must bear 10–30 s of looping. */
+    brokenTape: Object.freeze({
+      onsetSec: 0.6,
+      groanSemitones: 2,
+      baseDelaySec: 0.005,
+      wowHz: 0.55,
+      wowDepthSec: 0.002,
+      flutterHz: 6,
+      flutterDepthSec: 0.00005,
+      highpassHz: 60,
+      lowpassHz: 1900,
+      lowpassQ: 0.9,
+      drive: 1.6,
+      makeupDb: -3.75,
+    }),
     /** A standing Check's ✓ (the Desgraciat round: the song hasn't landed): a short knock. 12 of them take ~11 s. */
     stillSec: 0.55,
-    /** Automatic reveal (checkAuto): the pause after a ✗ or a knock before the next reveal (a ✓'s song plays through it). */
+    /** Automatic reveal (checkAuto): the pause after a knock before the next reveal (a ✓'s or ✗'s song plays through it). */
     gapSec: 0.35,
     /** After a cue, the next queued card's Check comes on screen by itself this long after (its cue shows meanwhile). */
     nextCardSec: 3,
@@ -806,7 +828,6 @@ export const FLOW = Object.freeze({
     snippetTailSec: 0.2,
     /** A late start (a slow fetch) joins its pass as far in as the reveal is old, unless that leaves less than this. */
     lateMinAheadSec: 0.5,
-    brokenDb: -8,
     stillDb: -12,
   }),
   celebration: Object.freeze({

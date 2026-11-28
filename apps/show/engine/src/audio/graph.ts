@@ -3,7 +3,7 @@
 //   the breaks' and the end's sets (tracks, their echo-outs) → [breaks] [end] → intervalBus → holdDuck ┘ (under the music)
 //   Hold music → [holdMusic], the error Hold music → [fail], the victory track and the Celebration's loop → [win],
 //     the intro track → [intros] → holdBus → bedDuck (Parlem in a Celebration) → checkDuck.hold ┤
-//   a Check's snippets and "broken record" sounds → checkBus → [check] ┤
+//   a Check's revealed songs (a ✗'s through its broken tape) and knocks → checkBus → [check] ┤
 //   deck fader → echo send → echo (delay ⟲ HPF · feedback) → echo return → [djFx] ┤
 //   deck fader → reverb send → convolver → HPF → reverb return → [djFx] ┤
 //   synth layers (riser, snare roll, swell, impact) → synthBus → [djFx] ┤

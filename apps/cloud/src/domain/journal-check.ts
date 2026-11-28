@@ -69,7 +69,8 @@ const settings: FieldCheck = (value) => {
     songsUntilWinner: integer(0),
     phaseOverride: nullable(phase),
     roundsTotal: integer(1, 99),
-    holdMusicAfterSec: finite,
+    // Before D318 (Parlem's Hold music takeover, removed): a journal from before still checks.
+    holdMusicAfterSec: optional(finite),
     // Before D237's autoSounds; the engine mirrors them for one deploy, then drops them.
     finalLapStinger: optional(boolean),
     voicesOn: optional(boolean),

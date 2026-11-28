@@ -2,7 +2,6 @@
 // - the next auto-advance (state.autoAtMs), as a ring on Now playing;
 // - the next song's landing while a transition runs (state.transition.landAtMs);
 // - a Suspense's auto-release (state.suspense.autoReleaseAtMs);
-// - Hold music taking over (state.hold.holdMusicAtMs);
 // - the Interval's guide (flow.interval.guideEndMs), which may run over.
 // Pure.
 import type { ShowState } from '@quina/protocol';
@@ -73,13 +72,6 @@ export function suspenseCountdown(state: ShowState, nowMs: number): Countdown | 
   const s = state.suspense;
   if (!s) return null;
   return countdownBetween(s.sinceMs, s.autoReleaseAtMs, nowMs);
-}
-
-/** Hold music taking over, during a Hold that hasn't switched yet. */
-export function holdMusicCountdown(state: ShowState, nowMs: number): Countdown | null {
-  const h = state.hold;
-  if (!h || h.holdMusic || h.holdMusicAtMs === null) return null;
-  return countdownBetween(h.sinceMs, h.holdMusicAtMs, nowMs);
 }
 
 /** The Shuffle's animation, while it runs. */

@@ -34,7 +34,7 @@ export interface CheckCell {
   /** The room has seen it (a full mark, from the end of its snippet); before that the mark is the presenters' alone
    * (dotted). */
   revealed: boolean;
-  /** Revealed, its snippet (or the broken record) playing now: highlighted (ANIMATIONS.md › check-step, console). */
+  /** Revealed, its song playing now (for `durationMs`, though the song plays on, D314): highlighted (ANIMATIONS.md › check-step, console). */
   playing: boolean;
   /** The next press reveals it («Següent»). */
   next: boolean;

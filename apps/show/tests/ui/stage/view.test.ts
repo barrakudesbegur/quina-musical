@@ -68,7 +68,7 @@ function withSecrets(name: string): FlowState {
     future: { lineAt: 4242, bingoAt: 4343, toLine: [0, 7], toBingo: [], markCounts: [5, 6], lastStandingAt: 4444, standingCurve: [4646, 4747] },
     // The Desgraciat round's standing count and cards: the console's only.
     standing: { count: SECRET.standingCount, cardIds: [SECRET.standingCard] },
-    hold: { sinceMs: NOW, reason: 'hold', holdMusic: false, holdMusicAtMs: null, ducked: false },
+    hold: { sinceMs: NOW, reason: 'hold', holdMusic: false, ducked: false },
     queue: { ...state.queue, length: 777 },
     history: [{ recipe: 'R7', family: 'build', exit: null, songId: SECRET.nextSongId, hookId: 'h-secret', phase: 'final' }],
     claims: [
@@ -366,7 +366,7 @@ test("the last card's fail stays on the projector through the round's `checkFail
     ...atCue,
     scene: 'play',
     check: null,
-    hold: { sinceMs: NOW, reason: 'checkFailed', holdMusic: true, holdMusicAtMs: null, ducked: true },
+    hold: { sinceMs: NOW, reason: 'checkFailed', holdMusic: true, ducked: true },
     claims: atCue.claims.map((c) => ({ ...c, status: 'invalid' as const })),
   };
   const memory = { ...NO_CHECK_MEMORY, last: atCue.check };

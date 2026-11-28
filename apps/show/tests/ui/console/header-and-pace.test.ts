@@ -72,7 +72,7 @@ test('the Drift chip’s tone agrees with its words', () => {
 type HoldState = Pick<ShowState, 'status' | 'hold'>;
 const holding = (extra: Record<string, unknown> = {}): HoldState => ({
   status: 'hold',
-  hold: { sinceMs: 0, reason: 'hold', holdMusic: false, holdMusicAtMs: null, ...extra },
+  hold: { sinceMs: 0, reason: 'hold', holdMusic: false, ...extra },
 });
 
 test('the active hold mode: none, Parlem (ducked, or an engine without `ducked`), Aguanta', () => {

@@ -63,14 +63,15 @@ export interface CheckResult {
 export interface CheckTiming {
   /** A ✓'s reveal: it paces the automatic reveal; its song plays on until the next reveal, a step back or the cue. */
   stepSec: number;
+  /** A ✗'s reveal: long enough to hear its tape break before an automatic cue; its song plays on like a ✓'s. */
   missSec: number;
   /** A standing Check's ✓ (a song that hasn't landed): a short knock. */
   stillSec: number;
 }
 
-/** What a step sounds like: a landed song from its hook ('snippet': its snippet starts it, the full song plays on), the
- * "broken record" (a Line's or Bingo's missing song), or the standing Check's knock (a song that hasn't landed: good for
- * that claim). */
+/** What a step sounds like: a landed song from its hook ('snippet': its snippet starts it, the full song plays on), a
+ * Line's or Bingo's missing song the same way, its tape breaking after a couple of seconds ('miss'), or the standing
+ * Check's knock (a song that hasn't landed: good for that claim). */
 export type StepSound = 'snippet' | 'miss' | 'still';
 
 export interface TimedStep extends CheckSong {
@@ -138,7 +139,8 @@ export function computeCheck({ allCards, cardId, kind, cardType, side = 1, cards
 }
 
 /** What one revealed song sounds like: a landed song always plays from its hook (in a standing Check, as the proof that
- * sank the card); a Line's or Bingo's missing one the broken record; a standing Check's song that hasn't landed a knock. */
+ * sank the card); a Line's or Bingo's missing one too, its tape breaking; a standing Check's song that hasn't landed a
+ * knock. */
 export function stepSound(song: CheckSong, kind: WinKind, timing: CheckTiming): { sound: StepSound; durationSec: number } {
   const sound: StepSound = song.landed ? 'snippet' : kind === 'standing' ? 'still' : 'miss';
   return { sound, durationSec: sound === 'snippet' ? timing.stepSec : sound === 'still' ? timing.stillSec : timing.missSec };

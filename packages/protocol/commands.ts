@@ -55,9 +55,9 @@ export const COMMANDS = Object.freeze({
   back: {},
   /**
    * Enter (`on: true`), leave (`on: false`) or toggle (no `on`) the Hold. `duck` (default true) is Parlem: the
-   * song ducks under the presenters' voices, and Hold music may take over. `duck: false` is Aguanta (Stay): the
-   * song keeps playing at full volume, nothing lands and nothing advances, and near its end it loops its last
-   * phrase. Sent while holding, `duck` switches between the two in place; `on: false` releases, and so does `next`
+   * song ducks under the presenters' voices. `duck: false` is Aguanta (Stay): the song keeps playing at full volume.
+   * In both nothing lands and nothing advances, and near its end the song loops its last phrase; Parlem never hands
+   * over to Hold music by itself (U205). Sent while holding, `duck` switches between the two in place; `on: false` releases, and so does `next`
    * from Parlem (Next is refused during Aguanta, D133). In a Celebration, Parlem ducks its music (D117). In a Check
    * under review (D118) it switches Parlem on or off in place: the round stays in the Check's Hold, nothing lands.
    */
@@ -86,10 +86,6 @@ export const COMMANDS = Object.freeze({
     songsUntilWinner: { type: 'integer', optional: true, min: 0, max: 999 },
     phaseOverride: { type: 'phase', optional: true, nullable: true },
     roundsTotal: { type: 'integer', optional: true, min: 1, max: 20 },
-    holdMusicAfterSec: { type: 'number', optional: true, min: 0, max: 3600 },
-    /** Off: a Hold keeps the song ducked instead of switching to Hold music after `holdMusicAfterSec`. Hold music
-     * still covers what would otherwise be silence (after Back, a cancelled Spin, a song that runs out). */
-    holdMusicOn: { type: 'boolean', optional: true },
     /** The remote's shake gesture on or off (D148), the same on every console. The engine only keeps it. */
     remoteShake: { type: 'boolean', optional: true },
     /** The phones' «LÍNIA!»/«QUINA!» over a card that completes one (GameSettings.announceWins, default true). The engine
@@ -220,7 +216,7 @@ export const COMMANDS = Object.freeze({
   /**
    * The presenter-paced Check (D107): the tap, or the Wii's A. `step` is the index the press expects, so two consoles
    * and the Wii pressing at once reveal once: `step` = the next song's index reveals it (in the card's grid order,
-   * its snippet or the broken record); once the reveals stop (the last song, or the first ✗), `step` = the revealed
+   * its song from the hook on, broken after ~2 s for a ✗); once the reveals stop (the last song, or the first ✗), `step` = the revealed
    * count is the cue (a pass: valid; a fail: the fail moment); with `celebrationNext`, its own `{ claimId, step }`
    * starts the shared Celebration. Any other press is ignored, silently.
    */

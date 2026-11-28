@@ -130,7 +130,6 @@ export function baseState(now: number): FullState {
       songsUntilWinner: 3,
       phaseOverride: null,
       roundsTotal: 8,
-      holdMusicAfterSec: 45,
       nextRecipe: null,
       autoSounds: { ...AUTO_SOUNDS_DEFAULT },
     },
@@ -204,7 +203,7 @@ export const FIXTURE_CARDS: Readonly<Record<number, CatalogCard>> = {
 
 /** The engine's Check timing (engine config FLOW.check): a landed song's snippet, a ✗'s broken record, a standing ✓'s
  * knock; and the time between two presses in these fixtures. */
-const PACED = { snippetMs: 2500, missMs: 1200, stillMs: 550, pressGapMs: 900 };
+const PACED = { snippetMs: 2500, missMs: 2500, stillMs: 550, pressGapMs: 900 };
 
 /** What the engine finds on a card (computeCheck): the songs its Check reveals, where the reveals stop, its outcome. */
 interface CardFinding {
@@ -338,7 +337,7 @@ function pacedCheck(s: FullState, specs: readonly PacedSpec[], landed: readonly 
     scene: 'check',
     status: 'hold',
     autoAtMs: null,
-    hold: { sinceMs: first, reason: 'claim', holdMusic: false, holdMusicAtMs: null, ducked: true },
+    hold: { sinceMs: first, reason: 'claim', holdMusic: false, ducked: true },
     claims: built.map((b) => b.claim),
     // The one on screen: the latest Claim with reveals (an earlier one already had its cue).
     check: built.filter((b) => b.check).at(-1)?.check ?? null,
@@ -740,7 +739,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
   audioStalled: (now) => ({ state: { ...baseState(now), audioStalled: { sinceMs: now - 4000 } } }),
   hold: (now) => {
     const s = baseState(now);
-    return { state: withFlow(s, { status: 'hold', autoAtMs: null, hold: { sinceMs: now - 12000, reason: 'hold', holdMusic: false, holdMusicAtMs: now + 33000 } }) };
+    return { state: withFlow(s, { status: 'hold', autoAtMs: null, hold: { sinceMs: now - 12000, reason: 'hold', holdMusic: false } }) };
   },
   possibleWinners: (now) => {
     const s = baseState(now);
@@ -856,7 +855,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
   },
   pause: (now) => {
     const s = baseState(now);
-    return { state: withFlow(s, { status: 'hold', autoAtMs: null, pause: { sinceMs: now - 30000, overlay: true }, hold: { sinceMs: now - 30000, reason: 'music', holdMusic: true, holdMusicAtMs: null } }) };
+    return { state: withFlow(s, { status: 'hold', autoAtMs: null, pause: { sinceMs: now - 30000, overlay: true }, hold: { sinceMs: now - 30000, reason: 'music', holdMusic: true } }) };
   },
   suspense: (now) => {
     const s = baseState(now);
@@ -865,7 +864,7 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
   /** Aguanta (B held): the song plays on at full volume, nothing lands, and Següent waits (D133). */
   stay: (now) => {
     const s = baseState(now);
-    return { state: withFlow(s, { status: 'hold', autoAtMs: null, hold: { sinceMs: now - 6000, reason: 'hold', holdMusic: false, holdMusicAtMs: null, ducked: false } }) };
+    return { state: withFlow(s, { status: 'hold', autoAtMs: null, hold: { sinceMs: now - 6000, reason: 'hold', holdMusic: false, ducked: false } }) };
   },
   /** Aguanta held on another console (D234's lock mirror): «Mòbil admin» has held it for 2 s, toward Suspens, so this
    *  console shows it locked («la manté Mòbil admin»). */
@@ -881,8 +880,8 @@ export const FIXTURES: Record<string, (now: number) => DemoScript> = {
   /** In play; 1.5 s in, Pausa starts (A's badge glides to «Acaba la pausa», D128), and 4 s later it ends. */
   pauseStart: (now) => {
     const s = baseState(now);
-    const paused = withFlow(s, { status: 'hold', autoAtMs: null, pause: { sinceMs: now + 1500, overlay: true }, hold: { sinceMs: now + 1500, reason: 'pause', holdMusic: true, holdMusicAtMs: null, ducked: true } });
-    const back = withFlow(s, { status: 'hold', autoAtMs: null, hold: { sinceMs: now + 5500, reason: 'pause', holdMusic: false, holdMusicAtMs: null, ducked: true } });
+    const paused = withFlow(s, { status: 'hold', autoAtMs: null, pause: { sinceMs: now + 1500, overlay: true }, hold: { sinceMs: now + 1500, reason: 'pause', holdMusic: true, ducked: true } });
+    const back = withFlow(s, { status: 'hold', autoAtMs: null, hold: { sinceMs: now + 5500, reason: 'pause', holdMusic: false, ducked: true } });
     return { state: s, events: [{ afterMs: 1500, event: { ...paused, seq: 2 } }, { afterMs: 5500, event: { ...back, seq: 3 } }] };
   },
   /** A break playing Pausa's set (D228: picked in the Descans' music picker), track 2 of 18. */

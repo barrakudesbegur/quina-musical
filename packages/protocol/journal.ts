@@ -11,9 +11,19 @@ import type { GameSettings, WinnerInfo } from './events.ts';
 
 /**
  * The settings a journal keeps (the one-off `nextRecipe` test override is not one of them). A journal from before
- * D237 lacks `autoSounds` and has the old switches instead (SoundSettings); read its sounds with autoSoundsOf.
+ * D237 lacks `autoSounds` and has the old switches instead (SoundSettings); read its sounds with autoSoundsOf. A
+ * journal from before U205 also has the Hold music setting (OldHoldMusicSettings): read and ignored.
  */
-export type JournalSettings = Omit<GameSettings, 'nextRecipe' | 'autoSounds'> & Omit<SoundSettings, 'autoSounds'> & { autoSounds?: AutoSounds };
+export type JournalSettings = Omit<GameSettings, 'nextRecipe' | 'autoSounds'> & Omit<SoundSettings, 'autoSounds'> & { autoSounds?: AutoSounds } & OldHoldMusicSettings;
+
+/**
+ * Before U205 (the user, 28 Nov: Parlem never hands over to Hold music by itself), «Música d'espera»: Hold music
+ * taking over a Parlem after `holdMusicAfterSec`, on or off. The engine no longer writes or takes them.
+ */
+export interface OldHoldMusicSettings {
+  holdMusicAfterSec?: number;
+  holdMusicOn?: boolean;
+}
 
 interface EntryBase {
   /** The Game this entry belongs to. */

@@ -20,6 +20,7 @@ import { BlendStore } from './audio/blend.ts';
 import { PreverbStore } from './audio/preverb.ts';
 import { plannerWithInputs } from './audio/plan-inputs.ts';
 import { CheckPlayer, SnippetStore } from './audio/check.ts';
+import { brokenTape } from './audio/fx/broken-tape.ts';
 import { WinningLoop } from './audio/celebration.ts';
 import { bestHook, hookLoop } from './plan/hookloop.ts';
 import { audibleEndSec } from './plan/checksong.ts';
@@ -769,7 +770,7 @@ function cancelTransition({ keepOutgoing, drum: wheel, backOut = false, recueA }
   rt.incoming = null;
   if (keepOutgoing && rt.outgoing) {
     rt.outgoing.restore(backOut ? fade : 0.3);
-    // Aguanta after its exit started (D239): its exit undone, a fresh source on its own clock (whatever the exit did
+    // Cancelled after its exit started (D239, U205): its exit undone, a fresh source on its own clock (whatever the exit did
     // to its rate or stop), crossfading from what the exit left.
     if (recueA) rt.outgoing.cue(recueA.at, recueA.offset, HOLD.recueFadeSec);
     rt.current = rt.outgoing;
@@ -926,7 +927,8 @@ async function playSfx(name: SoundName, at = ctx.currentTime + 0.01, out: AudioN
 }
 
 // The sound test (D229): one kind at a time, on a loop, through that slider's node, so the tech sets the PA on the
-// day with the real levels. Songs and the Check play their 3 s hook snippets (trimmed as in a Check); the music
+// day with the real levels. Songs and the Check play their 3 s hook snippets (trimmed as in a Check; the Check's every
+// other one through a ✗'s broken tape, broken from the start); the music
 // kinds play their own player; the short sounds repeat every few seconds. A new kind, or null, stops the last one.
 // A switched-off automatic sound (D237) mutes its node, so while a test plays the mutes are lifted, and stopping it puts
 // the last ones back.
@@ -956,7 +958,7 @@ function soundTest(effect: EffectOf<'soundTest'>): void {
     };
     tick(ctx.currentTime + 0.1, 0);
   };
-  const snippets = (out: AudioNode, gainDb = 0) => {
+  const snippets = (out: AudioNode, gainDb = 0, broken?: (k: number) => boolean) => {
     void testSnippets.loadIndex();
     every(3.5, (t, k) => {
       const id = effect.songIds[k % Math.max(1, effect.songIds.length)];
@@ -967,8 +969,11 @@ function soundTest(effect: EffectOf<'soundTest'>): void {
         const level = ctx.createGain();
         level.gain.value = 10 ** (((testSnippets.gains.get(id) ?? 0) + gainDb) / 20);
         source.buffer = buffer;
-        source.connect(level).connect(out);
-        source.start(Math.max(t, ctx.currentTime + 0.02));
+        const start = Math.max(t, ctx.currentTime + 0.02);
+        const tape = broken?.(k) ? brokenTape(ctx, out, { ...FLOW.check.brokenTape, breakAt: -Infinity }) : null;
+        source.connect(level).connect(tape?.input ?? out);
+        source.start(start);
+        tape?.stop(start + buffer.duration + 0.1);
       });
     });
   };
@@ -978,7 +983,7 @@ function soundTest(effect: EffectOf<'soundTest'>): void {
     case 'songsParlem':
       return snippets(graph.musicBus, effect.parlemDb);
     case 'check':
-      return snippets(graph.vol.check);
+      return snippets(graph.vol.check, 0, (k) => k % 2 === 1);
     case 'djFx':
       return every(4, (t) => {
         SYNTHS.riser(ctx, graph.synthBus, { t0: t, t1: t + 2, fromHz: 700, toHz: 9500, fromDb: -36, toDb: -12 });

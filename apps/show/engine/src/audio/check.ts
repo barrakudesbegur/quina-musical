@@ -1,16 +1,18 @@
-// A Check's sound, paced by the presenters (D107; show.ts CheckRevealEffect, CheckDuckEffect): each revealed landed
-// song plays from its best hook's pickup until the next reveal, a step back or the Check's end; near its end it repeats
-// its last phrase, as a song left playing does anywhere else (D239, plan/checksong.ts), before its audio dies. A song
-// that has not landed gets the "broken record" (in a standing Check, where not landing is the point, a short knock
-// instead), at the time the machine set for each press. A press cuts the sound before it. Everything else (the songs, Hold music, the Celebration's loop) is ducked far down from the
+// A Check's sound, paced by the presenters (D107; show.ts CheckRevealEffect, CheckDuckEffect): each revealed song plays
+// from its best hook's pickup until the next reveal, a step back or the Check's end; near its end it repeats its last
+// phrase, as a song left playing does anywhere else (D239, plan/checksong.ts), before its audio dies. A ✓ (landed) plays
+// as it is; a ✗ (not landed) the same, at the same level, until FLOW.check.missBreakAfterSec in, when its tape breaks
+// (audio/fx/broken-tape.ts) and stays broken, loops included. In a standing Check, where not landing is the point, a song
+// that hasn't landed is a short knock instead. Each sounds at the time the machine set for its press, and a press cuts
+// the sound before it. Everything else (the songs, Hold music, the Celebration's loop) is ducked far down from the
 // first reveal until the cue, or a step back to none.
 //
-// A ✓ starts at once on the song's snippet (tools/prep/snippets.py cuts 3 s from that pickup, /snippets/<id>.flac, its
-// loudness trim and pickup in data/snippets/index.json), while the full song is fetched and decoded on the side (its
+// A reveal starts at once on the song's snippet (tools/prep/snippets.py cuts 3 s from that pickup, /snippets/<id>.flac,
+// its loudness trim and pickup in data/snippets/index.json), while the full song is fetched and decoded on the side (its
 // own small window, so the round's decoded songs stay where they are). As soon as the song is decoded the snippet hands
 // over to it, sample-aligned at the same level, so the switch can't be heard. Until then, or when the song can't be
-// loaded, the snippet itself loops back to its start, so a ✓ is never silent.
-import { brokenRecord } from './synth/broken.ts';
+// loaded, the snippet itself loops back to its start, so a reveal is never silent.
+import { brokenTape, type BrokenTape, type BrokenTapeOptions } from './fx/broken-tape.ts';
 import { stillKnock } from './synth/still.ts';
 import { audibleEndSec, atFrame, entryOffset, equalPowerCurves, handoverAt, passAt, pickupLoop, resumePass, snippetStartSec, songLoop, songSecAt, type CheckLoop, type VoiceClock } from '../plan/checksong.ts';
 import { LOOP } from '../config.ts';
@@ -104,7 +106,8 @@ export interface CheckTuning {
   duckDb: number;
   duckFadeSec: number;
   snippetDb: number;
-  brokenDb: number;
+  missBreakAfterSec: number;
+  brokenTape: Omit<BrokenTapeOptions, 'breakAt'>;
   stillDb: number;
   cutFadeSec: number;
   endFadeSec: number;
@@ -130,11 +133,15 @@ interface Voice extends VoiceClock {
   fullAt: number;
 }
 
-/** A ✓ reveal's song: what it can play, and the pass sounding. */
+/** A ✓ or ✗ reveal's song: what it can play, and the pass sounding. */
 interface SongSound {
   songId: number;
   at: number;
   out: GainNode;
+  /** Where its passes play into: `out`, or a ✗'s broken tape before it. */
+  input: AudioNode;
+  /** A ✗'s broken tape, and when it breaks (audio clock). */
+  tape: { fx: BrokenTape; breakAt: number } | null;
   level: number;
   pick: SnippetPick | null;
   snippet: { buffer: AudioBuffer; loop: CheckLoop } | null;
@@ -147,10 +154,12 @@ interface SongSound {
   sources: Set<AudioBufferSourceNode>;
 }
 
-/** A ✓ reveal's song as Pausa saved it (D128): what it can play, and the pass and buffer second it was at (null: it
+/** A ✓ or ✗ reveal's song as Pausa saved it (D128): what it can play, and the pass and buffer second it was at (null: it
  * had not started yet). */
 interface SuspendedSong {
   songId: number;
+  /** A ✗: how long until its tape breaks (≤ 0: broken already); null for a ✓. */
+  breakInSec: number | null;
   level: number;
   pick: SnippetPick | null;
   originSec: number | null;
@@ -159,7 +168,7 @@ interface SuspendedSong {
   at: { kind: Voice['kind']; offsetSec: number } | null;
 }
 
-/** What a ✓ reveal is playing now, for the debug view and the audio checks. */
+/** What a ✓ or ✗ reveal is playing now, for the debug view and the audio checks. */
 export interface CheckPlaying {
   songId: number;
   kind: 'snippet' | 'song';
@@ -178,7 +187,7 @@ export class CheckPlayer {
   /** The reveal sounding now: its own gain, so the next press can cut it. */
   private out: GainNode | null = null;
   private sound: SongSound | null = null;
-  /** The ✓ reveal's song Pausa saved, until Pausa ends (resume), or the Check does (cancel). */
+  /** The reveal's song Pausa saved, until Pausa ends (resume), or the Check does (cancel). */
   private suspended: SuspendedSong | null = null;
   /** Each decoded song's audible end, measured once. */
   private ends = new WeakMap<AudioBuffer, number>();
@@ -199,8 +208,9 @@ export class CheckPlayer {
   }
 
   /**
-   * One revealed song at `step.at`: its song (from the snippet on), the broken record or the knock. The sound before it
-   * stops. `nextSongId`: the next ✓'s song, decoded meanwhile so its reveal goes straight to it.
+   * One revealed song at `step.at`: its song (from the snippet on; a ✗'s breaks after FLOW.check.missBreakAfterSec), or
+   * a standing Check's knock. The sound before it stops. `nextSongId`: the next step's song, decoded meanwhile so its
+   * reveal goes straight to it.
    */
   reveal(claimId: string, step: TimedStep, nextSongId: number | null = null): void {
     const previous = this.sound?.songId;
@@ -212,15 +222,15 @@ export class CheckPlayer {
     this.out = out;
     this.claimId = claimId;
     void this.snippets.loadIndex();
-    if (step.sound === 'snippet') {
+    if (step.sound === 'still') stillKnock(ctx, out, { t0: step.at, levelDb: this.tuning.stillDb });
+    else {
       // The one before stays decoded for a step back; the next is decoded once this one is.
       this.songs.retain([previous, step.songId, nextSongId].filter((id) => id != null));
-      this.playSong(out, step, nextSongId);
-    } else if (step.sound === 'still') stillKnock(ctx, out, { t0: step.at, levelDb: this.tuning.stillDb });
-    else brokenRecord(ctx, out, { t0: step.at, durationSec: step.durationSec, levelDb: this.tuning.brokenDb });
+      this.playSong(out, step, nextSongId, step.sound === 'miss' ? step.at + this.tuning.missBreakAfterSec : null);
+    }
   }
 
-  /** What the ✓ reveal plays now, or null. */
+  /** What the ✓ or ✗ reveal plays now, or null. */
   playing(): CheckPlaying | null {
     const voice = this.sound?.voice;
     if (!this.sound || !voice) return null;
@@ -237,9 +247,16 @@ export class CheckPlayer {
     if (current && this.graph.ctx.currentTime >= current.outAt - this.tuning.loopAheadSec) this.nextPass(sound, current);
   }
 
-  private playSong(out: GainNode, step: TimedStep, nextSongId: number | null): void {
+  /** A ✗'s broken tape in front of `out`, breaking at `breakAt`; none for a ✓ (null). */
+  private tape(out: GainNode, breakAt: number | null): Pick<SongSound, 'input' | 'tape'> {
+    if (breakAt == null) return { input: out, tape: null };
+    const fx = brokenTape(this.graph.ctx, out, { ...this.tuning.brokenTape, breakAt });
+    return { input: fx.input, tape: { fx, breakAt } };
+  }
+
+  private playSong(out: GainNode, step: TimedStep, nextSongId: number | null, breakAt: number | null): void {
     const { songId, at } = step;
-    const sound: SongSound = { songId, at, out, level: 0, pick: null, snippet: null, song: null, voice: null, prev: null, originSec: null, sources: new Set() };
+    const sound: SongSound = { songId, at, out, ...this.tape(out, breakAt), level: 0, pick: null, snippet: null, song: null, voice: null, prev: null, originSec: null, sources: new Set() };
     this.sound = sound;
     const decoded = this.attach(sound);
     if (nextSongId != null && nextSongId !== songId) {
@@ -365,7 +382,7 @@ export class CheckPlayer {
     source.buffer = material.buffer;
     const gain = ctx.createGain();
     gain.gain.value = 0;
-    source.connect(gain).connect(sound.out);
+    source.connect(gain).connect(sound.input);
     source.start(at, offsetSec);
     sound.sources.add(source);
     source.onended = () => {
@@ -392,13 +409,14 @@ export class CheckPlayer {
         s.stop(at + fadeSec + 0.02);
       } catch {}
     }
+    sound?.tape?.fx.stop(at + fadeSec + 0.02);
     setTimeout(() => out.disconnect(), (Math.max(0, at - this.graph.ctx.currentTime) + fadeSec) * 1000 + 400);
   }
 
   /**
-   * Pausa (D128): the ✓ reveal's song fades out from `at` and is saved where it is (its pass, its loop), to resume
-   * with the rest of the playback; any other reveal's sound fades out with it. The music under the Check comes back up
-   * meanwhile (it is all saved and silent too, and Pausa's set is not under the duck), as before.
+   * Pausa (D128): the reveal's song fades out from `at` and is saved where it is (its pass, its loop, a ✗'s break), to
+   * resume with the rest of the playback; a knock fades out with it. The music under the Check comes back up meanwhile
+   * (it is all saved and silent too, and Pausa's set is not under the duck), as before.
    */
   suspend({ at = this.graph.ctx.currentTime, fadeSec }: { at?: number; fadeSec: number }): void {
     const t = Math.max(at, this.graph.ctx.currentTime);
@@ -407,7 +425,8 @@ export class CheckPlayer {
     if (sound) {
       const playing = sound.voice ? passAt(sound.voice, sound.prev, t) : null;
       const { songId, level, pick, originSec, snippet, song } = sound;
-      this.suspended = { songId, level, pick, originSec, snippet, song, at: playing && { kind: playing.pass.kind, offsetSec: playing.offsetSec } };
+      const breakInSec = sound.tape ? sound.tape.breakAt - t : null;
+      this.suspended = { songId, breakInSec, level, pick, originSec, snippet, song, at: playing && { kind: playing.pass.kind, offsetSec: playing.offsetSec } };
     }
     for (const node of [this.graph.checkDuck.music, this.graph.checkDuck.hold]) this.graph.glide(node.gain, 0, this.tuning.duckFadeSec);
     this.stopSounds(t, fadeSec);
@@ -425,7 +444,9 @@ export class CheckPlayer {
     this.out = out;
     const start = atFrame(Math.max(at, ctx.currentTime + 0.01), ctx.sampleRate);
     const { songId, level, pick, originSec, snippet, song } = saved;
-    const sound: SongSound = { songId, at: start, out, level, pick, snippet, song, voice: null, prev: null, originSec, sources: new Set() };
+    // A ✗ broken already comes back broken; one not broken yet breaks as much later as it had left.
+    const breakAt = saved.breakInSec == null ? null : saved.breakInSec <= 0 ? -Infinity : start + saved.breakInSec;
+    const sound: SongSound = { songId, at: start, out, ...this.tape(out, breakAt), level, pick, snippet, song, voice: null, prev: null, originSec, sources: new Set() };
     this.sound = sound;
     let was = saved.at;
     // The song decoded meanwhile (during Pausa): a snippet comes back as the song, at the same song second.

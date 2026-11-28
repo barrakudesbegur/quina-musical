@@ -189,3 +189,26 @@ export function resumePass(loop: CheckLoop, offsetSec: number, fadeSec: number, 
   if (room >= minFadeSec) return { offsetSec, fadeSec: Math.min(fadeSec, room) };
   return { offsetSec: loop.fromSec, fadeSec };
 }
+
+/**
+ * A ✗'s broken tape (audio/fx/broken-tape.ts): when its onset runs, on the audio clock. It starts `breakAt` (the
+ * reveal plus FLOW.check.missBreakAfterSec, or a resumed one's remaining time) and lasts `onsetSec`; one due before
+ * `now` is already over, the tape broken from the start (`on`).
+ */
+export function breakOnset(breakAt: number, now: number, onsetSec: number): { on: true } | { on: false; from: number; to: number } {
+  return breakAt <= now ? { on: true } : { on: false, from: breakAt, to: breakAt + onsetSec };
+}
+
+/**
+ * The extra delay that makes the tape "groan" down `semitones` over `onsetSec`: a delay line growing at d′ plays at
+ * 1 − d′, so it drops to 2^(−semitones/12) for the onset and comes back to speed after, with that much more latency
+ * (the speed overall never changes, so the voice clock, the loops and Pausa's position stay right).
+ */
+export function groanDelaySec(semitones: number, onsetSec: number): number {
+  return onsetSec * (1 - 2 ** (-semitones / 12));
+}
+
+/** The wow of a delay line swinging ±`depthSec` at `hz`: the largest pitch deviation it gives, in cents. */
+export function wowCents(depthSec: number, hz: number): number {
+  return 1200 * Math.log2(1 + 2 * Math.PI * hz * depthSec);
+}

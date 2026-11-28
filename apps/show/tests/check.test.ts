@@ -91,11 +91,12 @@ test('a Bingo plays all 12 songs row by row; complete since its last song', () =
   assert.deepEqual(short.steps.filter((s) => !s.landed).map((s) => s.songId), [1]);
 });
 
-test('each revealed song sounds by itself: ✓ the snippet, ✗ the broken record, a standing ✓ the knock', () => {
+test('each revealed song sounds by itself: ✓ its song, ✗ its song breaking, a standing ✓ the knock', () => {
   const t = FLOW.check;
   assert.deepEqual(stepSound({ songId: 1, landed: true }, 'line', t), { sound: 'snippet', durationSec: t.stepSec });
   assert.deepEqual(stepSound({ songId: 1, landed: false }, 'bingo', t), { sound: 'miss', durationSec: t.missSec });
   assert.deepEqual(stepSound({ songId: 1, landed: false }, 'standing', t), { sound: 'still', durationSec: t.stillSec });
   assert.deepEqual(stepSound({ songId: 1, landed: true }, 'standing', t), { sound: 'snippet', durationSec: t.stepSec }, 'the proof that sank it');
   assert.equal(t.stepSec, 2.5, 'the agreed default: 2.5 s per ✓');
+  assert.ok(t.missSec >= t.missBreakAfterSec && t.missSec <= t.missBreakAfterSec + t.brokenTape.onsetSec, "a ✗'s mark stamps as its tape breaks");
 });

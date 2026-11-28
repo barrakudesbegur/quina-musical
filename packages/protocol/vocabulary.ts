@@ -280,7 +280,7 @@ export type ThrowSong = (typeof THROW_SONGS)[number];
  * engine is tuned to for that sound, so a fresh Game sounds as before; above 100% is louder, with the room the engine
  * keeps inside (D157: it plays the whole show lower, by its headroom trim, so the limiter stays clean). `songsParlem`
  * is the song under Parlem as a share of its full level (its default is the Parlem duck). `master` scales everything. `djFx`: the DJ moves' risers, impacts and
- * whooshes; `padFx`: the presenters' effects pad; `check`: the Check's snippets and broken record; `win`: the Clear
+ * whooshes; `padFx`: the presenters' effects pad; `check`: the Check's revealed songs (✓, and ✗ through the broken tape); `win`: the Clear
  * fanfare, the victory track and the winning song's loop; `fail`: the Failure fanfare and the error Hold music;
  * `finalLap`: the stinger; `intros`, `breaks`, `pausa`, `throws`, `doors`, `end`: those moments' music; `voices`: the
  * automatic voice cues ("Veus", D204).

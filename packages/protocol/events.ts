@@ -46,8 +46,6 @@ export interface HoldInfo {
   sinceMs: number;
   reason: HoldReason;
   holdMusic: boolean;
-  /** When Hold music will take over, or null. */
-  holdMusicAtMs: number | null;
   /** PRIVATE (console and admin only): false in Aguanta (Stay, the song at full volume), true in Parlem (ducked).
    * Absent from an older engine: ducked. */
   ducked?: boolean;
@@ -131,14 +129,7 @@ export interface GameSettings {
   songsUntilWinner: number;
   phaseOverride: PhaseName | null;
   roundsTotal: number;
-  holdMusicAfterSec: number;
   nextRecipe: string | null;
-  /**
-   * Off: a Hold keeps the song ducked instead of switching to Hold music after `holdMusicAfterSec`; Hold music
-   * still covers what would be silence (after Back, a cancelled Spin, a song that runs out). Default true.
-   * Optional in the type only (added later in v1): the engine always sends it, and an older journal lacks it.
-   */
-  holdMusicOn?: boolean;
   /**
    * The volume sliders, percent 0–VOLUME_MAX (`setVolume`, vocabulary.ts VOLUME_KEYS and volumeDb). The state always has
    * every key. In the journal they are absent until a slider or the plan's `volumes` first set them, so a Game that
@@ -300,7 +291,7 @@ export interface ClaimInfo {
   cueNext: boolean;
 }
 
-/** One revealed song of a Check: its snippet (✓) or the "broken record" sound (✗). */
+/** One revealed song of a Check: its song from the hook on (✓), or the same broken after ~2 s (✗, D319). `durationMs` paces the reveal; the song plays on until the next reveal or the cue (D314). */
 export interface CheckStep {
   songId: number;
   landed: boolean;
@@ -829,7 +820,7 @@ export interface CheckStarted {
   check: CheckInfo;
 }
 
-/** A press revealed the Check's song at `index` (its snippet, or the broken record, from `step.atMs`). */
+/** A press revealed the Check's song at `index` (its song from the hook on, broken after ~2 s for a ✗, from `step.atMs`). */
 export interface CheckRevealed {
   v: ProtocolVersion;
   type: 'check.revealed';

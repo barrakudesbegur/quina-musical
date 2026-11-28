@@ -407,37 +407,35 @@ test('the scene rules: the skip whenever a set plays, and the console’s fallba
   assert.ok(sceneAllows('intervalSkip', ctx('check', { paused: true })), 'during Pausa: the Pausa set');
 });
 
-test('Hold music off: a Hold keeps the song ducked; switched back on, Hold music takes over; silence is still covered', () => {
-  const h = setup({ seed: 6, settings: { autoAdvance: false, holdMusicOn: false } });
+test('U205: Parlem never hands over to Hold music by itself, it loops; Back still brings Hold music; a journal from before with «Música d\'espera» restores and ignores it', () => {
+  const h = setup({ seed: 6, settings: { autoAdvance: false } });
   h.send('unlock');
-  assert.equal(h.show.snapshot().game.holdMusicOn, false);
   h.send('next');
   h.until(() => h.show.status === 'playing');
   h.send('hold');
-  assert.equal(h.show.timers.holdMusicAt, null, 'no timed switch');
-  const long = h.advance(h.show.game.holdMusicAfterSec + 2);
-  assert.ok(!find(long, 'songToHoldMusic') && h.show.current, 'the song stays, ducked');
-  const on = h.send('setGame', { holdMusicOn: true });
-  assert.ok(h.show.timers.holdMusicAt != null && h.show.timers.holdMusicAt >= h.clock.t, 'the switch comes back');
-  assert.equal(journalOf(on).at(-1)?.kind, 'settings.changed');
-  const later = h.advance(1.1);
-  assert.ok(find(later, 'songToHoldMusic'), 'already past holdMusicAfterSec: at once');
-  // Off again while the song still plays: Back still brings Hold music (never silence).
+  const cur = h.show.current;
+  assert.ok(cur);
+  const endAt = cur.endCtx; // the song's own end (each repeat moves the clock's)
+  const long = h.until(() => h.clock.t > endAt + 60, 600);
+  assert.ok(!find(long, 'songToHoldMusic') && !find(long, 'holdMusic'), 'no Hold music');
+  assert.equal(h.show.current?.songId, cur.songId, 'the song stays');
+  assert.equal(h.show.hold?.ducked, true, 'still Parlem');
+  assert.ok(h.show.loop?.purpose === 'stay' && long.filter((e) => e.type === 'cue').length >= 3, 'it loops');
+  assert.ok(!('holdMusicAtMs' in (h.show.snapshot().hold ?? {})), 'no takeover countdown');
+  // The setting is gone: setGame refuses it.
+  assert.ok(!checkCommand({ v: 1, type: 'cmd', cmd: 'setGame', holdMusicOn: false }).ok);
+  // Back still brings Hold music (never silence).
   h.send('hold', { on: false });
-  h.send('next');
-  h.until(() => h.show.status === 'playing');
-  h.send('setGame', { holdMusicOn: false });
   const back = h.send('back');
-  assert.equal(find(back, 'holdMusic')?.mood, 'error', 'Back still covers with Hold music');
+  assert.equal(find(back, 'holdMusic')?.mood, 'error');
   assert.ok(h.show.holdMusic);
-  // A fresh Game and an older journal without the newer settings: the defaults.
+  // A journal from before U205, with the old switch and delay: read and ignored.
   const fresh = setup({ seed: 6 });
-  assert.equal(fresh.show.game.holdMusicOn, true);
-  assert.deepEqual(fresh.show.snapshot().game.volumes, VOLUME_DEFAULTS);
   const record = replayJournal(journalOf(fresh.log));
-  const { holdMusicOn: _on, ...older } = record.settings ?? fresh.show.journalSettings();
-  const resumed = setup({ seed: 6, restore: { ...record, settings: older } });
-  assert.equal(resumed.show.game.holdMusicOn, true);
+  const settings = { ...(record.settings ?? fresh.show.journalSettings()), holdMusicOn: false, holdMusicAfterSec: 25 };
+  const resumed = setup({ seed: 6, restore: { ...record, settings } });
+  assert.ok(!('holdMusicOn' in resumed.show.game) && !('holdMusicAfterSec' in resumed.show.game));
+  assert.ok(!('holdMusicOn' in resumed.show.journalSettings()), 'never written again');
   assert.deepEqual(resumed.show.snapshot().game.volumes, VOLUME_DEFAULTS);
 });
 

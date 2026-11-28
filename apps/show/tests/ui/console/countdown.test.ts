@@ -1,4 +1,4 @@
-// The console's countdowns: auto-advance ring, landing, Suspense release, Hold music, Shuffle, Interval guide.
+// The console's countdowns: auto-advance ring, landing, Suspense release, Shuffle, Interval guide.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { baseState } from '../../../../../packages/ui/fixtures/states.ts';
@@ -9,7 +9,6 @@ import {
   countdownBetween,
   elapsedSec,
   guideCountdown,
-  holdMusicCountdown,
   landingCountdown,
   lastLandingAtMs,
   shuffleCountdown,
@@ -82,15 +81,6 @@ test('Suspense counts down to its auto-release', () => {
   assert.ok(c);
   assert.equal(c.secondsLeft, 20);
   assert.ok(Math.abs(c.remaining - 2 / 3) < 1e-9);
-});
-
-test('Hold music countdown only while it has not taken over yet', () => {
-  const s = baseState(NOW);
-  s.hold = { sinceMs: NOW - 10_000, reason: 'hold', holdMusic: false, holdMusicAtMs: NOW + 30_000 };
-  assert.equal(holdMusicCountdown(s, NOW)?.secondsLeft, 30);
-  assert.equal(holdMusicCountdown({ ...s, hold: { ...s.hold, holdMusic: true } }, NOW), null);
-  assert.equal(holdMusicCountdown({ ...s, hold: { ...s.hold, holdMusicAtMs: null } }, NOW), null);
-  assert.equal(holdMusicCountdown({ ...s, hold: null }, NOW), null);
 });
 
 test('the Shuffle countdown disappears once it has ended', () => {

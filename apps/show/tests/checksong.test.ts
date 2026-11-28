@@ -2,7 +2,7 @@
 // how a late start joins its pass, and when the snippet hands over to the full song.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { atFrame, audibleEndSec, entryOffset, equalPowerCurves, handoverAt, passAt, pickupLoop, resumePass, snippetStartSec, songLoop, songSecAt } from '../engine/src/plan/checksong.ts';
+import { atFrame, audibleEndSec, breakOnset, entryOffset, equalPowerCurves, handoverAt, passAt, pickupLoop, resumePass, snippetStartSec, songLoop, songSecAt, groanDelaySec, wowCents } from '../engine/src/plan/checksong.ts';
 import { lastPhraseLoop } from '../engine/src/plan/loop.ts';
 import type { Analysis } from '../engine/src/analysis.ts';
 import { FLOW } from '../engine/src/config.ts';
@@ -139,4 +139,23 @@ test('a resumed pass comes back where it was, its fade-in shortened to end befor
   const snippet = resumePass({ startSec: 0, fromSec: 0, outSec: 2.8, xfadeSec: 0.15 }, 1.42, 1.5);
   assert.equal(snippet.offsetSec, 1.42);
   assert.ok(Math.abs(snippet.fadeSec - 1.18) < 1e-9);
+});
+
+test("a ✗'s broken tape: its onset at the break, or broken from the start when that time has passed (a resumed ✗)", () => {
+  assert.deepEqual(breakOnset(12, 10, 0.6), { on: false, from: 12, to: 12.6 });
+  assert.deepEqual(breakOnset(10, 10, 0.6), { on: true });
+  assert.deepEqual(breakOnset(-Infinity, 10, 0.6), { on: true });
+});
+
+test("the tape's groan and wow: speed-neutral pitch from a moving delay, sad not seasick", () => {
+  const t = FLOW.check.brokenTape;
+  const groan = groanDelaySec(2, 0.6);
+  // A delay growing by `groan` over 0.6 s plays at 1 − groan/0.6: two semitones down.
+  assert.ok(Math.abs(1 - groan / 0.6 - 2 ** (-2 / 12)) < 1e-12);
+  assert.equal(groanDelaySec(0, 0.6), 0);
+  const wow = wowCents(t.wowDepthSec, t.wowHz);
+  assert.ok(wow > 8 && wow < 20, `the wow swings ±${wow.toFixed(1)} cents`);
+  assert.ok(wowCents(t.flutterDepthSec, t.flutterHz) < 5, 'the flutter only a little');
+  assert.ok(t.baseDelaySec > t.wowDepthSec + t.flutterDepthSec, 'the delay never goes below zero');
+  assert.ok(t.baseDelaySec + groanDelaySec(t.groanSemitones, t.onsetSec) + t.wowDepthSec < 1, 'within the delay line');
 });
