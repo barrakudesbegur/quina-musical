@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D289**, **U230**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D290**, **U230**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -35,11 +35,11 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 
 **Chrome's audio clock stopped on this Mac (28 Nov):** the user's fix is to quit every Chrome (including a kiosk from the 27 Nov production test, profile /tmp/quina-show, and that test's relay), then `sudo killall coreaudiod`, then a reboot. Backend's production e2e was red until its Chrome ran with `--disable-audio-output` (057ff2a); D277 then deployed (c9865a9e). D284 adds detection: Sound engine's part (0dd44efe) and Backend's preflight FAIL (1a9714c) are on main; Frontend's Console banner is on main (1fa4ef60).
 
-**Today's production test (D288, U204 answered):** it starts 30 minutes after the deploy and the laptop setup are live, with the collapsed cards, the beat bob, `announceWins` and `beat`; the show page in a plain window. Afterwards Backend re-uploads the plan with 27 Dec's times. Chrome's audio clock runs again on this Mac (Backend's probe). Still to log: the user's go to build the collapsed cards and the beat bob, and what `announceWins` is (asked of Frontend and Sound engine).
+**Today's production test (D288, U204 answered):** it starts 30 minutes after the deploy and the laptop setup are live, with the collapsed cards, the beat bob, `announceWins` and `beat`; the show page in a plain window. Afterwards Backend re-uploads the plan with 27 Dec's times. Chrome's audio clock runs again on this Mac (Backend's probe). The collapsed cards and the beat bob are approved to build (D289).
 
 **The sessions:**
 - **Sound engine:** important tasks only. Done today: the README's Chrome profile (9c5ef734), split mode marked a nice-to-have (9d1cb3ac), D277's public Spin target and the Pausa volume fix (a2d0b4af).
-- **Frontend:** at most two agents in parallel. Boards for D285/D287 (the Celebration's sponsor logos as packed stickers, a shared packing module with tests, the animated fireworks C, the collapsed cards, A leading with the user's details (D286; open: the count rule, and whether the phone announces a Line or Quina); none is a go to build), the phone's edge-to-edge and scroll fixes. Also working on: D277's phone drum, drawing every undrawn screen (D236), D283's thick Check marks on the projector, 16:10 on the projector (D276), D278's near-win sound, D279's items. The canvas redraw is done (v117, v118).
+- **Frontend:** at most two agents in parallel. Boards for D285/D287 (the Celebration's sponsor logos as packed stickers, a shared packing module with tests, the animated fireworks C, the fireworks; the sponsor stickers and fireworks aren't a go to build). Building: the collapsed cards and the beat bob (D289, approved), for today's production test, the phone's edge-to-edge and scroll fixes. Also working on: D277's phone drum, drawing every undrawn screen (D236), D283's thick Check marks on the projector, 16:10 on the projector (D276), D278's near-win sound, D279's items. The canvas redraw is done (v117, v118).
 - **Backend:** queue empty apart from D277's feed (Frontend's request) and the held D282; it waits for U204's time. Done today: the Chrome profiles out of /tmp (f63af09f), the plan's title «Quina Quina! 3» uploaded (D280).
 - **The card design session (quina-musical-d1):** its work is done except U212. Its handoff is tools/card-mockup/HANDOFF.md, the spec tools/card-mockup/README.md, the canvas https://claude.ai/code/artifact/8af06588-238f-4095-8d67-a594d91c7392. Decisions D250–D272.
 

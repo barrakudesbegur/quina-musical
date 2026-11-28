@@ -124,6 +124,7 @@ _From event.md › Players' phones; the decisions doc › Changes._
   - **Being built to match the boards (D132)**; the prizes drawer to `Mobil-Premis-D244`.
 - **The card's side (D102):** a normal card has two sides with the same number. Pending U50, the phone shows the side of the current or coming round by itself.
 - **Before the Game:** the night's rounds and the card types, round 1's prizes, and adding cards. No how-to-play text. The card types' preview: **Not built yet** (the phone shows the rounds and prizes).
+- **Collapsed cards (D286, D289):** with several cards, each shows as a tile with its map; the playing song gets the full card's moving ring on every tile that holds it. A Line or a full card shows a big «LÍNIA!» or «QUINA!» card in the map's space until the winning song passes, unless the presenters turn this off in the console's settings (on by default). The song marks swing on the beat like a nodding head. A one-time scribble shows that a tile opens, until one is tapped.
 - **Marking:** every landed song is marked on the cards, the latest included. The song that's playing has the design system's running ring, its cover undimmed. No near-win marking on the card (D237); the near-win chime and the 30-40-30 ms buzz play (D278). No banner.
 - **The drum matches the projector's** (D237): the same covers in the same order, the same spin and blur, and the same landing (3a0d00bf). How it lands before the song is public is U206.
 - **The Desgraciat:** each card shows "Dempeus" or "Assegut", and a card sits down at the landing that sinks it.

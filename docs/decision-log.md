@@ -1860,7 +1860,7 @@ By: the orchestrator, on Sound engine's proposal (Sound engine: the check and th
 - **Not decided:** the phone's collapsed cards (§8 Y2). A leads, but the user wants more variants first: a card with 1 song left, with all, with none; a card with a Line, before and after the prize is given; cards that don't match the round's type (Especial). The user thinks the remaining-songs counts on the proposals are wrong, and worries players won't know they can tap a card. Frontend draws affordance options. No code.
 By: the user (to Frontend). Source: Frontend's report of 28 Nov. Amends: D242. Lives in: requirements/screens.md › Projector, Player app.
 
-### D286 · The collapsed cards: A leads, with the user's details · 2026-11-28 · Active; the final pick Pending
+### D286 · The collapsed cards: A leads, with the user's details · 2026-11-28 · Active; amended by D289
 Boards only; not a go to build. A (§8 Y2) is polished before the final decision; B, C and D aren't iterated unless A is dropped.
 - **The tile:** no card number at its foot; the map fills the tile with equal margins on every side.
 - **A Line:** the «Línia» badge sits on the line itself, only until the presenters validate it; after that, nothing special.
@@ -1883,3 +1883,14 @@ By: the user (to Frontend, on the canvas). Source: Frontend's report of 28 Nov. 
 - **The test's show page opens as a plain window,** not kiosk: the show profile and flags without `--kiosk`. The night still runs in kiosk (runbook step 5, unchanged).
 - The test carries Frontend's collapsed cards and the beat bob, and Sound engine's `game.announceWins` and `state.beat`, projected to phones as `PublicState.announceWins?` and `PublicState.beat?`.
 By: the user (to Backend; the test's contents through Frontend). Source: Backend's report of 28 Nov. Lives in: requirements/operations.md › Rehearsals.
+
+### D289 · The collapsed cards are approved to build; Line and Quina announced; the beat bob · 2026-11-28 · Active
+After canvas v126, the user approved A with these edits: "Make those changes and i approve directly, so it can be coded. no need to review the changes you make." Boards Mobil-Plegats-A-Graella, -A-Estats v2 and -A-Toc v2. B, C and D stay archived. The count keeps today's rule (`songsToGo`): the fewest songs any line needs until a Line is given, then every song left.
+- **Line and Quina are announced:** "I decided that Line and quina will be shown, but it is an option presenters can disable in the settings." A big «LÍNIA!» or «QUINA!» card fills the tile's map space, with no card icon (the header has it), never on the expanded card, and the tile goes once the winning song passes. Presenters can turn it off in the console's settings, on by default (`game.announceWins`, public as `PublicState.announceWins`). Answers D286's open point.
+- **The playing song on several tiles** does the same moving ring ("zig zag") as on the full cards (Frontend's reading, to confirm).
+- **The beat bob:** "the song marks on the card rotate at sync with the beat. the motion should be as if they were a head moving side to side (movement starts fast and ends slower)." The phone swings per bar from `PublicState.beat`; no motion when no song is heard, or with reduced motion.
+- **The count icon:** an icon-only count shows the bare icon with a subtle sticker effect, no frame, on the tiles and the full card (replaces D286's full circle).
+- **Cards not playing this round:** no ✗ on the count ("i changed my mind"; amends D286).
+- **The tap hint (T3):** the scribble stays until a tile is tapped, stays visible on a tile turned yellow by a song, and with more than 4 cards sits above the first row, pointing at the second tile; its text sits lower and its arrow ends higher, off the card and the text. When a card opens by itself, a closing arc with a word shows the time until it closes, with no number.
+- **The fire under a card with 1 song left:** discarded ("in the future i may try other animations, for now not needed").
+By: the user (to Frontend). Source: Frontend's report of 28 Nov, the user's message quoted verbatim. Amends: D286. Lives in: requirements/screens.md › Player app.
