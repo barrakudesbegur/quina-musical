@@ -193,6 +193,16 @@ export interface SwipePlan {
   now: { head: number; box: number; switchY: number };
 }
 
+/**
+ * The drum's box with the Check's ribbon hanging under it (ANIMATIONS.md `check`, 28 Nov evening): both looks grow by
+ * the ribbon's room (its height and margins), so the collapse's range stays the drum's own, the switch waits under the
+ * ribbon, and the content starts under it once the strip has stuck. With no ribbon (`room` 0) the heights are the
+ * drum's.
+ */
+export function boxWithRibbon(fullHeight: number, stripHeight: number, room: number): { fullHeight: number; stripHeight: number } {
+  return { fullHeight: fullHeight + room, stripHeight: stripHeight + room };
+}
+
 /** The box's height in a view (the strip's on Cartrons when the drum shows; other scenes look alike in both). */
 const boxHeight = (view: AraView, g: HomeGeometry) => (g.drum && view === 'cartrons' ? g.stripHeight : g.fullHeight);
 

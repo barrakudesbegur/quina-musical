@@ -13,6 +13,8 @@
   // - `landing`: when the drum's words change height, the views slide from their old place to the new one (no jump).
   // - `drum-pick` and `card-hint`: a tap on the drum scrolls to the first card holding the song; on Cartrons, when no
   //   such card shows, a hint points to it (HomeFloats draws it, over the masked scroll box, from `homeUi`).
+  // - `check`: the Check's ribbon hangs under the drum's box (CheckStrip), riding with the collapse and stuck under the
+  //   strip; the content and the fade line make room for it (`--ara-check-room`).
   // - Reduced motion and Data Saver: nothing follows the finger; the view changes by a crossfade (a view transition).
   // It scrolls in the shell's `.player__scroll` box (App.svelte), not the page.
   import { flushSync, onMount, untrack } from 'svelte';
@@ -21,6 +23,7 @@
   import { homeUi } from '../logic/home-ui.svelte.ts';
   import {
     SWIPE,
+    boxWithRibbon,
     dragPos,
     easeOut,
     hintSide,
@@ -39,6 +42,7 @@
   } from '../logic/home-swipe.ts';
   import { ARA_VIEWS, type AraView } from '../logic/tabs.ts';
   import CardsList from './CardsList.svelte';
+  import CheckStrip from './CheckStrip.svelte';
   import InstallPrompt from './InstallPrompt.svelte';
   import HistoryList from './HistoryList.svelte';
   import NowPanel from './NowPanel.svelte';
@@ -60,6 +64,9 @@
   let boxPad = $state(0);
   /** Where the content fades out under the stuck strip (`strip-fade`), in the swipe's coordinates at scroll 0. */
   let fadeAt = $state(0);
+  /** The Check's ribbon under the drum (`check`): the room it takes under the drum's box (its height and margins). */
+  let checkEl: HTMLElement | undefined = $state();
+  let checkRoom = $state(0);
 
   /** The top shows the drum (and so sticks and collapses); the other scenes and the pause just scroll. */
   const drum = $derived(!app.paused && !['before', 'roundStart', 'interval', 'after'].includes(app.scene));
@@ -81,6 +88,8 @@
 
   const remPx = () => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
   const stripPx = () => 5.125 * remPx();
+  /** The stuck strip's height with the Check's ribbon hanging under it (`check`), where the content starts. */
+  const stuckPx = () => stripPx() + checkRoom;
   const playerEl = () => root?.closest<HTMLElement>('.player') ?? null;
   /** The scroll box the home scrolls in (App.svelte), or the page where there is none. */
   const box = (): HTMLElement => root?.closest<HTMLElement>('.player__scroll') ?? document.scrollingElement as HTMLElement;
@@ -96,10 +105,16 @@
     boxPad = parseFloat(getComputedStyle(box()).paddingTop) || 0;
     stickyTop = Math.max(boxPad, heat?.getBoundingClientRect().bottom ?? 0) + (a && getComputedStyle(a).display !== 'none' ? a.offsetHeight : 0);
     stickAt = root.getBoundingClientRect().top + box().scrollTop - stickyTop;
+    // The Check's ribbon hangs under the drum's box and the content makes room for it (home.css); with no drum it is
+    // in the page's flow, under the top's content.
+    if (drum && checkEl) {
+      const cs = getComputedStyle(checkEl);
+      checkRoom = checkEl.offsetHeight + (parseFloat(cs.marginTop) || 0) + (parseFloat(cs.marginBottom) || 0);
+    } else checkRoom = 0;
     // `strip-fade`: the stuck strip's bottom edge, in the swipe's own coordinates at the box's scroll 0 (home.css adds
     // the scroll itself, from a scroll-driven value, so the fade stays still on the screen as the content scrolls).
     const swipe = root.querySelector<HTMLElement>(':scope > .ara__swipe');
-    if (swipe) fadeAt = stickyTop + stripPx() - (swipe.getBoundingClientRect().top + box().scrollTop);
+    if (swipe) fadeAt = stickyTop + stuckPx() - (swipe.getBoundingClientRect().top + box().scrollTop);
     const was = fullHeight;
     fullHeight = (top?.firstElementChild as HTMLElement | null)?.offsetHeight ?? 0;
     if (was && fullHeight !== was) smoothHeight(fullHeight - was);
@@ -172,7 +187,7 @@
   function updateClear(): void {
     const header = headEls()[0]?.getBoundingClientRect().bottom ?? 0;
     const topRect = drum ? top?.getBoundingClientRect() : undefined;
-    const strip = topRect && (shown === 'cartrons' || topRect.top <= stickyTop + 1) ? topRect.top + stripPx() : 0;
+    const strip = topRect && (shown === 'cartrons' || topRect.top <= stickyTop + 1) ? topRect.top + stuckPx() : 0;
     // The toast's CSS keeps it under the garland whatever this says (a header scrolled away ends above the screen).
     homeUi.topClear = Math.round(Math.max(0, header, strip));
   }
@@ -186,7 +201,7 @@
     const sc = box();
     const scRect = sc.getBoundingClientRect();
     const bottom = scRect.bottom - parseFloat(getComputedStyle(sc).paddingBottom || '0');
-    const from = stickyTop + (drum ? stripPx() : 0);
+    const from = stickyTop + (drum ? stuckPx() : 0);
     homeUi.hintTop = from;
     const rects = holders.map((h) => holderEl(h.id)?.getBoundingClientRect()).filter((r): r is DOMRect => !!r);
     const side = hintSide(rects, from, bottom);
@@ -214,6 +229,17 @@
     void drum;
     void app.paused;
     const el = top?.firstElementChild;
+    if (!el) return;
+    const ro = new ResizeObserver(() => measure());
+    ro.observe(el);
+    return () => ro.disconnect();
+  });
+
+  // The Check's ribbon comes and goes, and changes height (its result's words): measure the room it takes again.
+  $effect(() => {
+    const el = checkEl;
+    void drum;
+    untrack(() => measure());
     if (!el) return;
     const ro = new ResizeObserver(() => measure());
     ro.observe(el);
@@ -249,8 +275,9 @@
       headHeight: headBottom - headTop,
       homeTop: root.getBoundingClientRect().top,
       drum,
-      fullHeight: drum ? fullHeight : switchRect.top - root.getBoundingClientRect().top - gap,
-      stripHeight: drum ? stripPx() : switchRect.top - root.getBoundingClientRect().top - gap,
+      ...(drum
+        ? boxWithRibbon(fullHeight, stripPx(), checkRoom)
+        : { fullHeight: switchRect.top - root.getBoundingClientRect().top - gap, stripHeight: switchRect.top - root.getBoundingClientRect().top - gap }),
       gap,
       switchHeight: switchRect.height,
       leavingHeight: leaving?.offsetHeight ?? 0,
@@ -424,6 +451,7 @@
   style:--ara-full="{fullHeight}px"
   style:--ara-sticky-top="{stickyTop - boxPad}px"
   style:--ara-fade-at="{fadeAt}px"
+  style:--ara-check-room="{checkRoom}px"
   style:--reel-collapse-range={drum && fullHeight ? `${Math.max(0, fullHeight - stripPx())}px` : undefined}
 >
   <!-- The pause swaps in for the drum with a crossfade (ANIMATIONS.md `pause`, 300 ms). The drum's box sticks to the top
@@ -441,6 +469,8 @@
       {:else}
         <NowPanel {app} stopped={app.offline} marks={holders.map((h) => h.identity)} onpick={holders.length ? pickCard : undefined} />
       {/if}
+      <!-- The Check, under the drum (never over it): it rides with the collapse and sticks under the strip (`check`). -->
+      <CheckStrip {app} bind:el={checkEl} />
     </div>
   {/key}
   <!-- svelte-ignore a11y_no_static_element_interactions -->

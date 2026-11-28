@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   SWIPE,
+  boxWithRibbon,
   collapseOf,
   dragPos,
   easeOut,
@@ -167,6 +168,21 @@ test('back to the top of Historial from deep in Cartrons: the header and the ful
   assert.equal(plan.now.head + end.head, target.head, 'the header back on screen');
   assert.equal(plan.now.switchY + end.switchY, target.switchY, 'the switch under the full drum');
   assert.equal(leavingTop(g, g.stripHeight) + plan.comingY, target.view, 'Historial back at its top');
+});
+
+test("a Check's ribbon under the drum (`check`): the collapse keeps its range, the switch lands under the ribbon", () => {
+  const room = 52; // a 36 px ribbon and its two 8 px margins
+  assert.deepEqual(boxWithRibbon(232, 82, 0), { fullHeight: 232, stripHeight: 82 }, 'no ribbon: the drum alone');
+  const g = phone(boxWithRibbon(232, 82, room));
+  const plain = phone();
+  const plan = planSwipe('historial', g);
+  const end = swipeFrame(plan, 1);
+  assert.equal(swipeFrame(plan, 0.5).collapse, swipeFrame(planSwipe('historial', plain), 0.5).collapse, 'the drum collapses as without it');
+  assert.equal(plan.now.switchY + end.switchY, laidOut('cartrons', plain, 0).switchY + room, 'the switch under the strip and the ribbon');
+  assert.equal(leavingTop(g, g.fullHeight) + end.comingY, laidOut('cartrons', plain, 0).view + room, 'the cards under them');
+  // Scrolled deep: the switch waits hidden under the stuck strip and the ribbon, not just the strip.
+  const deep = planSwipe('historial', phone({ ...boxWithRibbon(232, 82, room), scroll: 700, savedScroll: 400 }));
+  assert.equal(deep.switchY[1], g.alerts + 82 + room - g.switchHeight);
 });
 
 test("the coming view's saved scroll is clamped to what its page allows", () => {

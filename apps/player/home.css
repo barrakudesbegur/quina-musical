@@ -77,11 +77,24 @@
   top: var(--ara-sticky-top, 0px);
   z-index: 3;
   height: var(--reel-strip-height, 5.125rem);
+  /* the Check's ribbon's room, under the strip (0 with no Check) */
+  margin-bottom: var(--ara-check-room, 0px);
   pointer-events: none;
 }
 
 .ara[data-drum][data-view='historial'] > .ara__top {
-  margin-bottom: max(0px, calc(var(--ara-full) - var(--reel-strip-height, 5.125rem)));
+  margin-bottom: calc(max(0px, var(--ara-full) - var(--reel-strip-height, 5.125rem)) + var(--ara-check-room, 0px));
+}
+
+/* The Check's ribbon (ANIMATIONS.md `check`, 28 Nov evening): under the drum, never over it. It hangs from the drum's
+   bottom edge, wherever the collapse has taken it (the full drum's bottom at 0, the strip's at 1: the same value the
+   drum draws with, so it rides with the content and then sticks under the strip); the box's margin above keeps its
+   room, and the strip's fade starts under it (AraHome's measure). With no drum it simply follows the top's content. */
+.ara[data-drum] > .ara__top > .check-strip {
+  --reel-collapse: inherit;
+  position: absolute;
+  inset-inline: 0;
+  top: calc(var(--reel-strip-height, 5.125rem) + (1 - var(--reel-collapse)) * var(--reel-collapse-range, 0px));
 }
 
 .ara[data-drum] > .ara__top .drum-box,
@@ -147,7 +160,7 @@
   }
 }
 
-.ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top > .now {
+.ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top > :is(.now, .check-strip) {
   animation: drum-collapse linear both;
   animation-timeline: scroll(nearest block);
   animation-range: var(--ara-stick, 0px) calc(var(--ara-stick, 0px) + var(--reel-collapse-range, 9.375rem));
@@ -155,7 +168,7 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  :where(.player[data-motion='full']) .ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top > .now {
+  :where(.player[data-motion='full']) .ara[data-drum][data-view='historial']:not([data-swiping]) > .ara__top > :is(.now, .check-strip) {
     animation-timing-function: linear;
   }
 }
