@@ -45,7 +45,7 @@
     {"id": "ca-l-angie", "name": "Ca l'Angie", "file": "drive:Ca l_Angie.jpeg", "background": "edges"},
     {"id": "cactus-begur", "name": "Cactus Begur", "file": "search:cactus-begur/website-shopify-logo.jpg", "background": "edges", "note": "their website's logo (last year's design, a clean file)"},
     {"id": "dana-taboe", "name": "Dana Taboe", "file": "search:dana-taboe/website-header-wayback.jpg", "background": "edges", "note": "their website's logo (black; the organizers' photo of the badge is blue)"},
-    {"id": "el-taller", "name": "El Taller", "file": "driveroot:Insta_Saver_@boutique_el_taller_dp_HD.jpg", "crop": [0.1, 0.3, 0.9, 0.95], "background": "all", "tolerance": 0.22, "ink": {"color": "#8c6a2c"}, "note": "the better file found on 28 Nov (gold foil, recoloured dark gold)"},
+    {"id": "el-taller", "name": "El Taller", "file": "driveroot:Insta_Saver_@boutique_el_taller_dp_HD.jpg", "crop": [0.1, 0.3, 0.9, 0.95], "background": "all", "tolerance": 0.22, "ink": {"color": "#8c6a2c"}, "sticker": {"reach": 0.35}, "note": "the better file found on 28 Nov (gold foil, recoloured dark gold)"},
     {"id": "estanc-begur", "name": "Estanc Begur"},
     {"id": "indians", "name": "Indians", "file": "drive:indians-boutique.JPEG", "background": "edges"},
     {"id": "kumade", "name": "Kumade", "file": "search:kumade/website-logo.png", "note": "from their website"},
