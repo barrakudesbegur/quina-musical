@@ -120,7 +120,6 @@
   flex-shrink: 0;
   height: calc(var(--tabs-selected-h) + var(--tabs-line));
   margin-bottom: calc(-1 * var(--tabs-line));
-  anchor-name: var(--tabs-anchor);
   background: var(--color-surface);
   color: var(--color-text);
 }
@@ -168,10 +167,6 @@
 .tabs__extra {
   position: absolute;
   z-index: 3;
-  position-anchor: var(--tabs-anchor);
-  top: calc(anchor(top) + var(--tabs-line));
-  bottom: calc(anchor(bottom) + var(--tabs-line));
-  right: calc(anchor(right) + var(--tabs-line) + var(--tabs-pad-inline) / 2);
   display: flex;
   align-items: center;
 }
@@ -200,13 +195,53 @@
   content: '';
   position: absolute;
   z-index: 2;
-  position-anchor: var(--tabs-anchor);
-  top: calc(anchor(bottom) - var(--tabs-line));
-  left: calc(anchor(left) + var(--tabs-line));
-  right: calc(anchor(right) + var(--tabs-line));
   height: var(--tabs-line);
   background: var(--color-surface);
   pointer-events: none;
+}
+
+/* The selected tab is the anchor of the extra control and of the bridge. */
+@supports (anchor-name: --a) {
+  .tabs__tab[aria-selected='true'] {
+    anchor-name: var(--tabs-anchor);
+  }
+
+  .tabs__extra {
+    position-anchor: var(--tabs-anchor);
+    top: calc(anchor(top) + var(--tabs-line));
+    bottom: calc(anchor(bottom) + var(--tabs-line));
+    right: calc(anchor(right) + var(--tabs-line) + var(--tabs-pad-inline) / 2);
+  }
+
+  .tabs::after {
+    position-anchor: var(--tabs-anchor);
+    top: calc(anchor(bottom) - var(--tabs-line));
+    left: calc(anchor(left) + var(--tabs-line));
+    right: calc(anchor(right) + var(--tabs-line));
+  }
+}
+
+/* Without anchor positioning (Safari before 26, an iPad on iPadOS 18): Tabs.svelte measures the selected tab's edges
+   as the insets anchor() would give (`--tabs-at-*`, from the bar's edges; `--tabs-at-end`, its bottom from the tabs'
+   top), so the extra control and the bridge land in the same place. Unmeasured (the first frame), no bridge and no
+   extra control, never one over another tab. */
+@supports not (anchor-name: --a) {
+  .tabs__extra {
+    top: calc(var(--tabs-at-top) + var(--tabs-line));
+    bottom: calc(var(--tabs-at-bottom) + var(--tabs-line));
+    right: calc(var(--tabs-at-right) + var(--tabs-line) + var(--tabs-pad-inline) / 2);
+  }
+
+  .tabs::after {
+    top: calc(var(--tabs-at-end) - var(--tabs-line));
+    left: calc(var(--tabs-at-left) + var(--tabs-line));
+    right: calc(var(--tabs-at-right) + var(--tabs-line));
+  }
+
+  .tabs:not([data-measured]) .tabs__extra,
+  .tabs:not([data-measured])::after {
+    visibility: hidden;
+  }
 }
 
 .tabs__content {

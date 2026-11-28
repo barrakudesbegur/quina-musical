@@ -57,7 +57,8 @@
   $effect(() => {
     void layer;
     const el = top;
-    if (!el) return;
+    // iOS's popover support is dated 18.3 (modern-web-guidance Baseline): without it the layer stays over the home.
+    if (!el || !('showPopover' in el)) return;
     const raf = requestAnimationFrame(() => {
       if (el.matches(':popover-open')) el.hidePopover();
       el.showPopover();

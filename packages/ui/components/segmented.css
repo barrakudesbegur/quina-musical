@@ -61,17 +61,44 @@
   content: '';
   position: absolute;
   z-index: 0;
-  position-anchor: var(--segment-anchor);
-  top: anchor(top);
-  bottom: anchor(bottom);
-  left: anchor(left);
-  right: anchor(right);
   box-sizing: border-box;
   border: var(--segment-border) solid var(--color-line);
   border-radius: var(--segment-radius);
   background: var(--color-gold);
   box-shadow: inset 0 -4px 0 var(--color-gold-edge);
   pointer-events: none;
+}
+
+@supports (anchor-name: --a) {
+  .segmented::after {
+    position-anchor: var(--segment-anchor);
+    top: anchor(top);
+    bottom: anchor(bottom);
+    left: anchor(left);
+    right: anchor(right);
+  }
+
+  .segmented__option[data-chosen] {
+    anchor-name: var(--segment-anchor);
+  }
+
+  .segmented[data-follow]::after {
+    position-anchor: auto;
+  }
+}
+
+/* Without anchor positioning (Safari before 26, iOS 18): no thumb to tether, so the chosen option wears the thumb's
+   look itself and changes at once (no segment-slide). Following a parent's `progress` needs no anchor: as above. */
+@supports not (anchor-name: --a) {
+  .segmented:not([data-follow])::after {
+    content: none;
+  }
+
+  .segmented:not([data-follow]) > .segmented__option[data-chosen] {
+    border-color: var(--color-line);
+    background: var(--color-gold);
+    box-shadow: inset 0 -4px 0 var(--color-gold-edge);
+  }
 }
 
 /* No option chosen (a parent's value that isn't one of them): no thumb. */
@@ -92,7 +119,6 @@
 /* Following a parent's `progress` (a swipe, home-swipe): the thumb sits on the first column and moves by translate only,
    with no slide of its own; the option it's nearest to reads ink. */
 .segmented[data-follow]::after {
-  position-anchor: auto;
   top: var(--segment-pad);
   bottom: var(--segment-pad);
   left: var(--segment-pad);
@@ -141,7 +167,6 @@
 }
 
 .segmented__option[data-chosen] {
-  anchor-name: var(--segment-anchor);
   color: var(--color-ink);
 }
 

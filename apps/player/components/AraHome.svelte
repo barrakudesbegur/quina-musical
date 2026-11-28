@@ -377,7 +377,10 @@
       afterChange();
     };
     if (!document.startViewTransition) return update();
-    document.startViewTransition({ update, types: ['home-crossfade'] });
+    // Types came in Safari 18.2: 18.0 and 18.1 take only a callback (the object form throws, the view never changes),
+    // and there the crossfade runs untyped, at the browser's own length.
+    if ('types' in ViewTransition.prototype) document.startViewTransition({ update, types: ['home-crossfade'] });
+    else document.startViewTransition(update);
   }
 
   /** A view has just changed: a pick waiting for Cartrons scrolls now; the hint looks again. */

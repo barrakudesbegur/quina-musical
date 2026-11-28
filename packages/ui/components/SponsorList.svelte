@@ -8,6 +8,7 @@
 <script lang="ts">
   import { tick } from 'svelte';
   import IconButton from './IconButton.svelte';
+  import { lightDismiss } from './top-layer.ts';
   import { CA } from '../i18n/ca.ts';
   import { imageSources } from '../data/media.ts';
   import LogoTile from './LogoTile.svelte';
@@ -59,6 +60,9 @@
     await transition.finished.catch(() => {});
     morph = null;
   }
+
+  // A tap outside closes it where `closedby` is missing (Safari), as the Sheet and the Dialog do.
+  $effect(() => (dialog ? lightDismiss(dialog, () => void hide()) : undefined));
 
   /** Closed without hide() (a second Esc the browser didn't let us intercept): no morph, just tidy up. */
   let closing = false;
