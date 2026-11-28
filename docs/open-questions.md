@@ -15,6 +15,11 @@ No decision is recorded for #90 and #117 (low bitrate: 117 and 114 kbps) or #18 
 
 **The user picked (b) on 28 Nov:** "i will do it now, keep a question open on what is the conclusion". Open until the user says which, if any, to swap.
 
+### U246 · Ending the night after the last round
+Since 1db48b1b the night's rounds are the plan's: after the last round's Quina (the Especial) there's no Interval, and its Celebration plays on until the presenters end the night. Today the console says «Era l'última quina: acabeu la nit des del menú.» and «Acabar la nit» is only in ☰, like «Començar la nit» was (whats-left 1.3: the user couldn't find it).
+- (a) Keep «Acabar la nit» in the menu only, with the note.
+- (b) The Celebration's big button becomes «Acabar la nit», with a long press so a stray tap can't end the night (the orchestrator's recommendation: the same place as D304's «Començar la nit»).
+
 ### U245 · Songs landing while the claim pad is open
 On a claim the presenters press Parlem first, then «Comprovar cartró» (game-rules › Claims). The agreed board (Consola-Comprovacio-Ritme ①) draws the claim pad over Parlem, Aguanta and Següent, so a presenter who opens the pad first can't stop the songs while typing the numbers (only the Wii remote's −/+ can; «Torna a la quina» throws the typed numbers away). Found on 28 Nov (whats-left 2.1).
 - (a) The pad keeps Parlem, Aguanta and Següent on screen: a new pad board at the three sizes, then the build.
