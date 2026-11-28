@@ -18,7 +18,7 @@ const asked = new Set<string>();
 /** Not started yet (undefined), running, or unavailable (null: solve here). */
 let worker: Worker | null | undefined;
 
-const keyOf = (i: SpinInputs): string => `${i.cardCount}:${i.fromIndex}:${i.durationSec}:${i.spinSeed}`;
+const keyOf = (i: SpinInputs): string => `${i.cardCount}:${i.fromIndex}:${i.durationSec}:${i.spinSeed}:${i.targetIndex ?? ''}`;
 
 function keep(key: string, solution: Solution): void {
   solved.delete(key);
@@ -53,7 +53,8 @@ export function prepareSpinSolver(): void {
   if (worker === undefined) worker = start();
 }
 
-/** The stand-in Spin for these inputs (logic/drum.ts SpinSolver): its solution, or null while the worker solves it. */
+/** The Spin for these inputs (logic/drum.ts SpinSolver: onto its target, or the stand-in): its solution, or null while
+ * the worker solves it. */
 export function solveSpinOffThread(inputs: SpinInputs): Solution | null {
   const key = keyOf(inputs);
   const done = solved.get(key);

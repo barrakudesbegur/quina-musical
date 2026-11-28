@@ -5,14 +5,19 @@
 //   the songs still to come plus the last landing, as the engine's `drumReset` gives the projector.
 // - **A Spin:** the last landing leaves the ring as it starts (the projector's `removeCard`), and the ring turns by the
 //   projector's solver (packages/rules/drum-solver.ts) with the same tile count, start tile, duration, laps and the
-//   Spin's public `spinSeed`. The target is private until it lands (U206), so the phone solves towards a stand-in (where
-//   that seed's spin rests by itself), and never comes to rest on it: under `creepFromSpeed` it creeps on, slowing
-//   towards `creepFloor`, blurred at least `veilPx`, until the landing is public.
-// - **The landing** (or a Back, or a cancelled Spin: whenever the last landing's tile changes): the drum glides from
-//   its position and speed to that tile by the shortest way round (the solver's `hoverSpin` with no sway).
-// Nothing here knows the target before the landing is public: every frame before it depends only on public fields.
+//   Spin's public `spinSeed`. Since D277 (U206 answered) the Spin's landing song is public from its start
+//   (`spin.targetId`): the phone solves the projector's very Spin onto that tile and rests on it at `landAtMs`, as the
+//   projector does. The song shows only at the public landing (the selection here, the words in Reel.svelte).
+// - **Without `targetId`** (an older feed, a Spin turned into a held Suspense): the phone solves towards a stand-in
+//   (where that seed's spin rests by itself) and never comes to rest on it: under `creepFromSpeed` it creeps on,
+//   slowing towards `creepFloor`, blurred at least `veilPx`, until the landing is public.
+// - **A Suspense** coasts (the projector's `coastSpin`); released with a `targetId`, it brakes onto that tile at
+//   `landAtMs` (the projector's `landingBrake`).
+// - **The landing** after a stand-in (or a Back, or a cancelled Spin: whenever the last landing's tile changes and the
+//   drum isn't already resting there): the drum glides from its position and speed to that tile by the shortest way
+//   round (the solver's `hoverSpin` with no sway).
 import { drumOrder, drumRandom, type PublicLanding, type PublicSpin } from '../feed/public.ts';
-import { coastSpin, hoverSpin, positionAt, simulate, solveSpin, velocityAt, type Solution } from '../../../packages/rules/drum-solver.ts';
+import { coastSpin, hoverSpin, landingBrake, positionAt, simulate, solveSpin, velocityAt, type Solution } from '../../../packages/rules/drum-solver.ts';
 import type { Catalog } from '../../../packages/ui/data/catalog.ts';
 
 export const DRUM = Object.freeze({
@@ -87,13 +92,15 @@ export interface SpinInputs {
   fromIndex: number;
   durationSec: number;
   spinSeed: number;
+  /** The landing tile (the Spin's public targetId's place in the ring); absent: the stand-in. */
+  targetIndex?: number;
 }
 
 /**
  * The projector's Spin for `targetIndex` (exactly main.ts's `solveSpin` call: not calm, a lap at least from 3 tiles),
  * or, with no target, the stand-in: the tile where this seed's spin would rest by itself (the solver's first draw).
  */
-export function spinSolution({ cardCount, fromIndex, durationSec, spinSeed }: SpinInputs, targetIndex?: number): Solution {
+export function spinSolution({ cardCount, fromIndex, durationSec, spinSeed, targetIndex }: SpinInputs): Solution {
   const target = targetIndex ?? mod(fromIndex + simulate({ cardCount, seed: Math.floor(drumRandom(spinSeed)() * 2 ** 32) >>> 0 }).traveled, cardCount);
   return solveSpin({ cardCount, fromIndex, targetIndex: target, durationSec, minLaps: cardCount < 3 ? 0 : 1, random: drumRandom(spinSeed) });
 }
@@ -183,7 +190,9 @@ export interface DrumFrame {
 }
 
 interface Motion {
-  kind: 'spin' | 'coast' | 'glide';
+  /** `spin`: the solver's (onto `targetId`, or the stand-in); `coast`: a Suspense; `brake`: a released Suspense onto
+   * `targetId`; `glide`: onto the last landing's tile. */
+  kind: 'spin' | 'coast' | 'brake' | 'glide';
   /** The Spin it belongs to (its start time), or the landing it glides to. */
   key: string;
   ring: readonly number[];
@@ -191,6 +200,8 @@ interface Motion {
   startMs: number;
   /** A stand-in Spin's creep start (replay seconds). */
   creepAt: number;
+  /** The song it rests on at the Spin's `landAtMs` (the Spin's public targetId), or null (a stand-in, a coast). */
+  targetId: number | null;
 }
 
 /**
@@ -210,7 +221,7 @@ export function wordsStale(phase: DrumPhase): boolean {
 }
 
 /**
- * Solves a Spin's stand-in (spinSolution), or answers null while its solution is still being worked out elsewhere
+ * Solves a Spin (spinSolution: onto its target, or the stand-in), or answers null while its solution is still being worked out elsewhere
  * (the app solves off the main thread: device/drum-solver.ts); the drum asks again on its next frame.
  */
 export type SpinSolver = (inputs: SpinInputs) => Solution | null;
@@ -249,6 +260,16 @@ export class PhoneDrum {
       return { ring, position, velocity: 0, phase: last ? 'landed' : 'idle', selectedId: last?.songId ?? null, blurPx: 0 };
     };
     if (reduced || !ring.length) return rest();
+    // The Spin landed where it was going (its public targetId): the drum is already on the tile at landAtMs (the solver
+    // leaves it within 0.03 of a tile there), so it rests now; a landing seen before landAtMs (a clock a little ahead)
+    // lets the Spin finish first.
+    const m0 = this.motion;
+    if (m0 && (m0.kind === 'spin' || m0.kind === 'brake') && m0.targetId !== null && m0.targetId === last?.songId && m0.ring.length === ring.length) {
+      const t = (nowMs - m0.startMs) / 1000;
+      if (t >= m0.solution.durationSec) return rest();
+      const velocity = velocityAt(m0.solution, t);
+      return { ring, position: positionAt(m0.solution, t), velocity, phase: 'spinning', selectedId: null, blurPx: motionBlurPx(velocity) };
+    }
     if (this.motion?.kind !== 'glide' || this.motion.key !== key) {
       // Where the drum is now, in this ring: the tile under the window keeps its place (a cancelled Spin or a Back puts
       // a song back), and the drum glides on to the last landing's tile.
@@ -256,7 +277,7 @@ export class PhoneDrum {
       if (from === null) return rest();
       const settled = this.last?.phase === 'landed' || this.last?.phase === 'idle';
       if (settled && Math.abs(from - nearestTurn(target, from, ring.length)) < 1e-6) return rest();
-      this.motion = { kind: 'glide', key, ring, solution: glideSolution(ring.length, from, this.last?.velocity ?? 0, target), startMs: nowMs, creepAt: Infinity };
+      this.motion = { kind: 'glide', key, ring, solution: glideSolution(ring.length, from, this.last?.velocity ?? 0, target), startMs: nowMs, creepAt: Infinity, targetId: null };
     }
     const m = this.motion;
     const t = (nowMs - m.startMs) / 1000;
@@ -268,30 +289,45 @@ export class PhoneDrum {
   private spinFrame(order: readonly number[], landings: readonly PublicLanding[], spin: PublicSpin, nowMs: number, reduced: boolean): DrumFrame {
     const { ring, fromIndex } = spinStart(order, landings);
     const still: DrumFrame = { ring, position: fromIndex, velocity: 0, phase: 'spinning', selectedId: null, blurPx: DRUM.veilPx };
-    if (!ring.length) return still;
+    if (!ring.length || reduced) {
+      this.motion = null;
+      return still;
+    }
+    // The landing tile, when the Spin's song is public (D277): its place in the ring after the start's removal.
+    const targetIndex = spin.targetId === undefined ? -1 : ring.indexOf(spin.targetId);
+    const targetId = targetIndex >= 0 ? (spin.targetId as number) : null;
     const key = `${spin.startAtMs}:${ring.length}`;
     if (this.motion?.key !== key) {
-      if (reduced) {
-        this.motion = null;
-        return still;
-      }
-      // A Suspense (landAtMs null) coasts; a released one keeps its coast (same start). A Spin turns by the solver.
+      // A Suspense (landAtMs null) coasts. A Spin turns by the solver: onto its target, or the stand-in without one.
       if (spin.landAtMs === null) {
-        this.motion = { kind: 'coast', key, ring, solution: coastSolution(ring.length, fromIndex, spin.startAtMs), startMs: spin.startAtMs, creepAt: Infinity };
+        this.motion = { kind: 'coast', key, ring, solution: coastSolution(ring.length, fromIndex, spin.startAtMs), startMs: spin.startAtMs, creepAt: Infinity, targetId: null };
       } else {
-        const solution = this.solve({ cardCount: ring.length, fromIndex, durationSec: Math.max(0.5, (spin.landAtMs - spin.startAtMs) / 1000), spinSeed: spin.spinSeed ?? spin.startAtMs >>> 0 });
+        const solution = this.solve({ cardCount: ring.length, fromIndex, durationSec: Math.max(0.5, (spin.landAtMs - spin.startAtMs) / 1000), spinSeed: spin.spinSeed ?? spin.startAtMs >>> 0, ...(targetId !== null ? { targetIndex } : {}) });
         if (!solution) {
           this.motion = null;
           return still;
         }
-        this.motion = { kind: 'spin', key, ring, solution, startMs: spin.startAtMs, creepAt: creepStart(solution) };
+        this.motion = { kind: 'spin', key, ring, solution, startMs: spin.startAtMs, creepAt: targetId !== null ? Infinity : creepStart(solution), targetId };
       }
+    } else if (this.motion.kind === 'coast' && spin.landAtMs !== null && targetId !== null && this.last) {
+      // A released Suspense: from where the coast is, brake onto the landing tile exactly at landAtMs (the projector's
+      // landingBrake from its own coast).
+      const { position, velocity } = this.last;
+      const solution = landingBrake({ cardCount: ring.length, fromPosition: position, velocity, targetIndex, durationSec: Math.max(0.05, (spin.landAtMs - nowMs) / 1000) });
+      this.motion = { ...this.motion, kind: 'brake', solution, startMs: nowMs, targetId };
     }
-    if (reduced) return still;
     const m = this.motion;
     const t = Math.max(0, (nowMs - m.startMs) / 1000);
-    const { position, velocity } = m.kind === 'spin' ? standInMotion(m.solution, m.creepAt, t) : { position: positionAt(m.solution, t), velocity: velocityAt(m.solution, t) };
-    const phase: DrumPhase = m.kind === 'spin' && t >= m.creepAt ? 'waiting' : 'spinning';
+    // On its way to the public target: the projector's curve, no veil. Otherwise (a stand-in, or a target dropped by a
+    // Spin turned Suspense) it creeps on, veiled, never resting.
+    if ((m.kind === 'spin' || m.kind === 'brake') && m.targetId !== null && m.targetId === spin.targetId) {
+      const velocity = velocityAt(m.solution, t);
+      return { ring, position: positionAt(m.solution, t), velocity, phase: 'spinning', selectedId: null, blurPx: motionBlurPx(velocity) };
+    }
+    const creepAt = m.kind === 'spin' && m.creepAt === Infinity ? creepStart(m.solution) : m.creepAt;
+    if (creepAt !== m.creepAt) m.creepAt = creepAt;
+    const { position, velocity } = m.kind === 'coast' ? { position: positionAt(m.solution, t), velocity: velocityAt(m.solution, t) } : standInMotion(m.solution, m.creepAt, t);
+    const phase: DrumPhase = m.kind !== 'coast' && t >= m.creepAt ? 'waiting' : 'spinning';
     return { ring, position, velocity, phase, selectedId: null, blurPx: Math.max(DRUM.veilPx, motionBlurPx(velocity)) };
   }
 

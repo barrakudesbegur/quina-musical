@@ -1,5 +1,5 @@
 // The home screen's drum (board Mobil-B-J2; §8 Y1, D237: the projector's drum), apps/player/logic/drum.ts and
-// drum-tug.ts: its motion from public fields only, the landing's glide, a cancelled Spin, a Back, a Suspense, reduced
+// drum-tug.ts: its motion from public fields only, the Spin onto its public target (D277), the stand-in and the landing's glide, a cancelled Spin, a Back, a Suspense, reduced
 // motion and the projector's blur (the tug: drum-tug.test.ts; its sync with the engine: tests/drum-sync.test.ts). And
 // where a song row's card icons sit.
 import { test } from 'node:test';
@@ -102,6 +102,56 @@ test('a Spin is solved once; while its solution is on its way (off the main thre
   ready = true;
   for (let ms = T + 120; ms <= T + 9000; ms += 16) assert.deepEqual(drum.frame(input(ms)), now.frame(input(ms)), `the same frame at ${ms - T} ms`);
   assert.deepEqual(asked, [31, 31, 31, 31, 31, 31, 31, 31, 31], 'asked on each frame until it came, then never again');
+});
+
+test('with its public targetId (D277) a Spin is the projector\'s onto that tile: no stand-in, no creep, no glide; it rests there as the landing goes public', () => {
+  const drum = new PhoneDrum();
+  const before = [landing(0, ORDER[0]!, T - 20_000)];
+  const { ring, fromIndex } = spinStart(ORDER, before);
+  const target = ring[30]!;
+  const spin: PublicSpin = { startAtMs: T, landAtMs: T + 7000, spinSeed: 5, targetId: target };
+  const exact = spinSolution({ cardCount: ring.length, fromIndex, durationSec: 7, spinSeed: 5, targetIndex: 30 });
+  drum.frame({ order: ORDER, landings: before, spin: null, nowMs: T - 1000, reduced: false });
+  let f!: DrumFrame;
+  for (let ms = T; ms <= T + 7000; ms += 16) {
+    f = drum.frame({ order: ORDER, landings: before, spin, nowMs: ms, reduced: false });
+    assert.equal(f.phase, 'spinning', 'never «waiting»: no creep');
+    assert.equal(f.selectedId, null, 'the song is not shown before the landing');
+  }
+  assert.equal(under(f), target, 'on the target at landAtMs');
+  assert.ok(Math.abs(f.position - (fromIndex + exact.traveled)) < 0.05);
+  assert.equal(f.blurPx, 0, 'no veil: it is the projector\'s own curve');
+  const late = drum.frame({ order: ORDER, landings: before, spin, nowMs: T + 7080, reduced: false });
+  assert.equal(late.phase, 'spinning', 'between landAtMs and the public landing it holds, unselected');
+  const after = [...before, landing(1, target, T + 7000)];
+  const g = drum.frame({ order: ORDER, landings: after, spin: null, nowMs: T + 7120, reduced: false });
+  assert.deepEqual([g.phase, g.selectedId, under(g), g.velocity], ['landed', target, target, 0], 'resting at once, no glide');
+  // A landing seen a moment before landAtMs (a clock ahead): the Spin finishes, then rests.
+  const early = new PhoneDrum();
+  early.frame({ order: ORDER, landings: before, spin, nowMs: T + 6000, reduced: false });
+  assert.equal(early.frame({ order: ORDER, landings: after, spin: null, nowMs: T + 6900, reduced: false }).phase, 'spinning');
+  assert.equal(early.frame({ order: ORDER, landings: after, spin: null, nowMs: T + 7010, reduced: false }).phase, 'landed');
+});
+
+test('a released Suspense with its targetId brakes from its coast onto the tile exactly at landAtMs; a target dropped by a held Suspense creeps on', () => {
+  const drum = new PhoneDrum();
+  const held: PublicSpin = { startAtMs: T, landAtMs: null };
+  drum.frame({ order: ORDER, landings: [], spin: null, nowMs: T - 1000, reduced: false });
+  run(drum, () => ({ order: ORDER, landings: [], spin: held, reduced: false }), T, T + 9000);
+  const target = ORDER[44]!;
+  const released: PublicSpin = { startAtMs: T, landAtMs: T + 13_000, spinSeed: 2, targetId: target };
+  const f = run(drum, () => ({ order: ORDER, landings: [], spin: released, reduced: false }), T + 9016, T + 13_000);
+  assert.equal(under(f), target, 'on the target at landAtMs');
+  assert.ok(Math.abs(f.position - Math.round(f.position)) < 1e-3 && Math.abs(f.velocity) < 0.05, `at rest (within a sample): ${f.position} ${f.velocity}`);
+  const g = drum.frame({ order: ORDER, landings: [landing(0, target, T + 13_000)], spin: null, nowMs: T + 13_100, reduced: false });
+  assert.deepEqual([g.phase, g.selectedId], ['landed', target]);
+  // A Spin that becomes a held Suspense loses its target: it never rests on it, it creeps on, veiled.
+  const turned = new PhoneDrum();
+  const spin: PublicSpin = { startAtMs: T, landAtMs: T + 7000, spinSeed: 8, targetId: ORDER[20]! };
+  turned.frame({ order: ORDER, landings: [], spin: null, nowMs: T - 1000, reduced: false });
+  run(turned, () => ({ order: ORDER, landings: [], spin, reduced: false }), T, T + 3000);
+  const h = run(turned, () => ({ order: ORDER, landings: [], spin: { startAtMs: T, landAtMs: null }, reduced: false }), T + 3016, T + 15_000);
+  assert.ok(Math.abs(h.velocity) >= DRUM.creepFloor - 1e-9 && h.blurPx >= DRUM.veilPx && h.selectedId === null);
 });
 
 test('a Spin opened late (the page loads mid-Spin) starts mid-curve; opened after the landing, the drum is simply there', () => {

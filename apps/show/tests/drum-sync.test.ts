@@ -1,4 +1,5 @@
-// The phone's drum is the projector's (D237; §8 Y1, the user's second production test). On the real engine, Spin after
+// The phone's drum is the projector's (D237; §8 Y1, the user's second production test; D277: the target public from the
+// Spin's start). On the real engine, Spin after
 // Spin: the phone's tiles and start tile (apps/player/logic/drum.ts, from public fields only) equal the projector's drum
 // as main.ts and wheel/drum.ts build it from the engine's effects; the phone's solved Spin for the landed tile is the
 // projector's very trajectory (the same solveSpin call with the public spinSeed); and before the landing is public the
@@ -94,22 +95,45 @@ dataTest("Spin after Spin, the phone's drum is the projector's: the same tiles, 
       const phone = spinStart(order, landings);
       assert.deepEqual(phone.ring, projector.cards, `spin ${spinNo}: the same tiles, in the same order`);
       assert.equal(phone.fromIndex, fromIndex, `spin ${spinNo}: the same start tile`);
-      const spin: PublicSpin = { startAtMs: scheduled.spinStartAtMs, landAtMs: scheduled.landAtMs, spinSeed: scheduled.spinSeed };
+      // D277: the Spin's landing song is public from its start (the cloud and project.ts copy drum.targetId).
+      const spin: PublicSpin = { startAtMs: scheduled.spinStartAtMs, landAtMs: scheduled.landAtMs, spinSeed: scheduled.spinSeed, targetId: scheduled.drum.targetId };
       const durationSec = (scheduled.landAtMs - scheduled.spinStartAtMs) / 1000;
-      // Once the landing is public, the phone's solved Spin for the landed tile is the projector's trajectory.
-      const exact = spinSolution({ cardCount: phone.ring.length, fromIndex: phone.fromIndex, durationSec, spinSeed: scheduled.spinSeed }, phone.ring.indexOf(start.drum.targetId));
+      // The phone's solved Spin for the public target's tile is the projector's trajectory.
+      const exact = spinSolution({ cardCount: phone.ring.length, fromIndex: phone.fromIndex, durationSec, spinSeed: scheduled.spinSeed, targetIndex: phone.ring.indexOf(scheduled.drum.targetId) });
       assert.equal(exact.seed, projectorSpin.seed, 'the same physics seed');
       assert.equal(exact.traveled, projectorSpin.traveled, 'the same travel');
       assert.equal(exact.method, projectorSpin.method);
       for (let t = 0; t <= durationSec + 0.5; t += 0.05) {
         assert.ok(Math.abs(positionAt(exact, t) - positionAt(projectorSpin, t)) < 1e-3, `spin ${spinNo}: the same keyframe at ${t.toFixed(2)} s`);
       }
-      // Before the landing is public (and after landAtMs, while it's on its way), the phone turns by the public seed
-      // alone: the projector's songs, nothing selected, never at rest, blurred at least the veil.
+      // The phone's drum, frame by frame, with the target: the projector's position up to the landing, nothing
+      // selected, the words' phase still turning; at landAtMs on the target's tile.
+      const exactDrum = new PhoneDrum();
+      exactDrum.frame({ order, landings, spin: null, nowMs: spin.startAtMs - 1000, reduced: false });
+      let g = exactDrum.frame({ order, landings, spin, nowMs: spin.startAtMs, reduced: false });
+      for (let ms = spin.startAtMs; ms <= scheduled.landAtMs + 100; ms += 20) {
+        g = exactDrum.frame({ order, landings, spin, nowMs: ms, reduced: false });
+        const t = (ms - spin.startAtMs) / 1000;
+        assert.ok(Math.abs(g.position - positionAt(projectorSpin, t)) < 1e-3, `spin ${spinNo}: the projector's position at ${t.toFixed(2)} s (${g.position} vs ${positionAt(projectorSpin, t)})`);
+        assert.equal(g.selectedId, null, 'nothing selected before the landing is public');
+        assert.equal(g.phase, 'spinning');
+      }
+      const n = g.ring.length;
+      assert.equal(g.ring[((Math.round(g.position) % n) + n) % n], scheduled.drum.targetId, 'on the target at landAtMs');
+      // The landing goes public 100 ms after landAtMs: the drum rests there at once (no glide), selected.
+      const landedTarget: PublicLanding[] = [...landings, { position: scheduled.position, songId: scheduled.drum.targetId, atMs: scheduled.landAtMs }];
+      const before = g.position;
+      g = exactDrum.frame({ order, landings: landedTarget, spin: null, nowMs: scheduled.landAtMs + 120, reduced: false });
+      assert.equal(g.phase, 'landed');
+      assert.equal(g.selectedId, scheduled.drum.targetId);
+      assert.ok(Math.abs(g.position - before) < 0.05, 'it settles where it is: no jump');
+      // Without a target (an older feed, a Spin turned Suspense): the stand-in by the public seed alone, the
+      // projector's songs, nothing selected, never at rest, blurred at least the veil.
+      const { targetId: _target, ...noTarget } = spin;
       const drum = new PhoneDrum();
       drum.frame({ order, landings, spin: null, nowMs: spin.startAtMs - 1000, reduced: false });
       for (let ms = spin.startAtMs; ms <= scheduled.landAtMs + 3000; ms += 40) {
-        const f = drum.frame({ order, landings, spin, nowMs: ms, reduced: false });
+        const f = drum.frame({ order, landings, spin: noTarget, nowMs: ms, reduced: false });
         assert.deepEqual(f.ring, projector.cards);
         assert.equal(f.selectedId, null, 'nothing selected before the landing is public');
         assert.ok(f.phase === 'spinning' || f.phase === 'waiting');
@@ -121,7 +145,7 @@ dataTest("Spin after Spin, the phone's drum is the projector's: the same tiles, 
       const landed = h.show.landings.at(-1)!;
       landings.push({ position: landed.position, songId: landed.songId, atMs: landed.atMs });
       const seenAt = scheduled.landAtMs + 3300;
-      let f = drum.frame({ order, landings, spin, nowMs: seenAt, reduced: false });
+      let f = drum.frame({ order, landings, spin: noTarget, nowMs: seenAt, reduced: false });
       assert.equal(f.phase, 'gliding');
       let prev = f.position;
       for (let ms = seenAt; ms <= seenAt + 1600; ms += 16) {
