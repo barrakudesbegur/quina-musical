@@ -795,7 +795,7 @@ export const S = {
     connect: 'Connectar',
     open: 'Veure el comandament',
     close: 'Tancar',
-    connectNote: "Aparelleu-lo abans amb el Bluetooth del portàtil; després, «Connectar» i trieu-lo a la llista.",
+    connectNote: "Aparelleu-lo abans, un sol cop, al portàtil amb l'app MacWiiPair i el botó vermell SYNC (sota la tapa de les piles); després, «Connectar» i trieu-lo a la llista.",
     unsupportedNote: 'Aquest navegador no pot connectar el comandament. Es connecta a la consola oberta amb Chrome al portàtil, on està aparellat.',
     demo: 'Comandament de prova (només en desenvolupament)',
     /** The remote is connected to another console (the laptop's): this one shows it, it can't connect it. */
