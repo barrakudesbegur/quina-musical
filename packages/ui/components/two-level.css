@@ -212,25 +212,22 @@
   }
 }
 
-/* ---- the badge: a paper disc in the top-left corner (the padlock while locked on, D128) ------------------------ */
+/* ---- the badge: a bare icon in the top-left corner, no frame, at half opacity (the padlock while locked on, D128, or
+   held on another console, D234; 28 Nov, the board's look) ---------------------------------------------------------- */
 .two-level__badge {
-  --corner-size: 30px;
+  --corner-size: 28px;
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
   width: var(--corner-size);
   height: var(--corner-size);
-  border: var(--line-width) solid var(--color-ink);
-  border-radius: 50%;
-  background: var(--color-paper, var(--color-snow));
   color: var(--color-ink);
+  opacity: 0.5;
   -webkit-text-stroke: 0;
   text-shadow: none;
 }
 
 .two-level__badge .icon {
-  width: 16px;
-  height: 16px;
+  width: 100%;
+  height: 100%;
 }
 
 /* ---- the meter: a time bar in the body (a Throw song's position; hook throw-on) -------------------------------- */

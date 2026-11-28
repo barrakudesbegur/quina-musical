@@ -72,7 +72,7 @@
     {#snippet t3()}<TwoLevelButton {...ACTIONS.stay} iconPlacement="top" active={2} level2={{ ...ACTIONS.stay.level2, wii: null }} note="toca per aterrar" timer="s'allibera sol en 8 s" pulse={0.4} />{/snippet}
     {@render cell('level 2 on: the strip’s edge shade, dots panning, the countdown pulsing', t3)}
     {#snippet t4()}<TwoLevelButton {...ACTIONS.hold} iconPlacement="top" active={2} note="en pausa · toca per tornar" badge={{ icon: 'lock', label: 'Parlem queda posat' }} />{/snippet}
-    {@render cell('locked on (the padlock): the zigzag panning on the body, no stripes (2b853e91)', t4)}
+    {@render cell('locked on: the bare padlock at half opacity, the zigzag panning on the body, no stripes (2b853e91)', t4)}
     {#snippet t5()}<TwoLevelButton {...ACTIONS.stay} iconPlacement="top" lead="mantén" level2={{ ...ACTIONS.stay.level2, wii: phone ? null : SHAKE_OR }} />{/snippet}
     {@render cell('the strip’s keys: «×3 / B+A», OR is «/» (D-j, #12)', t5)}
     {#snippet t6()}<TwoLevelButton {...ACTIONS.hold} iconPlacement="top" lead="mantén" disabled />{/snippet}

@@ -15,9 +15,9 @@
   - level 1 on: the body sunk (aria-pressed), its `pattern` (stripes) panning;
   - escalating: the strip fills with light left to right (hook escalate-hold), clipped to the strip;
   - level 2 on: the strip in its palette's dark `edge`, white words, the hexagonal dots panning; the body sunk with
-    no pattern (level 2 is what's on). `badge` draws a small disc in its top-left corner and means the button is
-    locked on (the padlock while Parlem is locked on during a Pausa): the body then pans the zigzag, never the
-    stripes (#23, 2b853e91);
+    no pattern (level 2 is what's on). `badge` draws a bare icon in its top-left corner, no frame, at half opacity
+    (28 Nov, the board's look), and means the button is locked (the padlock: Parlem locked on during a Pausa, or a
+    button held on another console): locked on, the body pans the zigzag, never the stripes (#23, 2b853e91);
   - `level2={null}`: no strip; the hold's light sweeps the whole body (the last round's top row).
   `pulse` (0..1) makes the strip pulse while level 2 is on, faster towards 1 (hook suspense-hold); `timer` is the
   strip's countdown text; `meter` a time bar in the body (a Throw song's position). Structure as Button's

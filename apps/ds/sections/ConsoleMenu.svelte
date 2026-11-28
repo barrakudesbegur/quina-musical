@@ -107,7 +107,7 @@
   <h3>D234 · A two-level button held on another console (the lock mirror: `twoLevelHeld`)</h3>
   <p class="ds-prose">
     While another console holds Parlem or Aguanta (for 300 ms or more: a tap never flashes it), this console shows that
-    button locked until it’s let go: disabled, the padlock in its top-left corner, «la manté &lt;console&gt;» as its
+    button locked until it’s let go: disabled, the bare padlock in its top-left corner (half opacity, no frame), «la manté &lt;console&gt;» as its
     note, no pattern (R3). The holder’s name is its device label; a console with no label reads «una altra consola».
   </p>
   <div class="ds-gallery__grid ds-console-menu__tall">
