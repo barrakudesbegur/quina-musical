@@ -9,6 +9,7 @@
 // - **Duplex:** a sheet prints side 1, then side 2… on the following pages. Printed double-sided and flipped on the long
 //   edge, a back page's rows come out mirrored, so each row's cards are drawn in reverse order there: every card's side
 //   2 lands behind its side 1.
+// - **Test sheets (D306):** the user's A3 test sheets repeat a type's last cards, the same cards as the run's.
 
 /** One place on a sheet: the index of the card it prints (0 is the type's first card), and whether it is a sample. */
 export interface Slot {
@@ -38,6 +39,23 @@ export function sheetSlots(amount: number, perSheet: number): Slot[][] {
     out[p][k] = { cardIndex: (((amount - empty.length + j) % amount) + amount) % amount, sample: true };
   });
   return out as Slot[][];
+}
+
+/**
+ * The cards on a type's test sheets (D306), by index: its last `perSheet × sheets` cards in number order (all of them
+ * when it has fewer), so they fill the test sheets with no sample.
+ */
+export function testSheetCardIndexes(amount: number, perSheet: number, sheets: number): number[] {
+  for (const [name, n, min] of [['amount', amount, 0], ['places a sheet', perSheet, 1], ['test sheets', sheets, 0]] as const) {
+    if (!Number.isInteger(n) || n < min) throw new Error(`testSheetCardIndexes: the ${name} must be a whole number from ${min} (got ${n})`);
+  }
+  const count = Math.min(amount, perSheet * sheets);
+  return Array.from({ length: count }, (_, i) => amount - count + i);
+}
+
+/** A type's cards on its test sheets: the very cards of its run (the same numbers, songs and QR), its last ones. */
+export function testSheetCards<T>(cards: readonly T[], perSheet: number, sheets: number): T[] {
+  return testSheetCardIndexes(cards.length, perSheet, sheets).map((i) => cards[i]);
 }
 
 /** How many places hold samples, over all the sheets. */

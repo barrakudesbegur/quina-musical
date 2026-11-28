@@ -1,5 +1,6 @@
 // The printed cards as a PDF, one per card type: the 2026 design (D250–D267, D295, tools/card-mockup), in the layout
-// config.ts picks (print/layouts.ts). Last year's card kept as it was (the Barrakudes figure, Londrina Solid, the double-bordered
+// config.ts picks (print/layouts.ts). One PDF may hold several runs, each in its own layout and on its own sheet size:
+// the proof (index.ts) is a type's first A4 sheet and its A3 test sheet. Last year's card kept as it was (the Barrakudes figure, Londrina Solid, the double-bordered
 // 3 × 4 grid, black ink, the faint logo stamp) with only what 2026 needs:
 //
 // - the header: the side's heading at 38 pt (side 2's white on a black box), the GOMET circle (a sticker goes there,
@@ -283,13 +284,21 @@ const CutLines: React.FC<{ g: CardGeometry }> = ({ g }) => {
 
 // ── The document ──
 
+/** Cards printed in one layout: they fill its sheets (print/sheets.ts), samples included. */
+export interface PrintRun {
+  layout: CardLayout;
+  /** The cards, in number order. */
+  cards: readonly Card[];
+  /** Only the first sheets (a proof), else every sheet. */
+  firstSheets?: number;
+}
+
 export interface CardsPdf {
   /** The type printed, with its sides' headings. */
   type: PrintedCardTypeSpec;
-  /** Its cards, in number order. */
-  cards: readonly Card[];
-  layout: CardLayout;
-  /** Each song's cover as a data URI (null: missing, an empty box), when the layout has covers. */
+  /** The runs, one after another: each one's sheets, side 1 then side 2… */
+  runs: readonly PrintRun[];
+  /** Each song's cover as a data URI (null: missing, an empty box), for the layouts with covers. */
   covers: ReadonlyMap<number, string | null>;
   outputPath: string;
 }
@@ -300,54 +309,65 @@ export interface CardsPdfResult {
   samples: number;
 }
 
-/** Writes one type's PDF: its sheets in page order, each sheet's side 1 then side 2… */
-export async function generateCardsPDF({ type, cards, layout, covers, outputPath }: CardsPdf): Promise<CardsPdfResult> {
-  const g = cardGeometry(layout);
-  const sheets = sheetSlots(cards.length, layout.cols * layout.rows);
-  // One QR per card, the same string on both sides and on its sample, so the PDF embeds it once.
+/** Writes one type's PDF: each run's sheets in page order, each sheet's side 1 then side 2… */
+export async function generateCardsPDF({ type, runs, covers, outputPath }: CardsPdf): Promise<CardsPdfResult> {
+  // One QR per card, the same string on both sides, on its sample and in every run, so the PDF embeds it once.
   const qrs = new Map<number, string>();
-  for (const card of cards) qrs.set(card.id, await generateQRCodeDataUri(card.id));
-  // A song's fit depends only on its name and the layout: measured once.
-  const fits = new Map<number, SongFit>();
-  const songs: SongPrint = {
+  for (const card of runs.flatMap((r) => r.cards)) if (!qrs.has(card.id)) qrs.set(card.id, await generateQRCodeDataUri(card.id));
+  const headings = new Map(type.sides.map((s) => [s.side, s.heading]));
+  const sides = type.sides.map((s) => s.side);
+  // A song's fit depends only on its name and the layout: measured once per layout.
+  const fits = new Map<string, SongFit>();
+  const songPrint = (layout: CardLayout, g: CardGeometry): SongPrint => ({
     fit: (song) => {
-      let fit = fits.get(song.id);
-      if (!fit) fits.set(song.id, (fit = fitSong(song, g.cell.textBox, layout.titleMax, SONG_MEASURES)));
+      const key = `${layout.id}:${song.id}`;
+      let fit = fits.get(key);
+      if (!fit) fits.set(key, (fit = fitSong(song, g.cell.textBox, layout.titleMax, SONG_MEASURES)));
       return fit;
     },
     cover: (songId) => (layout.covers ? covers.get(songId) : undefined),
-  };
-  const headings = new Map(type.sides.map((s) => [s.side, s.heading]));
-  const pages = printPages(sheets, type.sides.map((s) => s.side));
+  });
+  const parts = runs.map((run, r) => {
+    const g = cardGeometry(run.layout);
+    const all = sheetSlots(run.cards.length, run.layout.cols * run.layout.rows);
+    const sheets = run.firstSheets === undefined ? all : all.slice(0, run.firstSheets);
+    return { r, run, g, sheets, songs: songPrint(run.layout, g), pages: printPages(sheets, sides) };
+  });
 
   await render(
     <Document title={`${CARD_TITLE} · ${type.name}`} author="Barrakudes">
-      {pages.map(({ sheet, sheetIndex, side }) => (
-        <Page key={`${sheetIndex}-${side}`} size={[g.page.width, g.page.height]} style={{ backgroundColor: PAPER_COLOR, position: 'relative' }}>
-          {side === 1 && <CutLines g={g} />}
-          {sideRows(sheet, layout.cols, side).map((row, r) => (
-            <View key={r} style={{ display: 'flex', flexDirection: 'row' }}>
-              {row.map(({ cardIndex, sample }) => {
-                const card = cards[cardIndex];
-                return (
-                  <CardSide
-                    key={`${card.id}${sample ? '-sample' : ''}`}
-                    g={g}
-                    card={card}
-                    side={side}
-                    heading={headings.get(side) ?? ''}
-                    qr={qrs.get(card.id) ?? ''}
-                    sample={sample}
-                    songs={songs}
-                  />
-                );
-              })}
-            </View>
-          ))}
-        </Page>
-      ))}
+      {parts.flatMap(({ r, run, g, songs, pages }) =>
+        pages.map(({ sheet, sheetIndex, side }) => (
+          <Page key={`${r}-${sheetIndex}-${side}`} size={[g.page.width, g.page.height]} style={{ backgroundColor: PAPER_COLOR, position: 'relative' }}>
+            {side === 1 && <CutLines g={g} />}
+            {sideRows(sheet, run.layout.cols, side).map((row, i) => (
+              <View key={i} style={{ display: 'flex', flexDirection: 'row' }}>
+                {row.map(({ cardIndex, sample }) => {
+                  const card = run.cards[cardIndex];
+                  return (
+                    <CardSide
+                      key={`${card.id}${sample ? '-sample' : ''}`}
+                      g={g}
+                      card={card}
+                      side={side}
+                      heading={headings.get(side) ?? ''}
+                      qr={qrs.get(card.id) ?? ''}
+                      sample={sample}
+                      songs={songs}
+                    />
+                  );
+                })}
+              </View>
+            ))}
+          </Page>
+        )),
+      )}
     </Document>,
     outputPath,
   );
-  return { pages: pages.length, sheets: sheets.length, samples: sampleCount(sheets) };
+  return {
+    pages: parts.reduce((n, p) => n + p.pages.length, 0),
+    sheets: parts.reduce((n, p) => n + p.sheets.length, 0),
+    samples: parts.reduce((n, p) => n + sampleCount(p.sheets), 0),
+  };
 }

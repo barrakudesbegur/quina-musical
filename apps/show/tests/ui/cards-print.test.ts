@@ -4,13 +4,13 @@
 // the fonts are measured with made-up widths here.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { printPages, sampleCount, sheetSlots, sideRows } from '../../../cards/src/print/sheets.ts';
+import { printPages, sampleCount, sheetSlots, sideRows, testSheetCardIndexes, testSheetCards } from '../../../cards/src/print/sheets.ts';
 import { fitSong, lineCount, TITLE_MIN, type SongMeasures } from '../../../cards/src/print/fit.ts';
 import { CARD_LAYOUTS, CARD_LAYOUT_IDS, HEADING_SIZE, QR_SIZE, cardGeometry, headingProblems, layoutIdFrom } from '../../../cards/src/print/layouts.ts';
 import { inPool, poolCounts, poolProblems, sideSources, songPools } from '../../../cards/src/sides.ts';
 import { cardTypeProblems, printedTypeProblems } from '../../../cards/src/card-types.ts';
-import { CARD_AMOUNTS, CARD_LAYOUT, CARD_TITLE, CARD_TYPES } from '../../../cards/src/config.ts';
-import { parseRepertoire, printName, songProblems } from '../../../cards/src/repertoire.ts';
+import { CARD_AMOUNTS, CARD_LAYOUT, CARD_TITLE, CARD_TYPES, TEST_SHEET_LAYOUT, TEST_SHEETS, cardUrl } from '../../../cards/src/config.ts';
+import { outDirFrom, parseRepertoire, printName, songProblems } from '../../../cards/src/repertoire.ts';
 
 // ---- the sheets: page order, samples, duplex
 
@@ -51,6 +51,58 @@ test('the A4 card is the default (D295): both amounts fill whole A4 sheets, 133 
   assert.deepEqual(CARD_AMOUNTS.map((a) => sampleCount(sheetSlots(a.amount, perSheet))), [0, 0]);
   // The A3 layout still prints a whole run, with its own samples (#397–399 on the normal run's last sheets).
   assert.equal(sampleCount(sheetSlots(399, 6)), 3);
+});
+
+/** Each type's cards as a run numbers them: normal 1–399, then especial 400–699. */
+const runCards = () => {
+  let next = 1;
+  return CARD_AMOUNTS.map((a) => {
+    const cards = Array.from({ length: a.amount }, (_, i) => ({ id: next + i, type: a.type }));
+    next += a.amount;
+    return { type: a.type, cards };
+  });
+};
+
+test("the A3 test sheets (D306) repeat each type's last cards: normal #394–399, especial #694–699, one sheet each", () => {
+  assert.equal(TEST_SHEET_LAYOUT, 'a3-6');
+  const test = CARD_LAYOUTS[TEST_SHEET_LAYOUT];
+  assert.equal(test.covers, true, 'the square card with covers');
+  const perSheet = test.cols * test.rows;
+  assert.deepEqual(TEST_SHEETS.map((t) => [t.type, t.sheets]), [['normal', 1], ['especial', 1]]);
+  const numbers = runCards().map(({ type, cards }) => testSheetCards(cards, perSheet, TEST_SHEETS.find((t) => t.type === type)?.sheets ?? 0).map((c) => c.id));
+  assert.deepEqual(numbers, [[394, 395, 396, 397, 398, 399], [694, 695, 696, 697, 698, 699]]);
+  // One sheet each, in number order, no sample: every place is one of those cards.
+  for (const ids of numbers) {
+    const sheets = sheetSlots(ids.length, perSheet);
+    assert.equal(sheets.length, 1);
+    assert.equal(sampleCount(sheets), 0);
+    assert.deepEqual(sheets[0].map((s) => ids[s.cardIndex]), ids);
+  }
+});
+
+test("the test sheets' cards are the A4 run's own cards: the same numbers, songs and QR", () => {
+  const songs = (id: number) => [{ side: 1, lines: [[{ id: id % 70, title: `t${id}`, artist: 'a' }]] }];
+  const cards = Array.from({ length: 399 }, (_, i) => ({ id: i + 1, type: 'normal', sides: songs(i + 1) }));
+  const test = testSheetCards(cards, 6, 1);
+  assert.deepEqual(test.map((c) => c.id), [394, 395, 396, 397, 398, 399]);
+  test.forEach((card, i) => {
+    assert.equal(card, cards[393 + i], 'the very card object, songs and all');
+    assert.equal(cardUrl(card.id), `https://quina.barrakudesbegur.org/26/${394 + i}`, 'the QR encodes its number, as on the A4 card');
+  });
+  // Two sheets take the last 12; more sheets than cards take them all; none, nothing.
+  assert.deepEqual(testSheetCardIndexes(399, 6, 2), Array.from({ length: 12 }, (_, i) => 387 + i));
+  assert.deepEqual(testSheetCardIndexes(4, 6, 1), [0, 1, 2, 3]);
+  assert.deepEqual(testSheetCards(cards, 6, 0), []);
+  assert.throws(() => testSheetCardIndexes(399, 6, 1.5), /test sheets/);
+  assert.throws(() => testSheetCardIndexes(399, 0, 1), /places a sheet/);
+});
+
+test('--out writes a run elsewhere (the proof), relative to where the command ran; else the cardsJson folder', () => {
+  assert.equal(outDirFrom([], '/repo/data/media/2026/cards', '/repo/apps/cards'), '/repo/data/media/2026/cards');
+  assert.equal(outDirFrom(['--proof', '--out', '../../temp/proof'], '/x', '/repo/apps/cards'), '/repo/temp/proof');
+  assert.equal(outDirFrom(['--out=/tmp/p'], '/x', '/repo'), '/tmp/p');
+  assert.throws(() => outDirFrom(['--out'], '/x', '/repo'), /--out needs a folder/);
+  assert.throws(() => outDirFrom(['--out', '--proof'], '/x', '/repo'), /--out needs a folder/);
 });
 
 test("a back page's rows are mirrored, so each card's side 2 is printed behind its side 1 (long-edge duplex)", () => {

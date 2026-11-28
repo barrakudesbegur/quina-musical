@@ -17,9 +17,24 @@ import type { CardLayoutId } from './print/layouts';
  * The printed layout (print/layouts.ts). The organizers picked «Apaïsat sense portades» (D295): `'a4-3'`, A4
  * portrait, 3 cards a sheet (210 × 99 mm), no covers, black and white on last year's coloured paper. The other one,
  * `'a3-6'` (A3 portrait, 6 cards a sheet, 148.5 × 140 mm, each song's cover in colour above its title), stays for the
- * user's A3 test sheets (D295, D306) and still prints a whole run with `--layout a3-6`.
+ * user's A3 test sheets (TEST_SHEETS, D295, D306) and still prints a whole run with `--layout a3-6`.
  */
 export const CARD_LAYOUT: CardLayoutId = 'a4-3';
+
+/** The layout of the A3 test sheets: the square card with covers (D295). */
+export const TEST_SHEET_LAYOUT: CardLayoutId = 'a3-6';
+
+/**
+ * The A3 test sheets (D295, D306): one or two sheets of the square card with covers, for a test with real players on
+ * the night. They repeat each type's **last** cards, the same numbers, songs and QR as those A4 cards, which stay off
+ * sale with the user (who hands a known buyer of two cards one or the other, and tracks who holds them). One sheet per
+ * type by default, since each type prints on its own paper colour: normal #394–399, especial #694–699. `--test-sheets`
+ * writes them, `cards-<type>-test-a3.pdf`; `--proof` puts them in the proof (index.ts).
+ */
+export const TEST_SHEETS = [
+  { type: 'normal', sheets: 1 },
+  { type: 'especial', sheets: 1 },
+] as const satisfies readonly { type: CardTypeId; sheets: number }[];
 
 /** The year tag, two digits, as in the cards' links and the Game plan. */
 export const EDITION = '26';

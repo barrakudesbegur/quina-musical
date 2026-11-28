@@ -56,6 +56,19 @@ export function repertoireNameFrom(argv: readonly string[]): string {
   return name;
 }
 
+/**
+ * `--out <dir>` or `--out=<dir>` from the command line: where a run writes, instead of the repertoire's cardsJson folder
+ * (`fallback`), so a proof never touches the folder the relay and the cloud serve. Relative to `cwd`, where the command
+ * was run.
+ */
+export function outDirFrom(argv: readonly string[], fallback: string, cwd: string): string {
+  const i = argv.findIndex((a) => a === '--out' || a.startsWith('--out='));
+  if (i < 0) return fallback;
+  const dir = argv[i].includes('=') ? argv[i].slice('--out='.length) : argv[i + 1];
+  if (!dir || dir.startsWith('--')) throw new Error(`--out needs a folder (got "${dir ?? ''}")`);
+  return path.resolve(cwd, dir);
+}
+
 /** The repertoire's file, with its paths made absolute. Throws with a clear message when the file isn't one. */
 export function parseRepertoire(name: string, json: unknown, repo: string): Repertoire {
   const p = json as Record<string, unknown> | null;

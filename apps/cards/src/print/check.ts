@@ -56,7 +56,7 @@ export function checkPrint(
   const sizes = fits.filter((f) => f.fits).map((f) => f.titleSize).sort((a, b) => a - b);
   const summary =
     `Layout ${layout.id}, ${layout.name}: cards ${mm(g.card.width)} × ${mm(g.card.height)} mm, ${perSheet} a ${layout.sheet.name} sheet; ` +
-    amounts.map((a, i) => `${a.type} ${sheets[i].length} sheets (${sampleCount(sheets[i])} samples)`).join(', ') +
+    amounts.map((a, i) => `${a.type} ${sheets[i].length} sheet${sheets[i].length === 1 ? '' : 's'} (${sampleCount(sheets[i])} samples)`).join(', ') +
     `; cells ${mm(g.cellSize.width)} × ${mm(g.cellSize.height)} mm` +
     (g.cell.kind === 'coverAbove' ? `, covers ${mm(g.cell.cover)} mm` : ', no covers') +
     (sizes.length ? `; titles ${sizes[0]}–${sizes[sizes.length - 1]} pt (median ${sizes[Math.floor(sizes.length / 2)]})` : '');
