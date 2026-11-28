@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D273**, **U226**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D275**, **U226**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -44,7 +44,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 - U204: the realistic run's start time today, or 27 Dec (Backend uploads the plan with `--start` when it's relayed);
 - U212: the organizers pick the card, «Quadrat amb portades» (the default, A3 six a sheet) or «Apaïsat sense portades» (A4 three a page). The generator makes both (`--layout a4-3`); the cards are made on 4–5 Dec, after a proof sheet;
 - U222–U225: Frontend's redraw questions (the Desgraciat's standing Check, the edition's name, the Efectes tab, the thick ✗);
-- U218, U219: when the "just a website" setup happens, and what a 5G drop may cost (research: browser-only-show.md, wii-remote-mac.md); U220 (user task): try the Wii remote with MacWiiPair; U221: where the laptop sits (fibre HDMI at the stage, recommended), waiting on the venue's distances;
+- U218: when the "just a website" setup happens (U219 answered: D273, a 5G drop isn't a design concern); the presenters' remote is the main problem (D274; research running: presenter-remote.md); U220 (user task): try the Wii remote with MacWiiPair; U221: where the laptop sits (the user prefers the table by the projector, with the mixer; decided by the remote research);
 - U216, U217: the Check's side label on a wrong-type card, and «Desgraciat» twice in the Desgraciat's Check header (Frontend, 28 Nov);
 - U215: a double-click start for the night laptop (research in docs/research/reports/laptop-app.md; recommended: a launcher only);
 - U214: the grill format only in a card design session (the default), or plain questions there too;

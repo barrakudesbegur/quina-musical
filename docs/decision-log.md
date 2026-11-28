@@ -1792,3 +1792,14 @@ By: the user (to the card design session). Source: quina-musical-d1's report of 
 - "third option is discarded. keep square for now as default, but that i can also generate the pdf for the other." The organizers choose between «Quadrat amb portades» (the A3 card, the default) and «Apaïsat sense portades» (21 × 9.9 cm, black and white). The generator makes both: `CARD_LAYOUT` 'a3-6', or `--layout a4-3`. «Apaïsat amb portades» is dropped. Amends D271.
 - "the year in the stamp is broken! you had to bring the exact old code." The port had centred «2026» 4 pt lower than last year's code. It's now exactly as last year's: flush with the stamp's top, 5 pt in from its right, 18 pt. The stamp is drawn over the songs at 9 % ink, so the square card's corner cover never hides it (4e4c0fe2).
 By: the user (to the card design session). Source: quina-musical-d1's report of 28 Nov.
+
+### D273 · A 5G drop isn't a design concern · 2026-11-28 · Active
+Answers U219 with (b): "A 5G drop is so unlikely it is absurd to care about. i'm in begur a town in girona, spain." New designs may rely on the internet: losing the tablet until 5G returns is acceptable. What's built for a drop (the relay, the hotspot Console, the laptop's journal, R2-Q26) stays as it is. ADR-0003's reason for rejecting the cloud as the live show's hub no longer weighs on later designs, such as the browser-only setup (U218).
+By: the user. Source: the user's message of 28 Nov, after docs/research/reports/browser-only-show.md. Lives in: requirements/operations.md › Where things run.
+
+### D274 · No stick at the projector; the audio on another device is only a nice-to-have · 2026-11-28 · Active
+- **The projector stick is dropped:** "the projector stick was just a random idea, we see it is very bad so we discard it. a wireless hdmi is a better option if laptop needs to be far from projector."
+- **The audio on another device** (a phone at the mixer, ADR-0002's split mode) "is also just an idea that i didnt consider important, it would be nice it worked, but if not it is not a dealbreaker. the mixing table can be placed almost anywhere." Split mode is no longer required. Amends ADR-0002.
+- **The real problem is the presenters' control:** "the main issue to figure out is a reliable way for the presenter to control the game. a screen is not nice because needs his eyes to be on it, and he should look at the public." Research: docs/research/reports/presenter-remote.md.
+- **Where the laptop sits:** "my preference is to keep the laptop on the table, near the projector, with the mixer with me as well. but i can adapt. the audio source is not the issue, the issue is the remote connectivity, and the slight inconvenience of wires." U221 waits on the remote's research.
+By: the user. Source: the user's message of 28 Nov. Amends: ADR-0002. Lives in: requirements/operations.md › Where things run.

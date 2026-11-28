@@ -157,11 +157,6 @@ The user (28 Nov): "just a website … a PWA that works offline … the show pag
 - (a) The direction for after 27 Dec. This year the laptop stays the only playback device, with the cheap pieces: the start app (U215), the cloud Console as the main path, and the Wii remote fixes.
 - (b) This year: reopens R2-Q26, and the rehearsals run on the new setup.
 
-### U219 · If 5G drops, in the setup the user wants
-A browser can't accept connections, so with no internet the devices on the hotspot only find each other through a local server (today, the relay). ADR-0003 rejected the cloud as the live show's hub for this reason.
-- (a) The tablet must still control the show: one device runs a local server (the laptop or the Mac app), and the others join it over the hotspot as plain web pages.
-- (b) Losing the tablet until 5G returns is acceptable: the music keeps going, and the Wii remote or the laptop drives it. This is what makes "just a website" possible.
-
 ### U222 · The Desgraciat's standing Check when no finale was started
 D166: the finale replaces the Desgraciat's public Check. But the built console still offers one: with one card left standing and no finale started, Dempeus «Comprovar #N» (or the Wii remote's A) sends a standing Check. «Començar final» needs at least 2 finalists, so in that case the Check is the only way to confirm the winner.
 - (a) Remove it: the finale is the only way, and the presenters start it while at least 2 stand. As D166 reads.
@@ -185,6 +180,7 @@ S1's verdict ✗ is thick. The Check cells' ✗ are thinner.
 
 ### U221 · Where the laptop sits, and how the distance is bridged
 The user wants the laptop free of the projector and the mixer. ADR-0002's split mode (the audio on another device) is recorded but not built (docs/research/reports/browser-only-show.md). The distances in metres aren't recorded yet: the user is asked for them.
+The user's preference (D274): the laptop on the table near the projector, with the mixer there too, "but i can adapt"; the remote's connection decides it (docs/research/reports/presenter-remote.md).
 - (a) The laptop at the stage, next to the mixer and the Wii remote, with a fibre HDMI cable to the projector (about 150–210 USD for 50 m, no delay). Also fixes the remote's range.
 - (b) The laptop at the projector, with a long balanced audio cable to the mixer (the cable default in mixer-design-decisions.md › Devices). The Wii remote's range stays at the limit.
 - (c) Build split mode first (Sound engine and Frontend, medium work, over the relay on the hotspot), rehearsed before the freeze.
@@ -401,6 +397,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U219 · If 5G drops** (2026-11-28) → D273: a drop isn't a design concern; what's built for it stays.
 - **U57 · Pool 2's song numbers** (2026-11-28) → D238, D269: pool 2 continues after pool 1 (71–135), and a shared song keeps pool 1's number.
 - **U61 · A pool's song we can't download** (2026-11-28): moot. All 135 songs downloaded (D269).
 - **U213 · #117's cover** (2026-11-28) → D270: keep the real 1996 white label; title «Els Segadors Remix», artist «Pont Aeri-Chasis».
