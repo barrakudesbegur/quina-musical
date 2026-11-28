@@ -5,7 +5,7 @@ import { HAS_DATA, NO_CARD, dataTest as test } from './support/data.ts';
 import assert from 'node:assert/strict';
 import { COMMAND_NAMES, VOLUME_DEFAULTS, checkGamePlan, replayJournal, volumeDb, type CommandName, type EventOf, type JournalEntry, type ShowEvent, type ShowEventType, type ShowScene } from '@quina/protocol';
 import { sceneAllows, type SceneContext } from '@quina/protocol';
-import { FLOW, THROW } from '../engine/src/config.ts';
+import { FLOW, INTERVAL, THROW } from '../engine/src/config.ts';
 import { cardSongIds, type Card } from '../engine/src/game/cards.ts';
 import type { Effect, EffectOf, EffectType } from '../engine/src/show/show.ts';
 import { hookLoop, bestHook } from '../engine/src/plan/hookloop.ts';
@@ -627,6 +627,8 @@ test('Pausa saves what plays and resumes it where it was, under Parlem (D128, D1
   assert.deepEqual(find(on, 'pauseOverlay'), { type: 'pauseOverlay', on: true }, 'in a round: "Tornem de seguida"');
   assert.deepEqual(emitted(on, 'transition.cancelled').map((e) => e.reason), ['hold'], 'a Spin in flight is cancelled (U105)');
   assert.ok(find(on, 'pausePlayback') && find(on, 'pausaMusic')?.on, 'what plays is saved, the Pausa set plays');
+  const music = find(on, 'pausaMusic');
+  assert.equal(music?.on && music.levelDb, INTERVAL.volumeDb + volumeDb(VOLUME_DEFAULTS.songsParlem), 'low, as if in Parlem (D128)');
   assert.ok(!find(on, 'holdMusic') && !find(on, 'songToHoldMusic') && !find(on, 'intervalMusic'));
   assert.deepEqual(h.show.snapshot().intervalMusic, { set: 'pausa', track: null });
   assert.deepEqual(h.show.snapshot().pause, { sinceMs: h.show.pause?.sinceMs, overlay: true });

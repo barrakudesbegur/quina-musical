@@ -66,7 +66,7 @@ export interface PublicRound {
   landings: PublicLanding[];
 }
 
-/** A Spin in progress: its timing and seed only, never the song or the drum's target (U206). */
+/** A Spin in progress: its timing, its seed and, since U206, its landing song (the screens reveal it only at landAtMs). */
 export interface PublicSpin {
   startAtMs: number;
   /** null while a Suspense is held open. */
@@ -74,6 +74,13 @@ export interface PublicSpin {
   /** PUBLIC (D237): the drum solver's seed, so a phone's solveSpin replays the projector's trajectory. Absent while a
    * Suspense is held open, and from an older engine or cloud. */
   spinSeed?: number;
+  /**
+   * The song the Spin lands on (U206, the user: sending it early is fine as long as it's revealed at the right time):
+   * from the Spin's start, so a phone solves the projector's very Spin onto its tile (drumOrder) and lands with it.
+   * Phones must not show the song before `landAtMs`. A Back may still cancel the Spin, and that song then stays next.
+   * Absent while a Suspense is held open (its landing isn't chosen yet), and from an older engine or cloud.
+   */
+  targetId?: number;
 }
 
 /** The round's public Shuffle: the phone animates it between these times. Never the Queue. */

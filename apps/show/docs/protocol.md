@@ -319,7 +319,7 @@ Players' phones get the Game from the cloud, never from the relay. The cloud bui
   - `link` (the laptop's connection: show "Connexió perduda" after `PUBLIC_FEED.offlineNoticeAfterMs` offline).
   - `plan` (`GamePlan`, logos as asset paths).
   - `notice` (Admin's banner) and `soundsDefault`.
-- **Never in it.** The Queue, `next`, `transition.to`/`drum.targetId` before the landing, `possibleWinners`, `future`, `hold.ducked`, `phase`, the real `heat`, `schedule.roundEndMs`, a Check's steps before its verdict, claims' `completeSince` and `warnings`, winners' names and notes, the journal.
+- **Never in it.** The Queue, `next`, `transition.to` before the landing (but `drum.targetId` is public from the Spin's start since U206, as `PublicSpin.targetId`, and screens reveal it only at the landing), `possibleWinners`, `future`, `hold.ducked`, `phase`, the real `heat`, `schedule.roundEndMs`, a Check's steps before its verdict, claims' `completeSince` and `warnings`, winners' names and notes, the journal.
 
 ## Analysis files
 

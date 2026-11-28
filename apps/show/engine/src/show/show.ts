@@ -3492,7 +3492,8 @@ export class Show {
     this.pause = { sinceMs: this.env.nowMs(), since: now };
     this.pausaNow = null;
     this.out.push({ type: 'pausePlayback', at: now, fadeSec: PAUSA.fadeOutSec });
-    this.out.push({ type: 'pausaMusic', on: true, at: now, fadeSec: PAUSA.musicFadeInSec, levelDb: INTERVAL.volumeDb });
+    // D128: "the Pausa music plays low, as if in Parlem": the set's level under the Parlem duck (the songsParlem slider).
+    this.out.push({ type: 'pausaMusic', on: true, at: now, fadeSec: PAUSA.musicFadeInSec, levelDb: INTERVAL.volumeDb + this.parlemDb() });
     this.out.push({ type: 'pauseOverlay', on: this.pauseOverlay() });
   }
 
