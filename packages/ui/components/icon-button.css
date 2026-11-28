@@ -61,6 +61,25 @@
   height: var(--icon-button-icon);
 }
 
+/* With trailing content (28 Nov, the card hint's mark): a pill hugging the icon and it, as tall as the frame */
+:where(.icon-button[data-trailing]) {
+  --ds-radius: var(--radius-pill);
+  --icon-button-trailing: var(--icon-button-icon);
+}
+
+.icon-button[data-trailing] > .icon-button__piece {
+  grid-auto-flow: column;
+  gap: 0.375rem;
+  width: auto;
+  padding-inline: calc((var(--icon-button-size) - var(--icon-button-icon)) / 2);
+}
+
+.icon-button__trailing {
+  display: grid;
+  width: var(--icon-button-trailing);
+  height: var(--icon-button-trailing);
+}
+
 /* framed: its fill and the words' colour; the surface by default, or the palette's solid */
 .icon-button[data-variant='framed'] > .icon-button__piece {
   background: var(--palette-solid, var(--color-surface));

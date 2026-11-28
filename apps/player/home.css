@@ -316,10 +316,11 @@ html:active-view-transition-type(home-crossfade)::view-transition-new(root) {
   top: calc(var(--home-hint-top, 0px) + 0.5rem);
 }
 
-/* A bigger paper disc than the finalist's ✕: it has to be found at a glance. */
+/* A bigger paper pill than the finalist's ✕ disc, the arrow and the card's mark: it has to be found at a glance. */
 .home-hint__button {
   --icon-button-size: 3rem;
   --icon-button-icon: 1.5rem;
+  --icon-button-trailing: 1.75rem;
   pointer-events: auto;
 }
 
@@ -329,9 +330,13 @@ html:active-view-transition-type(home-crossfade)::view-transition-new(root) {
   }
 }
 
+/* The arrow nudges towards the card; the pill and the mark stay */
 @media (prefers-reduced-motion: no-preference) {
   :where(.player[data-motion='full']) .home-hint {
     --home-hint-way: 1;
+  }
+
+  :where(.player[data-motion='full']) .home-hint__button .icon-button__piece > .icon {
     animation: home-hint-nudge 1.6s ease-in-out infinite;
   }
 

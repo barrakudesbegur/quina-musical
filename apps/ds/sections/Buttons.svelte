@@ -16,6 +16,7 @@
   import Icon from '../../../packages/ui/icons/Icon.svelte';
   import { ACTIONS, FX, ICONS, MINI, WII } from '../../console/actions.ts';
   import { PLAYER, PLAYER_CORNERS, PLAYER_ICONS, PLAYER_LINKS } from '../../player/actions.ts';
+  import CardMark from '../../player/components/CardMark.svelte';
   import './buttons.css';
 
   let { phone, cell }: { phone: boolean; cell: Snippet<[string, Snippet]> } = $props();
@@ -137,10 +138,12 @@
     {@render cell('the quiet preset: navy on the night, the floating shadow (the user’s phone test)', f1)}
     {#snippet f2()}<Button color="orange" floating size="s" icon="plus" label="Cartró" sound="floating" />{/snippet}
     {@render cell('orange, for comparison', f2)}
-    {#snippet f3()}<IconButton floating icon="arrow-down" label="Veure el cartró que té aquesta cançó" class="ds-hint" />{/snippet}
-    {@render cell('the hint to the card holding the song, off screen (card-hint, §8 Y2): a 48 px paper disc, no words', f3)}
-    {#snippet f4()}<IconButton floating icon="arrow-up" label="Veure el cartró que té aquesta cançó" class="ds-hint" />{/snippet}
-    {@render cell('… pointing up, under the strip', f4)}
+    {#snippet f3()}<IconButton floating icon="arrow-down" label="Veure Àvia, que té aquesta cançó" class="ds-hint">{#snippet trailing()}<CardMark identity={1} decorative />{/snippet}</IconButton>{/snippet}
+    {@render cell('the hint to the card holding the song, off screen (card-hint, §8 Y2): a 48 px paper pill with the arrow and that card’s mark (trailing, 28 Nov), no words', f3)}
+    {#snippet f4()}<IconButton floating icon="arrow-up" label="Veure #57, que té aquesta cançó" class="ds-hint">{#snippet trailing()}<CardMark identity={2} decorative />{/snippet}</IconButton>{/snippet}
+    {@render cell('… pointing up, under the strip, with the shooting star', f4)}
+    {#snippet f5()}<IconButton floating icon="arrow-down" label="Veure #204, que té aquesta cançó" class="ds-hint">{#snippet trailing()}<CardMark identity={9} decorative />{/snippet}</IconButton>{/snippet}
+    {@render cell('… with the black card’s top hat (its paper outline)', f5)}
   </div>
 </section>
 

@@ -3,9 +3,9 @@
   // home tells it (logic/home-ui.svelte.ts):
   // - «+ Cartró» between the corners on Cartrons (D188, D218; `add-card-float`): the quiet navy preset, following the
   //   swipe's share; only with 1 … max − 1 cards, never during a Celebration (the empty view keeps its own).
-  // - The hint to the card holding the playing song when none shows on Cartrons (§8 Y2; `card-hint`): a paper disc with
-  //   an arrow, no words (its name is spoken), at the bottom above «+ Cartró» or under the strip at the top; a tap
-  //   scrolls to the card (`drum-pick`).
+  // - The hint to the card holding the playing song when none shows on Cartrons (§8 Y2; `card-hint`): a paper pill with
+  //   the arrow and that card's mark, no words (its name is spoken), at the bottom above «+ Cartró» or under the strip
+  //   at the top; the arrow nudges towards the card; a tap scrolls to the card (`drum-pick`).
   import { fade, fly } from 'svelte/transition';
   import Button from '../../../packages/ui/components/Button.svelte';
   import IconButton from '../../../packages/ui/components/IconButton.svelte';
@@ -15,6 +15,7 @@
   import { homeUi } from '../logic/home-ui.svelte.ts';
   import { cardLabel } from '../logic/storage.ts';
   import { S } from '../strings.ts';
+  import CardMark from './CardMark.svelte';
 
   let { app }: { app: PlayerApp } = $props();
   const canAdd = $derived(app.data.cards.length > 0 && app.data.cards.length < PLAYER_CONFIG.maxCards && !app.celebrationOpen);
@@ -47,7 +48,9 @@
         label={S.cardHint(hintCard ? cardLabel(hintCard) : '')}
         class="home-hint__button"
         onclick={() => homeUi.pick?.()}
-      />
+      >
+        {#snippet trailing()}<CardMark identity={hint.identity} decorative />{/snippet}
+      </IconButton>
     </div>
   {/key}
 {/if}

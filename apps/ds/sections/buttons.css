@@ -43,9 +43,10 @@
   justify-self: start;
 }
 
-/* The home's card-hint disc (home.css › .home-hint__button): bigger than the finalist's ✕. */
+/* The home's card-hint pill (home.css › .home-hint__button): bigger than the finalist's ✕, the arrow and the mark. */
 .ds-buttons .ds-hint {
   --icon-button-size: 3rem;
   --icon-button-icon: 1.5rem;
+  --icon-button-trailing: 1.75rem;
 }
 }
