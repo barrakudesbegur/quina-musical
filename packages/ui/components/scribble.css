@@ -62,7 +62,9 @@
   font-size: var(--scribble-size);
   font-weight: 400;
   line-height: 0.95;
-  white-space: nowrap;
+  /* one line where it fits; in a narrow box it wraps (balanced) rather than run under the arrow */
+  text-wrap: balance;
+  text-align: end;
   color: var(--scribble-color);
   text-shadow: var(--scribble-shadow);
   rotate: -5deg;
@@ -79,9 +81,7 @@
 .scribble[data-point='left'] .scribble__words {
   align-self: center;
   margin-left: 1.25rem;
-  white-space: normal;
   text-align: center;
-  text-wrap: balance;
 }
 
 .scribble__arrow {

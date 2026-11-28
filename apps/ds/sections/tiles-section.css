@@ -1,0 +1,53 @@
+/* The gallery's collapsed cards (development only): its frames. */
+
+@layer app {
+.ds-gallery__grid--tiles {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 11rem), 1fr));
+}
+
+.ds-gallery__grid--scribbles {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 23rem), 1fr));
+  align-items: start;
+}
+
+.ds-gallery__resting {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.625rem;
+  max-width: 23rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ds-gallery__scribble {
+  display: grid;
+  padding: var(--space-2);
+  border-radius: var(--radius-lg);
+  background: var(--color-night);
+}
+
+.ds-gallery__scribble[data-ground='gold'] {
+  background: linear-gradient(var(--color-gold-light), #ff9d1a);
+}
+
+.ds-gallery__scribble[data-shape='row'] {
+  width: min(100%, 22rem);
+  min-height: 5.5rem;
+}
+
+.ds-gallery__scribble[data-shape='above'] {
+  width: min(100%, 22rem);
+  min-height: 4.5rem;
+}
+
+.ds-gallery__scribble[data-shape='cell'] {
+  width: 11rem;
+  min-height: 12rem;
+}
+
+.ds-gallery__scribble .card-tile__mark,
+.ds-gallery__grid--tiles .card-tile__mark {
+  transform: rotate(var(--tilt, 0deg));
+}
+}

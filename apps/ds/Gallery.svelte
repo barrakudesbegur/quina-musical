@@ -16,6 +16,7 @@
   import { PLAYER } from '../player/actions.ts';
   import StatusSections from './StatusSections.svelte';
   import CardsSongs from './sections/CardsSongs.svelte';
+  import TilesSection from './sections/TilesSection.svelte';
   import PanelsSection from './PanelsSection.svelte';
   import ButtonsFamily from './sections/Buttons.svelte';
   import IconsSection from './sections/Icons.svelte';
@@ -282,6 +283,7 @@
   </section>
 
   {#if !projector}<CardsSongs {phone} {cell} />{/if}
+  {#if phone}<TilesSection {cell} />{/if}
   <StatusSections {density} />
   {#if !projector}<ControlsGallery {phone} />{/if}
   {#if !phone && !projector}<ConsoleMenu {cell} />{/if}
