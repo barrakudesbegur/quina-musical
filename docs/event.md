@@ -64,7 +64,7 @@ This page explains the event: what happens on the night, who does what, and how 
 - **Distances:** the projector stands at its normal throw distance from the screen, under about 5 m (maybe a bit more). The stage is a little further than the screen: no more than about 6–7 m from the projector. The closest table is next to the projector. The 2025 screen's size isn't known; it worked fine. The audio cables are usually long enough; the only worry is someone tripping over them. The mixing desk can be placed almost anywhere. The tech prefers the laptop and the mixer at that table, next to the projector. 5G in Begur is reliable: a drop is so unlikely it isn't worth designing for. Congestion, when the whole tent loads the player app at once, is unlikely but possible.
 - **Microphones:** both wired and wireless are available. The choice isn't fixed.
 - **Show equipment:**
-  - the laptop, which drives the projector and the music, in the first row or at the side of the stage;
+  - the laptop, which drives the projector and the music, at the tech's table next to the projector, with the mixer (D281; in 2025 it was in the first row or at the side of the stage);
   - one tablet shared by the presenters (**new in 2026**);
   - the tech's phone;
   - a Wii remote for the presenters.
@@ -285,7 +285,7 @@ This page explains the event: what happens on the night, who does what, and how 
   - on request, how close cards are to winning and who might win. It's hidden by default, so the presenters stay intrigued too.
 - **Their equipment:**
   - **The shared tablet** (**new in 2026**). The presenters may not like it. Then the tech drives the show from the laptop, and they advance by hand.
-  - **The Wii remote** is the intended experience. It's fun, the presenters joke about it, and shaking it can start a Suspense. It needs a plan B: the tablet can do everything the remote does. In 2025 its range from the stage to the laptop was at the limit: it worked most of the time, but was unreliable at moments. It was paired with WiimotePair and read through WebHID in Chrome (natel97/wiimote-chrome). So in 2026 the device it connects to sits closer to the stage. **The presenters look at the public, not at a screen,** so a physical remote is their main control. The Wii remote is fun and familiar to them, with many buttons, but its connection is outdated and unreliable: a reliable remote is the main problem to solve for 2026.
+  - **The Wii remote** is the intended experience. It's fun, the presenters joke about it, and shaking it can start a Suspense. It needs a plan B: the tablet can do everything the remote does. In 2025 its range from the stage to the laptop was at the limit: it worked most of the time, but was unreliable at moments. It was paired with WiimotePair and read through WebHID in Chrome (natel97/wiimote-chrome). In 2026 the laptop sits at the tech's table, 6–7 m from the stage (D281), so the range test at the setup matters (night-runbook.md step 7). **The presenters look at the public, not at a screen,** so a physical remote is their main control. The Wii remote is fun and familiar to them, with many buttons, but its connection is outdated and unreliable: a reliable remote is the main problem to solve for 2026.
 - **The tech** can open the presenters' controls on a phone to help them. The tech wants to sit at a table with friends and family, not tied to the laptop, and still control the show from a phone or a second tablet.
 
 ## Fairness and trust

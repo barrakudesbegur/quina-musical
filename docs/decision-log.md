@@ -230,7 +230,7 @@ By: the user. Source: show-ui-and-platform-decisions.md › Hosting and architec
 The cloud is the single source of truth; the laptop plays, journals every landing and carries on alone offline; any prepared device resumes from the cloud.
 By: the user. Source: show-ui-and-platform-decisions.md › Hosting and architecture; transcript 2026-11-24T01:35Z. Supersedes: R2-Q1, R2-Q1a, R2-Q1c. ADR: [ADR-0003](#adr-0003--the-cloud-owns-the-game-the-laptop-owns-playback--2026-11-24--active). Lives in: requirements/operations.md › Where things run.
 
-### R2-Q1f · A simple Plan B when 5G drops · 2026-11-24 · Active
+### R2-Q1f · A simple Plan B when 5G drops · 2026-11-24 · Amended by D281 (the laptop's place)
 The laptop sits in the front row or at the side of the stage, so its keys and the Wii remote are in reach, and a console on the laptop's hotspot loads from the laptop and talks to it directly. The user asked to keep it simple. (Asked in three versions; this is the final one.)
 By: the user. Source: show-ui-and-platform-decisions.md › Hosting and architecture (Plan B); transcript 2026-11-24T01:35Z. Lives in: requirements/operations.md › Plan B and resume codes, Fallbacks.
 

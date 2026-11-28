@@ -29,8 +29,8 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 - **The user's answers so far (28 Nov night):** U231 (a) → D297; the transitions wait until the app works better (D298); nothing on the projector starts the event (D299); the projector screen can open from a website for a second projector (D300); the console's Heat meter ("thermometer") didn't work in the test (whats-left 2.12). The user wants all questions answered before the plan.
 - **More answers (28 Nov, later):** D301 (U234), D302 (U233 with edits), D303 (U232 with the squashed nino), D304 (U173), D305 (U163: no round total anywhere), D306 (U239, the user's two-card test), D307 (businesses' names fine in git, logos out). U238: the user is listening now, keep it open for the conclusion.
 - **Waiting on the user:** U235, U236, U237 on the side-by-side page https://claude.ai/code/artifact/91dfbce3-8e64-4d2a-b289-e87f4dc50506 (the user: "cant you put both side to side and i chose? easier": always show design questions as images side by side), then U238, U239, U173, U163; then the go for the plan.
-- **The user's setup session is quina-musical-cd** (1de1335b): briefed 28 Nov night with the user's words, D299, D300, D304 and the verified setup findings; the user plans the setup, the Mac app (D282) and the web projector (D300) with it.
-- **Sessions on 28 Nov night** (from ~/.claude/sessions/*.json, which maps names to session ids): quina-musical-e0 = the sponsor logos session (ccaa48f6), -f5 = the Check's song session (12d5bb9d), -cd = setup, -79 = the previous orchestrator (60564de3), -e4 = this orchestrator (f665f759). The role sessions (Frontend 69916f7a, Backend a890966e, Sound engine) weren't open.
+- **The user's setup session is quina-musical-79** (the user pasted the brief there; my send to -cd was interrupted): its scope is the night's setup and startup with the user: D282 (the Mac app, on hold), Rubber Band in WebAssembly, the backup remote, each device's place and connections, D299, D300 and D304's start. It numbers its own open questions T1, T2… and sends decisions as lines the same day.
+- **Sessions on 28 Nov night** (from ~/.claude/sessions/*.json, which maps names to session ids): quina-musical-e0 = the sponsor logos session (ccaa48f6), -f5 = the Check's song session (12d5bb9d), -79 = the setup session (it was the previous orchestrator, 60564de3), -cd = a fresh session, -e4 = this orchestrator (f665f759). The role sessions (Frontend 69916f7a, Backend a890966e, Sound engine) weren't open.
 - **Not yet briefed:** the sessions. On the user's go, brief phase A (whats-left.md › The plan) to each, and check each pushed item with a verify agent before it counts as done.
 - **The orchestrator's worktree** is now `.claude/worktrees/orchestrator` (the old `orchestrator-timeline` was gone).
 
@@ -100,7 +100,7 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 - U214: the grill format only in a card design session (the default), or plain questions there too;
 - U205 (Parlem's 40 s Hold music), U207 (✕ in a stack);
 - U194 (push), U196 (App Clip), U197 (TWA): the research says pass; U195 (uncollected prizes);
-- U202, U203: the console's in-game admin and second-console sync (they matter more now: the tech drives from a phone at the table, D281);
+- U202, U203: the console's in-game admin and second-console sync (they matter more now that the laptop sits at the tech's table, D281);
 - U55 (old song data on the laptop), U56 (faster hook approval) and U14 (approving the hooks), before the rehearsals;
 - U68–U75: the edition file's details (built and passing; not committed until U75);
 - older ones: U157–U160, U163, U166, U168, U169, U173, U176–U179, U181, U36–U39, U12, U50, U79, U97/U99, U103–U114, U128, U129, U136–U139, U150, U85, U89.

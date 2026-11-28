@@ -24,7 +24,7 @@ _From event.md › What must never fail; [ADR 0003](../adr/0003-cloud-owns-the-g
   - It plays the music and drives the projector from one clock.
   - It journals everything, reports every landing to the cloud, and carries on alone when the internet drops. **The music never depends on the internet.**
   - It's installed: one setup command pulls the Pool and media from R2, so any prepared laptop can take over. A laptop with nothing installed is not for this year (R2-Q26).
-  - It sits in the first row or at the side of the stage, wired to the PA by cable (never Bluetooth or AirPlay), with the projector on HDMI.
+  - It sits at the tech's table, next to the projector and with the mixer, 6–7 m from the stage (D281), wired to the PA by cable (never Bluetooth or AirPlay), with the projector on HDMI.
   - It's tethered by USB to a phone, with a second phone on another carrier as a backup hotspot.
 - **The tablet** joins the laptop's phone hotspot and talks to the laptop directly. Away from the hotspot, a console goes through the cloud.
 - **The tech's phone** opens the console the same way.
