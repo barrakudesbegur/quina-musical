@@ -162,6 +162,12 @@ A browser can't accept connections, so with no internet the devices on the hotsp
 - (a) The tablet must still control the show: one device runs a local server (the laptop or the Mac app), and the others join it over the hotspot as plain web pages.
 - (b) Losing the tablet until 5G returns is acceptable: the music keeps going, and the Wii remote or the laptop drives it. This is what makes "just a website" possible.
 
+### U221 · Where the laptop sits, and how the distance is bridged
+The user wants the laptop free of the projector and the mixer. ADR-0002's split mode (the audio on another device) is recorded but not built (docs/research/reports/browser-only-show.md). The distances in metres aren't recorded yet: the user is asked for them.
+- (a) The laptop at the stage, next to the mixer and the Wii remote, with a fibre HDMI cable to the projector (about 150–210 USD for 50 m, no delay). Also fixes the remote's range.
+- (b) The laptop at the projector, with a long balanced audio cable to the mixer (the cable default in mixer-design-decisions.md › Devices). The Wii remote's range stays at the limit.
+- (c) Build split mode first (Sound engine and Frontend, medium work, over the relay on the hotspot), rehearsed before the freeze.
+
 ### U216 · The Check's side label on a card of the wrong type (D266)
 The console's Check chip and the projector's Check badge name the side being checked, from card-types.json (30f7e61b). So when a special card is wrongly claimed in a normal round (Quines 1–5), they read «Desgraciat», its side 1's label, while the verdict line says it's an especial card.
 - (a) Keep it: the chip and badge always name the side being checked. As built.
