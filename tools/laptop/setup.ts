@@ -7,13 +7,15 @@
 //   4. the cloud link's pairing: apps/cloud/.env.link with the laptop's service token (never sent by chat or email);
 //   5. the repertoire's prepared media, pulled from the cloud's private R2 (resumable: run it again after a cut);
 //   6. the Game plan and its images, fetched with the laptop's token (no takeover of the laptop playing);
-//   7. the preflight's Repertoire and Laptop checks.
-// It only uses Node's own modules, so it runs before npm ci.
+//   7. the Chrome profiles for the show page and the laptop's console, outside /tmp (they survive a restart);
+//   8. the preflight's Repertoire and Laptop checks.
+// It only uses Node's own modules (and apps/cloud/laptop/chrome-profiles.ts, which does too), so it runs before npm ci.
 import { spawnSync, type SpawnSyncOptions } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { RUNBOOK_COMMANDS, ensureChromeProfiles } from '../../apps/cloud/laptop/chrome-profiles.ts';
 
 const REPO = path.resolve(import.meta.dirname, '../..');
 const args = process.argv.slice(2);
@@ -120,12 +122,26 @@ else if (!run('npm', ['run', 'media', '-w', '@quina/cloud', '--', 'pull', '--rep
 step(6, 'The Game plan and its images');
 if (!run('npm', ['run', 'media', '-w', '@quina/cloud', '--', 'plan'])) stop('could not fetch the Game plan.');
 
-// ---- 7. preflight ----------------------------------------------------------------------------------------
-step(7, 'Preflight: the repertoire and this laptop');
+// ---- 7. the Chrome profiles ------------------------------------------------------------------------------
+step(7, 'Chrome profiles for the show page and the console (they survive a restart; /tmp does not)');
+for (const folder of ensureChromeProfiles()) {
+  if (folder.state === 'created') ok(`${folder.window}: created ${folder.dir}`);
+  else if (folder.state === 'tightened') ok(`${folder.window}: ${folder.dir}, made private to this user (700)`);
+  else ok(`${folder.window}: ${folder.dir} (already there)`);
+}
+console.log(`   On the night (docs/night-runbook.md), the show page on the projector (step 5):
+     ${RUNBOOK_COMMANDS.show}
+   and the console on this laptop's screen (step 7, and "Without the tablet"):
+     ${RUNBOOK_COMMANDS.console}
+   (Only for the Wii remote: pair it once with MacWiiPair and its red SYNC button, at home; runbook step 7.)`);
+
+// ---- 8. preflight ----------------------------------------------------------------------------------------
+step(8, 'Preflight: the repertoire and this laptop');
 const preflight = run('npm', ['run', 'preflight', '-w', '@quina/cloud', '--', '--only', 'Repertoire,Laptop', '--repertoire', REPERTOIRE, '--fast']);
 
 console.log(`\n${bold(preflight ? 'This laptop is set up.' : 'Set up, but the preflight found problems (above).')}
 On the night (docs/night-runbook.md): in apps/show, npm start -- --lan; in apps/cloud, npm run link; the show page
-in Chrome; then the full preflight with everything running: npm run preflight -w @quina/cloud.
+and the console in Chrome (the commands in step 7); then the full preflight with everything running:
+npm run preflight -w @quina/cloud.
 At the sound check: the show plays 6 dB lower inside than last year (D157), so turn the PA up about 6 dB.`);
 process.exit(preflight ? 0 : 1);
