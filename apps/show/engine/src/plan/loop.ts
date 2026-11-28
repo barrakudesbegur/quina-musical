@@ -5,12 +5,16 @@
 import type { Analysis } from '../analysis.ts';
 import type { DeckClock } from './timeline.ts';
 
-/** A phrase of the song to repeat: song seconds [fromSec, toSec), `bars` of its downbeats from `fromIndex`. */
+/**
+ * A phrase of the song to repeat: song seconds [fromSec, toSec), `bars` of its downbeats from `fromIndex`. `outSec`:
+ * where the deck jumps back the first time when that is not `toSec` (a late Stay, already past the phrase: stayLoop).
+ */
 export interface PhraseLoop {
   fromSec: number;
   toSec: number;
   fromIndex: number;
   bars: number;
+  outSec?: number;
 }
 
 /** What the loop finders need: the song, where it plays, and the hook it landed on (its phrases count from there). */
@@ -94,8 +98,56 @@ export function lastBarsLoop(song: { analysis: Analysis; deck: DeckClock }, afte
   return null;
 }
 
-/** When the deck first reaches the loop's end (its first repeat starts there). */
-export const firstRepeatAt = (deck: DeckClock, loop: PhraseLoop): number => clockAt(deck, loop.toSec);
+/**
+ * The loop of a song left playing (D239: Aguanta, or auto-advance off with nobody pressing Next). It always loops when
+ * the song has a beat grid, however late it is asked:
+ * - its last full phrase ahead (lastPhraseLoop), else its last 4 bars ahead (lastBarsLoop), both before the tail;
+ * - asked too late for either (Aguanta or auto-advance off a few seconds before the end, the song in its outro or
+ *   tail): its last phrase before the tail (8 bars, else 4, counted from the landed hook; without a landed hook its
+ *   last 4 bars), else the 4 bars up to the next downbeat, and the deck jumps back on the next downbeat. A jump from
+ *   the outro is not a phrase end, but far better than the song running out. Once the audio is dead (past
+ *   `audibleEndSec`, or past the last downbeat) it jumps back at once.
+ * The tail is the longer of `tailSec` and what follows the song's audible end.
+ * @returns null only for a song with fewer than 5 downbeats (no beat grid to loop)
+ */
+export function stayLoop(song: LoopSong & { audibleEndSec?: number | null }, after: number, tailSec: number): PhraseLoop | null {
+  const { analysis, audibleEndSec } = song;
+  const duration = analysis.source.durationSec;
+  const tail = audibleEndSec != null ? Math.max(tailSec, duration - audibleEndSec) : tailSec;
+  const ahead = lastPhraseLoop(song, after, tail) ?? lastBarsLoop(song, after, tail);
+  if (ahead) return ahead;
+  const downbeats = analysis.downbeats;
+  const from = posAt(song.deck, after);
+  const until = duration - tail;
+  const last = (bars: number, starts: number[]): PhraseLoop | null => {
+    const start = starts.filter((k) => downbeats[k + bars] <= until).at(-1);
+    return start == null ? null : { fromSec: downbeats[start], toSec: downbeats[start + bars], fromIndex: start, bars };
+  };
+  const anyStart = (bars: number) => Array.from({ length: Math.max(0, downbeats.length - bars) }, (_, k) => k);
+  const next = downbeats.findIndex((d) => d >= from);
+  const around = (): PhraseLoop | null => {
+    const end = next < 0 ? downbeats.length - 1 : next;
+    return end >= 4 ? { fromSec: downbeats[end - 4], toSec: downbeats[end], fromIndex: end - 4, bars: 4 } : null;
+  };
+  const phrase = last(8, phraseStarts(song, 8)) ?? last(4, phraseStarts(song, 4)) ?? last(4, anyStart(4)) ?? around();
+  if (!phrase || downbeats.length < 5) return null;
+  // Already past it (forward search found nothing): out on the next downbeat while the song still sounds.
+  const dead = (audibleEndSec != null && from >= audibleEndSec) || next < 0;
+  return { ...phrase, outSec: dead ? from : Math.max(from, Math.min(downbeats[next], audibleEndSec ?? Infinity)) };
+}
+
+/** When the deck first jumps back (its first repeat starts there): the loop's end, or a late Stay's `outSec`. */
+export const firstRepeatAt = (deck: DeckClock, loop: PhraseLoop): number => clockAt(deck, loop.outSec ?? loop.toSec);
 
 /** One pass of the loop on the context clock. */
 export const loopSeconds = (deck: DeckClock, loop: PhraseLoop): number => (loop.toSec - loop.fromSec) / (deck.rate || 1);
+
+/**
+ * When a song that can't loop (Parlem, or one with no beat grid) hands over to Hold music, on the context clock: `leadSec`
+ * before its audio dies (`audibleEndSec`, its trailing silence and the quiet end of its fade left out), so Hold music
+ * is up by then, and never later than `marginSec` before the file ends.
+ */
+export function runOutAt(deck: DeckClock & { endCtx: number }, audibleEndSec: number | null | undefined, marginSec: number, leadSec: number): number {
+  const fileEnd = deck.endCtx - marginSec;
+  return audibleEndSec == null ? fileEnd : Math.min(fileEnd, clockAt(deck, audibleEndSec) - leadSec);
+}

@@ -639,6 +639,83 @@ test("a song left playing with auto-advance off loops its last phrase and never 
   assert.equal(h.show.position, 1);
 });
 
+test('Aguanta pressed in the outro, after the 40 s look-ahead: the song still loops, jumping back on its next downbeat (D239)', () => {
+  const h = setup({ seed: 6, settings: { holdMusicOn: false } });
+  startAndLand(h);
+  h.send('hold'); // Parlem first: the ducked song plays on, no loop
+  const cur = h.show.current;
+  assert.ok(cur);
+  const endAt = cur.endCtx;
+  h.until(() => h.clock.t >= endAt - 10, 400);
+  const loopNow = () => h.show.loop; // read afresh (not narrowed by the check before)
+  assert.equal(loopNow(), null);
+  h.send('hold', { duck: false }); // Aguanta 10 s before the end
+  h.advance(0.05);
+  const loop = loopNow();
+  assert.ok(loop && loop.purpose === 'stay', 'a loop at once');
+  const out = h.until(() => h.clock.t > endAt + 60, 400);
+  assert.equal(find(out, 'songToHoldMusic'), undefined, 'never runs out');
+  assert.equal(h.show.current?.songId, cur.songId);
+  const cues = out.filter((e) => e.type === 'cue');
+  assert.ok(cues.length >= 3, `${cues.length} repeats`);
+  assert.ok(cues.every((c) => c.type === 'cue' && c.offset === loop.phrase.fromSec));
+});
+
+test('Aguanta during a Spin whose exit started: the outgoing song comes back on its own clock and loops, no Hold music (D239)', () => {
+  const h = setup({ seed: 6 });
+  startAndLand(h);
+  const a = h.show.current;
+  assert.ok(a);
+  // The automatic Next: wait until A's exit move has started, well before the landing.
+  h.until(() => {
+    const t = h.show.transition;
+    return t != null && t.aExitStart != null && h.clock.t > t.aExitStart + 0.1 && t.T - h.clock.t > 1;
+  }, 200);
+  const out = h.send('hold', { on: true, duck: false });
+  const cancel = get(out, 'cancelTransition');
+  assert.equal(cancel.keepOutgoing, true);
+  assert.ok(cancel.recueA, 'A is re-cued');
+  const now = h.clock.t;
+  assert.ok(Math.abs(cancel.recueA.at - (now + HOLD.recueLeadSec)) < 1e-9);
+  assert.ok(Math.abs(cancel.recueA.offset - (a.offset + (cancel.recueA.at - a.startCtx) * a.rate)) < 1e-9, 'where its own clock says');
+  assert.equal(find(out, 'songToHoldMusic'), undefined);
+  assert.equal(h.show.status, 'hold');
+  assert.equal(h.show.hold?.ducked, false, 'Aguanta, not Parlem');
+  assert.equal(h.show.current?.songId, a.songId);
+  assert.equal(find(out, 'duck'), undefined, 'never ducked on the way');
+  const endAt = a.endCtx; // the song's own end (each repeat moves the clock's)
+  const later = h.until(() => h.clock.t > endAt + 30, 600);
+  assert.equal(find(later, 'songToHoldMusic'), undefined);
+  assert.ok(h.show.loop?.purpose === 'stay');
+});
+
+test('Parlem pressed during a Spin whose exit started still hands over to Hold music', () => {
+  const h = setup({ seed: 6 });
+  startAndLand(h);
+  h.until(() => {
+    const t = h.show.transition;
+    return t != null && t.aExitStart != null && h.clock.t > t.aExitStart + 0.1 && t.T - h.clock.t > 1;
+  }, 200);
+  const out = h.send('hold', { on: true });
+  assert.equal(get(out, 'cancelTransition').keepOutgoing, false);
+  assert.equal(get(out, 'cancelTransition').recueA, undefined);
+  assert.equal(h.show.current, null);
+  assert.equal(h.show.holdMusic, true);
+});
+
+test("a song that runs out (Parlem) hands over HOLD.runOutLeadSec before its audio dies, not at its file's end", () => {
+  const deadFor = 15; // a long silent tail, as YMCA's
+  const h = setup({ seed: 6, settings: { holdMusicOn: false }, env: { audibleEndSec: (id) => (analyses.get(id)?.source.durationSec ?? 0) - deadFor } });
+  startAndLand(h);
+  h.send('hold');
+  const cur = h.show.current;
+  assert.ok(cur);
+  const audibleAt = cur.endCtx - deadFor / cur.rate;
+  const out = h.until(() => h.show.holdMusic, 400);
+  assert.ok(find(out, 'songToHoldMusic'));
+  assert.ok(Math.abs(h.clock.t - (audibleAt - HOLD.runOutLeadSec)) < 0.05, `handed over at ${h.clock.t}, the audio dies at ${audibleAt}`);
+});
+
 test('the drum only ever shows songs still to play (and the last landing under the pointer), in the drum order: Next, Back, Hold, Aguanta and Suspense', () => {
   const cmds: (() => Command)[] = [
     () => makeCommand('next'), () => makeCommand('next'), () => makeCommand('next'), () => makeCommand('back'), () => makeCommand('hold'),

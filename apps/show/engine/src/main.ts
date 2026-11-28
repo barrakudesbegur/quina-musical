@@ -21,7 +21,8 @@ import { PreverbStore } from './audio/preverb.ts';
 import { plannerWithInputs } from './audio/plan-inputs.ts';
 import { CheckPlayer, SnippetStore } from './audio/check.ts';
 import { WinningLoop } from './audio/celebration.ts';
-import { hookLoop } from './plan/hookloop.ts';
+import { bestHook, hookLoop } from './plan/hookloop.ts';
+import { audibleEndSec } from './plan/checksong.ts';
 import { SYNTHS } from './audio/synth/fx.ts';
 import { solveSpin, type SolutionMethod } from './wheel/solver.ts';
 import { DrumView, type DrumCard } from './wheel/drum.ts';
@@ -335,6 +336,7 @@ async function boot() {
       stems: (id) => stems.summary(id),
       signatures: (id) => signatures.summary(id),
       blend: (aSongId, hookId) => blends.summary(aSongId, hookId),
+      audibleEndSec: (id) => songAudibleEnd(id),
       // The planner plus what the audio stores have for the two songs (A's stem lanes, B's pre-verbs, keys).
       plan: plannerWithInputs({ stems, preverbs, blends }),
       random: secureRandom,
@@ -758,7 +760,7 @@ function landed(plan: ShowPlan): void {
 
 // A cancelled Spin: the build stops at once. A cancelled Suspense (`backOut`, D144) backs out instead: the build's
 // layers, echoes and high-pass fade away over SUSPENSE.backOutSec while the song comes back up, under a long fall.
-function cancelTransition({ keepOutgoing, drum: wheel, backOut = false }: EffectOf<'cancelTransition'>): void {
+function cancelTransition({ keepOutgoing, drum: wheel, backOut = false, recueA }: EffectOf<'cancelTransition'>): void {
   finishSpinCut();
   const now = ctx.currentTime;
   const fade = backOut ? SUSPENSE.backOutSec : 0.08;
@@ -767,6 +769,9 @@ function cancelTransition({ keepOutgoing, drum: wheel, backOut = false }: Effect
   rt.incoming = null;
   if (keepOutgoing && rt.outgoing) {
     rt.outgoing.restore(backOut ? fade : 0.3);
+    // Aguanta after its exit started (D239): its exit undone, a fresh source on its own clock (whatever the exit did
+    // to its rate or stop), crossfading from what the exit left.
+    if (recueA) rt.outgoing.cue(recueA.at, recueA.offset, HOLD.recueFadeSec);
     rt.current = rt.outgoing;
   } else {
     rt.outgoing?.fadeOut(0.25);
@@ -778,11 +783,17 @@ function cancelTransition({ keepOutgoing, drum: wheel, backOut = false }: Effect
   if (wheel.selectId == null) showStatusLine('');
 }
 
-// The ducked song washes out into reverb while Hold music comes in.
+// The (usually ducked) song washes out into reverb under Hold music: a crossfade. Hold music starts as soon as its
+// loop is ready and comes up over HOLD.handoverInSec; only then does the song start fading (over `fadeSec`), so
+// there is never a gap while a track loads, nor a valley between the two.
 function songToHoldMusic(fadeSec: number, mood: HoldMood): void {
-  const now = ctx.currentTime;
-  dropCurrentSong(fadeSec);
-  holdMusic.start({ at: now + fadeSec * 0.3, levelDb: HOLD.holdMusicLevelDb, fadeSec, mood }).catch((e) => console.error('hold music', e));
+  const deck = rt.current;
+  rt.current = null;
+  const wash = () => washOut(deck, fadeSec, 'crossfade');
+  holdMusic.start({ at: ctx.currentTime, levelDb: HOLD.holdMusicLevelDb, fadeSec: HOLD.handoverInSec, mood }).then(wash, (e) => {
+    console.error('hold music', e);
+    wash();
+  });
 }
 
 // The playing (usually ducked) song washes out into reverb: other music takes over. The Hold duck moves into
@@ -790,6 +801,14 @@ function songToHoldMusic(fadeSec: number, mood: HoldMood): void {
 function dropCurrentSong(fadeSec: number): void {
   const deck = rt.current;
   rt.current = null;
+  washOut(deck, fadeSec, 'drop');
+}
+
+/**
+ * `drop`: the song falls away fast (an exponential fade) while other music comes in over it (the Celebration's).
+ * `crossfade`: it fades linearly under music that is already coming up (Hold music), so their sum never dips.
+ */
+function washOut(deck: Deck | null, fadeSec: number, shape: 'drop' | 'crossfade'): void {
   if (!deck) return;
   const now = ctx.currentTime;
   const duck = graph.holdDuck.gain.value;
@@ -797,13 +816,30 @@ function dropCurrentSong(fadeSec: number): void {
   deck.fader.gain.setValueAtTime(Math.max(0.0002, deck.fader.gain.value * duck), now);
   graph.holdDuck.gain.cancelScheduledValues(now);
   graph.holdDuck.gain.setValueAtTime(1, now);
-  for (const [p, to, curve] of [[deck.reverbSend.gain, 0.7, 'lin'], [deck.lpf.frequency, 400, 'exp'], [deck.fader.gain, 0.0001, 'exp']] as const) {
-    if (p !== deck.fader.gain) p.setValueAtTime(p.value, now);
-    if (curve === 'exp') p.exponentialRampToValueAtTime(to, now + fadeSec);
-    else p.linearRampToValueAtTime(to, now + fadeSec * 0.4);
-  }
+  deck.reverbSend.gain.setValueAtTime(deck.reverbSend.gain.value, now);
+  deck.reverbSend.gain.linearRampToValueAtTime(0.7, now + fadeSec * 0.4);
+  deck.lpf.frequency.setValueAtTime(deck.lpf.frequency.value, now);
+  deck.lpf.frequency.exponentialRampToValueAtTime(400, now + fadeSec);
+  if (shape === 'drop') deck.fader.gain.exponentialRampToValueAtTime(0.0001, now + fadeSec);
+  else deck.fader.gain.linearRampToValueAtTime(0, now + fadeSec);
   deck.stop(now + fadeSec + 0.05);
   addTask(now + fadeSec + 3, () => deck.dispose());
+}
+
+/** Where a decoded song's audio dies (Env.audibleEndSec), measured once per buffer, from its best hook's level. */
+const audibleEnds = new WeakMap<AudioBuffer, number>();
+function songAudibleEnd(songId: number): number | null {
+  const entry = loader.get(songId);
+  if (!entry) return null;
+  let end = audibleEnds.get(entry.buffer);
+  if (end == null) {
+    const hook = bestHook(entry.analysis);
+    const refStartSec = hook ? Math.max(0, hook.downbeatSec - (hook.pickupSec || 0)) : 0;
+    const channels = Array.from({ length: entry.buffer.numberOfChannels }, (_, c) => entry.buffer.getChannelData(c));
+    end = audibleEndSec(channels, entry.buffer.sampleRate, { refStartSec, refSec: LOOP.tailRefSec, windowSec: LOOP.tailWindowSec, dropDb: LOOP.tailDropDb });
+    audibleEnds.set(entry.buffer, end);
+  }
+  return end;
 }
 
 // The Celebration's music: the Winning song's hook looped in whole bars, the victory track, or Hold music.

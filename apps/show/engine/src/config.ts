@@ -215,8 +215,18 @@ export const HOLD = Object.freeze({
   holdMusicAfterSec: 40,
   holdMusicLevelDb: -12,
   holdMusicFadeInSec: 2,
-  /** A song still playing in a Hold hands over to Hold music this long before it runs out. */
+  /** A song still playing in a Hold hands over to Hold music this long before its file ends, at the latest… */
   songEndMarginSec: 2.5,
+  /** …and this long before its audio dies (Env.audibleEndSec: its trailing silence and the end of its fade left out),
+   * so Hold music is up before the song is gone. */
+  runOutLeadSec: 2,
+  /** A song washing out into Hold music (a run-out, Parlem's long Hold, a cancelled Spin): Hold music starts as soon
+   * as its loop is ready and comes up over this long, while the song fades out under it over the handover's 3 s. */
+  handoverInSec: 1.5,
+  /** Aguanta during a Spin whose exit started (D239): the outgoing song is re-cued this far ahead, on its own clock. */
+  recueLeadSec: 0.06,
+  /** …with a crossfade this long from what its exit left. */
+  recueFadeSec: 0.03,
   /** Back: the undone song rewinds out for this long before Hold music comes in. */
   rewindSec: 1.1,
   /** A Spin closer than this to its landing can no longer be cancelled; Back or Hold act just after it. */
@@ -233,6 +243,12 @@ export const LOOP = Object.freeze({
   stayLookSec: 40,
   /** The phrase Aguanta loops ends at least this long before the song does (its outro and fade stay out). */
   stayTailSec: 8,
+  /** Where a song's audio dies (plan/checksong.ts audibleEndSec, measured once per decoded buffer): once its RMS over
+   * windows of `tailWindowSec` stays `tailDropDb` under its best hook's (its first `tailRefSec`). A Stay's loop ends
+   * before then, a run-out hands over before then (HOLD.runOutLeadSec), and a Check's revealed song loops the same. */
+  tailWindowSec: 0.25,
+  tailDropDb: -12,
+  tailRefSec: 3,
 });
 
 /**
@@ -783,9 +799,9 @@ export const FLOW = Object.freeze({
     /** The song's audio counts as dead (trailing silence, the end of a fade-out) once its RMS over windows of
      * `tailWindowSec` stays `tailDropDb` under the hook's (its first `tailRefSec`): the loop ends before then, even
      * when that is earlier than LOOP.stayTailSec before the song's end. */
-    tailWindowSec: 0.25,
-    tailDropDb: -12,
-    tailRefSec: 3,
+    tailWindowSec: LOOP.tailWindowSec,
+    tailDropDb: LOOP.tailDropDb,
+    tailRefSec: LOOP.tailRefSec,
     /** The snippet's own fade-out (tools/prep/snippets.py, 0.15 s) and a margin: its passes jump back before it. */
     snippetTailSec: 0.2,
     /** A late start (a slow fetch) joins its pass as far in as the reveal is old, unless that leaves less than this. */

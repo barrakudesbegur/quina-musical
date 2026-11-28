@@ -86,7 +86,7 @@ import { pickHook, usableHooks } from '../plan/hooks.ts';
 import { tempoMatch } from '../plan/tempo.ts';
 import { spinWindow, slotSec, alignedPress, autoPressAt, pressAfterHold, scheduleEstimate, driftNudge, roundLengthSec, roundSongs, slotSongs, PACE_LIMITS } from '../plan/pace.ts';
 import { deckTimeline } from '../plan/timeline.ts';
-import { firstRepeatAt, lastBarsLoop, lastPhraseLoop, loopSeconds, type PhraseLoop } from '../plan/loop.ts';
+import { firstRepeatAt, loopSeconds, runOutAt, stayLoop, type PhraseLoop } from '../plan/loop.ts';
 import { NO_BEAT, beatInfo, deckBeat, nextBeat, type BeatGrid, type BeatPublication, type BeatSource } from '../plan/beat.ts';
 import { mixSeed, secureRandom, seededRandom } from '../rng.ts';
 
@@ -268,6 +268,9 @@ export interface CancelTransitionEffect {
   drum: { insertId: number | null; selectId: number | null; ids: number[] };
   /** A cancelled Suspense (D144): its build backs out and fades instead of stopping at once. */
   backOut?: boolean;
+  /** Aguanta pressed after A's exit started (D239): A comes back from its exit, re-cued so song second `offset` plays
+   * at `at` (where its own clock says it is), and plays on at full volume. */
+  recueA?: { at: number; offset: number };
 }
 export interface DuckEffect {
   type: 'duck';
@@ -571,6 +574,9 @@ export interface Env {
   blend?: (aSongId: number, hookId: string) => BlendSource | null;
   /** The song's approved Signatures that are decoded (runtime SignatureStore). */
   signatures?: (songId: number) => readonly SignatureSource[];
+  /** Where the decoded song's audio dies (song seconds, plan/checksong.ts audibleEndSec, measured once per buffer):
+   * its trailing silence and the quiet end of its fade-out come after. Null or absent: the file's end. */
+  audibleEndSec?: (songId: number) => number | null;
 }
 
 export interface SongInfo {
@@ -1192,15 +1198,15 @@ export class Show {
     if (cur && !this.transition && !this.pending) {
       if (this.status === 'playing') {
         const spin = this.spin();
-        if (this.autoAdvanceAllowed() && now >= cur.endCtx - spin.dTarget - 1) {
+        if (this.autoAdvanceAllowed() && now >= this.runOutAt(cur, 0, 0) - spin.dTarget - 1) {
           this.timers.autoAt = null;
           this.next(null);
           this.emitState();
-        } else if (!this.autoAdvanceAllowed() && now >= cur.endCtx - HOLD.songEndMarginSec) {
+        } else if (!this.autoAdvanceAllowed() && !this.looping(cur) && now >= this.runOutAt(cur)) {
           this.enterHold('end', { music: true });
           this.emitState();
         }
-      } else if (this.status === 'hold' && now >= cur.endCtx - HOLD.songEndMarginSec) {
+      } else if (this.status === 'hold' && !this.looping(cur) && now >= this.runOutAt(cur)) {
         this.toHoldMusic();
         this.emitState();
       }
@@ -2165,7 +2171,7 @@ export class Show {
   holdOn(reqId: string | null, duck = true) {
     if (this.status === 'hold') return;
     void reqId;
-    if (this.transition) this.cancel(this.transition, 'hold');
+    if (this.transition) this.cancel(this.transition, 'hold', { stay: !duck });
     else if (this.suspense) this.cancelSuspense(this.suspense, 'hold');
     else {
       if (this.pending) this.pending = null;
@@ -2253,9 +2259,24 @@ export class Show {
     const analysis = this.env.analysis(cur.songId);
     if (!analysis) return;
     const after = now + LOOP.aheadSec + 0.05;
-    const phrase = lastPhraseLoop({ analysis, deck: cur, landedDownbeatIndex: cur.landedDownbeatIndex }, after, LOOP.stayTailSec)
-      ?? lastBarsLoop({ analysis, deck: cur }, after, LOOP.stayTailSec);
-    if (phrase) this.loop = { songId: cur.songId, phrase, nextAt: firstRepeatAt(cur, phrase), until: null, purpose: 'stay' };
+    // However late (Aguanta or auto-advance off in the outro): its last phrase, jumping back on the next downbeat.
+    const song = { analysis, deck: cur, landedDownbeatIndex: cur.landedDownbeatIndex, audibleEndSec: this.env.audibleEndSec?.(cur.songId) ?? null };
+    const phrase = stayLoop(song, after, LOOP.stayTailSec);
+    if (phrase) this.loop = { songId: cur.songId, phrase, nextAt: Math.max(after, firstRepeatAt(cur, phrase)), until: null, purpose: 'stay' };
+  }
+
+  /** The playing song repeats a phrase: it never runs out. */
+  looping(cur: PlayingSong): boolean {
+    return this.loop?.songId === cur.songId;
+  }
+
+  /**
+   * When the playing song runs out (context time): Hold music takes over HOLD.runOutLeadSec before its audio dies
+   * (Env.audibleEndSec), never later than HOLD.songEndMarginSec before the file ends. Auto-advance reads where its audio
+   * dies (no margins).
+   */
+  runOutAt(cur: PlayingSong, marginSec: number = HOLD.songEndMarginSec, leadSec: number = HOLD.runOutLeadSec): number {
+    return runOutAt(cur, this.env.audibleEndSec?.(cur.songId), marginSec, leadSec);
   }
 
   /** Re-cue each repeat of the loop a moment ahead; the playing song's clock follows it. */
@@ -2366,21 +2387,29 @@ export class Show {
   }
 
   // Cancel the running Spin `t` (Back or Hold pressed during it). The outgoing song stays if its exit move
-  // has not started; otherwise Hold music takes over. Too close to the landing, act right after it.
-  cancel(t: Transition, reason: 'back' | 'hold') {
+  // has not started; otherwise Hold music takes over. Aguanta (`stay`) keeps it even after its exit started: a song
+  // the presenters let play loops (D239), so it comes back from its exit at full volume. Too close to the landing,
+  // act right after it (Aguanta then holds the song that lands).
+  cancel(t: Transition, reason: 'back' | 'hold', { stay = false }: { stay?: boolean } = {}) {
     const now = this.env.now();
     if (t.T - now < HOLD.cancelMinSec) {
-      t.afterLanding = reason;
+      t.afterLanding = stay ? 'stay' : reason;
       return;
     }
-    const keepOutgoing = t.fromSongId != null && t.aExitStart != null && t.aExitStart > now + 0.05 && this.current?.songId === t.fromSongId;
+    const aPlaying = t.fromSongId != null && t.aExitStart != null && this.current?.songId === t.fromSongId;
+    const exitAhead = aPlaying && t.aExitStart! > now + 0.05;
+    const cur = this.current;
+    const recueA = stay && aPlaying && !exitAhead && cur && this.env.analysis(cur.songId)
+      ? { at: now + HOLD.recueLeadSec, offset: cur.offset + (now + HOLD.recueLeadSec - cur.startCtx) * cur.rate }
+      : null;
+    const keepOutgoing = exitAhead || recueA != null;
     if (!keepOutgoing) this.current = null;
     if (this.loop?.purpose === 'suspense') this.loop = null; // a released Suspense's A plays on from its phrase
     this.transition = null;
     const lastId = this.position >= 0 ? this.queue[this.position] : null;
-    this.out.push({ type: 'cancelTransition', planId: t.id, keepOutgoing, drum: { insertId: lastId, selectId: lastId, ids: this.drumIds(this.position) } });
+    this.out.push({ type: 'cancelTransition', planId: t.id, keepOutgoing, drum: { insertId: lastId, selectId: lastId, ids: this.drumIds(this.position) }, ...(recueA ? { recueA } : {}) });
     this.emit({ type: 'transition.cancelled', id: t.id, reason, keptOutgoing: keepOutgoing, atMs: this.env.toEpochMs(now) });
-    this.enterHold(reason === 'back' ? 'back' : 'cancel', { music: !keepOutgoing });
+    this.enterHold(reason === 'back' ? 'back' : 'cancel', { music: !keepOutgoing, duck: !(stay && keepOutgoing) });
   }
 
   // ------------------------------------------------------------------------------------ settings
