@@ -85,7 +85,6 @@
   --color-text-muted: var(--color-muted);
   --color-title: var(--color-gold);
   --color-standing-gold: var(--color-gold); /* the Dempeus count from 3 down */
-  --color-danger: #ff5a60;
   /* The menu's danger zone (Consola-Menu, dark) */
   --color-danger-zone: #3a1e3f;
   --color-danger-text: #ff8a8f;
@@ -116,7 +115,8 @@
   --color-standing-gold: var(--color-gold-edge);
   --color-line: var(--color-ink);
   --color-primary: var(--color-orange);
-  --color-danger: #c8232b;
+  /* --color-danger is the design system's #E8363D in both themes (tokens.css): the ✗ marks' red on every screen
+     (U175 item 4, D211); the red fills with ink words take --color-red-bright */
   --color-ok: var(--color-green-edge);
   --color-accent: var(--color-gold);
   --color-focus: var(--color-night);

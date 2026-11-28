@@ -152,7 +152,7 @@
 }
 
 .badge[data-status='invalid'] {
-  background: var(--color-danger);
+  background: var(--color-red-bright);
   color: var(--color-on-danger);
 }
 
@@ -538,7 +538,7 @@
   padding: var(--space-2) var(--space-3);
   border: var(--line-width) solid var(--color-line);
   border-radius: var(--radius-md);
-  background: var(--color-danger);
+  background: var(--color-red-bright);
   color: var(--color-on-danger);
   font-weight: var(--font-weight-strong);
 }
@@ -1637,14 +1637,18 @@
 }
 
 /* An upcoming song's tag: the songs left until the next win, or the win it brings (green) */
+/* Two short lines at most («quina: / falten 6»), so the song's title keeps its room (one line left it 5 letters) */
 .upcoming-tag {
+  flex: none;
+  max-inline-size: 6.5em;
   padding: 2px 8px;
   border: var(--line-width) solid var(--color-line);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-md);
   background: var(--color-chip);
   font-size: var(--text-xs);
   font-weight: var(--font-weight-strong);
-  white-space: nowrap;
+  line-height: 1.15;
+  text-align: center;
 }
 
 .upcoming-tag[data-kind='win'] {
@@ -2305,6 +2309,19 @@
   grid-column: span 4;
 }
 
+/* With the remote's keys (① ②, − +), Enrere and «Revisió manual» carry them at the bottom right, beside their note,
+   as the cluster's Enrere does: at the top right they covered the label (the last round's narrow row above all). */
+@media (orientation: landscape) and (min-width: 48rem) {
+  :is(.check-board__back, .check-board__review) .button__wii {
+    top: auto;
+    bottom: var(--corner-inset);
+  }
+
+  :is(.check-board__back, .check-board__review):has(.button__wii > *) .button__note {
+    padding-inline-end: 3.25rem;
+  }
+}
+
 .check-board__review {
   grid-column: span 6;
 }
@@ -2779,6 +2796,17 @@
   aspect-ratio: 1;
 }
 
+/* With the claims strip above it, the card's covers are a little smaller, so its verdict stays on the screen
+   (1194 × 834: it was cut by about 30 px) */
+.check-board__left:has(> .claims-strip) .check-cell .card-cell__art {
+  width: min(100%, 4.5rem);
+}
+
+/* «SEGÜENT» and «+2» sit a quarter below the cover's edge, not half: half reached 3 px into the title under it */
+.check-cell .card-cell__tag {
+  translate: -50% 25%;
+}
+
 .check-cell .cover {
   width: 100%;
   height: 100%;
@@ -2845,6 +2873,20 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-2) var(--space-4);
+}
+
+/* On the tablet the strip stays one row: its label takes two lines («CARTRONS / CANTATS») rather than a row of its
+   own over the chips, which pushed the card's verdict off the screen (1194 × 834); the chips still wrap among
+   themselves */
+@media (orientation: landscape) and (min-width: 48rem) {
+  .claims-strip {
+    flex-wrap: nowrap;
+  }
+
+  .claims-strip > .panel__label {
+    flex: none;
+    inline-size: min-content;
+  }
 }
 
 .claims-strip__list {
@@ -3337,6 +3379,21 @@
 }
 
 /* ---- interval, round start ------------------------------------------------------------------------------ */
+/* A break's panel takes the room the tabs leave them (14rem): its prizes scroll inside it, instead of the column pushing
+   the tabs off the screen (1194 × 834) */
+@media (orientation: landscape) and (min-width: 48rem) {
+  .console__main > .interval-panel {
+    flex: 0 1 auto;
+    min-height: 0;
+  }
+
+  .interval-panel > .prize-list {
+    flex: 0 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+}
+
 .interval-panel__next {
   font-family: var(--font-display);
   text-transform: uppercase;
