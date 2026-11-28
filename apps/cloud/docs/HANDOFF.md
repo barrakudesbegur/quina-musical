@@ -186,6 +186,7 @@ Nothing half-built. Card type per round and the Desgraciat round are done on Pla
    - Admin's Games and the export show stopped and dropped claims.
    Deploy it before Sound engine's step 3 journals them. That same day, the e2e moves from `decide` to `checkNext {claimId, step}` presses: one claim by presses, one with checkAuto, one stopped then dropped, and a two-number claim. The live Desgraciat run uses presses.
 7. **The plan tool (U63; D111: the cloud is always the source of truth, no settings file in git).** Proposed: `npm run plan -- pull|check|push` on a gitignored working copy (data/link/plan-edit.json). Push shows the diff and refuses if the cloud's plan changed since the pull, so a phone edit is never overwritten. It uses a separate Access service token `quina-agent` that may only GET/PUT /api/plan (apps/cloud/.env.agent, never on the show laptops). Build nothing until U63.
+8. **At a rehearsal (U220):** after a `kill -9` of the show's Chrome and a reboot, check whether a "Restore pages?" bubble or a "profile in use on another computer" dialog appears in the kiosk window. The Chrome profiles now live in `~/Library/Application Support/Quina/` and outlive a crash, unlike `/tmp`.
 
 ## Waiting on the user
 
