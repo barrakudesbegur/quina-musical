@@ -59,7 +59,7 @@
 </script>
 
 {#if snap && ring}
-  {@const name = music ? (music === 'error' ? S.nowPlaying.errorMusic : S.nowPlaying.holdMusic) : (snap.current?.title ?? S.nowPlaying.nothing)}
+  {@const name = music ? (music === 'error' ? S.nowPlaying.errorMusic : music === 'pause' ? S.intervalMusic.sets.pausa : S.nowPlaying.holdMusic) : (snap.current?.title ?? S.nowPlaying.nothing)}
   <section bind:this={root} class="panel now-playing" data-testid="now-playing" data-song-id={snap.current?.songId ?? ''} data-state={snap.status} data-ring-state={ring.state} aria-labelledby="{uid}-title">
     <!-- The design system's SongTile, `feature` (D5): a long title stops at two lines (#81). Hold or error music shows
          the note on its tile instead of a cover. -->

@@ -418,7 +418,7 @@ export const S = {
   pause: {
     title: 'Pausa',
     since: (clock: string) => `des de fa ${clock}`,
-    note: 'El projector i els mòbils mostren «Tornem de seguida». Sona la música d\'espera.',
+    note: 'El projector i els mòbils mostren «Tornem de seguida». Sona la música de la pausa, baixa com amb Parlem.',
     end: 'Acaba la pausa',
     start: 'Pausa',
   },
