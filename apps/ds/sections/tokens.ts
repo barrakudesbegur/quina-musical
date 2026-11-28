@@ -1,6 +1,6 @@
 // The gallery's Tokens section reads every value from the stylesheets the page loaded (CSSOM), never from a copy, so it
 // can't drift from packages/ui/tokens.css or the apps' own sheets: each custom property declared in a style rule, with
-// the file it comes from (Vite's dev id), its selector and the cascade layer it sits in. Helpers turn a declared value
+// the file it comes from (Vite's dev id; in the gallery's build, the file's mark), its selector and the cascade layer it sits in. Helpers turn a declared value
 // into what the page draws: var() references resolved, a colour's hex, a duration's milliseconds, an easing's curve.
 // Development only, like the rest of apps/ds.
 
@@ -26,8 +26,23 @@ export function sheetFile(sheet: CSSStyleSheet): string {
   return repo ? (repo[1] as string) : id;
 }
 
+/**
+ * The file a rule of the gallery's build comes from: there, Vite bundles the stylesheets into a few, and
+ * apps/show/vite.config.ts › galleryCssSources starts each file's part with `ds-source { --ds-source: "<path>" }`.
+ */
+function sourceMark(rule: CSSRule): string | null {
+  if (!(rule instanceof CSSStyleRule) || rule.selectorText !== 'ds-source') return null;
+  const value = rule.style.getPropertyValue('--ds-source').trim();
+  return value ? (JSON.parse(value) as string) : null;
+}
+
 function walk(rules: CSSRuleList, file: string, layers: string[], conditions: string[], out: TokenDecl[]): void {
   for (const rule of Array.from(rules)) {
+    const mark = sourceMark(rule);
+    if (mark !== null) {
+      file = mark;
+      continue;
+    }
     if (rule instanceof CSSStyleRule) {
       for (const name of Array.from(rule.style)) {
         if (name.startsWith('--')) out.push({ name, raw: rule.style.getPropertyValue(name).trim(), file, selector: rule.selectorText, layers, conditions });
@@ -153,6 +168,16 @@ export function pxOf(value: string): number | null {
   return m ? Number(m[1]) : null;
 }
 
+/** A file the build copied into its assets folder, named with Vite's content hash: «/assets/nino-afro-B8LgNj0y.svg». */
+const BUILT_ASSET = /^\/assets\/(?:.*\/)?[^/]+-[\w-]{8}\.\w+$/;
+
+/** A file's name as the source names it: a built asset's without its hash, so the build's captions read as development's. */
+function sourceName(url: string): string {
+  const path = url.split(/[?#]/)[0] ?? '';
+  const name = path.split('/').pop() ?? '';
+  return BUILT_ASSET.test(path) ? name.replace(/-[\w-]{8}(\.\w+)$/, '$1') : name;
+}
+
 /** A value as a caption shows it: an image's url() names only its file (a data: URL only its type), never a long path. */
 export function tidyValue(raw: string): string {
   let out = '';
@@ -163,7 +188,7 @@ export function tidyValue(raw: string): string {
     const end = quote ? raw.indexOf(`${quote})`, at + 5) + 1 : raw.indexOf(')', at + 4);
     if (end <= 0) return out + raw.slice(at);
     const url = raw.slice(at + 4 + quote.length, end - quote.length);
-    out += url.startsWith('data:') ? `url(${url.slice(0, url.search(/[;,]/))}…)` : `url(…/${url.split(/[?#]/)[0]?.split('/').pop()})`;
+    out += url.startsWith('data:') ? `url(${url.slice(0, url.search(/[;,]/))}…)` : `url(…/${sourceName(url)})`;
     i = end + 1;
   }
   return out + raw.slice(i);
