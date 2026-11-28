@@ -70,16 +70,19 @@ test('the app settles on this year’s home before it reads the cards, the root 
 });
 
 test('review hints: the home screen\'s view, a drawer to open and demo cards', () => {
-  assert.deepEqual(devHints('?open=pad&cards=123,57'), { view: null, open: 'pad', cards: [123, 57], install: null });
-  assert.deepEqual(devHints('?open=horari'), { view: null, open: 'horari', cards: null, install: null });
-  assert.deepEqual(devHints('?open=ajustos&view=cartrons'), { view: 'cartrons', open: 'ajustos', cards: null, install: null });
-  assert.deepEqual(devHints('?view=historial'), { view: 'historial', open: null, cards: null, install: null });
-  assert.deepEqual(devHints('?open=menu&tab=premis'), { view: null, open: null, cards: null, install: null }, 'the tabs and the menu are gone (no fallback, D84)');
-  assert.deepEqual(devHints('?cards='), { view: null, open: null, cards: [], install: null });
+  assert.deepEqual(devHints('?open=pad&cards=123,57'), { view: null, open: 'pad', cards: [123, 57], install: null, mask: null });
+  assert.deepEqual(devHints('?open=horari'), { view: null, open: 'horari', cards: null, install: null, mask: null });
+  assert.deepEqual(devHints('?open=ajustos&view=cartrons'), { view: 'cartrons', open: 'ajustos', cards: null, install: null, mask: null });
+  assert.deepEqual(devHints('?view=historial'), { view: 'historial', open: null, cards: null, install: null, mask: null });
+  assert.deepEqual(devHints('?open=menu&tab=premis'), { view: null, open: null, cards: null, install: null, mask: null }, 'the tabs and the menu are gone (no fallback, D84)');
+  assert.deepEqual(devHints('?cards='), { view: null, open: null, cards: [], install: null, mask: null });
   // what installing the app offers (D221), for reviewing its screens
   assert.equal(devHints('?install=steps').install, 'steps');
   assert.equal(devHints('?install=prompt&open=install').open, 'install');
   assert.equal(devHints('?install=yes').install, null);
+  // strip-fade's comparison (28 Nov): only `under`, the 27 Nov look
+  assert.equal(devHints('?demo=play&mask=under').mask, 'under');
+  assert.equal(devHints('?mask=fade').mask, null);
 });
 
 test('the feed comes from the URL: demo, relay, cloud; dev on this machine or the LAN defaults to the relay', () => {

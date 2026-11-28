@@ -114,6 +114,9 @@ export interface DevHints {
   cards: number[] | null;
   /** What installing the app offers, whatever the browser says (main.ts honours it only in development and demos). */
   install: InstallOffer | null;
+  /** `&mask=under`: the home's content runs on under the drum's strip, the 27 Nov look, to compare with `strip-fade`
+   *  on a phone (main.ts honours it only in development and demos). */
+  mask: 'under' | null;
 }
 
 /** Review hints in the query (development and demos). */
@@ -125,6 +128,7 @@ export function devHints(search: string): DevHints {
   const install = params.get('install');
   return {
     install: isInstallOffer(install) ? install : null,
+    mask: params.get('mask') === 'under' ? 'under' : null,
     view: isAraView(view) ? view : null,
     open: isOpenable(open) ? open : null,
     cards: cards === null ? null : cards.split(/\D+/).map(cardId).filter((id): id is number => id !== null),

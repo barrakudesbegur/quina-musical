@@ -58,6 +58,8 @@
   let stickyTop = $state(0);
   /** The scroll box's top padding (the garland's room). */
   let boxPad = $state(0);
+  /** Where the content fades out under the stuck strip (`strip-fade`), in the swipe's coordinates at scroll 0. */
+  let fadeAt = $state(0);
 
   /** The top shows the drum (and so sticks and collapses); the other scenes and the pause just scroll. */
   const drum = $derived(!app.paused && !['before', 'roundStart', 'interval', 'after'].includes(app.scene));
@@ -94,6 +96,10 @@
     boxPad = parseFloat(getComputedStyle(box()).paddingTop) || 0;
     stickyTop = Math.max(boxPad, heat?.getBoundingClientRect().bottom ?? 0) + (a && getComputedStyle(a).display !== 'none' ? a.offsetHeight : 0);
     stickAt = root.getBoundingClientRect().top + box().scrollTop - stickyTop;
+    // `strip-fade`: the stuck strip's bottom edge, in the swipe's own coordinates at the box's scroll 0 (home.css adds
+    // the scroll itself, from a scroll-driven value, so the fade stays still on the screen as the content scrolls).
+    const swipe = root.querySelector<HTMLElement>(':scope > .ara__swipe');
+    if (swipe) fadeAt = stickyTop + stripPx() - (swipe.getBoundingClientRect().top + box().scrollTop);
     const was = fullHeight;
     fullHeight = (top?.firstElementChild as HTMLElement | null)?.offsetHeight ?? 0;
     if (was && fullHeight !== was) smoothHeight(fullHeight - was);
@@ -415,6 +421,7 @@
   style:--ara-stick="{stickAt}px"
   style:--ara-full="{fullHeight}px"
   style:--ara-sticky-top="{stickyTop - boxPad}px"
+  style:--ara-fade-at="{fadeAt}px"
   style:--reel-collapse-range={drum && fullHeight ? `${Math.max(0, fullHeight - stripPx())}px` : undefined}
 >
   <!-- The pause swaps in for the drum with a crossfade (ANIMATIONS.md `pause`, 300 ms). The drum's box sticks to the top

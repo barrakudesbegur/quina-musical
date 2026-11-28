@@ -113,6 +113,8 @@ async function main(): Promise<void> {
   app.openRoute(route);
   if (hints.view) app.araSession = hints.view;
   if (hints.open) app.drawers = [{ kind: hints.open }];
+  // `strip-fade`'s comparison (ANIMATIONS.md): the 27 Nov look, in development and demos only.
+  if ((import.meta.env.DEV || choice.kind === 'demo') && hints.mask) document.documentElement.dataset.homeMask = hints.mask;
 
   const motion = watchReducedMotion((reduced) => app.setReducedMotion(reduced));
   app.setReducedMotion(motion.reduced);
