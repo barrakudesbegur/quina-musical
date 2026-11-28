@@ -153,12 +153,19 @@
   }
   .cheat-sheet {
     display: grid;
+    /* The screen's width at most: on a phone the prize table scrolls inside its section, the page doesn't. */
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-5);
     padding: var(--space-5);
     font-size: var(--text-md);
   }
   .cheat-sheet__title {
     font-size: var(--text-2xl);
+  }
+  @media screen {
+    .cheat-sheet__section--prizes {
+      overflow-x: auto;
+    }
   }
   .cheat-sheet__heading {
     font-size: var(--text-lg);

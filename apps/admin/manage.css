@@ -8,6 +8,8 @@
 .manage {
   min-height: 100vh;
   display: grid;
+  /* One column the screen's width: a wide control inside never widens the page (390 px phones, audit gap 9). */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto auto 1fr;
 }
 
@@ -58,6 +60,7 @@
 
 .manage__main {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--space-5);
   align-content: start;
   width: 100%;
@@ -137,6 +140,7 @@ textarea {
 input[type='text'],
 input[type='number'],
 input[type='datetime-local'],
+input[type='file'],
 select {
   width: 100%;
 }
