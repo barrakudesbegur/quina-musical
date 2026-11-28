@@ -240,6 +240,7 @@ const snippets = new SnippetStore(ctx);
 // reveals never evict the round's current, incoming or prefetched songs from `loader`.
 const checkSongs = new SongLoader(ctx);
 const checkPlayer = new CheckPlayer(graph, snippets, {
+  get: (id) => loader.get(id) ?? checkSongs.get(id),
   ensure: (id) => (loader.entries.has(id) ? loader.ensure(id) : checkSongs.ensure(id)),
   retain: (ids) => checkSongs.retain(ids),
 }, FLOW.check);
@@ -990,11 +991,15 @@ function soundTest(effect: EffectOf<'soundTest'>): void {
   }
 }
 
-// Pausa (D128): the song deck and every bed fade out where they are and wait; effects and snippets ring out (U113).
+// Pausa (D128): the song deck, every bed and a Check's revealed song fade out where they are and wait; effects ring
+// out (U113).
 function pausePlayback(at: number, fadeSec: number): void {
   const deck = rt.current;
   rt.current = null;
   deck?.suspend(at, fadeSec);
+  // A Check's revealed song is saved with the rest (its own state stays in checkPlayer, so a Check that ends during
+  // Pausa drops it).
+  checkPlayer.suspend({ at, fadeSec });
   const saved: NonNullable<typeof paused> = {
     deck,
     hold: holdMusic.suspend({ at, fadeSec }),
@@ -1014,6 +1019,7 @@ function pausePlayback(at: number, fadeSec: number): void {
 function resumePlayback({ at, fadeSec, song, discard }: EffectOf<'resumePlayback'>): void {
   const saved = paused;
   paused = null;
+  if (!saved || discard) checkPlayer.dropSuspended();
   if (!saved) return;
   if (discard) {
     if (saved.deck) addTask(at + 1, () => saved.deck?.dispose());
@@ -1024,6 +1030,7 @@ function resumePlayback({ at, fadeSec, song, discard }: EffectOf<'resumePlayback
     rt.current = saved.deck;
   } else if (saved.deck) addTask(at + 1, () => saved.deck?.dispose());
   if (saved.hold) holdMusic.resume(saved.hold, { at, fadeSec });
+  checkPlayer.resume({ at, fadeSec });
   if (saved.loop) winningLoop.resume(saved.loop, { at, fadeSec });
   for (const set of ['breaks', 'end'] as const) {
     const s = saved.sets[set];

@@ -169,3 +169,23 @@ export function snippetStartSec(snippet: Float32Array, song: Float32Array, sampl
   }
   return (base + best) / sampleRate;
 }
+
+/**
+ * Pausa (D128): which pass plays at `t` and where in its buffer. The pass scheduled last (`voice`) once it has started,
+ * else the one before it, still playing up to the jump (`prev`); a pass not started yet at all is at its offset.
+ */
+export function passAt<V extends VoiceClock>(voice: V, prev: V | null, t: number): { pass: V; offsetSec: number } {
+  const pass = voice.at <= t || !prev ? voice : prev;
+  return { pass, offsetSec: pass.offsetSec + Math.max(0, t - pass.at) };
+}
+
+/**
+ * Where and how a pass Pausa saved at `offsetSec` resumes (D135): from where it was, fading in over `fadeSec`, or
+ * faster when the jump comes sooner (the fade ends before the jump's crossfade starts, `marginSec` ahead); only when
+ * that leaves less than `minFadeSec`, from where its loop repeats, over the whole fade.
+ */
+export function resumePass(loop: CheckLoop, offsetSec: number, fadeSec: number, { marginSec = 0.05, minFadeSec = 0.1 } = {}): { offsetSec: number; fadeSec: number } {
+  const room = loop.outSec - loop.xfadeSec - marginSec - offsetSec;
+  if (room >= minFadeSec) return { offsetSec, fadeSec: Math.min(fadeSec, room) };
+  return { offsetSec: loop.fromSec, fadeSec };
+}

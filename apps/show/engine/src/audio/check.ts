@@ -12,7 +12,7 @@
 // loaded, the snippet itself loops back to its start, so a ✓ is never silent.
 import { brokenRecord } from './synth/broken.ts';
 import { stillKnock } from './synth/still.ts';
-import { audibleEndSec, atFrame, entryOffset, equalPowerCurves, handoverAt, pickupLoop, snippetStartSec, songLoop, songSecAt, type CheckLoop, type VoiceClock } from '../plan/checksong.ts';
+import { audibleEndSec, atFrame, entryOffset, equalPowerCurves, handoverAt, passAt, pickupLoop, resumePass, snippetStartSec, songLoop, songSecAt, type CheckLoop, type VoiceClock } from '../plan/checksong.ts';
 import { LOOP } from '../config.ts';
 import { bestHook } from '../plan/hookloop.ts';
 import type { AudioGraph } from './graph.ts';
@@ -91,6 +91,8 @@ export class SnippetStore {
 
 /** Where a Check's full songs come from (main.ts): one the round has decoded already, else the Check's own window. */
 export interface CheckSongSource {
+  /** The song when it is decoded already, else null. */
+  get(songId: number): DecodedSong | null;
   /** The decoded song, decoding it if needed. */
   ensure(songId: number): Promise<DecodedSong>;
   /** Keep only these in the Check's own window (the round's songs are never touched). */
@@ -137,11 +139,24 @@ interface SongSound {
   pick: SnippetPick | null;
   snippet: { buffer: AudioBuffer; loop: CheckLoop } | null;
   song: { buffer: AudioBuffer; loop: CheckLoop } | null;
-  /** The pass sounding, or the next one once it is scheduled. */
+  /** The pass sounding, or the next one once it is scheduled; `prev`, the one before it (it plays up to its jump). */
   voice: Voice | null;
+  prev: Voice | null;
   /** The snippet's exact start in the song (snippetStartSec), found at the handover. */
   originSec: number | null;
   sources: Set<AudioBufferSourceNode>;
+}
+
+/** A ✓ reveal's song as Pausa saved it (D128): what it can play, and the pass and buffer second it was at (null: it
+ * had not started yet). */
+interface SuspendedSong {
+  songId: number;
+  level: number;
+  pick: SnippetPick | null;
+  originSec: number | null;
+  snippet: SongSound['snippet'];
+  song: SongSound['song'];
+  at: { kind: Voice['kind']; offsetSec: number } | null;
 }
 
 /** What a ✓ reveal is playing now, for the debug view and the audio checks. */
@@ -163,6 +178,8 @@ export class CheckPlayer {
   /** The reveal sounding now: its own gain, so the next press can cut it. */
   private out: GainNode | null = null;
   private sound: SongSound | null = null;
+  /** The ✓ reveal's song Pausa saved, until Pausa ends (resume), or the Check does (cancel). */
+  private suspended: SuspendedSong | null = null;
   /** Each decoded song's audible end, measured once. */
   private ends = new WeakMap<AudioBuffer, number>();
   claimId: string | null = null;
@@ -187,6 +204,7 @@ export class CheckPlayer {
    */
   reveal(claimId: string, step: TimedStep, nextSongId: number | null = null): void {
     const previous = this.sound?.songId;
+    this.suspended = null;
     this.stopSounds(Math.max(this.graph.ctx.currentTime, step.at - 0.02), this.tuning.cutFadeSec);
     const { ctx } = this.graph;
     const out = ctx.createGain();
@@ -221,15 +239,28 @@ export class CheckPlayer {
 
   private playSong(out: GainNode, step: TimedStep, nextSongId: number | null): void {
     const { songId, at } = step;
-    const sound: SongSound = { songId, at, out, level: 0, pick: null, snippet: null, song: null, voice: null, originSec: null, sources: new Set() };
+    const sound: SongSound = { songId, at, out, level: 0, pick: null, snippet: null, song: null, voice: null, prev: null, originSec: null, sources: new Set() };
     this.sound = sound;
+    const decoded = this.attach(sound);
+    if (nextSongId != null && nextSongId !== songId) {
+      void decoded
+        .catch(() => undefined)
+        .then(() => (this.sound === sound ? this.songs.ensure(nextSongId) : undefined))
+        .catch((error: unknown) => console.warn('check: prefetch', nextSongId, error));
+    }
+  }
+
+  /** The snippet and the song for `sound`, each as it arrives (the first one starts it; the song takes over from the
+   * snippet). What it has already is kept. */
+  private attach(sound: SongSound): Promise<DecodedSong> {
+    const { songId } = sound;
     const live = () => this.sound === sound;
     const index = this.snippets.loadIndex().then(() => {
       sound.pick = this.snippets.picks.get(songId) ?? null;
       sound.level = 10 ** (((this.snippets.gains.get(songId) ?? 0) + this.tuning.snippetDb) / 20);
     });
     void Promise.all([this.snippets.get(songId), index]).then(([buffer]) => {
-      if (!buffer || !live()) return;
+      if (!buffer || !live() || sound.snippet) return;
       const loop = pickupLoop({ startSec: 0, endSec: buffer.duration - this.tuning.snippetTailSec, xfadeSec: this.tuning.pickupXfadeSec });
       sound.snippet = { buffer, loop };
       // The song got here first (it was decoded already): it plays, the snippet is not needed.
@@ -238,18 +269,13 @@ export class CheckPlayer {
     const decoded = this.songs.ensure(songId);
     void Promise.all([decoded, index])
       .then(([song]) => {
-        if (!live()) return;
+        if (!live() || sound.song) return;
         sound.song = { buffer: song.buffer, loop: this.songLoop(sound, song) };
         if (!sound.voice) this.begin(sound, 'song');
         else if (sound.voice.kind === 'snippet') this.handover(sound, sound.voice, sound.song);
       })
       .catch((error: unknown) => console.warn('check: the full song is not available, its snippet loops', songId, error));
-    if (nextSongId != null && nextSongId !== songId) {
-      void decoded
-        .catch(() => undefined)
-        .then(() => (live() ? this.songs.ensure(nextSongId) : undefined))
-        .catch((error: unknown) => console.warn('check: prefetch', nextSongId, error));
-    }
+    return decoded;
   }
 
   /** The song's loop: from the snippet's pickup (else its best hook's) into its last phrase, before its audio dies. */
@@ -299,6 +325,7 @@ export class CheckPlayer {
     snippet.gain.gain.setValueAtTime(sound.level, at);
     snippet.gain.gain.linearRampToValueAtTime(0, at + t.handoverSec);
     snippet.source.stop(at + t.handoverSec + 0.01);
+    sound.prev = snippet;
     sound.voice = voice;
   }
 
@@ -321,6 +348,7 @@ export class CheckPlayer {
     voice.gain.gain.setValueAtTime(sound.level, t0);
     voice.gain.gain.setValueCurveAtTime(curves.out, t0, x);
     voice.source.stop(jump + 0.01);
+    sound.prev = voice;
     sound.voice = next;
   }
 
@@ -367,8 +395,67 @@ export class CheckPlayer {
     setTimeout(() => out.disconnect(), (Math.max(0, at - this.graph.ctx.currentTime) + fadeSec) * 1000 + 400);
   }
 
-  /** Stop the Check's sounds and bring everything else back up; the Check's own decoded songs are let go. */
+  /**
+   * Pausa (D128): the ✓ reveal's song fades out from `at` and is saved where it is (its pass, its loop), to resume
+   * with the rest of the playback; any other reveal's sound fades out with it. The music under the Check comes back up
+   * meanwhile (it is all saved and silent too, and Pausa's set is not under the duck), as before.
+   */
+  suspend({ at = this.graph.ctx.currentTime, fadeSec }: { at?: number; fadeSec: number }): void {
+    const t = Math.max(at, this.graph.ctx.currentTime);
+    const sound = this.sound;
+    this.suspended = null;
+    if (sound) {
+      const playing = sound.voice ? passAt(sound.voice, sound.prev, t) : null;
+      const { songId, level, pick, originSec, snippet, song } = sound;
+      this.suspended = { songId, level, pick, originSec, snippet, song, at: playing && { kind: playing.pass.kind, offsetSec: playing.offsetSec } };
+    }
+    for (const node of [this.graph.checkDuck.music, this.graph.checkDuck.hold]) this.graph.glide(node.gain, 0, this.tuning.duckFadeSec);
+    this.stopSounds(t, fadeSec);
+  }
+
+  /** Pausa ends (D135): the saved song plays on from where it was at `at`, fading in over `fadeSec`; then as before
+   * (its loop, and the song taking over from a snippet). Nothing when nothing was saved, or the Check ended meanwhile. */
+  resume({ at, fadeSec }: { at: number; fadeSec: number }): void {
+    const saved = this.suspended;
+    this.suspended = null;
+    if (!saved) return;
+    const { ctx } = this.graph;
+    const out = ctx.createGain();
+    out.connect(this.graph.checkBus);
+    this.out = out;
+    const start = atFrame(Math.max(at, ctx.currentTime + 0.01), ctx.sampleRate);
+    const { songId, level, pick, originSec, snippet, song } = saved;
+    const sound: SongSound = { songId, at: start, out, level, pick, snippet, song, voice: null, prev: null, originSec, sources: new Set() };
+    this.sound = sound;
+    let was = saved.at;
+    // The song decoded meanwhile (during Pausa): a snippet comes back as the song, at the same song second.
+    const decoded = !sound.song ? this.songs.get(songId) : null;
+    if (decoded) sound.song = { buffer: decoded.buffer, loop: this.songLoop(sound, decoded) };
+    if (was?.kind === 'snippet' && sound.song && sound.snippet && pick) {
+      sound.originSec ??= snippetStartSec(sound.snippet.buffer.getChannelData(0), sound.song.buffer.getChannelData(0), ctx.sampleRate, pick.startSec);
+      was = { kind: 'song', offsetSec: sound.originSec + was.offsetSec };
+    }
+    const material = was && (was.kind === 'song' ? sound.song : sound.snippet);
+    if (was && material) {
+      const pass = resumePass(material.loop, was.offsetSec, fadeSec);
+      const voice = this.voice(sound, was.kind, start, pass.offsetSec);
+      voice.gain.gain.setValueAtTime(0, start);
+      voice.gain.gain.linearRampToValueAtTime(level, start + pass.fadeSec);
+      voice.fullAt = this.after(start + pass.fadeSec);
+      sound.voice = voice;
+    }
+    void this.attach(sound).catch(() => undefined);
+  }
+
+  /** Pausa ended with nothing saved coming back (Next, Panic, the end of the Game): the saved song is let go. */
+  dropSuspended(): void {
+    this.suspended = null;
+  }
+
+  /** Stop the Check's sounds and bring everything else back up; the Check's own decoded songs are let go, and so is a
+   * song Pausa saved (the Check ended during Pausa: a discard, Panic). */
   cancel(): void {
+    this.suspended = null;
     this.duck(false);
     this.songs.retain([]);
     this.claimId = null;

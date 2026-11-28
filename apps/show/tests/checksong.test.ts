@@ -2,7 +2,7 @@
 // how a late start joins its pass, and when the snippet hands over to the full song.
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { atFrame, audibleEndSec, entryOffset, equalPowerCurves, handoverAt, pickupLoop, snippetStartSec, songLoop, songSecAt } from '../engine/src/plan/checksong.ts';
+import { atFrame, audibleEndSec, entryOffset, equalPowerCurves, handoverAt, passAt, pickupLoop, resumePass, snippetStartSec, songLoop, songSecAt } from '../engine/src/plan/checksong.ts';
 import { lastPhraseLoop } from '../engine/src/plan/loop.ts';
 import type { Analysis } from '../engine/src/analysis.ts';
 import { FLOW } from '../engine/src/config.ts';
@@ -118,4 +118,25 @@ test('the Check tunables: the handover and the loop crossfades fit inside a snip
   assert.ok(c.cutFadeSec < c.endFadeSec);
   assert.ok(3 - c.snippetTailSec - c.pickupXfadeSec > c.handoverLeadSec + c.handoverSec + 1, 'a second of the first pass for the song to arrive in');
   assert.ok(c.loopAheadSec > 0.1 && c.loopAheadSec < 3 - c.snippetTailSec - c.pickupXfadeSec);
+});
+
+test('Pausa saves the pass playing and where: the one before a pass scheduled ahead, as far in as time has gone', () => {
+  const prev = { at: 10, offsetSec: 68, originSec: 0, name: 'prev' };
+  const next = { at: 25.7, offsetSec: 67.995, originSec: 0, name: 'next' };
+  assert.deepEqual(passAt(next, prev, 25), { pass: prev, offsetSec: 83 });
+  assert.deepEqual(passAt(next, prev, 26.7), { pass: next, offsetSec: 68.995 });
+  assert.deepEqual(passAt(next, null, 20), { pass: next, offsetSec: 67.995 }, 'not started yet: at its offset');
+});
+
+test('a resumed pass comes back where it was, its fade-in shortened to end before the jump', () => {
+  const loop = { startSec: 19.5, fromSec: 68, outSec: 84, xfadeSec: 0.005 };
+  assert.deepEqual(resumePass(loop, 30.25, 1.5), { offsetSec: 30.25, fadeSec: 1.5 });
+  const near = resumePass(loop, 83, 1.5);
+  assert.equal(near.offsetSec, 83);
+  assert.ok(Math.abs(near.fadeSec - 0.945) < 1e-9, 'the fade ends 50 ms before the jump\'s crossfade');
+  assert.deepEqual(resumePass(loop, 83.9, 1.5), { offsetSec: 68, fadeSec: 1.5 }, 'no room at all: from where the loop repeats');
+  // The snippet, saved 1.42 s in: 1.23 s of fade before its 0.15 s crossfade at 2.8 s.
+  const snippet = resumePass({ startSec: 0, fromSec: 0, outSec: 2.8, xfadeSec: 0.15 }, 1.42, 1.5);
+  assert.equal(snippet.offsetSec, 1.42);
+  assert.ok(Math.abs(snippet.fadeSec - 1.18) < 1e-9);
 });

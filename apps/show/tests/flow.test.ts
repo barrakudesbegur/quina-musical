@@ -674,18 +674,30 @@ test('Pausa saves what plays and resumes it where it was, under Parlem (D128, D1
   assert.equal(find(out, 'resumePlayback')?.discard, true);
   assert.ok(find(out, 'startTransition')?.fromHoldMusic, 'the Spin builds out of the Pausa music');
 
-  // In a Check: its marks stay, auto and the sounds stop, the next reveal waits for a press.
+  // In a Check: its marks stay, auto stops, the next reveal waits for a press; the revealed song is saved with the rest
+  // of the playback (not cancelled) and resumes with it.
   const c = flow(9);
   landSongs(c, 4);
   c.send('claim', { cardId: card.id });
   c.send('checkNext', { claimId: 'cl-1', step: 0 });
   const paused = c.send('pause', { on: true });
-  assert.ok(find(paused, 'cancelCheck'));
+  assert.ok(!find(paused, 'cancelCheck') && find(paused, 'pausePlayback'), 'the revealed song is saved, not stopped');
   assert.equal(c.show.claims[0].status, 'checking');
+  assert.equal(c.show.check?.awaitPress, true);
   assert.deepEqual(rejected(c.send('checkNext', { claimId: 'cl-1', step: 1 })), ['wrongScene']);
   const resumed = c.send('pause', { on: false });
+  assert.equal(find(resumed, 'resumePlayback')?.discard, false, 'it resumes with the rest');
+  assert.ok(!find(resumed, 'checkReveal'), 'nothing is revealed again');
   assert.deepEqual(find(resumed, 'checkDuck'), { type: 'checkDuck', on: true }, 'the music under the Check goes back down');
   assert.equal(c.show.check?.info.revealed.length, 1);
+  // Panic during a Check's Pausa: the Check ends and nothing saved comes back.
+  const pc = flow(9);
+  landSongs(pc, 4);
+  pc.send('claim', { cardId: card.id });
+  pc.send('checkNext', { claimId: 'cl-1', step: 0 });
+  pc.send('pause', { on: true });
+  const panicked = pc.send('panic');
+  assert.ok(find(panicked, 'cancelCheck') && find(panicked, 'resumePlayback')?.discard === true);
 
   // In a Celebration: its music is saved and resumes; the 60 s to the Interval exclude the paused time.
   c.pressCue('cl-1');

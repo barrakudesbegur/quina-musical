@@ -433,7 +433,7 @@ export interface PadHoldEffectMsg {
   land?: boolean;
 }
 /** Pausa starts (D128): everything playing fades out and is saved where it is (the song deck, Hold music, the
- * Celebration's music, a set, the intro, the throw song). Effects and snippets ring out (U113). */
+ * Celebration's music, a set, the intro, the throw song, a Check's revealed song). Effects ring out (U113). */
 export interface PausePlaybackEffect {
   type: 'pausePlayback';
   at: number;
@@ -3644,11 +3644,11 @@ export class Show {
     const now = this.env.now();
     const run = this.check;
     if (run) {
-      // Its marks stay; auto and the reveal's sound stop, and the next reveal waits for a press (U107).
+      // Its marks stay; auto stops and the next reveal waits for a press (U107). The revealed song is saved with the
+      // rest of the playback (pausePlayback) and resumes with it, under the Check's duck again.
       run.autoAt = null;
       run.awaitPress = true;
       run.soundEndAt = null;
-      this.out.push({ type: 'cancelCheck', claimId: run.info.claimId });
     }
     const t = this.throwSong;
     if (t?.playing) {
