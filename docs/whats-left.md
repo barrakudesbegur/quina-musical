@@ -185,6 +185,6 @@ Sessions keep their lanes (team.md) and their limits on parallel agents (Fronten
 **Phase D:** the tech rehearsal when the user says; then the code freeze; P2 only if there's time.
 
 **What needs the user, by phase:**
-- A: U238's conclusion, U241, U242, U243, the go for this plan (answered: D297, D301–D306, D308–D311).
+- A: U238's conclusion (the user is listening) (answered: D297, D301–D306, D308–D311).
 - B: the proof sheet and the print.
 - C: the listening session (a couple of hours), the hook approval (about 4.5 h, U14), vetting the Signatures, the voices and Hold music (U20), D282's conversation, the real-device checks (U19), the organizers' plan in Admin (U18).

@@ -1275,7 +1275,7 @@ By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in:
 The user: "buttons should not be fully round unless they are floating". A design-system rule for every screen: pills only for floating buttons, rounded rectangles otherwise. It was made on a phone board and stated generally, so it applies to the phones, the console, the projector and Admin. Frontend lists the boards and components that still have non-floating pills, then fixes the boards and the code after the finale and tab builds.
 By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in: requirements/screens.md › Every screen.
 
-### D190 · The Desgraciat's winner phone says "Quina potra!" · 2026-11-26 · Active; amended by D315
+### D190 · The Desgraciat's winner phone says "Quina potra!" · 2026-11-26 · Active; amended by D315, D316
 The phone holding the last standing card says "Quina potra!" too, like the projector (D186), with the glowing card, the nino and the confetti. The user: "i dont care. a seems fine". Answers U165 with (a).
 By: the user. Source: open-questions.md › Answered (U165). Amends: D62 (the phone's part). Lives in: requirements/screens.md › Player app.
 
@@ -2007,7 +2007,7 @@ By: the user. Source: the user's message of 28 Nov. Lives in: requirements/scree
 - **Later task (the user):** how to show prizes, on the projector and wherever else it makes sense.
 By: the user. Source: the user's message of 28 Nov. Amends: D242, D285. Lives in: requirements/screens.md › Projector; whats-left.md.
 
-### D312 · A Celebration shows only the stickers of the sponsors who gave its prize; money sponsors spread through the rounds · 2026-11-28 · Active; amended by D315; where the money sponsors show Pending (U241)
+### D312 · A Celebration shows only the stickers of the sponsors who gave its prize; money sponsors spread through the rounds · 2026-11-28 · Active; amended by D315, D317
 Answers U240 with (a): "i think i asked a session to make a design where the sponsor sticker logos were used in the celebration pages, including player app. i like that idea more than the entire prize, only the sponsors that participated. the sponsors that just gave money we spread them throug the rounds." That's D287's sticker collage: a Celebration, on the projector and the phones, shows as stickers only the sponsors whose gifts make up that prize, with no prize. Sponsors who only gave money (a sponsor with no gift in the plan) are spread through the rounds; where they show is U241.
 By: the user. Source: the user's message of 28 Nov. Amends: D285, D287. Lives in: requirements/screens.md › Projector, Player app.
 
@@ -2026,7 +2026,7 @@ After the realistic test: "in the test i did, i noticed that during the card che
 - **For Frontend:** the projector's "playing" mark per reveal still lasts 2.5 s, while the song now plays on. **To listen for:** `LOOP.tailDropDb` (−12 dB under the hook) marks some soft endings as dead, so those songs hand over or auto-advance up to 20 s early (Viva La Vida).
 By: the user (to quina-musical-f5). Source: its report of 28 Nov. Lives in: requirements/show-and-music.md › The Check, The presenters' actions.
 
-### D315 · No Celebration screen on the phones; the Check's ribbon shows the result · 2026-11-28 · Active; the winner's phone and the Desgraciat Pending (U242, U243)
+### D315 · No Celebration screen on the phones; the Check's ribbon shows the result · 2026-11-28 · Active; amended by D316
 Answers U237, after the screenshots of what's built: "the text comprovant el cartro can simply be comprobant #332. okay so i think we should not have a celebration screen. and in the ribbon when check fails we should change the color and content to "Quina incorrecte!" quina/linea in red bg and the card number on the right, and the ribon goes away when the next spin starts. if the line is correct, we do like the fail but with green and correcte. and it it is a quina correcte, we do like the line correct, but it goes away when the screen changes to the interval or break or whatever."
 - **No Celebration screen on any phone**, for a Line or a Quina, whoever won.
 - **The Check's ribbon:** «Comprovant #332» while the card is checked (was «Comprovant el cartró #332»).
@@ -2037,3 +2037,11 @@ Answers U237, after the screenshots of what's built: "the text comprovant el car
 - The card number on the phone's ribbon is the user's explicit choice (amends D32's "no winning card numbers on phones").
 - Consequences: the phones' prize panel goes (whats-left 4.3) and D312's stickers apply to the projector's Celebrations only. Frontend draws the ribbon's states, side by side with today's, before building.
 By: the user. Source: the user's message of 28 Nov. Amends: D32, D190, D242, D285, D287, D312. Lives in: requirements/screens.md › Player app.
+
+### D316 · The same ribbon on every phone; the Desgraciat's ends with «Tenim desgraciat!» · 2026-11-28 · Active
+Answers U242 and U243: "same for every phone. WTF dotn say quina potra, i dont want that text say "Tenim desgraciat!"". The winner's phone gets the same ribbon as every other phone. At the Desgraciat's end every phone's ribbon reads «Tenim desgraciat!», green, with the card number, until the screen changes, as a correct Quina (D315). The projector's «QUINA POTRA!» (D186, D310) isn't part of this answer.
+By: the user. Source: the user's message of 28 Nov. Amends: D190, D315. Lives in: requirements/screens.md › Player app.
+
+### D317 · Money-only sponsors show in their round's Celebrations (the orchestrator's default) · 2026-11-28 · Active; the user may overrule
+U241, decided as the obvious default after the user said follow-ups with obvious answers shouldn't be asked: the sponsors who gave only money are spread evenly through the rounds in plan order and show as stickers in their round's Celebrations on the projector, beside the sponsors who gave the prize (D312). Admin shows the result.
+By: the orchestrator. Source: D312. Lives in: requirements/screens.md › Projector.

@@ -8,23 +8,6 @@ The only list of what waits on the user: decisions with the default in force mea
 
 ## Decisions
 
-### U242 · The winner's own phone, with no Celebration screen (D315)
-Every phone gets the same green «Línia correcta!» or «Quina correcta!» ribbon with the card number. Earlier the user wanted the winner's phone to differ only in "animation and text contents, and maybe ninos".
-- (a) The winner's phone gets the same ribbon as everyone.
-- (b) The same ribbon, and the winning card itself is marked on that phone (its tile glows gold, as with your song) (the recommendation: the winner still finds their own moment without a screen).
-
-### U243 · The end of the Desgraciat on the phones (D315)
-The Desgraciat has no public Check: its finale on stage decides it (D166), and today the winner's phone shows «QUINA POTRA!» as a Celebration screen.
-- (a) A green «Quina potra!» ribbon with the card number on every phone, until the screen changes to the Break (the recommendation: the same as a correct Quina).
-- (b) Nothing beyond each card's sitting down.
-
-### U241 · Where the money-only sponsors show (D312)
-Sponsors who gave money and no gift are spread through the rounds (D312). Where in a round:
-- (a) In that round's Celebrations, beside the stickers of the sponsors who gave its prize (the recommendation: the user's words came with the Celebration pages, and every Celebration then thanks someone).
-- (b) In that round's intro.
-- (c) Both.
-They're spread evenly in plan order by default; Admin shows the result.
-
 ### U238 · Four songs flagged for quality, before the cards
 No decision is recorded for #90 and #117 (low bitrate: 117 and 114 kbps) or #18 and #83 (remix titles; data/out/repertoires/2026/quality.json). #73 and #133 were kept. A swap needs a download, prep, an R2 push and new cards before 4 Dec.
 - (a) Keep all four (the recommendation, unless one sounds bad to the user; D270 already says #117 is the right song).
@@ -341,6 +324,8 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U242, U243 · The winner's phone; the Desgraciat's end on phones** (2026-11-28) → D316: the same ribbon on every phone; «Tenim desgraciat!».
+- **U241 · Where the money-only sponsors show** (2026-11-28) → D317: their round's Celebrations (the orchestrator's default).
 - **U237 · The phones in a Check and a Celebration** (2026-11-28) → D315: no Celebration screen; the Check's ribbon shows the result (U242, U243 follow).
 - **U240 · The sponsors in a round's intro and its Celebrations** (2026-11-28) → D312: only the stickers of the sponsors who gave that prize; money sponsors spread through the rounds (U241).
 - **U235 · The projector's Break** (2026-11-28) → D308: (a), with a timeline of the night, the price beside the countdown, stickers.
