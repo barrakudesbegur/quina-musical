@@ -21,7 +21,7 @@ This year's app (2026) and last year's (2025) live side by side:
 | `tools/e2e/` | One whole show, headless (Playwright): the relay, the show page, the console, the stage and a player, plus the phones' production path (the Worker in wrangler dev, the cloud link, a phone on `/feed`), driven through the protocol (`npm run test:e2e`; needs the prepared pool, so it is not in CI) |
 | `tools/edition/` | `npm run edition`: check an edition's plan against its repertoire's cards, and upload it to the cloud after saving the cloud's current one (D116) |
 | `tools/git/` | `npm run sync-main`: bring the shared checkout's `main` up to `origin/main` without touching anyone's uncommitted work (replays local commits onto origin in git's object store, updates only the files origin changed, refuses if one of them is being edited) |
-| `tools/logos/` | The sponsors' logo cleanup: transparent background, trimmed, PNG + JPEG XL, with a contact sheet (`clean.py`) |
+| `tools/logos/` | The sponsors' logos for an edition (`prepare.py`, from `data/editions/<year>.logos.json`): each one as its original, a transparent logo and its die-cut sticker, with a comparison sheet |
 | `data/` | Repertoire manifests (`data/repertoires/`), audio (`data/media/`, gitignored except `fx/`), and generated files (`data/out/`, `data/cache/`, gitignored) |
 | `docs/`, `brand/` | Decisions, research and the runbook; the brand assets |
 | `legacy/2025/` | Last year's app (`client/`, `server/`), unchanged and runnable on its own; everything below is about it |

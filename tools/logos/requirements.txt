@@ -1,4 +1,6 @@
-# The logo cleanup (clean.py): Pillow only. Set up from the repo root:
+# The logo tools (prepare.py): Pillow, numpy and scipy. Set up from the repo root:
 #   uv venv --python /opt/homebrew/bin/python3.13 tools/logos/.venv
 #   uv pip install --python tools/logos/.venv/bin/python -r tools/logos/requirements.txt
 Pillow==11.3.0
+numpy==2.3.4
+scipy==1.16.3
