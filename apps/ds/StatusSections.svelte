@@ -423,8 +423,9 @@
   </div>
   {#key `${collageRun}`}
     {#if projector}
-      <div class="ds-s__collage-stage">
-        <div class="ds-s__collage-scene">
+      <!-- sized inline too, so the design system page's static snapshots keep the 60 % box -->
+      <div class="ds-s__collage-stage" style="width: 864px; height: 648px; overflow: hidden">
+        <div class="ds-s__collage-scene" style="width: 1440px; height: 1080px; transform: scale(0.6); transform-origin: 0 0">
           <div class="ds-s__collage-title" style:left="{SCENE.title.x}px" style:top="{SCENE.title.y}px" style:width="{SCENE.title.width}px" style:height="{SCENE.title.height}px">
             <StickerTitle text="Quina!" size="hero" color="gold" fit />
           </div>
