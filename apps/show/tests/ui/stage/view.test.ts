@@ -161,7 +161,7 @@ test('before: start time, the night\'s card types, sponsors and the player app l
   const state = FIXTURES.before(NOW).state;
   const plan = { ...SAMPLE_PLAN, schedule: { ...SAMPLE_PLAN.schedule, startAtMs: NOW + 600_000 } };
   const view = stageView(state, flowOf(state), plan, CATALOG);
-  assert.equal(view.title, 'Quina Quina 3', "the edition's name");
+  assert.equal(view.title, SAMPLE_PLAN.title, "the edition's name");
   assert.deepEqual(view.body, {
     scene: 'before',
     startAtMs: NOW + 600_000,

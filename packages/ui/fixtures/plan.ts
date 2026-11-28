@@ -116,7 +116,8 @@ const giftsFrom = (number: number): number => Array.from({ length: number - 1 },
 export const SAMPLE_PLAN: GamePlan = {
   v: 3,
   edition: '26',
-  title: 'Quina Quina 3',
+  // As the real 2026 plan (data/editions/2026.plan.json); «Quina Quina 3» beside «Quina 3» read as the name plus the round.
+  title: 'Quina Musical',
   prizeReveal: 'perRound',
   sponsors: SPONSORS,
   rounds: Array.from({ length: 8 }, (_, i) => {

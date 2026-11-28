@@ -10,7 +10,7 @@ const COPY: CheatSheetCopy = { keys: [{ keys: '→', action: 'Següent' }], wiiR
 
 test('every round with both bundles, their sponsors and the special flag', () => {
   const m = cheatSheetModel(SAMPLE_PLAN, COPY);
-  assert.equal(m.title, 'Quina Quina 3');
+  assert.equal(m.title, SAMPLE_PLAN.title);
   assert.equal(m.rounds.length, 8);
   const r1 = m.rounds[0];
   assert.equal(r1.label, 'Quina 1');
