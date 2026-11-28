@@ -100,7 +100,7 @@ What works, seen live on the production path: the QR link, the pad, the scan, th
 | 5.7 | P1 | Phrase landings count bars from provisional hooks; FADE (the plain fade the user rejected) is still the last fallback; "call and response" is only a weighting; one hook per song | S | Sound engine |
 | 5.8 | P1 | The Blend renders live, one pair at a time; never checked on the show laptop under load; the relay crashes if tools/prep/.venv is missing | S, F | Sound engine |
 
-**Built since (28 Nov, quina-musical-f5):** no silence in a Check, Aguanta always loops, songs hand over before their silent tails (D314). Not heard by ear yet; the ✗ case waits on the user.
+**Built since (28 Nov, quina-musical-f5):** no silence in a Check, Aguanta always loops, songs hand over before their silent tails (D314). Not heard by ear yet. The ✗ case: the song plays on "broken" until the cue (D319), being built by f5; Parlem's ducked song loops, no Hold music (D318).
 
 ## 6. Setup, startup and Plan B
 

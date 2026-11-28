@@ -127,7 +127,7 @@ _From event.md › Claims and checks, Atmosphere and style; the decisions doc �
 - **Hold music** is looping background tracks, such as a video-game waiting tune. It never takes over during a Hold (D318); outside Pausa it plays only where a presenter asks for it (the remaining cases go to the user, D318).
 - **The Check's sound:**
   - the card's songs play in the card's order, each when a presenter reveals it (D107), from its hook on and into the rest of the song until the next reveal, a step back or the Check's end; near its end it loops its last phrase, as in Aguanta (D239, D314). A Pausa saves it and brings it back;
-  - a song that has landed gets ✓; one that hasn't plays briefly "broken" (a short warble or bitcrush, never annoying) and gets ✗;
+  - a song that has landed gets ✓; one that hasn't plays from its hook at the same level, turns "broken" or sad after about 2 s and loops like that until the presenters' cue (the Failure fanfare with the fail music), and gets ✗ (D319);
   - the Desgraciat has no public Check: its finale on stage replaces it (D166), and it has no shared win (D180);
   - the Hold music stays ducked far down throughout.
 - **A failed Check:** the Failure fanfare on the presenters' cue, or at the end of an automatic reveal (D109, D117), then the error Hold music until the presenters press "Reprèn".
