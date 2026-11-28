@@ -2237,6 +2237,14 @@
   --cell-line: var(--stage-check-ring);
 }
 
+/* The marks are thick (D283, U225: as the console's verdict ✗, S1): the ✓ and ✗ in the icon's outline look, a white
+   line over an ink line, in a bigger box than the thin look's 58 %, so line and ink take the verdict's share of the
+   disc (white about 8 %, with the ink about 18 %). The cells', a lifted one's and the type badge's. */
+.check :is(.card-grid__mark, .check__type-mark) .icon.icon--outline {
+  width: 72%;
+  height: 72%;
+}
+
 /* `check-step`: while the snippet plays its ring runs round the cover (cell-playing), then the mark stamps on at the
    centre and the ring turns green (`data-mark='ok'`: good for the claim) or red with the cover grey (`bad`). For a
    Line or a Bingo the good songs are the landed ones; in the Desgraciat round's standing Check, the ones that haven't

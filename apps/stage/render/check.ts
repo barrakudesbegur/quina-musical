@@ -234,7 +234,8 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
         const cover = new CoverArt('card-grid__cover');
         cover.set(cell.songId);
         const art = h('div', 'card-grid__art', cover.root);
-        const parts = new CellParts(art);
+        // The marks thick (D283, U225): the outline look, as the console's verdict ✗ (S1).
+        const parts = new CellParts(art, { outlineMarks: true });
         parts.badge.classList.add('card-grid__mark');
         const root = h('figure', { class: 'card-grid__cell', data: { state: cell.step === null ? 'idle' : 'pending' } }, art, h('figcaption', 'card-grid__title card-cell__title', cell.title ?? ''));
         parts.set(root, stepLook('pending', null, false));
@@ -296,7 +297,7 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
   private setTypeMark(mark: 'ok' | 'wrong' | null): void {
     setHidden(this.typeMark, mark === null);
     if (mark === null) return void this.typeMark.replaceChildren();
-    if (this.typeMark.dataset.mark !== mark) this.typeMark.replaceChildren(iconElement(mark === 'ok' ? 'check' : 'close'));
+    if (this.typeMark.dataset.mark !== mark) this.typeMark.replaceChildren(iconElement(mark === 'ok' ? 'check' : 'close', { outline: true }));
     this.typeMark.dataset.mark = mark;
   }
 
@@ -344,7 +345,7 @@ export class CheckScene implements SceneRenderer<CheckSceneView> {
     const ghost = h(
       'span',
       { class: 'card-cell__badge card-grid__mark card-grid__mark--lift', data: { mark, color: ok ? 'green' : 'red', style: 'solid', icon: ok ? 'check' : 'close' }, attrs: { 'aria-hidden': 'true' } },
-      iconElement(ok ? 'check' : 'close'),
+      iconElement(ok ? 'check' : 'close', { outline: true }),
     );
     nodes.art.append(ghost);
     setTimeout(() => ghost.remove(), STAGE.checkUnrevealMs);

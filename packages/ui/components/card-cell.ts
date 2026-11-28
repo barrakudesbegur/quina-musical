@@ -3,7 +3,7 @@
 // it, a centred badge, a tag on its bottom edge. Which game state looks like what is CardGrid's looks table
 // (card-looks.ts). The phone and the console draw it with CardCell.svelte; the projector (plain TS) builds the same
 // parts here and sets the same data attributes, so all three share card-cell.css.
-import { LINE_ICONS, isBehind, partClass, pathOf, type IconPath, type LineIconName } from '../icons/line.ts';
+import { LINE_ICONS, isBehind, outlined, partClass, pathOf, type IconPath, type LineIconName } from '../icons/line.ts';
 import '../icons/icons.css';
 import './card-cell.css';
 
@@ -60,19 +60,22 @@ function partPath(p: IconPath, cls = partClass(p)): SVGPathElement {
 
 /**
  * One icon of the family (line.ts) as an SVG element, for the projector's DOM (Icon.svelte's markup, `alone`). Parts
- * marked `behind` are drawn through the mask the other parts cut, as Icon.svelte does.
+ * marked `behind` are drawn through the mask the other parts cut, as Icon.svelte does. `outline`: Icon.svelte's
+ * outline look, the line over an ink line a little wider all round (the projector Check's thick marks, D283).
  */
-export function iconElement(name: LineIconName): SVGSVGElement {
+export function iconElement(name: LineIconName, options: { outline?: boolean } = {}): SVGSVGElement {
   const svg = document.createElementNS(SVG, 'svg');
-  svg.setAttribute('class', 'icon icon--alone');
+  svg.setAttribute('class', options.outline ? 'icon icon--alone icon--outline' : 'icon icon--alone');
   svg.setAttribute('viewBox', '0 0 24 24');
   svg.setAttribute('aria-hidden', 'true');
   svg.setAttribute('focusable', 'false');
   const parts = LINE_ICONS[name] as readonly IconPath[];
   const back = parts.filter(isBehind);
   const front = parts.filter((p) => !isBehind(p));
+  let maskId: string | null = null;
   if (back.length) {
     const id = `icon-mask-el-${++masks}`;
+    maskId = id;
     const mask = document.createElementNS(SVG, 'mask');
     for (const [k, v] of Object.entries({ id, maskUnits: 'userSpaceOnUse', x: '-12', y: '-12', width: '48', height: '48' })) mask.setAttribute(k, v);
     const reveal = document.createElementNS(SVG, 'rect');
@@ -80,12 +83,28 @@ export function iconElement(name: LineIconName): SVGSVGElement {
     mask.append(reveal, ...front.map((p) => partPath(p, 'icon__cut')));
     const defs = document.createElementNS(SVG, 'defs');
     defs.append(mask);
-    const g = document.createElementNS(SVG, 'g');
-    g.setAttribute('mask', `url(#${id})`);
-    g.append(...back.map((p) => partPath(p)));
-    svg.append(defs, g);
+    svg.append(defs);
   }
-  svg.append(...front.map((p) => partPath(p)));
+  // One layer of the drawing: the back parts through the mask, then the front ones; `under`, only the outlined parts.
+  const layer = (under: boolean): SVGElement[] => {
+    const pick = (list: readonly IconPath[]) => (under ? list.filter(outlined) : list).map((p) => partPath(p));
+    const out: SVGElement[] = [];
+    if (maskId && back.length) {
+      const g = document.createElementNS(SVG, 'g');
+      g.setAttribute('mask', `url(#${maskId})`);
+      g.append(...pick(back));
+      out.push(g);
+    }
+    out.push(...pick(front));
+    return out;
+  };
+  if (options.outline) {
+    const under = document.createElementNS(SVG, 'g');
+    under.setAttribute('class', 'icon__under');
+    under.append(...layer(true));
+    svg.append(under);
+  }
+  svg.append(...layer(false));
   return svg;
 }
 
@@ -113,8 +132,11 @@ export class CellParts {
   readonly badge: HTMLElement;
   readonly tag: HTMLElement;
   private shownBadge: string | null = null;
+  /** The ✓ and ✗ in the outline look (the projector's Check, D283); the play icon keeps its line. */
+  private readonly outlineMarks: boolean;
 
-  constructor(art: HTMLElement) {
+  constructor(art: HTMLElement, options: { outlineMarks?: boolean } = {}) {
+    this.outlineMarks = options.outlineMarks ?? false;
     art.classList.add('card-cell__art');
     this.badge = document.createElement('span');
     this.badge.className = 'card-cell__badge';
@@ -137,7 +159,8 @@ export class CellParts {
     const badge = look.badge ? `${look.badge}:${look.badgeColor ?? ''}:${look.badgeStyle ?? 'solid'}` : null;
     if (badge !== this.shownBadge) {
       this.shownBadge = badge;
-      this.badge.replaceChildren(...(look.badge ? [iconElement(look.badge)] : []));
+      const outline = this.outlineMarks && look.badge !== 'play';
+      this.badge.replaceChildren(...(look.badge ? [iconElement(look.badge, { outline })] : []));
       this.badge.dataset.color = look.badgeColor ?? 'green';
       this.badge.dataset.style = look.badgeStyle ?? 'solid';
       this.badge.dataset.icon = look.badge ?? '';
