@@ -14,10 +14,11 @@
   - off: the body in its palette, no pattern; the strip pale (its palette's `pale`), «mantén» before its words;
   - level 1 on: the body sunk (aria-pressed), its `pattern` (stripes) panning;
   - escalating: the strip fills with light left to right (hook escalate-hold), clipped to the strip;
-  - level 2 on: the strip in its palette's dark `edge`, white words, the hexagonal dots panning; the body sunk with
-    no pattern (level 2 is what's on). `badge` draws a bare icon in its top-left corner, no frame, at half opacity
-    (28 Nov, the board's look), and means the button is locked (the padlock: Parlem locked on during a Pausa, or a
-    button held on another console): locked on, the body pans the zigzag, never the stripes (#23, 2b853e91);
+  - level 2 on: the strip fills with the button's full colour (its palette's `solid`), no pattern, its words white
+    Londrina capitals with the ink outline; the body sunk, panning its `pattern` (28 Nov, the board's look). `badge`
+    draws a bare icon in its top-left corner, no frame, at half opacity, and means the button is locked (the padlock:
+    Parlem locked on during a Pausa, or a button held on another console): locked on, the body pans the zigzag,
+    never the stripes (#23, 2b853e91);
   - `level2={null}`: no strip; the hold's light sweeps the whole body (the last round's top row).
   `pulse` (0..1) makes the strip pulse while level 2 is on, faster towards 1 (hook suspense-hold); `timer` is the
   strip's countdown text; `meter` a time bar in the body (a Throw song's position). Structure as Button's
@@ -139,10 +140,10 @@
   /** Level 2 shows on while it's on, and from the moment the hold reaches it (finger still down). */
   const level2On = $derived(active === 2 || hold.state.phase === 'escalated');
   /**
-   * The body's pattern (R3): locked on (a badge) pans the zigzag, never the stripes (#23, 2b853e91); otherwise level 1's
-   * pattern only while level 1 is what's on; nothing while disabled.
+   * The body's pattern (R3): locked on (a badge) pans the zigzag, never the stripes (#23, 2b853e91); otherwise its
+   * `pattern` while level 1 or level 2 is on (28 Nov: level 2 pans the body too, the strip filled); nothing while disabled.
    */
-  const bodyPattern = $derived(disabled ? null : badge ? 'zigzag' : active === 1 && pattern !== 'none' ? pattern : null);
+  const bodyPattern = $derived(disabled ? null : badge ? 'zigzag' : (active === 1 || (level2 && level2On)) && pattern !== 'none' ? pattern : null);
   const howText = $derived([badge?.label, how ?? (level2 ? CA.controls.holdFor(level2.label) : null)].filter(Boolean).join('. '));
   const describedBy = $derived([note ? `${uid}-note` : null, howText ? `${uid}-how` : null, rest['aria-describedby'] ?? null].filter(Boolean).join(' ') || undefined);
 </script>
@@ -199,9 +200,7 @@
     </span>
     {#if level2}
       <span class="two-level__strip" data-on={level2On || undefined}>
-        <span class="two-level__fill" aria-hidden="true">
-          {#if level2On && !disabled}<span class="ds-pattern" data-pattern="dots"></span>{/if}
-        </span>
+        <span class="two-level__fill" aria-hidden="true"></span>
         <span class="two-level__strip-words">
           {#if !level2On && lead}<span class="two-level__lead" aria-hidden="true">{lead}</span>{/if}
           {#if level2.icon}<Icon name={level2.icon} />{/if}

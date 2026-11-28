@@ -10,6 +10,9 @@
   --two-level-strip: 46px;
   --two-level-strip-size: 1.0625rem;
   --two-level-strip-icon: 1.5rem;
+  /* Level 2 on: the strip's words in Londrina (28 Nov, the board's look) */
+  --two-level-strip-on-size: 1.25rem;
+  --two-level-strip-on-stroke: 4px;
   --two-level-sub-size: 1.25rem;
   --button-pad-bottom: calc(var(--two-level-strip) + var(--button-pad-block));
 }
@@ -75,10 +78,26 @@
   text-shadow: none;
 }
 
-/* On (or just reached, the finger still down): the button's own dark shade (D-k), white words, the dots panning (R3). */
+/* On (or just reached, the finger still down): the strip fills with the button's full colour, no pattern, its words in
+   white Londrina capitals with the ink outline, while the body pans its stripes (28 Nov, the board's look; R3). */
 .two-level__strip[data-on] {
-  background: var(--palette-edge);
   color: var(--color-white);
+}
+
+/* The full colour is the fill's, so an open Suspens's pulse (below) lightens it towards the pale under it */
+.two-level__strip[data-on] > .two-level__fill {
+  background: var(--palette-solid);
+}
+
+.two-level__strip[data-on] .two-level__strip-label {
+  font-family: var(--font-display);
+  font-size: var(--two-level-strip-on-size);
+  font-weight: var(--font-weight-strong);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  -webkit-text-stroke: var(--two-level-strip-on-stroke) var(--color-ink);
+  paint-order: stroke fill;
+  text-shadow: 0 2px 0 var(--color-ink);
 }
 
 .two-level__strip-words {
@@ -167,11 +186,6 @@
   background: rgb(255 255 255 / 0.5);
 }
 
-/* The dots on the strip: the strip's own corners, not the piece's */
-.two-level__strip .ds-pattern {
-  border-radius: 0;
-}
-
 /* An open Suspens pulses on the strip, faster towards its auto-release (suspense-hold) */
 @media (prefers-reduced-motion: no-preference) {
   .two-level[data-anim~='suspense-hold'] .two-level__strip[data-on] > .two-level__fill {
@@ -192,7 +206,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .two-level[data-state='pressing'] .two-level__fill:not(:has(.ds-pattern)) {
+  .two-level[data-state='pressing'] :is(.two-level__fill--body, .two-level__strip:not([data-on]) > .two-level__fill) {
     display: none;
   }
 
