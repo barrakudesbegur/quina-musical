@@ -206,9 +206,34 @@ export function soundsCheck(missingSounds: readonly string[], holdCount: number,
   ];
 }
 
-/** The files against the reference manifest (the cloud's, or the last push/pull here): present and same SHA-256. */
-export function mediaCheck(reference: { files: Record<string, { size: number; sha256: string }>; source: string } | null, local: ReadonlyMap<string, { size: number; sha256: string }>, rehashed: boolean): Check {
-  if (!reference) return check('Repertoire', 'Media files', 'warn', `${local.size} files here, no reference to compare with: run "npm run media -- push" once`);
+/** What the media files are compared with: the cloud's manifest, or this laptop's copy of it (its last push or pull). */
+export interface MediaReference {
+  files: Record<string, { size: number; sha256: string }>;
+  /** "the cloud's manifest", or "this laptop's copy". */
+  source: string;
+  /** When this laptop's copy was written (the file's mtime); absent for the cloud's manifest. */
+  savedAtMs?: number;
+}
+
+/** A copy's date and time, 24-hour in the show's time zone, as the preflight's other times: "27 Nov, 23:42". */
+const copyTime = (ms: number): string =>
+  new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'Europe/Madrid' }).format(ms);
+
+/**
+ * The files against the reference manifest: present and same SHA-256. `cloudProblem` is why the cloud's manifest
+ * couldn't be used ("HTTP 503", "no answer: fetch failed"), null when it was or when no cloud is configured. Against
+ * this laptop's copy after a failed fetch, differences are a WARN, not a FAIL: a stale copy (from before the last push
+ * elsewhere) can't prove media is missing. With no cloud configured the copy is all there is, so they still fail.
+ */
+export function mediaCheck(reference: MediaReference | null, local: ReadonlyMap<string, { size: number; sha256: string }>, rehashed: boolean, cloudProblem: string | null = null): Check {
+  const unreached = cloudProblem ? `couldn't reach the cloud's manifest (${cloudProblem}); ` : '';
+  if (!reference) {
+    return check('Repertoire', 'Media files', 'warn', cloudProblem
+      ? `${unreached}no copy on this laptop either: ${local.size} files here, nothing to compare with. Re-run the preflight when online`
+      : `${local.size} files here, no reference to compare with: run "npm run media -- push" once`);
+  }
+  const source = reference.savedAtMs === undefined ? reference.source : `${reference.source} from ${copyTime(reference.savedAtMs)}`;
+  const against = cloudProblem ? `${unreached}compared with ${source}` : `against ${source}`;
   const missing: string[] = [];
   const changed: string[] = [];
   for (const [path, file] of Object.entries(reference.files)) {
@@ -219,9 +244,16 @@ export function mediaCheck(reference: { files: Record<string, { size: number; sh
   const how = rehashed ? 'every file re-hashed' : 'hashes from the index (--fast)';
   if (missing.length > 0 || changed.length > 0) {
     const list = [...missing.map((p) => `missing ${p}`), ...changed.map((p) => `different ${p}`)];
-    return check('Repertoire', 'Media files', 'fail', `${list.slice(0, 3).join('; ')}${list.length > 3 ? ` (+${list.length - 3} more)` : ''}; against ${reference.source}`);
+    const shown = `${list.slice(0, 3).join('; ')}${list.length > 3 ? ` (+${list.length - 3} more)` : ''}`;
+    if (cloudProblem) {
+      return check('Repertoire', 'Media files', 'warn',
+        `${against}: ${shown}. That copy may be older than the cloud's, so this doesn't prove media is missing: re-run the preflight when online, ` +
+        `or "npm run media -- pull" (or "-- push", if this laptop has the newest files)`);
+    }
+    return check('Repertoire', 'Media files', 'fail', `${shown}; ${against}`);
   }
-  return check('Repertoire', 'Media files', 'pass', `${Object.keys(reference.files).length} files match ${reference.source} (${how})`);
+  const count = Object.keys(reference.files).length;
+  return check('Repertoire', 'Media files', 'pass', cloudProblem ? `${against}: ${count} files match (${how})` : `${count} files match ${source} (${how})`);
 }
 
 // ---- the laptop -------------------------------------------------------------------------------------------

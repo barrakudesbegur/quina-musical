@@ -287,6 +287,35 @@ test('songs, sounds and media files', () => {
   assert.equal(c.mediaCheck(null, same, true).status, 'warn');
 });
 
+test("media files against this laptop's copy: named with its date; when the cloud's manifest couldn't be fetched, differences only warn", () => {
+  const files = { 'cache/10/stems/drums.flac': { size: 3, sha256: 'a'.repeat(64) }, 'covers/10.jpg': { size: 1, sha256: 'b'.repeat(64) } };
+  const same = new Map(Object.entries(files));
+  const savedAtMs = Date.UTC(2026, 10, 27, 22, 42); // 23:42 in Begur
+  const copy = { files, source: "this laptop's copy", savedAtMs };
+  const short = new Map([...same].slice(1));
+  // A stale copy (from before a push elsewhere) can't prove media is missing: a WARN, with the copy's date and what to do.
+  const stale = c.mediaCheck(copy, short, true, 'HTTP 503');
+  assert.equal(stale.status, 'warn');
+  assert.match(stale.detail, /^couldn't reach the cloud's manifest \(HTTP 503\); compared with this laptop's copy from 27 Nov, 23:42: missing cache\/10\/stems\/drums\.flac/);
+  assert.match(stale.detail, /re-run the preflight when online/);
+  assert.match(stale.detail, /npm run media -- pull/);
+  // Against the cloud's own manifest, a missing file still fails.
+  const cloud = c.mediaCheck({ files, source: "the cloud's manifest" }, short, true);
+  assert.equal(cloud.status, 'fail');
+  assert.match(cloud.detail, /against the cloud's manifest$/);
+  // A clean comparison with the copy passes, but says the cloud wasn't reached and which copy was used.
+  const clean = c.mediaCheck(copy, same, true, 'no answer: fetch failed');
+  assert.equal(clean.status, 'pass');
+  assert.equal(clean.detail, "couldn't reach the cloud's manifest (no answer: fetch failed); compared with this laptop's copy from 27 Nov, 23:42: 2 files match (every file re-hashed)");
+  // No cloud configured: the copy is all there is, so differences fail as before, named the same way.
+  const offline = c.mediaCheck(copy, short, true);
+  assert.equal(offline.status, 'fail');
+  assert.match(offline.detail, /against this laptop's copy from 27 Nov, 23:42$/);
+  assert.equal(c.mediaCheck(copy, same, true).detail, "2 files match this laptop's copy from 27 Nov, 23:42 (every file re-hashed)");
+  // Neither the cloud nor a copy: nothing to compare with.
+  assert.match(c.mediaCheck(null, same, true, 'HTTP 503').detail, /^couldn't reach the cloud's manifest \(HTTP 503\); no copy on this laptop either/);
+});
+
 test('the relay, the LAN and the cloud', () => {
   assert.equal(c.relayCheck('default', { ok: true, name: 'default' }).status, 'pass');
   assert.equal(c.relayCheck('2026', { ok: true, name: 'default' }).status, 'fail', 'the wrong repertoire');

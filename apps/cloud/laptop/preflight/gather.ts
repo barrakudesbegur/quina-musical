@@ -172,21 +172,26 @@ async function repertoireChecks(o: PreflightOptions, repertoire: Repertoire): Pr
   out.push(...checks.soundsCheck(missingSounds, hold.length, hold.filter((h) => !fs.existsSync(path.resolve(REPO, h.pcm))).map((h) => h.name)));
   out.push(checks.voicesCheck(readJson(path.join(OUT, 'voice', 'index.json')), (name) => fs.existsSync(path.join(CACHE, 'voice', `${name}.flac`))));
 
-  let reference: { files: Record<string, { size: number; sha256: string }>; source: string } | null = null;
+  // The cloud's manifest; when it can't be fetched, this laptop's copy (its last push or pull), named with its date:
+  // a copy from before a push elsewhere would read as missing files (checks.mediaCheck makes that a WARN).
+  let reference: checks.MediaReference | null = null;
+  let cloudProblem: string | null = null;
   if (o.cloud) {
     const remote = await getJson(`${o.cloud}/api/sync/manifests/${repertoire.name}`, o.headers);
     const files = (remote.body as { files?: Record<string, { size: number; sha256: string }> } | undefined)?.files;
     if (remote.ok && files && Object.keys(files).length > 0) reference = { files, source: "the cloud's manifest" };
+    else cloudProblem = remote.error ? `no answer: ${remote.error}` : !remote.ok ? `HTTP ${remote.status}` : 'it lists no files';
   }
   if (!reference) {
-    const local = readJson(referenceFile(o.dataDir, repertoire.name)) as { files?: Record<string, { size: number; sha256: string }> } | null;
-    if (local?.files) reference = { files: local.files, source: 'the last push or pull on this laptop' };
+    const file = referenceFile(o.dataDir, repertoire.name);
+    const copy = readJson(file) as { files?: Record<string, { size: number; sha256: string }> } | null;
+    if (copy?.files) reference = { files: copy.files, source: "this laptop's copy", savedAtMs: fs.statSync(file).mtimeMs };
   }
   // Re-hashing reads every byte (about 8 s for 6 GB); --fast trusts the index kept by size and mtime.
   const indexDir = o.fast ? o.dataDir : fs.mkdtempSync(path.join(os.tmpdir(), 'quina-preflight-'));
   try {
     const local = await scan(repertoireRoots(repertoire), indexDir);
-    out.push(checks.mediaCheck(reference, local, !o.fast));
+    out.push(checks.mediaCheck(reference, local, !o.fast, cloudProblem));
   } finally {
     if (!o.fast) fs.rmSync(indexDir, { recursive: true, force: true });
   }
