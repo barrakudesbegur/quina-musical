@@ -74,6 +74,18 @@
     red: 'a fallen finalist',
   };
   const SIZES: StickerTitleSize[] = ['hero', 'hero-2', 'xl', 'l', 'm', 's', 'xs'];
+  /** The countdown before the start (not built yet): the share left of the last 3 hours, full while more is left. */
+  const BEFORE_WINDOW_MIN = 180;
+  const before = (minutes: number, value: string, unit: string, label: string) => {
+    const progress = Math.min(1, minutes / BEFORE_WINDOW_MIN);
+    return { value, unit, label, progress, caption: `«${value} ${unit}»: ${progress === 1 ? 'full (more than 3 h left)' : `${Math.round(progress * 100)} % of the last 3 h left`}` };
+  };
+  const BEFORE = [
+    before(24 * 60, '1', 'd', 'Comencem d’aquí a 1 dia'),
+    before(120, '2', 'h', 'Comencem d’aquí a 2 hores'),
+    before(60, '1', 'h', 'Comencem d’aquí a 1 hora'),
+    before(25, '25', 'min', 'Comencem d’aquí a 25 minuts'),
+  ];
 
   /** The projector's strip and QR are the stage's own DOM classes, on the shared CSS. `rows`: the strip's rows (S4's
    * knob); `count`: how many of the sample sponsors (a short list repeats, never a gap). */
@@ -131,6 +143,20 @@
     {/each}
     {#snippet big()}<Ring arc="progress" color="cyan" face="number" framed progress={0.7} value="2" unit="min" label="Tornem d’aquí a uns 2 minuts" size={projector ? 390 : 170} />{/snippet}
     {@render cell(`framed: the Break’s countdown, cyan, ${projector ? '390' : '170'} px (the projector’s CountdownRing is this, ring-dom.ts)`, big)}
+  </div>
+
+  <h3>Before the start (not built yet)</h3>
+  <p class="ds-gallery__note">
+    A countdown to the Game’s start: the framed Ring in gold, the value with its unit (D114). How full: the share left of the last
+    3 hours (full while more is left). Ring draws no words, so the start shows its closest face.
+  </p>
+  <div class="ds-gallery__grid ds-s__rings ds-s__before">
+    {#each BEFORE as b (b.caption)}
+      {#snippet r()}<Ring arc="progress" color="gold" face="number" framed progress={b.progress} value={b.value} unit={b.unit} label={b.label} size={projector ? 390 : 170} />{/snippet}
+      {@render cell(`${b.caption} (not built yet: the projector’s Before shows no countdown)`, r)}
+    {/each}
+    {#snippet start()}<Ring arc="full" color="gold" face="disc" icon="play" pulse framed label="Ja comencem!" size={projector ? 390 : 170} />{/snippet}
+    {@render cell('the start («JA COMENCEM!»): Ring shows no words, so its closest face, the full gold ring and a play disc breathing, the words only its spoken label (not built yet: the projector’s Before shows no countdown)', start)}
   </div>
 </section>
 
@@ -369,6 +395,15 @@
 
   .ds-s__rings {
     grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  }
+
+  /* The framed rings at their own size (170 px; the projector's 390 px) */
+  .ds-s__before {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+  }
+
+  :global([data-density='projector']) .ds-s__before {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 26rem), 1fr));
   }
 
   .ds-s__ninos {
