@@ -15,7 +15,7 @@ _From event.md › The audience, Atmosphere and style, Fairness and trust._
   - A round is "Quina 1"…, the special round "Quina Especial" and the Desgraciat "Quina del Desgraciat", or simply "Desgraciat" where space is short (D251). Numbering only appears as "Quina 4 de 12".
   - A Line is "Línia", a full card "Quina!" ("premi de quina"). Card numbers are written "#123". Times use am/pm.
 - **A show, not a meeting:** a festive Christmas look, styled like a mobile game, "juicy" and full of animation. The projector and the player app get the full look; the console and Admin can be simpler. One design system covers all of them.
-- **Animations are part of the show.** Each one is planned in [ANIMATIONS.md](../../packages/ui/ANIMATIONS.md) before it's coded. Motion never tells a secret: nothing moves before a song lands.
+- **Animations are part of the show.** Each one is planned in [ANIMATIONS.md](../../packages/ui/ANIMATIONS.md) before it's coded. Motion never tells a secret: nothing shows a song before it lands, even when a phone already holds the Spin's target (D277).
 - Barrakudes' figures ("ninos") may appear, only family-friendly ones, and only if they fit the style.
 - **Londrina is always in capitals** (D96): titles, buttons, names and numbers. Unit symbols beside a number stay lowercase ("9 s", "10:14 pm"), and Nunito text inside a Londrina button keeps its case (D114).
 - **Buttons are fully round only when floating** (D189). Every other button is a rounded rectangle.

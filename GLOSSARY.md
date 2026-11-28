@@ -7,7 +7,7 @@ A live music bingo show. Players mark songs on printed cards as they recognize t
 ### The game
 
 **Game**:
-The whole set of rounds played on the night of the event. On screen it carries the edition's name, which is set in Admin (this year "Quina Quina 3").
+The whole set of rounds played on the night of the event. On screen it carries the edition's name, which is set in Admin (this year «Quina Quina! 3», D280; the printed card leaves out the 3).
 _Avoid_: Night, session, event, partida
 
 **Edition**:

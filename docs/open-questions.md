@@ -131,17 +131,6 @@ If they do, a reminder to an uncollected winner is the one push message with rea
 - (a) No, or very rarely.
 - (b) Yes, it happens.
 
-### U206 · The phone's drum landing with the projector's (D237)
-The phones can already spin in time with the projector, and Sound engine proposes a public per-round order so the covers match too. To slow down onto the same cover as the projector, a phone needs the landing song about 2.5 s before it lands. Today nothing public names a song before it lands (Every screen: "motion never tells a secret"). The projector itself shows its slow-down in those last seconds. Knowing a song 2.5 s early changes nobody's card, so it's suspense, not fairness. One catch: "Enrere" can still cancel a Spin until its last moment, and then the song stays next, so a phone that was told it would know the next song early. A mitigation: the phone slows down onto a cover that stays blurred until the landing.
-- (a) Publish the landing song about 2.5 s early (never during a Suspens), so phones land exactly with the projector, behind the blur.
-- (b) Phones keep spinning until the landing and snap to the song. Nothing leaks, but they don't match the projector.
-Evidence (Frontend, 27 Nov): with the landing private, the phone's drum shows other covers during the spin, then glides to the landed cover at the landing, once 31 covers in about 1.4 s. Order and spin now match the projector (3a0d00bf). Frontend asked the user directly too.
-
-### U208 · The near-win chime and buzz on the phone
-With the "last song for a line" marking removed (D237), Frontend's helper also removed the phone's near-win chime and buzz. Frontend asked the user directly whether those go too.
-- (a) They go, with the marking.
-- (b) Keep the sound and the buzz, without the marking.
-
 ### U207 · ✕ in a stack of the app's own drawers
 In a stack such as Ajustos → the add-card pad, ✕ closes every drawer at once today. The QR camera's ✕ closes only the camera.
 - (a) Keep it: ✕ closes the whole stack, and ‹ goes back one level.
@@ -162,22 +151,6 @@ D275: the user buys a backup for the Wii remote, "a presenter remote, or maybe a
 - (a) A 2.4 GHz presenter remote with a USB receiver (a Logitech R400 or similar). Its receiver is a plain USB keyboard: no pairing, and it can sit on a USB extension near the stage. Següent works today with no code (PageDown); the tap-and-hold mapping for its other keys is a Console change (Frontend, board first).
 - (b) A mini gamepad (for example an 8BitDo Micro). More buttons and useful for other things, but it's Bluetooth, so to the laptop it has the Wii remote's range; and the Console needs a gamepad or keyboard mapping for it (Frontend, board first).
 
-### U222 · The Desgraciat's standing Check when no finale was started
-D166: the finale replaces the Desgraciat's public Check. But the built console still offers one: with one card left standing and no finale started, Dempeus «Comprovar #N» (or the Wii remote's A) sends a standing Check. «Començar final» needs at least 2 finalists, so in that case the Check is the only way to confirm the winner.
-- (a) Remove it: the finale is the only way, and the presenters start it while at least 2 stand. As D166 reads.
-- (b) Keep it only for that case: one card left and no finale started. As built.
-
-### U223 · The edition's name
-D22 (the user on the canvas, 24 Nov): "This year «Quina Quina 3»", and the docs and GLOSSARY say so. The 2026 plan (data/editions/2026.plan.json, from the organizers' sheet) says «Quina Musical», and the organizers' 2026 documents say «QUINA MUSICAL» and «QUINA MUSICAL DE NADAL».
-- (a) «Quina Quina 3», as D22.
-- (b) «Quina Musical».
-- (c) Another name.
-
-### U224 · The console's Efectes tab on the tablet
-At 1194 × 834 the Efectes tab doesn't fit without scrolling.
-- (a) Six columns of smaller pads, so every effect fits on one screen. Frontend's proposal.
-- (b) The pads keep their size, and the tab scrolls.
-
 ### U225 · The ✗ in the Check's cells
 S1's verdict ✗ is thick. The Check cells' ✗ are thinner.
 - (a) The thick ✗ on every surface.
@@ -189,16 +162,6 @@ The user's preference (D274): the laptop on the table near the projector, with t
 - (a) The laptop at the stage, next to the mixer and the Wii remote, with a fibre HDMI cable to the projector (about 150–210 USD for 50 m, no delay). Also fixes the remote's range.
 - (b) The laptop at the projector, with a long balanced audio cable to the mixer (the cable default in mixer-design-decisions.md › Devices). The Wii remote's range stays at the limit.
 - (c) Build split mode first (Sound engine and Frontend, medium work, over the relay on the hotspot), rehearsed before the freeze.
-
-### U216 · The Check's side label on a card of the wrong type (D266)
-The console's Check chip and the projector's Check badge name the side being checked, from card-types.json (30f7e61b). So when a special card is wrongly claimed in a normal round (Quines 1–5), they read «Desgraciat», its side 1's label, while the verdict line says it's an especial card.
-- (a) Keep it: the chip and badge always name the side being checked. As built.
-- (b) A card of the wrong type is named by its type: «Especial».
-
-### U217 · «Desgraciat» twice in the Desgraciat round's Check header
-In the Desgraciat round, on a special card, the console's Check header shows «Desgraciat» twice: the round's chip and the side's chip.
-- (a) Keep both, so the side chip is always in the same place. As built.
-- (b) Drop the side chip when it repeats the round's name.
 
 ### U215 · A double-click start for the night laptop
 The user (28 Nov) asked whether a simple macOS, Windows and Linux app would be easy and a good idea, since the command line isn't ideal on a non-developer laptop. The research (docs/research/reports/laptop-app.md): the show needs Chrome with its flags (the engine and WebHID for the Wii remote), the relay's Python helper for the Blend, and macOS-only setup and preflight. Windows and Linux would be a port nobody can rehearse before the freeze, and R2-Q26 keeps the laptop installed, with "nothing installed" after this year.
@@ -240,11 +203,10 @@ The user: "where we put the add card button, when he doesn't have any, we could 
 - (a) Yes, that.
 - (b) Something else (say what).
 
-### U188 · A tap outside the console's menu or Wii dialog
-The phone's drawers already close on a tap outside. On the console only ✕ and Esc close them.
-- (a) The menu closes on a tap outside; the Wii dialog doesn't, because it may be mid-pairing.
-- (b) Both close on a tap outside.
-- (c) Neither, as today.
+### U188 · A tap outside the console's Wii dialog
+The menu now closes on a tap outside (D279: the user reported it as a bug). Left open: the Wii dialog.
+- (a) It doesn't close on a tap outside, because it may be mid-pairing. The default.
+- (b) It closes too.
 
 ### U181 · What the «Veus automàtiques» switch turns off (D204)
 Frontend's board (v104) has the switch on by default: «Apagat: cap veu més en tota la nit». Voices that fall due while it's off are dropped, not saved for later, since a late "15 minuts" would be wrong (D204's 60 s).
@@ -402,6 +364,10 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U206 · The phone's drum landing** (2026-11-28) → D277: the Spin's target travels from the Spin's start, shown only at the landing.
+- **U208 · The near-win sound** (2026-11-28) → D278: (b), the sound and buzz stay without the marking.
+- **U216, U217, U222, U224** (2026-11-28) → D279: (a), (b), (b), and Frontend's pick on "decide yourself".
+- **U223 · The edition's name** (2026-11-28) → D280: «Quina Quina! 3».
 - **U226 · What to buy to test the remote** (2026-11-28) → D275: the Wii remote with MacWiiPair, no adapter; a backup remote (U229).
 - **U227, U228 · A second projector** (2026-11-28) → D276: inside for the back tables; the same image from a splitter.
 - **U219 · If 5G drops** (2026-11-28) → D273: a drop isn't a design concern; what's built for it stays.

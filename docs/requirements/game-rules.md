@@ -12,7 +12,7 @@ What the game must be, as it stands now: the Game and its rounds, the cards in p
 _From event.md › The cards, Players' phones; GLOSSARY › Game, Edition._
 
 - An **Edition** is one year's Quina, named by its year ("26"). Cards, their QR links and the data on players' phones belong to an edition.
-- The **Game** is every round played on the night. It carries the edition's name, set in Admin (this year "Quina Quina 3").
+- The **Game** is every round played on the night. It carries the edition's name, set in Admin (this year «Quina Quina! 3», D280; the printed card leaves out the 3).
 - A rehearsal is a separate Game in the same edition, so phones keep their cards.
 - Each edition starts clean. Last year's cards don't count, and an old card shows that it's from last year.
 

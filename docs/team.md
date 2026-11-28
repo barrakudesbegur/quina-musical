@@ -15,7 +15,7 @@ The new Quina musical is built by several Claude sessions working in parallel, e
 
 - **`@quina/protocol`** (in `packages/protocol/`, documented in `apps/show/docs/protocol.md`) is the only coupling between engine, screens and cloud. Anyone may propose changes. The sound engine session reviews and merges them, with tests.
 - **The Game journal** (`packages/protocol/journal.ts`) is shared by the laptop and the Durable Object. Changes to it are reviewed by both Sound engine and Platform.
-- **The public feed for phones** is defined by Platform and UI together. It never carries the Queue, the next song or possible winners.
+- **The public feed for phones** is defined by Platform and UI together. It never carries the Queue, the songs after the current Spin or possible winners. The current Spin's target may travel from the Spin's start, shown only at the landing (D277).
 
 ## Working rules
 

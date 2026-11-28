@@ -41,7 +41,7 @@ _From event.md › What must never fail; [ADR 0003](../adr/0003-cloud-owns-the-g
 _From event.md › Fairness and trust (The ending stays secret), Prizes and sponsors (The reveal)._
 
 The feed to phones must never carry:
-- the Queue or the next song: a phone learns a song only at its landing;
+- the Queue or the songs after the current Spin: a phone shows a song only at its landing. The current Spin's target may reach it from the Spin's start, so its drum runs the projector's exact trajectory (D277);
 - the possible winners, Futur, or the standing cards and their count;
 - a locked prize: only revealed rounds' bundles reach it;
 - a Check's outcome, a winner's name, or a winner's slip number;

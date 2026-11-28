@@ -550,7 +550,7 @@ By: the user via canvas. Source: canvas 2026-11-24T13:31Z. Lives in: requirement
 Before the Game, the projector and phones show the night's rounds (regular, Desgraciat, Especial) and each card type with its colour, making clear which card is only for the Especial.
 By: the user via canvas. Source: canvas 2026-11-24T13:59Z, 16:12Z. Amends: R2-Q25. Lives in: requirements/screens.md › Projector, Player app.
 
-### D22 · The edition's name is set in Admin · 2026-11-24 · Active
+### D22 · The edition's name is set in Admin · 2026-11-24 · Active; amended by D280
 This year "Quina Quina 3".
 By: the user via canvas. Source: canvas 2026-11-24T14:00Z. Lives in: requirements/game-rules.md › The Game and its edition.
 
@@ -1143,7 +1143,7 @@ By: the orchestrator and Frontend, at the user's request. Source: the canvas thr
 The user worked with the canvas's own assistant: "Un altre" becomes "+ Candidat", buttons come in three sizes defined in the component, the next song sits inside "Destapa", and there are no "només vosaltres" tags. The canvas has two pages, "Disseny actual" and "Proves i opcions". Answers U140.
 By: the user via canvas (26 Nov). Source: open-questions.md › Answered (U140). Lives in: the "Quina Musical look" canvas.
 
-### D166 · The finale replaces the Desgraciat's public Check · 2026-11-26 · Active
+### D166 · The finale replaces the Desgraciat's public Check · 2026-11-26 · Active; amended by D279
 Answers U142 with (a).
 By: the user. Source: open-questions.md › Answered (U142). Amends: D161. Lives in: requirements/game-rules.md › The Quina del Desgraciat.
 
@@ -1600,7 +1600,7 @@ By: the user. Source: the user's message of 27 Nov. Amends: D227. Lives in: the 
 A standing rule from the user (to Frontend): every change lands in the code, the mockups and the design system together. Nothing from earlier reviews may be lost.
 By: the user (to Frontend). Source: Frontend's report of 27 Nov. Lives in: docs/team.md.
 
-### D237 · From the user's production test (to Frontend) · 2026-11-27 · Active
+### D237 · From the user's production test (to Frontend) · 2026-11-27 · Active; amended by D278
 The list is in temp/design-canvas/ds/comments-27nov.md §8. The main points:
 - **The phone's drum matches the projector's:** the same cover order, the same landing, the same effects, blur included. Sound engine says what the phones need.
 - **Automatic sounds:** the phone's drum stops clicking while it spins. The console switches each automatic sound (the drum's click and others) on or off; Sound engine defines the commands and state.
@@ -1814,3 +1814,25 @@ By: the user. Source: the user's message of 28 Nov, after docs/research/reports/
 - **The projector scenes support the most common projector formats:** "we should support most frequent vendor formats": 4:3, 16:10 and 16:9. With a splitter both projectors get one signal, so it's set to suit both (a 4:3 signal keeps the text's size on a 16:9 projector).
 - The open area beside the tent needs no screen: people there "can, probably" play, "but they have the app".
 By: the user. Source: the user's message of 28 Nov, after docs/research/reports/two-projectors.md. Lives in: requirements/screens.md › Projector; requirements/operations.md › Where things run.
+
+### D277 · The Spin's target may reach the phones early, shown only at the landing · 2026-11-28 · Active
+Answers U206, beyond (a): "sending the landing early is fine as long as it's revealed at the right time." Reading the internals gives no advantage: everyone still waits for the others to mark, no cards are sold during a round, and cards are sold in order. "I want whatever implementation gives the best user experience and simpler internals." So the public Spin carries its target (the landing tile in the drum's order) from the Spin's start, the phone runs the projector's exact trajectory, and the song shows only at the landing. The Queue and the songs after the current Spin stay private. Frontend builds it with Sound engine (the protocol) and Backend (the feed). Amends the public feed's rule (team.md, operations.md) and "motion never tells a secret" (screens.md): the motion still shows nothing before the landing.
+By: the user (to Frontend). Source: Frontend's report of 28 Nov. Lives in: requirements/operations.md › The public feed's privacy; requirements/screens.md › Every screen.
+
+### D278 · The near-win sound and buzz stay, without the marking · 2026-11-28 · Active
+Answers U208 with (b). Only the card's indicator was meant to go (D237); the near-win chime and the 30-40-30 buzz "seem like a nice idea", which may change after hearing them. Frontend restores them.
+By: the user (to Frontend). Source: Frontend's report of 28 Nov. Amends: D237. Lives in: requirements/screens.md › Player app.
+
+### D279 · The Check's side labels, the Desgraciat's fallback Check, and two console looks · 2026-11-28 · Active
+- **U216 (a):** the Check's chip and badge always name the side being checked, so a special card wrongly claimed in Quines 1–5 reads «Desgraciat».
+- **U217 (b):** in the Desgraciat round the side chip hides when it repeats the round's name.
+- **U222 (b):** the standing Check stays as a fallback, for one card left standing with no finale started. Amends D166.
+- **U224:** the user: "decide yourself". Frontend's pick: smaller pads, keeping the approved grid.
+- **The locked padlock:** the board's look, a bare padlock with no frame, at 0.5 opacity.
+- **A two-level button's second level:** the board's look, the body pans stripes and the strip fills.
+- **U188, the menu:** the user reported "the console menu doesn't close when tapping its backdrop" as a bug, so the menu closes on a tap outside. The Wii dialog's part stays open (U188).
+By: the user (to Frontend). Source: Frontend's report of 28 Nov. Amends: D166. Lives in: requirements/screens.md › Console.
+
+### D280 · The edition's name is «Quina Quina! 3» · 2026-11-28 · Active
+Answers U223: the official name is «Quina Quina! 3», the third edition of «Quina Quina!». The event is a quina musical at Christmas («Nadal» appears too), and other contexts may use other names. The printed card leaves out the 3, so players don't think its back counts for Quina 3. The 2026 plan's title becomes «Quina Quina! 3». Amends D22.
+By: the user (to Frontend). Source: Frontend's report of 28 Nov. Lives in: requirements/game-rules.md › The Game and its edition.
