@@ -556,6 +556,8 @@ export interface CheckRun {
   nextAt: number | null;
   /** After the last card's fail cue with nothing valid: when the round goes back to the fail moment's Hold. */
   failAt: number | null;
+  /** After the last card's pass cue: when its Celebration starts (its plaque shows meanwhile). */
+  passAt: number | null;
 }
 
 /** Everything the machine needs from the outside world. Times: `now` audio-clock seconds, `nowMs` epoch ms. */
@@ -2723,7 +2725,7 @@ export class Show {
     this.reviewMarks.delete(claim.claimId);
     const still = marks && marks.revealed.length <= result.steps.length && marks.revealed.every((m, i) => result.steps[i].songId === m.songId && result.steps[i].landed === m.landed);
     if (still) info.revealed = marks.revealed.map((m) => ({ ...m }));
-    this.check = { info, songs: result.steps, until: result.revealUntil, autoOff: still ? marks.autoOff : false, awaitPress: true, autoAt: null, soundEndAt: null, nextAt: null, failAt: null };
+    this.check = { info, songs: result.steps, until: result.revealUntil, autoOff: still ? marks.autoOff : false, awaitPress: true, autoAt: null, soundEndAt: null, nextAt: null, failAt: null, passAt: null };
     // The music is far down once something is revealed, as it was before the Check left the screen.
     if (still && info.revealed.length) this.out.push({ type: 'checkDuck', on: true });
     this.emit({ type: 'check.started', check: this.checkInfo()! });
@@ -2884,13 +2886,20 @@ export class Show {
       this.finishBatch(false);
       return true;
     }
+    if (run.passAt != null && now >= run.passAt && !this.pause) {
+      run.passAt = null;
+      this.out.push({ type: 'cancelCheck', claimId: run.info.claimId });
+      this.finishBatch(true);
+      return true;
+    }
     return false;
   }
 
   /**
    * The cue (D109, D110): the card passed (valid) or failed, by its reveals or a Review's decision by hand. A pass that
    * isn't the batch's last card shows its plaque with no fanfare; a fail plays the fail moment. Then the next card's
-   * Check comes on screen by itself after a moment, or (none left) the batch ends.
+   * Check comes on screen by itself after a moment, or (none left) the batch ends: the last card's pass shows its plaque
+   * too, its song playing on under it, and its Celebration (with the fanfare) follows a moment later (whats-left 3.4).
    */
   cue(run: CheckRun, claim: ClaimInfo, pass: boolean, manual = false) {
     const atMs = this.env.nowMs();
@@ -2899,14 +2908,21 @@ export class Show {
     run.info.cue = pass ? 'pass' : 'fail';
     run.info.reviewing = false;
     claim.cueNext = false;
-    this.out.push({ type: 'cancelCheck', claimId: claim.claimId });
     this.decide(claim, pass, manual);
-    this.emit({ type: 'check.cue', claimId: claim.claimId, cue: run.info.cue, ...(manual ? { manual: true } : {}), atMs });
     const more = this.claims.some((c) => c.status === 'queued' || c.status === 'reviewing');
+    // The last card's pass shows its plaque first, its song playing on until the Celebration; a win by hand from a
+    // Review goes straight to the fanfare (D121). Otherwise the revealed song fades out under the cue.
+    const plaque = pass && !more && !manual;
+    if (!plaque) this.out.push({ type: 'cancelCheck', claimId: claim.claimId });
+    this.emit({ type: 'check.cue', claimId: claim.claimId, cue: run.info.cue, ...(manual ? { manual: true } : {}), atMs });
     if (!pass) this.out.push({ type: 'sfx', name: FLOW.failureFanfare, volume: 'failFx' });
     if (more) {
       run.nextAt = this.env.now() + FLOW.check.nextCardSec;
       this.autoCheck = true;
+      return;
+    }
+    if (plaque) {
+      run.passAt = this.env.now() + FLOW.check.passPlaqueSec;
       return;
     }
     if (pass) return this.finishBatch(true);

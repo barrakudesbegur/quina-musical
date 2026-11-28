@@ -797,6 +797,9 @@ export const FLOW = Object.freeze({
     gapSec: 0.35,
     /** After a cue, the next queued card's Check comes on screen by itself this long after (its cue shows meanwhile). */
     nextCardSec: 3,
+    /** The last card's pass: its plaque «Cartró correcte!» shows this long, its song playing on, before the Celebration
+     * and its fanfare (whats-left 3.4; a guess, to tune by eye). */
+    passPlaqueSec: 2,
     /** The song or Hold music under the Check, far down. */
     duckDb: -32,
     duckFadeSec: 0.4,

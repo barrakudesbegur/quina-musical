@@ -163,11 +163,17 @@ test('a whole round: Line claimed, revealed press by press, cued and celebrated;
   const decided = h.send('checkNext', { claimId: 'cl-1', step: 4 });
   assert.deepEqual(emitted(decided, 'check.cue').map((e) => [e.claimId, e.cue, e.manual ?? false]), [['cl-1', 'pass', false]]);
   assert.deepEqual(emitted(decided, 'claim.decided').map((e) => [e.claimId, e.verdict]), [['cl-1', 'valid']]);
+  assert.deepEqual(h.show.winners.map((w) => [w.claimId, w.kind, w.cardId, w.winningSongId, w.position, w.name]), [['cl-1', 'line', card.id, winningSong, 3, null]]);
+  // The last card's plaque «Cartró correcte!» first, as between two cards (whats-left 3.4): no fanfare yet, its song on.
+  assert.deepEqual([h.show.scene, h.show.check?.info.cue], ['check', 'pass']);
+  assert.deepEqual([sfxNames(decided), find(decided, 'cancelCheck')], [[], undefined]);
+  h.advance(FLOW.check.passPlaqueSec - 0.1);
+  assert.equal(h.show.scene, 'check');
+  decided.push(...h.advance(0.2));
   assert.equal(h.show.round.lineConfirmed, true);
   assert.equal(h.show.phaseModel.kind, 'bingo');
   assert.equal(h.show.scene, 'celebration');
   assert.equal(h.show.check, null);
-  assert.deepEqual(h.show.winners.map((w) => [w.claimId, w.kind, w.cardId, w.winningSongId, w.position, w.name]), [['cl-1', 'line', card.id, winningSong, 3, null]]);
   const [celebration] = emitted(decided, 'celebration.started');
   assert.deepEqual({ ...celebration.celebration, sinceMs: 0 }, { kind: 'line', round: 1, cardIds: [card.id], winningSongId: winningSong, sinceMs: 0, music: 'winningSong', parlem: false });
   assert.deepEqual(sfxNames(decided), [FLOW.celebration.fanfare, FLOW.celebration.impact]);
@@ -887,7 +893,9 @@ test('the music under a Check goes far down from its first reveal until the cue'
   const reveal = find(h.log, 'checkReveal');
   assert.ok(reveal && Math.abs(reveal.step.at - (h.clock.t + FLOW.check.revealLeadSec)) < 1e-9, 'just ahead of the press');
   for (let k = 1; k < 4; k++) assert.ok(!find(h.send('checkNext', { claimId: 'cl-1', step: k }), 'checkDuck'), 'once');
-  assert.ok(find(h.send('checkNext', { claimId: 'cl-1', step: 4 }), 'cancelCheck'), 'the cue brings it back up');
+  const cue = h.send('checkNext', { claimId: 'cl-1', step: 4 });
+  assert.ok(!find(cue, 'cancelCheck'), 'the last card\'s plaque: its song plays on under it');
+  assert.ok(find(h.throughPlaque(), 'cancelCheck'), 'the Celebration brings it back up');
 });
 
 test("the Celebration's Winning-song loop: whole bars from the hook it landed on (else its best), on its own grid", () => {

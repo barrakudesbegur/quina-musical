@@ -90,7 +90,10 @@ export function setup({ seed = 1, decoded = () => true, settings = {}, cards = [
     assert.ok(predicate(), 'condition never met');
     return out;
   };
-  /** The presenter-paced Check (D107) on screen pressed through: each reveal, then its cue. */
+  /** The last card's pass shows its plaque «Cartró correcte!» for a moment (FLOW.check.passPlaqueSec): until its
+   * Celebration starts. */
+  const throughPlaque = () => (show.check?.passAt != null ? until(() => show.check?.passAt == null, 10) : []);
+  /** The presenter-paced Check (D107) on screen pressed through: each reveal, then its cue (and a last pass's plaque). */
   const pressCue = (claimId = show.check?.info.claimId) => {
     const out: Effect[] = [];
     for (let n = 0; n < 30; n++) {
@@ -98,6 +101,7 @@ export function setup({ seed = 1, decoded = () => true, settings = {}, cards = [
       if (!claimId || !run || run.info.claimId !== claimId || run.info.cue != null || run.info.reviewing) break;
       out.push(...send('checkNext', { claimId, step: run.info.revealed.length }));
     }
+    out.push(...throughPlaque());
     return out;
   };
   /** Every Check of the claim pressed through, card after card, and the shared Celebration's press, until the scene
@@ -120,6 +124,6 @@ export function setup({ seed = 1, decoded = () => true, settings = {}, cards = [
     }
     return out;
   };
-  return { show, clock, env, send, dispatch, advance, until, log, pressCue, checkAll };
+  return { show, clock, env, send, dispatch, advance, until, log, pressCue, throughPlaque, checkAll };
 }
 export type Harness = ReturnType<typeof setup>;

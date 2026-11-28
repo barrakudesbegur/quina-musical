@@ -500,6 +500,8 @@ export const S = {
       cuedPass: 'Vàlid',
       cuedFail: 'Fallat',
       cuedNote: 'el següent cartró entra sol',
+      /** The last card's pass: its plaque shows for a moment, then the Celebration comes by itself (whats-left 3.4). */
+      cuedLastNote: 'la festa comença sola',
     },
     claims: 'Cartrons cantats',
     /** The claimed cards' chips. */

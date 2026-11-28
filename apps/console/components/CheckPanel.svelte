@@ -89,7 +89,7 @@
         return { ...ACTIONS.checkCelebrate, note: B.celebrateFor(winners), strip: false, busy: false } as const;
       case 'cued':
         return state.pass
-          ? ({ ...ACTIONS.checkValid, label: B.cuedPass, note: B.cuedNote, strip: false, busy: false } as const)
+          ? ({ ...ACTIONS.checkValid, label: B.cuedPass, note: state.more ? B.cuedNote : B.cuedLastNote, strip: false, busy: false } as const)
           : ({ ...ACTIONS.checkFail, label: B.cuedFail, note: B.cuedNote, strip: false, busy: false } as const);
       default:
         return null;

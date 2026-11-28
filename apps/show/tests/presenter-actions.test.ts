@@ -134,3 +134,31 @@ test("Aguanta in a Spin's last 0.15 s holds the song that lands at full volume: 
   assert.deepEqual(rejected(h.send('next')), ['nextBlocked']);
   void find;
 });
+
+// ---------------------------------------------------------------------------------------- the last card's plaque
+test("the last card's pass shows «Cartró correcte!» before its Celebration (whats-left 3.4); a claim meanwhile is checked first", () => {
+  const h = flow();
+  landSongs(h, 4);
+  h.send('claim', { cardId: card.id });
+  for (let k = 0; k < 4; k++) h.send('checkNext', { claimId: 'cl-1', step: k });
+  const cue = h.send('checkNext', { claimId: 'cl-1', step: 4 });
+  assert.deepEqual([h.show.scene, h.show.check?.info.cue, h.show.snapshot().check?.cue], ['check', 'pass', 'pass'], 'its plaque on screen');
+  assert.ok(!cue.some((e) => e.type === 'sfx'), 'the fanfare comes with the Celebration');
+  const later = h.advance(FLOW.check.passPlaqueSec + 0.05);
+  assert.equal(h.show.scene, 'celebration');
+  assert.ok(later.some((e) => e.type === 'sfx' && e.name === FLOW.celebration.fanfare));
+
+  // A claim during the plaque: its Check comes first; it fails, and the Celebration waits for its press.
+  const g = flow();
+  landSongs(g, 4);
+  g.send('claim', { cardId: card.id });
+  for (let k = 0; k <= 4; k++) g.send('checkNext', { claimId: 'cl-1', step: k });
+  g.advance(0.5);
+  g.send('claim', { cardId: loser.id });
+  g.advance(0.1);
+  assert.equal(g.show.check?.info.claimId, 'cl-2');
+  g.pressCue('cl-2');
+  assert.ok(g.show.celebrationNext);
+  g.send('checkNext', g.show.celebrationNext);
+  assert.deepEqual([g.show.scene, g.show.celebration?.cardIds], ['celebration', [card.id]]);
+});
