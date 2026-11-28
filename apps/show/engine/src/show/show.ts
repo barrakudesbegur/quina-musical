@@ -87,6 +87,7 @@ import { tempoMatch } from '../plan/tempo.ts';
 import { spinWindow, slotSec, alignedPress, autoPressAt, pressAfterHold, scheduleEstimate, driftNudge, roundLengthSec, roundSongs, slotSongs, PACE_LIMITS } from '../plan/pace.ts';
 import { deckTimeline } from '../plan/timeline.ts';
 import { firstRepeatAt, lastBarsLoop, lastPhraseLoop, loopSeconds, type PhraseLoop } from '../plan/loop.ts';
+import { NO_BEAT, beatInfo, deckBeat, nextBeat, type BeatGrid, type BeatPublication, type BeatSource } from '../plan/beat.ts';
 import { mixSeed, secureRandom, seededRandom } from '../rng.ts';
 
 /** A Spin's public drum seed (D237), from its private plan seed through one more mix, so the plan seed stays unsaid. */
@@ -691,6 +692,9 @@ export class Show {
   holdMusic = false;
   /** The playing song repeating a phrase, or null. */
   loop: LoopState | null = null;
+  /** The pulse last published (`state.beat`, plan/beat.ts): it changes only when the grid heard changes materially.
+   * Not journaled: a resumed Game works it out again. */
+  beat: BeatPublication = NO_BEAT;
   /** The rounds whose prizes were revealed, and how (the journal's `prizes.revealed`). */
   prizesRevealed: { round: number; by: 'presenters' | 'intro' }[] = [];
   timers: Timers = { autoAt: null, holdMusicAt: null };
@@ -805,6 +809,7 @@ export class Show {
       autoAdvance: true,
       autoAdvanceFinal: false,
       remoteShake: true,
+      announceWins: true,
       songsUntilWinner: 20,
       phaseOverride: null,
       roundsTotal: 5,
@@ -1102,7 +1107,14 @@ export class Show {
 
   /** Called every few tens of milliseconds by the runtime. */
   tick(): Effect[] {
-    const now = this.env.now();
+    this.tickAt(this.env.now());
+    // The beat also moves on its own (the outgoing song's exit starting, a drift): sent when nothing else sent it.
+    if (this.refreshBeat()) this.emitState();
+    return this.flush();
+  }
+
+  /** One tick of the machine at `now` (its effects wait in `out`). */
+  tickAt(now: number) {
     if (this.volumesMovedAt != null && now >= this.volumesMovedAt + FLOW.volumesJournalSec) {
       this.volumesMovedAt = null;
       this.journal({ kind: 'settings.changed', settings: this.journalSettings() });
@@ -1115,7 +1127,7 @@ export class Show {
     if (this.unlocked) this.tickVoice(now);
     if (this.status !== 'transition' && this.status !== 'locked') this.prepareNext();
     // Pausa froze what plays: no timer runs, no loop repeats, nothing lands (endPause moves them all on).
-    if (this.pause) return this.flush();
+    if (this.pause) return;
     const t = this.transition;
     if (t && now >= t.T) this.land(t);
     // After any landing in this tick, which replaces a sample not yet sent: never one at a landing.
@@ -1150,7 +1162,6 @@ export class Show {
         this.emitState();
       }
     }
-    return this.flush();
   }
 
   /**
@@ -3870,6 +3881,7 @@ export class Show {
       hold: this.hold ? { sinceMs: this.env.toEpochMs(this.hold.since), reason: this.hold.reason, holdMusic: this.holdMusic, holdMusicAtMs: toMs(this.timers.holdMusicAt), ducked: this.hold.ducked } : null,
       holdMusic: this.holdMusic,
       current: cur ? { ...this.songRef(cur.songId), hookId: cur.hookId, firstPlay: this.isFirstPlay(cur.songId), posSec: round2(cur.offset + (now - cur.startCtx) * cur.rate), endsAtMs: toMs(cur.endCtx) } : null,
+      beat: this.beat.info ? { ...this.beat.info } : null,
       next: this.songInfo(this.queue[this.position + 1]),
       queue: { position: this.position, length: this.queue.length },
       round: { ...this.round, drumSeed: this.drumSeed },
@@ -3929,12 +3941,58 @@ export class Show {
     };
   }
 
+  // ---------------------------------------------------------------------------------- the beat
+  /**
+   * The grid the room hears now (`state.beat`) and the deck it comes from, or null when no song is heard: Pausa, Hold
+   * music, scene music (a bed), a Check's reveals (its snippets over the music, far down), no song, or a song with no
+   * grid. Parlem and the voice cues' dips still count as heard. A Spin's is the incoming song's from the outgoing one's
+   * exit start on (from its start without one), anchored on the landing: never before its `transition.scheduled`, which
+   * comes with the Spin. A held Suspense's is the outgoing song's while it plays on (its phrase loop, or until its exit
+   * starts), else null: the incoming song's beat waits for the release's Spin.
+   */
+  beatCandidate(now: number): { grid: BeatGrid; source: BeatSource } | null {
+    if (this.pause || this.holdMusic || this.bed) return null;
+    const run = this.check;
+    if (run && run.info.revealed.length && run.info.cue == null) return null; // the music is under checkDuck
+    const cur = this.current;
+    /** The outgoing song still plays as it did: its exit move (which bends its time) hasn't started. */
+    const aPlays = (songId: number | null | undefined, exitStart: number | null | undefined) => cur != null && cur.songId === songId && exitStart != null && now < exitStart;
+    const t = this.transition;
+    if (t && !aPlays(t.fromSongId, t.aExitStart)) {
+      const { startCtx, offset, rate } = t.plan.b;
+      return this.deckGrid({ songId: t.songId, startCtx, offset, rate }, t.plan.hook.downbeatIndex, now);
+    }
+    const s = this.suspense;
+    if (s && !(s.open.loop && cur?.songId === s.open.loop.songId) && !aPlays(s.open.a?.songId, s.open.a?.exitStart)) return null;
+    if (!cur) return null;
+    return this.deckGrid({ songId: cur.songId, startCtx: cur.startCtx, offset: cur.offset, rate: cur.rate }, cur.landedDownbeatIndex, now);
+  }
+
+  /** The grid of the deck `source` at `now` (plan/beat.ts deckBeat), with that source; null without its analysis or a grid. */
+  deckGrid(source: BeatSource, landedDownbeatIndex: number | null, now: number): { grid: BeatGrid; source: BeatSource } | null {
+    const analysis = this.env.analysis(source.songId);
+    const grid = analysis ? deckBeat(analysis, source, landedDownbeatIndex, now) : null;
+    return grid ? { grid, source } : null;
+  }
+
+  /** Publish the beat heard now when it changed materially (plan/beat.ts nextBeat). @returns whether the value changed */
+  refreshBeat(): boolean {
+    const now = this.env.now();
+    const toMs = (t: number) => this.env.toEpochMs(t);
+    const heard = this.beatCandidate(now);
+    const next = nextBeat(this.beat, heard && { info: beatInfo(heard.grid, toMs), source: heard.source }, toMs(now));
+    const changed = next.info !== this.beat.info;
+    this.beat = next;
+    return changed;
+  }
+
   // ---------------------------------------------------------------------------------- output
   emit(event: ShowEventBody) {
     this.out.push({ type: 'emit', message: makeEvent(event) });
   }
 
   emitState() {
+    this.refreshBeat();
     this.emit(this.snapshot());
   }
 

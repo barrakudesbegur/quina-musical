@@ -372,3 +372,39 @@ test("the remote's shake switch (D148) is a Game setting: true by default, journ
   assert.equal(last.settings.remoteShake, false);
   assert.deepEqual(replayJournal(entries), h.show.record());
 });
+
+test("the phones' LÍNIA!/QUINA! switch (announceWins) is a Game setting: true by default, journaled, restored; an older journal without it restores as true", () => {
+  const h = setup({ seed: 2 });
+  h.send('unlock');
+  assert.equal(h.show.snapshot().game.announceWins, true);
+  const started = journalOf(h.log).find((e) => e.kind === 'round.started');
+  assert.ok(started?.kind === 'round.started');
+  assert.equal(started.settings.announceWins, true, 'journaled with the round');
+  h.send('setGame', { announceWins: false });
+  assert.equal(h.show.snapshot().game.announceWins, false);
+  const entries = journalOf(h.log);
+  const last = entries.at(-1);
+  assert.ok(last?.kind === 'settings.changed');
+  assert.equal(last.settings.announceWins, false);
+  assert.deepEqual(replayJournal(entries), h.show.record());
+  // A restarted page keeps it off.
+  const r = setup({ seed: 3, restore: replayJournal(entries), startSec: 0.5 });
+  assert.equal(r.show.snapshot().game.announceWins, false);
+  r.send('unlock');
+  landSongs(r, 1);
+  assert.equal(r.show.snapshot().game.announceWins, false);
+  // A journal from before the switch (no announceWins in its settings) restores it as on.
+  const older = entries.map((e) => {
+    if (e.kind !== 'settings.changed' && e.kind !== 'round.started' && e.kind !== 'round.resumed') return e;
+    const { announceWins: _absent, ...settings } = e.settings;
+    return { ...e, settings };
+  });
+  assert.equal(replayJournal(older).settings?.announceWins, undefined);
+  const o = setup({ seed: 3, restore: replayJournal(older), startSec: 0.5 });
+  assert.equal(o.show.snapshot().game.announceWins, true);
+  o.send('unlock');
+  o.send('setGame', { autoAdvance: false });
+  const journaled = journalOf(o.log).at(-1);
+  assert.ok(journaled?.kind === 'settings.changed');
+  assert.equal(journaled.settings.announceWins, true, 'journaled from then on');
+});

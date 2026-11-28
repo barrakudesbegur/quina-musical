@@ -235,6 +235,24 @@ export const LOOP = Object.freeze({
   stayTailSec: 8,
 });
 
+/**
+ * The pulse of the song heard (`state.beat`, plan/beat.ts) that phones bob the marks to. Every new value goes out to
+ * every phone, so the published one stays unless it changed materially. Measured on the test and 2026 repertoires
+ * (data/out): about one drift re-anchor a minute per song (median; 1.5 on average), and 92% of bars within 30 ms of the
+ * published grid.
+ */
+export const BEAT = Object.freeze({
+  /** The local tempo: the median of this many bars from the anchor on. */
+  tempoBars: 8,
+  /** Two values are the same grid within this share of bpm… */
+  bpmTolerance: 0.002,
+  /** …and with one's downbeat this close to one of the other's (ms, modulo a bar). A song's own downbeats drifting
+   * further from the published grid re-anchor it. */
+  driftMs: 30,
+  /** The same deck re-anchors at most this often (a song whose tempo wanders). */
+  minReanchorSec: 4,
+});
+
 export const STEMS = Object.freeze({
   /** A stem Teases a hook only if its last bars before the hook are at least this loud (bar RMS, dBFS). */
   teaseMinBarDb: -26,
