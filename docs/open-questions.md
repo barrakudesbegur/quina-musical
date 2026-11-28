@@ -152,6 +152,16 @@ The user: "When the presenter lets a song play it should always loop and not swi
 - (a) Parlem keeps the ducked song looping too, and the 40 s takeover and its switch go.
 - (b) Keep the 40 s takeover, with real Hold tracks added (U20).
 
+### U218 · When the "just a website" setup happens
+The user (28 Nov): "just a website … a PWA that works offline … the show page simply displays the info, and then we have a media player … for the projector i could even use a chromecast … my laptop is free to move … This last setup is what i've been trying to get since the beginning." R2-Q26 chose the installed laptop and deferred "nothing installed" until after this year. Research: docs/research/reports/browser-only-show.md, wii-remote-mac.md, laptop-app.md.
+- (a) The direction for after 27 Dec. This year the laptop stays the only playback device, with the cheap pieces: the start app (U215), the cloud Console as the main path, and the Wii remote fixes.
+- (b) This year: reopens R2-Q26, and the rehearsals run on the new setup.
+
+### U219 · If 5G drops, in the setup the user wants
+A browser can't accept connections, so with no internet the devices on the hotspot only find each other through a local server (today, the relay). ADR-0003 rejected the cloud as the live show's hub for this reason.
+- (a) The tablet must still control the show: one device runs a local server (the laptop or the Mac app), and the others join it over the hotspot as plain web pages.
+- (b) Losing the tablet until 5G returns is acceptable: the music keeps going, and the Wii remote or the laptop drives it. This is what makes "just a website" possible.
+
 ### U216 · The Check's side label on a card of the wrong type (D266)
 The console's Check chip and the projector's Check badge name the side being checked, from card-types.json (30f7e61b). So when a special card is wrongly claimed in a normal round (Quines 1–5), they read «Desgraciat», its side 1's label, while the verdict line says it's an especial card.
 - (a) Keep it: the chip and badge always name the side being checked. As built.
@@ -318,6 +328,13 @@ Asked in chat on 2026-11-25 after checking event.md against the 2025 hamper shee
 **Default:** the prizes drawer stays on hold until these are answered.
 
 ## Tasks only the user can do
+
+### U220 · Try the Wii remote on this laptop · before the tech rehearsal
+The runbook's old step (pair in System Settings) can't work, and 2025's WiimotePair fails on macOS 26 and 27 (docs/research/reports/wii-remote-mac.md). With the real remote:
+1. Pair it with MacWiiPair and the red SYNC button; note the model printed on the back (RVL-CNT-01, or -TR "Wii MotionPlus Inside").
+2. In the Console on the laptop: the buttons, rumble, the LED, the battery and the three strong shakes.
+3. Turn the remote off and on, then restart the Mac: does the Console reconnect by itself, or does it need Comandament → Connectar again?
+Then the spare laptop, the same way. A Mayflash DolphinBar on a USB extension may fix both pairing and range, but nobody has confirmed it on a Mac: optional, to try at a rehearsal.
 
 ### U191 · Ask the presenters about a notebook on the tablet
 The idea is in [ideas.md](ideas.md): their own colour-coded notes, imported and shown as a draggable notebook over half the console. First, do they want it at all, or do they prefer paper?
