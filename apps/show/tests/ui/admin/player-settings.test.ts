@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { applyPublic, emptyPublicState } from '@quina/protocol';
 import { fetchPlayerSettings, sendPlayerSettings, type GetFetch } from '../../../../admin/data/cloud-player-settings.ts';
+import { CLOUD } from '../../../../cloud/src/config.ts';
 import { BANNER_MAX_LENGTH, DEFAULT_PLAYER_SETTINGS, fromCloud, noticeBody, readCloudSettings, soundsBody } from '../../../../admin/logic/player-settings.ts';
 import { S } from '../../../../admin/strings.ts';
 import type { FetchLike } from '../../../../../packages/ui/data/cloud-plan.ts';
@@ -17,7 +18,7 @@ test("the bodies: the message trimmed while it's on, else null; the sounds defau
   assert.deepEqual(noticeBody({ ...ON, bannerOn: false }), { notice: null }, 'off: the phones show none, the text stays here');
   assert.deepEqual(noticeBody({ ...ON, banner: '   ' }), { notice: null }, 'on but empty: none');
   assert.equal(noticeBody({ ...ON, banner: 'x'.repeat(500) }).notice?.length, BANNER_MAX_LENGTH);
-  assert.ok(BANNER_MAX_LENGTH <= 200, "within the cloud's limit (apps/cloud config maxNoticeLength)");
+  assert.equal(BANNER_MAX_LENGTH, CLOUD.maxNoticeLength, "the cloud's limit (apps/cloud config maxNoticeLength), not a shorter one");
   assert.deepEqual(soundsBody(ON), { soundsDefault: false });
   assert.deepEqual(soundsBody(DEFAULT_PLAYER_SETTINGS), { soundsDefault: true });
   assert.deepEqual(noticeBody(DEFAULT_PLAYER_SETTINGS), { notice: null }, 'by default no message');

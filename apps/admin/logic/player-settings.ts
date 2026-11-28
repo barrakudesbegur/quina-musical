@@ -14,8 +14,8 @@ export interface PlayerSettings {
 }
 
 export const DEFAULT_PLAYER_SETTINGS: PlayerSettings = Object.freeze({ soundsOnByDefault: true, banner: '', bannerOn: false });
-/** Admin's limit for the message; the cloud takes up to 200 characters (apps/cloud config `maxNoticeLength`). */
-export const BANNER_MAX_LENGTH = 140;
+/** The message's limit: the cloud's (apps/cloud config `maxNoticeLength`, which refuses longer), so Admin never cuts what the cloud takes. */
+export const BANNER_MAX_LENGTH = 200;
 
 /** Read stored settings, falling back to the defaults field by field. */
 export function readPlayerSettings(json: unknown): PlayerSettings {

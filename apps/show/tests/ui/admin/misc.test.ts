@@ -66,7 +66,7 @@ test('player settings fall back to the defaults field by field', () => {
   assert.deepEqual(readPlayerSettings({ soundsOnByDefault: false, banner: 7 }), { soundsOnByDefault: false, banner: '', bannerOn: false });
   assert.equal(readPlayerSettings({ banner: 'Hola', bannerOn: true }).bannerOn, true);
   assert.equal(readPlayerSettings({ banner: 'Hola', bannerOn: 'yes' }).bannerOn, false, 'settings from before the switch: off');
-  assert.equal(readPlayerSettings({ banner: 'x'.repeat(500) }).banner.length, 140);
+  assert.equal(readPlayerSettings({ banner: 'x'.repeat(500) }).banner.length, 200, "the cloud's limit");
 });
 
 test("Winners name a card by its number as «#57» (components-v2.md §11, 28 Nov): the Cartró column and the fields' labels", () => {
