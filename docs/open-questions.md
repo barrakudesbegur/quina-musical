@@ -340,6 +340,7 @@ The runbook's old step (pair in System Settings) can't work, and 2025's WiimoteP
 1. Pair it with MacWiiPair and the red SYNC button; note the model printed on the back (RVL-CNT-01, or -TR "Wii MotionPlus Inside").
 2. In the Console on the laptop: the buttons, rumble, the LED, the battery and the three strong shakes.
 3. Turn the remote off and on, then restart the Mac: does the Console reconnect by itself, or does it need Comandament → Connectar again?
+4. Quit Chrome hard (`kill -9`) and restart the Mac: does a "Restore pages?" or "profile in use" dialog appear in the show or console window (Backend's check)?
 Then the spare laptop, the same way. A Mayflash DolphinBar on a USB extension may fix both pairing and range, but nobody has confirmed it on a Mac: optional, to try at a rehearsal.
 
 ### U191 · Ask the presenters about a notebook on the tablet
