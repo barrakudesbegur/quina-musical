@@ -44,6 +44,32 @@ class RemoveColour(unittest.TestCase):
         self.assertEqual(out[20, 20, 3], 1)  # the hole of the "O"
         self.assertEqual(out[20, 9, 3], 1)  # the ring
 
+    def test_edges_clears_a_letters_counter_but_not_a_drawings_fill(self):
+        # On 200×200 white: an "O" on the ground (its counter goes), and a big black frame whose white fill stays,
+        # with an "O" drawn on that fill (its counter stays too, or the fill would have dark holes on a dark ground).
+        px = canvas(200, 200, WHITE)
+        y, x = np.mgrid[0:200, 0:200]
+
+        def ring(cx, cy):
+            r = np.hypot(x - cx, y - cy)
+            px[(r > 5) & (r < 9), :3] = 0
+
+        ring(30, 30)
+        px[80:190, 80:190, :3] = 0
+        px[86:184, 86:184, :3] = 1
+        ring(135, 135)
+        out = remove_color(px, WHITE, 0.1, everywhere=False)
+        self.assertEqual(out[30, 30, 3], 0)  # the counter of the "O" on the ground
+        self.assertEqual(out[100, 100, 3], 1)  # the frame's fill
+        self.assertEqual(out[135, 135, 3], 1)  # the counter of the "O" on the fill
+
+    def test_holes_zero_keeps_every_counter(self):
+        px = canvas(200, 200, WHITE)
+        y, x = np.mgrid[0:200, 0:200]
+        r = np.hypot(x - 30, y - 30)
+        px[(r > 5) & (r < 9), :3] = 0
+        self.assertEqual(remove_color(px, WHITE, 0.1, everywhere=False, holes=0)[30, 30, 3], 1)
+
     def test_all_clears_the_colour_inside_too(self):
         out = remove_color(self.px, WHITE, 0.1, everywhere=True)
         self.assertEqual(out[20, 20, 3], 0)

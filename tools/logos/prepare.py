@@ -18,9 +18,10 @@ How a logo is cleaned (its manifest entry; every field but `id` and `name` is op
   a photo's surroundings).
 - `background`:
   - "keep": the file is already transparent; only trimmed (the default when its border is transparent);
-  - "edges": the background colour is removed where it touches the border, so the same colour inside the logo stays
-    (the default for a plain border). The logo's antialiased edge is unblended from the background, not cut, so
-    the transparent logo has no halo on a dark ground;
+  - "edges": the background colour is removed where it touches the border, and in the letters' counters (the
+    holes of D, A, B, O, P, R: enclosed patches up to `holes` of the image whose ink also touches the outside), so
+    the same colour elsewhere inside the logo stays (the default for a plain border). The logo's antialiased edge is
+    unblended from the background, not cut, so the transparent logo has no halo on a dark ground;
   - "all": the background colour is removed everywhere, as a colour-to-alpha (a logo printed on a coloured box: the
     box goes, the ink stays, each pixel unblended from the box's colour);
   - "light-ink" / "dark-ink": for a box that isn't one colour (a photo, a gradient, a watercolour): the ink is
@@ -29,6 +30,7 @@ How a logo is cleaned (its manifest entry; every field but `id` and `name` is op
 - `mask`: "ellipse": after the background, keep only the ellipse inscribed in the (cropped) image (a round badge).
 - `color`: the background colour as "#rrggbb", if the border's median isn't it.
 - `tolerance`: how far from the background colour still counts as background (0–1 of the channel range; default .1).
+- `holes`: the biggest enclosed patch "edges" clears, as a share of the image (default .02; 0 keeps every one).
 - `ink`: recolours the logo once it's cut out (the user, 28 Nov: logos printed in white on a box are cut out and
   recoloured, so they read on the sticker's white): {"color": "#rrggbb" | "box", "pixels": "all" | "light"}.
   "box" is the removed background's colour, darkened only as far as it needs to read on white (contrast 4.5:1, its
@@ -66,6 +68,7 @@ NOISE = (0.06, 0.45)  # colour-to-alpha: below the first, background (JPEG noise
 STICKER_SIDE = 1024  # the sticker is made from the logo at this longer side (the rim is a share of it)
 SMALL_SIDE = 400  # a source whose longer side is under this is reported as small
 INK_CONTRAST = 4.5  # a recoloured box colour is darkened until it reads on white at least this well (WCAG AA)
+HOLES = 0.02  # "edges" also clears enclosed background patches up to this share of the image (letters' counters)
 
 
 @dataclass
@@ -78,6 +81,7 @@ class Logo:
     background: str | None = None
     color: str | None = None
     tolerance: float = TOLERANCE
+    holes: float = HOLES
     luma: list[float] = field(default_factory=lambda: [60.0, 160.0])
     ink: dict | None = None
     sticker: dict | None = None
@@ -134,7 +138,35 @@ def over_bg(rgb: np.ndarray, bg: np.ndarray, alpha: np.ndarray) -> np.ndarray:
     return np.clip(bg + (rgb - bg) / safe, 0, 1)
 
 
-def remove_color(px: np.ndarray, bg: np.ndarray, tolerance: float, everywhere: bool) -> np.ndarray:
+def counters(near: np.ndarray, outside: np.ndarray, holes: float) -> np.ndarray:
+    """The background-coloured holes inside letters (the counters of D, A, B, O, P, R…): each enclosed patch of the
+    background colour smaller than `holes` of the image, whose surrounding ink also touches the outside. A bigger
+    patch (a badge's band, a drawing's fill) stays, and so do the counters of letters drawn on such a fill."""
+    if holes <= 0:
+        return np.zeros_like(near)
+    ink = ~near
+    ink_labels, _ = ndimage.label(ink)
+    on_outside = set(np.unique(ink_labels[ndimage.binary_dilation(outside, iterations=2) & ink]).tolist()) - {0}
+    patches, n = ndimage.label(near & ~outside)
+    floor = holes * near.size
+    out = np.zeros_like(near)
+    for i, box in enumerate(ndimage.find_objects(patches), start=1):
+        if box is None:
+            continue
+        grown = tuple(slice(max(s.start - 3, 0), s.stop + 3) for s in box)
+        patch = patches[grown] == i
+        if patch.sum() > floor:
+            continue
+        ring = ndimage.binary_dilation(patch, iterations=2) & ~patch
+        around = ink_labels[grown][ring]
+        around = around[around > 0]
+        # Most of the ink round it, not all: a JPEG's noise leaves specks inside a counter that are ink of their own.
+        if around.size and np.isin(around, list(on_outside)).mean() >= 0.9:
+            out[grown] |= patch
+    return out
+
+
+def remove_color(px: np.ndarray, bg: np.ndarray, tolerance: float, everywhere: bool, holes: float = HOLES) -> np.ndarray:
     rgb, alpha0 = px[..., :3], px[..., 3]
     # Everywhere, the tolerance is the noise floor: a box's JPEG noise and texture go, not only its exact colour.
     opacity = ramp(unblend(rgb, bg), max(NOISE[0], tolerance) if everywhere else NOISE[0], NOISE[1])
@@ -145,6 +177,7 @@ def remove_color(px: np.ndarray, bg: np.ndarray, tolerance: float, everywhere: b
         labels, _ = ndimage.label(near)
         touching = np.unique(border_of(labels))
         region = np.isin(labels, touching[touching > 0])
+        region |= counters(near, region, holes)
         band = max(2, round(max(px.shape[:2]) * EDGE_BAND))
         edge = ndimage.binary_dilation(region, iterations=band) & ~region
         alpha = np.where(region, 0.0, np.where(edge, opacity, 1.0))
@@ -242,7 +275,7 @@ def clean(logo: Logo, path: Path, done: Done) -> np.ndarray | None:
     done.background = background
     bg = hex_rgb(logo.color) if logo.color else border_color(px)
     if background in ("edges", "all"):
-        px = remove_color(px, bg, logo.tolerance, everywhere=background == "all")
+        px = remove_color(px, bg, logo.tolerance, everywhere=background == "all", holes=logo.holes)
         done.notes.append(f"background {rgb_hex(bg)} removed ({'everywhere' if background == 'all' else 'from the edges'})")
     elif background in ("light-ink", "dark-ink"):
         px = key_luma(px, logo.luma[0], logo.luma[1], light=background == "light-ink")
