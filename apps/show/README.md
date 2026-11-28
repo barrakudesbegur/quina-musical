@@ -55,6 +55,8 @@ Relative paths are relative to the repo root; absolute ones work too.
 
 For a projector without the click: `open -na "Google Chrome" --args --user-data-dir="$HOME/Library/Application Support/Quina/chrome-show" --no-first-run --no-default-browser-check --autoplay-policy=no-user-gesture-required --disable-background-timer-throttling --disable-renderer-backgrounding --disable-backgrounding-occluded-windows --kiosk "http://localhost:5174/show/?autostart=1"` (as docs/night-runbook.md step 5 has it). The profile lives outside /tmp, which macOS empties at every restart (the display offset and the show page's own Game copy went with it once); keep the quotes and `$HOME`, since zsh splits on the space and doesn't expand `~` after `=`.
 
+The page watches its audio clock (D284): if the context is running but its clock advances under half of wall time for 2 s (Chrome's clock once stood still, so no Shuffle ended and no Spin started), it tries `resume()` once, then reports it in the private state's `audioStalled { sinceMs }` for the consoles and the preflight, never on the projector; the fix is docs/night-runbook.md's "When something goes wrong" (quit every Chrome, `sudo killall coreaudiod`, then a reboot). Thresholds: AUDIO_WATCHDOG in engine/src/config.ts.
+
 **Show keys:**
 - → / Enter: Next (it also releases a Suspense). ←: Back. Space: Hold / release. S: Suspense. M: Hold music. Esc: Panic.
 - `+` / `−`: Pace ±1 s. L: lock the Pace. A: auto-advance on or off. 0–4: Phase (auto, early, mid, late, final).

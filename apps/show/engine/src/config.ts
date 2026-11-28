@@ -970,3 +970,16 @@ export const PAUSA = Object.freeze({
   fadeInSec: 1.5,
   musicFadeOutSec: 1.5,
 });
+
+/** The audio clock's watchdog (D284, audio/stall.ts): Chrome once kept the context "running" while its clock stood
+ * still, which stops the show silently; the consoles and the preflight show it, never the projector. */
+export const AUDIO_WATCHDOG = Object.freeze({
+  /** A sample a second: often enough to see a stall within a few seconds, cheap enough to run all night. */
+  sampleMs: 1000,
+  /** Slow for 2 s before it's a stall, and good for 2 s before it's over: a GC pause or a late timer is shorter. */
+  windowMs: 2000,
+  /** Slow: the clock advanced under half the wall time (the stall seen moved 0.25 %; a healthy one moves ~100 %). */
+  stallRatio: 0.5,
+  /** Back: at least 90 % of wall time, so a clock limping between the two doesn't clear the alert. */
+  recoverRatio: 0.9,
+});

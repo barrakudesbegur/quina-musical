@@ -778,6 +778,8 @@ export class Show {
   /** A two-level button held on a console (D234), the state's `twoLevelHeld`; `until`: when it clears by itself (audio
    * clock). Not journaled. */
   twoLevelHeld: { button: TwoLevelButton; clientId: string; sinceMs: number; until: number } | null = null;
+  /** The runtime's report of a stalled audio clock (D284, `audioStalled`), else null. Not journaled. */
+  audioStall: { sinceMs: number } | null = null;
   /** The phones' next Heat sample (`heat.sample`, audio clock), drawn at the last landing. */
   heatSample: { at: number; value: number } | null = null;
   holdMusicMood: HoldMood = 'hold';
@@ -1159,6 +1161,19 @@ export class Show {
     const held = this.twoLevelHeld;
     if (held && held.clientId !== OWN_PAGE && !clientIds.includes(held.clientId)) {
       this.twoLevelHeld = null;
+      this.emitState();
+    }
+    return this.flush();
+  }
+
+  /**
+   * The runtime's audio-clock watchdog (D284): the clock stalled since `sinceMs` (epoch ms), or null once it advances
+   * again. Only the private state carries it (the consoles' alert, the preflight); not journaled, nothing on the
+   * projector. The state is emitted when it changes.
+   */
+  audioStalled(sinceMs: number | null): Effect[] {
+    if ((this.audioStall?.sinceMs ?? null) !== sinceMs) {
+      this.audioStall = sinceMs == null ? null : { sinceMs };
       this.emitState();
     }
     return this.flush();
@@ -3904,6 +3919,7 @@ export class Show {
         : null,
       voiceNext: this.voiceNext(),
       padHold: this.padHeld ? { effect: this.padHeld.effect, sinceMs: this.padHeld.sinceMs, intensity: this.padHeld.intensity } : null,
+      audioStalled: this.audioStall ? { ...this.audioStall } : null,
     };
   }
 

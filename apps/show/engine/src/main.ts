@@ -11,6 +11,7 @@ import { IntervalPlayer, type SuspendedInterval } from './audio/interval.ts';
 import { ThrowPlayer } from './audio/throw.ts';
 import { VoicePlayer } from './audio/voice.ts';
 import { DrumRoll } from './audio/padhold.ts';
+import { AudioStallDetector } from './audio/stall.ts';
 import type { SuspendedHold } from './audio/holdmusic.ts';
 import type { SuspendedLoop } from './audio/celebration.ts';
 import { StemStore } from './audio/stems.ts';
@@ -52,7 +53,7 @@ import {
   type Volumes,
 } from '@quina/protocol';
 import { indexPools, playableSongs } from './analysis.ts';
-import { ENGINE, FLOW, HOLD, INTERVAL, INTRO, LOOP, PACE, SUSPENSE, THROW, isStingerName } from './config.ts';
+import { AUDIO_WATCHDOG, ENGINE, FLOW, HOLD, INTERVAL, INTRO, LOOP, PACE, SUSPENSE, THROW, isStingerName } from './config.ts';
 import { drumTick } from './audio/synth/clicks.ts';
 import { seededRandom, secureRandom } from './rng.ts';
 import { el as $, targetOf } from './dom.ts';
@@ -370,6 +371,7 @@ async function boot() {
   setInterval(tick, ENGINE.taskIntervalMs);
   setInterval(emitHealth, ENGINE.healthIntervalMs);
   setInterval(watchdog, 1000);
+  setInterval(audioWatchdog, AUDIO_WATCHDOG.sampleMs);
   watchLongTasks();
   requestAnimationFrame(frame);
 }
@@ -1000,6 +1002,40 @@ function watchdog(): void {
   if (silentChecks >= 2) {
     silentChecks = 0;
     ensureMusic();
+  }
+}
+
+// The audio clock's watchdog (D284): a context "running" whose clock stands still stops the show silently (no
+// Shuffle ends, no Spin starts). Wall time against ctx.currentTime once a second; on a stall, `resume()` once, and if
+// the clock is still slow after it, the engine's private state says so (`audioStalled`) for the consoles and the
+// preflight, never the projector. A suspended context (before the start button) is never a stall. Hidden pages need
+// no exception: a throttled timer only spaces the samples out, and the audio clock keeps running behind them.
+const stall = new AudioStallDetector(AUDIO_WATCHDOG);
+let stallResumedAt: number | null = null;
+let stallReported: number | null = null;
+function audioWatchdog(): void {
+  const wallMs = performance.now();
+  const since = stall.sample(wallMs, ctx.currentTime, ctx.state === 'running');
+  if (since == null) {
+    if (stallResumedAt != null || stallReported != null) console.info('audio clock: advancing again');
+    stallResumedAt = null;
+    if (stallReported != null) {
+      stallReported = null;
+      if (show) run(show.audioStalled(null));
+    }
+    return;
+  }
+  if (stallResumedAt == null) {
+    stallResumedAt = wallMs;
+    console.warn(`audio clock: stalled (${Math.round((stall.lastRatio ?? 0) * 100)} % of wall time) while running — trying resume()`);
+    ctx.resume().catch((error) => console.error('audio clock: resume', error));
+    return;
+  }
+  // Still slow over the interval since the resume: report it (once per stall; it clears when the clock is back).
+  if (stallReported == null && (stall.lastRatio ?? 0) < AUDIO_WATCHDOG.stallRatio) {
+    stallReported = Math.round(performance.timeOrigin + since);
+    console.error('audio clock: still stalled after resume() — see docs/night-runbook.md, "When something goes wrong"');
+    if (show) run(show.audioStalled(stallReported));
   }
 }
 

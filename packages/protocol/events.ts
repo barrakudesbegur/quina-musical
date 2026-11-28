@@ -567,6 +567,13 @@ export interface ShowState {
    * the clientId, which starts with the device's label. Optional in the type only, as `voice`.
    */
   twoLevelHeld?: { button: TwoLevelButton; clientId: string; label: string; sinceMs: number } | null;
+  /**
+   * The audio clock stopped (D284): the context is "running" but its clock advanced under half of wall time for 2 s,
+   * and a `resume()` didn't help; `sinceMs` is when it began. Nothing advances meanwhile (no Shuffle ends, no Spin
+   * starts). PRIVATE: for the consoles' alert and the preflight, never the projector or the public feed; not
+   * journaled. Null when the clock is fine. Optional in the type only, as `voice`: the engine always sends it.
+   */
+  audioStalled?: { sinceMs: number } | null;
   /** The round in play is the night's last (the plan's last round, else `game.roundsTotal`): the corn-seed storm's
    * button shows in it (D155; SceneContext.lastRound). */
   lastRound: boolean;
