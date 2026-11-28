@@ -160,7 +160,7 @@ test('no private value or key ever comes out', () => {
 test('the public state has exactly the contract keys', () => {
   const out = projected();
   assert.deepEqual(Object.keys(out).sort(), [
-    'check', 'edition', 'gameEndMs', 'gameId', 'heat', 'interval', 'intro', 'link', 'notice', 'pause', 'plan', 'rounds', 'scene', 'shuffle', 'soundsDefault', 'spin', 'winners',
+    'beat', 'check', 'edition', 'gameEndMs', 'gameId', 'heat', 'interval', 'intro', 'link', 'notice', 'pause', 'plan', 'rounds', 'scene', 'shuffle', 'soundsDefault', 'spin', 'winners',
   ].sort());
   for (const r of out.rounds) {
     assert.deepEqual(Object.keys(r).sort(), ['cardType', 'ended', 'kind', 'landings', 'lineConfirmed', 'number', 'side', 'startedAtMs']);
@@ -169,6 +169,20 @@ test('the public state has exactly the contract keys', () => {
   for (const w of out.winners) assert.deepEqual(Object.keys(w).sort(), ['cardIds', 'kind', 'round']);
   assert.deepEqual(Object.keys(out.check ?? {}).sort(), ['cardId', 'kind', 'result', 'round']);
   assert.deepEqual(Object.keys(out.spin ?? {}).sort(), ['landAtMs', 'startAtMs']);
+});
+
+test("the beat (mark-bob): the engine's three numbers, built one by one; null when it sends none or a bad one", () => {
+  assert.equal(projected().beat, null, 'an engine with no beat');
+  const withBeat = (beat: unknown) => {
+    const p = new PublicProjector(() => 0.5);
+    p.ingest({ ...secretState(), beat } as unknown as IncomingEvent, NOW);
+    return p.project(ctx).beat;
+  };
+  assert.deepEqual(withBeat({ bpm: 171.2, beatsPerBar: 4, downbeatAtMs: NOW - 300, hookId: 'SECRET', songId: 9 }), { bpm: 171.2, beatsPerBar: 4, downbeatAtMs: NOW - 300 });
+  assert.equal(withBeat(null), null);
+  assert.equal(withBeat({ bpm: 0, beatsPerBar: 4, downbeatAtMs: NOW }), null);
+  assert.equal(withBeat({ bpm: 120, beatsPerBar: 2.5, downbeatAtMs: NOW }), null);
+  assert.equal(withBeat({ bpm: 120, beatsPerBar: 4 }), null);
 });
 
 test('the Spin carries only its timing; the exact start comes from the Spin event', () => {

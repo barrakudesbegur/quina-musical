@@ -39,6 +39,7 @@ import {
 } from './logic/storage.ts';
 import { saveBootState } from './logic/boot-cache.ts';
 import { araViewFor, type AraView } from './logic/tabs.ts';
+import { songBeat } from './logic/beat.ts';
 import { celebrationOf, cardViews, currentRound, focusRoundNumber, latestLanding, markKeys, planOf, roundKindOf } from './logic/view.ts';
 import { songsOnCards, yourSongOf } from './logic/your-song.ts';
 import { S } from './strings.ts';
@@ -96,6 +97,8 @@ export class PlayerApp {
   /** The card the cards view points at (one just added, or the pad's "Veure'l"): ringed in gold for a moment. */
   highlightCard = $state<number | null>(null);
   reducedMotion = $state(false);
+  /** A demo's beat (`&bpm=`, development and demos only: main.ts), while the feed sends none (`mark-bob`). */
+  demoBpm = $state<number | null>(null);
   hidden = $state(false);
   /** Kernels that just dropped in ("cardId:songId"): the mark-in animation (a ✗ stamping, in the Desgraciat round). */
   freshMarks = $state.raw<ReadonlySet<string>>(new Set());
@@ -116,6 +119,8 @@ export class PlayerApp {
   /** The current round is the Desgraciat one: the cards stand or sit, and nothing is near a win. */
   desgraciat = $derived(isDesgraciat(this.round));
   latest = $derived(latestLanding(this.round));
+  /** The beat of the song heard now (`mark-bob`), or null: the feed's `beat`, or a demo's `&bpm=`. */
+  beat = $derived(songBeat(this.state, this.latest, this.demoBpm));
   views = $derived(cardViews(this.data.cards, this.catalog, this.round));
   /** The printed card types' names and colours, from card-types.json (knownCardTypes). */
   cardTypes = $derived(knownCardTypes(this.catalog?.cardTypes));

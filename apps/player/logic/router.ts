@@ -117,6 +117,9 @@ export interface DevHints {
   /** `&mask=under`: the home's content runs on under the drum's strip, the 27 Nov look, to compare with `strip-fade`
    *  on a phone (main.ts honours it only in development and demos). */
   mask: 'under' | null;
+  /** `&bpm=120`: a beat for `mark-bob` while the feed has none (a 4-beat bar from the latest landing; main.ts honours it
+   *  only in development and demos). 40–240, else null. */
+  bpm: number | null;
 }
 
 /** Review hints in the query (development and demos). */
@@ -126,7 +129,9 @@ export function devHints(search: string): DevHints {
   const open = params.get('open');
   const cards = params.get('cards');
   const install = params.get('install');
+  const bpm = Number(params.get('bpm') ?? NaN);
   return {
+    bpm: Number.isFinite(bpm) && bpm >= 40 && bpm <= 240 ? bpm : null,
     install: isInstallOffer(install) ? install : null,
     mask: params.get('mask') === 'under' ? 'under' : null,
     view: isAraView(view) ? view : null,

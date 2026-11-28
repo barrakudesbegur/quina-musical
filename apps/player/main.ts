@@ -115,6 +115,8 @@ async function main(): Promise<void> {
   if (hints.open) app.drawers = [{ kind: hints.open }];
   // `strip-fade`'s comparison (ANIMATIONS.md): the 27 Nov look, in development and demos only.
   if ((import.meta.env.DEV || choice.kind === 'demo') && hints.mask) document.documentElement.dataset.homeMask = hints.mask;
+  // `mark-bob`'s beat before the feed sends one (ANIMATIONS.md): development and demos only.
+  if ((import.meta.env.DEV || choice.kind === 'demo') && hints.bpm) app.demoBpm = hints.bpm;
 
   const motion = watchReducedMotion((reduced) => app.setReducedMotion(reduced));
   app.setReducedMotion(motion.reduced);
