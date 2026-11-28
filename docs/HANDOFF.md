@@ -1,6 +1,6 @@
 # Orchestrator handoff
 
-Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D297**, **U240**) and [timeline.md](timeline.md). This file holds only what's in flight.
+Resume the orchestrator from this file after a clear. The durable state is in [status.md](status.md), [open-questions.md](open-questions.md), [decision-log.md](decision-log.md) (next free: **D301**, **U240**) and [timeline.md](timeline.md). This file holds only what's in flight.
 
 ## How the orchestrator works here
 
@@ -26,7 +26,9 @@ Resume the orchestrator from this file after a clear. The durable state is in [s
 **[whats-left.md](whats-left.md) is the one list of what's missing,** by area and priority (P0 before the cards on 4–5 Dec, P1 before the tech rehearsal, P2 before the night), with the plan for the sessions (phases A–D). It comes from the sessions' «What's left» lists checked again by this orchestrator's agents, without seeing them, on a frozen build of 943b651f: the projector, the console, the phone (on the production path), the setup and the night's flow, the cards, the playlists. Evidence: temp/verify-28nov/ (git-ignored). How the check was run, for the next one: build once with `npx vite build --outDir <scratch>/dist` in apps/show, copy data/link's cloud-plan.json, media and manifests into a scratch link folder, and start each agent's relay with `QUINA_LINK_DIR=<copy> node relay/server.ts --dist --dist-dir <scratch>/dist --port <own port> --repertoire 2026 [--test]`.
 
 - **Logged today:** D295 (the cards are «Apaïsat sense portades»; the A3 layout stays for one or two test sheets), D296 (the playlists confirmed final, unchanged since D269).
-- **Asked the user, waiting:** U231–U236 (which board for each other projector scene), U237 (the phones of those who didn't win), U238 (four quality flags), U239 (the A3 test sheets' numbers), and again U173 (starting the night from the doors' big button) and U163 («de N»); and the go for the plan.
+- **The user's answers so far (28 Nov night):** U231 (a) → D297; the transitions wait until the app works better (D298); nothing on the projector starts the event (D299); the projector screen can open from a website for a second projector (D300); the console's Heat meter ("thermometer") didn't work in the test (whats-left 2.12). The user wants all questions answered before the plan.
+- **Waiting on the user:** U232–U236 and U237 on the side-by-side page https://claude.ai/code/artifact/91dfbce3-8e64-4d2a-b289-e87f4dc50506 (the user: "cant you put both side to side and i chose? easier": always show design questions as images side by side), then U238, U239, U173, U163; then the go for the plan.
+- **For the user's setup session** (the user: "i have an open session to work on this, send him whatever you did in this topic and my comments"): the brief is ready (D299, D300, the verified setup findings); send it once the user names the session.
 - **Not yet briefed:** the sessions. On the user's go, brief phase A (whats-left.md › The plan) to each, and check each pushed item with a verify agent before it counts as done.
 - **Peers seen on 28 Nov night:** quina-musical-e0, -f5 and -cd (started around 5:20 pm, roles not yet confirmed) and the idle -79.
 - **The orchestrator's worktree** is now `.claude/worktrees/orchestrator` (the old `orchestrator-timeline` was gone).
