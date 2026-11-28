@@ -31,13 +31,14 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { WebSocketServer, type WebSocket } from 'ws';
 import {
-  CLOUD_CONSOLES_TYPE, PROTOCOL_VERSION, REMOTE_STATUS_TYPE, ROLES, publicPlan, readCloudConsoles, readRemoteStatus, remoteStatusMessage, revealedRounds, stampCommandFrom, withCloudConsoles,
+  CLOUD_CONSOLES_TYPE, PROTOCOL_VERSION, REMOTE_STATUS_TYPE, ROLES, makeCommand, publicPlan, readCloudConsoles, readRemoteStatus, remoteStatusMessage, revealedRounds, stampCommandFrom, withCloudConsoles,
   type RelayClients, type RelayPlan, type RemoteStatusMessage, type Role, type ShowState,
 } from '@quina/protocol';
 import { distProblem } from './build-stamp.ts';
 import { TEST_MODE_BANNER, relayAcceptsCommand, relayModeMessage } from './gate.ts';
 import { defaultRouteInterface, describeAddress, lanAddresses, type LanAddress } from './lan.ts';
 import { LaptopPlan, PLAN_BASE_HEADER, parsePlanBase, type CurrentPlan } from './plan.ts';
+import { ShowStates } from './show-states.ts';
 import { CACHE, LINK, MEDIA, NIGHT_REPERTOIRE, OUT, REPERTOIRE_ENV, PREP, REPO, SHOW, display, loadRepertoire, type Repertoire } from './repertoire.ts';
 
 const args = process.argv.slice(2);
@@ -455,7 +456,7 @@ server.on('request', async (req: http.IncomingMessage, res: http.ServerResponse)
     // This laptop's pages and paired devices get the whole plan; anyone else on the hotspot only what phones may
     // see (plan.ts publicPlan: no locked round's prizes, no cheat sheet), the rounds revealed as the show says.
     const whole = isThisMachine(req.socket.remoteAddress) || hasToken(req.headers.authorization);
-    const body = whole ? plan : publicPlan(plan, revealedRounds(plan, lastState?.prizes?.revealed ?? []));
+    const body = whole ? plan : publicPlan(plan, revealedRounds(plan, showStates.current()?.prizes?.revealed ?? []));
     return res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }).end(req.method === 'HEAD' ? undefined : JSON.stringify(body));
   }
   // The APIs rewrite hooks and render audio: only this laptop's own pages (show, audition) may call them.
@@ -505,6 +506,8 @@ function isEnginePath(pathname: string): boolean {
 //   tools only with `--test`, and never from the link (relay/gate.ts).
 // - The cloud's consoles (`cloud.consoles`) come only from the link, and go out folded into `relay.clients`.
 // - Every paired socket hears the relay's test mode (`relay.mode`) right after its hello.
+// - The show page's `state` is kept per show socket (relay/show-states.ts): a hello hears the latest sender's; when that
+//   page closes the listeners get the remaining page's (or it is asked for it), and with none left, no state at all.
 interface Client {
   role: Role | 'unknown';
   clientId: string;
@@ -516,7 +519,8 @@ const clients = new Map<WebSocket, Client>();
 const PLAN = new LaptopPlan(LINK, (current) => broadcast(planMessage(current)));
 PLAN.start();
 const wss = new WebSocketServer({ noServer: true });
-let lastState: ShowState | null = null;
+/** Each show page's last state, by socket: the consoles hear the latest sender's, and never a closed page's. */
+const showStates = new ShowStates<WebSocket>();
 const LOCAL_ROLES: readonly Role[] = ['show', 'cloud'];
 const LISTENERS: readonly Role[] = ['tablet', 'admin', 'drum', 'cloud'];
 const JOURNAL_EVENTS = new Set(['journal.entry', 'journal.entries']);
@@ -551,7 +555,9 @@ wss.on('connection', (socket: WebSocket, req: http.IncomingMessage) => {
       self.role = role && (LOCAL_ROLES.includes(role) ? local : paired) ? role : 'unknown';
       self.clientId = String(message.clientId ?? '');
       if (self.role === 'unknown') return; // unpaired: it hears nothing
-      if (lastState && receives(self, 'state')) socket.send(JSON.stringify(lastState));
+      if (self.role === 'show') showStates.connected(socket);
+      const state = showStates.current();
+      if (state && receives(self, 'state')) socket.send(JSON.stringify(state));
       socket.send(JSON.stringify(planMessage(PLAN.current())));
       socket.send(JSON.stringify(relayModeMessage(TEST_MODE)));
       if (isConsole(self)) for (const [clientId, status] of remoteStatuses) if (clientId !== self.clientId) socket.send(JSON.stringify(status));
@@ -579,7 +585,7 @@ wss.on('connection', (socket: WebSocket, req: http.IncomingMessage) => {
     if (isCommand) {
       if (!relayAcceptsCommand(message.cmd, self.role, TEST_MODE)) return;
     } else if (self.role !== 'show') return;
-    if (message.type === 'state') lastState = message as unknown as ShowState;
+    if (message.type === 'state') showStates.sent(socket, message as unknown as ShowState);
     // Who sent a command (D234's lock mirror): the relay's word, overwriting any a console set, so none can speak for
     // another. On the link's socket a `cloud:<id>` the cloud stamped is kept (each cloud console is its own sender),
     // else they carry the link's; a client without a clientId sends none.
@@ -593,6 +599,7 @@ wss.on('connection', (socket: WebSocket, req: http.IncomingMessage) => {
   });
   socket.on('close', () => {
     clients.delete(socket);
+    showPageLeft(socket);
     // The host's remote goes with its socket: the other consoles see it disconnected.
     if (remoteHosts.get(self.clientId) === socket) {
       remoteHosts.delete(self.clientId);
@@ -601,6 +608,22 @@ wss.on('connection', (socket: WebSocket, req: http.IncomingMessage) => {
     broadcast(clientList());
   });
 });
+
+/**
+ * A socket closed: if it was the show page whose state the consoles hear, they get the state of the show page still
+ * connected at once, or that page is asked to resend it (`getState`; its answer goes out like any state). With none
+ * left they keep "no show page" (relay.clients), and a console that says hello hears no state.
+ */
+function showPageLeft(socket: WebSocket): void {
+  const left = showStates.left(socket);
+  if (left.kind === 'replay') {
+    const text = JSON.stringify(left.state);
+    for (const [other, info] of clients) if (receives(info, 'state') && other.readyState === other.OPEN) other.send(text);
+  } else if (left.kind === 'ask') {
+    const text = JSON.stringify(makeCommand('getState'));
+    for (const page of left.pages) if (page.readyState === page.OPEN) page.send(text);
+  }
+}
 
 /** Paired consoles: the presenters' tablets and Admin (never the drum, the show page or the cloud link). */
 function isConsole(client: Client): boolean {

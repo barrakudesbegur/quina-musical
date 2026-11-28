@@ -550,8 +550,8 @@ export function describeShowGame(state: ShowStateLike, roundsInPlan: number | nu
  * The show page's audio clock (D284): its engine runs on the audio clock, so a context "running" whose time stands
  * still stops the show silently. The show page reports it in its private state (`audioStalled`, `sinceMs` on this
  * laptop's wall clock, so against `nowMs`). Only with a show page connected and its state on the relay: otherwise
- * the relay and show page checks already speak (null). The relay keeps the last state after the page goes, so a
- * state without a connected show page says nothing.
+ * the relay and show page checks already speak (null). The relay drops a show page's state when it goes (relay/
+ * show-states.ts); a state without a connected show page still says nothing.
  */
 export function audioClockCheck(
   clients: readonly { role: string }[] | null,
