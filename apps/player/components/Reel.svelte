@@ -68,9 +68,11 @@
   prepareSpinSolver();
   let frame: DrumFrame = $state.raw({ ring: [], position: 0, velocity: 0, phase: 'idle', selectedId: null, blurPx: 0 });
   const step = (now: number) => (frame = drum.frame({ order, landings, spin, nowMs: now, reduced }));
-  // Every change of the inputs (and the app's clock), unless offline: then it holds where it is.
+  // Every change of the inputs (and the app's clock), unless offline: then it holds where it is, once it has a ring
+  // (a page that opens offline computes its ring once, so it shows the covers, not card backs). Reading the ring
+  // untracked keeps this effect off its own writes.
   $effect(() => {
-    if (stopped) return;
+    if (stopped && untrack(() => frame.ring.length > 0)) return;
     const now = Math.max(nowMs, Date.now() + clockOffsetMs);
     untrack(() => step(now));
   });
