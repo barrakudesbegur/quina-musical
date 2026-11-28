@@ -8,6 +8,7 @@ import { STAGE } from '../config.ts';
 import { fateAt, finaleLayout, type FinaleNino, type FinaleView } from '../model/finale.ts';
 import type { AnimDetail } from '../model/moments.ts';
 import { runPaperConfetti } from '../../../packages/ui/motion/paper-confetti.ts';
+import { paperCount } from '../model/layout.ts';
 import { ninoUrl } from '../../../packages/ui/ninos.ts';
 import '../../../packages/ui/components/particles.css';
 import { STAGE_TEXT } from '../strings.ts';
@@ -165,7 +166,7 @@ export class FinaleStage {
     const paper = STAGE.paper;
     this.stopConfetti = runPaperConfetti(
       this.canvas,
-      { count: c.count, colors: paper.colors, origin: c.origin, spread: c.spread, fallShare: paper.fallShare, size: paper.size, random: this.env.random },
+      { count: paperCount(c.count, this.canvas.clientWidth, STAGE.box.width), colors: paper.colors, origin: c.origin, spread: c.spread, fallShare: paper.fallShare, size: paper.size, random: this.env.random },
       c.durationMs,
       paper.outline,
     );

@@ -4,8 +4,8 @@
 // steps, the Shuffle, Heat) are computed on every frame from the show's timestamps (`momentsOf`), set
 // `data-anim` hooks and are announced as `quina:anim` events on the root, for a theme script.
 //
-// Read-only: the stage never sends a command. Layout: a 1440×1080 reference box scaled to fit (letterboxed at
-// 16:9), with the drum's band stretched to the full screen width. In the show page the band is left open so
+// Read-only: the stage never sends a command. Layout: a 1440×1080 reference box scaled to fit (pillarboxed at
+// 16:10 and 16:9), with the drum's band stretched to the full screen width. In the show page the band is left open so
 // the real drum shows through; standalone, a labelled placeholder stands in for it.
 import type { ShowState } from '@quina/protocol';
 import type { Bus } from '../show/engine/src/net/bus.ts';
@@ -22,7 +22,7 @@ import '../../packages/ui/recipes/prizes.css';
 import './stage.css';
 import { STAGE } from './config.ts';
 import { activeHeatSample, garlandLook, heatDisplay } from './model/garland.ts';
-import { bandOnScreen, fitBox } from './model/layout.ts';
+import { bandOnScreen, boxBleed, fitBox } from './model/layout.ts';
 import { diffMoments, momentsOf, type AnimDetail, type Moments } from './model/moments.ts';
 import { pruneSpinNote, type SpinNote } from './model/motion.ts';
 import { NO_CHECK_MEMORY, rememberCheck, type CheckMemory } from './model/check.ts';
@@ -417,9 +417,14 @@ class Stage {
     const height = this.root.clientHeight;
     const fit = fitBox(width, height, STAGE.box.width, STAGE.box.height);
     const band = bandOnScreen(fit, this.band);
+    const bleed = boxBleed(fit);
     setVar(this.root, '--box-x', `${fit.x}px`);
     setVar(this.root, '--box-y', `${fit.y}px`);
     setVar(this.root, '--box-scale', String(fit.scale));
+    // The screen past the box's sides (16:10, 16:9: D276), in box px: the screen-wide layers reach into it.
+    setVar(this.root, '--box-bleed-x', `${bleed.x}px`);
+    setVar(this.root, '--box-bleed-y', `${bleed.y}px`);
+    setData(this.root, 'wide', bleed.x >= 1 ? '' : null);
     setVar(this.root, '--band-top', `${band.top}px`);
     setVar(this.root, '--band-h', `${band.height}px`);
     if (this.mode === 'overlay') {
@@ -439,7 +444,7 @@ class Stage {
     this.source.dispose();
     this.root.replaceChildren();
     this.root.classList.remove('stage-root');
-    for (const key of ['mode', 'scene', 'drum', 'link', 'paused', 'catalog', 'density', 'ground']) delete this.root.dataset[key];
+    for (const key of ['mode', 'scene', 'drum', 'link', 'paused', 'catalog', 'density', 'ground', 'wide']) delete this.root.dataset[key];
     if (this.mode === 'overlay') {
       document.documentElement.style.removeProperty('--stage-band-top');
       document.documentElement.style.removeProperty('--stage-band-height');

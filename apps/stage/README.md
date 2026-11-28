@@ -7,9 +7,10 @@ The audience screen's scenes, in plain TypeScript and the DOM. It follows the sh
 
 ## Layout
 
-The projector is 4:3 and far from the audience, but the stage must also work at 16:9:
-- Every scene is laid out in a **1440×1080 reference box**, scaled to fit the screen and letterboxed. Sizes come from `--stage-text-*`.
+The projector is 4:3 and far from the audience, but the stage must also work at 16:10 and 16:9 (D276):
+- Every scene is laid out in a **1440×1080 reference box**, scaled to fit the screen and centred: pillarboxed at 16:10 and 16:9. Sizes come from `--stage-text-*`.
 - **The drum's band** is the top 640 px of the box (about 60 %), stretched to the full width of the screen. It has no frame.
+- **The bleed:** `--box-bleed-x` (and `-y` on a screen taller than 4:3) is the screen past the box on each side, in box px (0 at 4:3, 144 at 16:10, 240 at 16:9), and the root has `data-wide` when it isn't 0. Only the layers that read as the whole screen reach into it (ANIMATIONS.md › Projector, "Every screen shape"): the garland's wings (`STAGE.garland.wingSwags`), the Celebration's flash and paper, the finale's floor, light and paper (its clip reaches the screen's sides), a failed Bingo's scrim and the Pausa. Everything else stays in the box, so 4:3 is unchanged.
 - In play:
   - "Quina N" and the Heat garland stay small at the edges;
   - the current song's big title sits under the band;

@@ -1,7 +1,8 @@
 // The Heat garland: colour and glow follow the Heat, the lights play its level's pattern; reduced motion steps.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { activeHeatSample, garlandLook, heatDisplay } from '../../../../stage/model/garland.ts';
+import { activeHeatSample, garlandLook, garlandWings, heatDisplay } from '../../../../stage/model/garland.ts';
+import { garlandLayout } from '../../../../../packages/ui/motion/garland.ts';
 import { STAGE } from '../../../../stage/config.ts';
 
 test('cool, warm and hot looks, each with its pattern', () => {
@@ -54,4 +55,21 @@ test('the active sample is the latest that has started', () => {
   assert.equal(activeHeatSample(samples, -1), null);
   assert.equal(activeHeatSample(samples, 10)?.value, 0.2);
   assert.equal(activeHeatSample(samples, 30000)?.value, 0.8);
+});
+
+test('the wings past the box: the same swags and bulb spacing, the box\'s part drawn as without them (D276)', () => {
+  const box = STAGE.garland;
+  const { shape, wing, first } = garlandWings(box, box.wingSwags);
+  assert.deepEqual([shape.width, shape.swags, shape.bulbs, wing, first], [2880, 8, 68, 720, -17]);
+  const plain = garlandLayout(box).lights;
+  const winged = garlandLayout(shape).lights;
+  // Each of the box's bulbs at the same place (px from the box's left edge), height and tilt, to the layout's rounding.
+  plain.forEach((light, i) => {
+    const w = winged[i - first];
+    assert.ok(Math.abs(w.x * shape.width - wing - light.x * box.width) < 0.5, `bulb ${i} x`); // x is a share to 4 places
+    assert.ok(Math.abs(w.y - light.y) < 0.05, `bulb ${i} y`);
+    assert.ok(Math.abs(w.angle - light.angle) < 0.15, `bulb ${i} tilt`);
+  });
+  assert.deepEqual(garlandWings(box, 0), { shape: box, wing: 0, first: 0 }, 'no wings');
+  assert.equal(garlandWings(box, 1).wing, 0, 'one swag would hold 8.5 bulbs: left out');
 });

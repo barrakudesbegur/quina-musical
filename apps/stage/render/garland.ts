@@ -4,7 +4,7 @@
 // outline with the cap, so a halo never covers ink. Each bulb's place in the pattern is set once as custom properties;
 // `paint` only writes the Heat's colour mix and, when the level changes, the pattern: stage.css runs the keyframes.
 import { garlandBulbs, garlandLayout, type GarlandShape } from '../../../packages/ui/motion/garland.ts';
-import type { GarlandLook } from '../model/garland.ts';
+import { garlandWings, type GarlandLook } from '../model/garland.ts';
 import { h, setData, setVar } from './dom.ts';
 
 const SVG = 'http://www.w3.org/2000/svg';
@@ -12,13 +12,15 @@ const SVG = 'http://www.w3.org/2000/svg';
 export class Garland {
   readonly root: HTMLDivElement;
 
-  constructor(shape: GarlandShape & { height: number; flameEvery: number }, random: () => number) {
+  constructor(box: GarlandShape & { height: number; flameEvery: number; wingSwags: number }, random: () => number) {
+    // The box's garland and its wings past each side (D276): stage.css shows the wings only on a screen wider than 4:3.
+    const { shape, wing, first } = garlandWings(box, box.wingSwags);
     const layout = garlandLayout(shape);
-    const bulbs = garlandBulbs(shape.bulbs, shape.flameEvery, random);
+    const bulbs = garlandBulbs(shape.bulbs, box.flameEvery, random, first);
 
     const wire = document.createElementNS(SVG, 'svg');
     wire.setAttribute('class', 'garland__wire');
-    wire.setAttribute('viewBox', `0 0 ${shape.width} ${shape.height}`);
+    wire.setAttribute('viewBox', `0 0 ${shape.width} ${box.height}`);
     wire.setAttribute('aria-hidden', 'true');
     const path = document.createElementNS(SVG, 'path');
     path.setAttribute('d', layout.wire);
@@ -28,11 +30,12 @@ export class Garland {
       const bulb = bulbs[i];
       const light = layout.lights[i];
       const el = h('span', { class: cls, data: { tone: String(bulb.step), party: bulb.party } });
-      el.style.cssText = `--x:${light.x};--y:${light.y}px;--tilt:${light.angle}deg;--i:${i};--seed:${bulb.seed}`;
+      if (bulb.index < 0 || bulb.index >= box.bulbs) el.dataset.wing = '';
+      el.style.cssText = `--x:${light.x};--y:${light.y}px;--tilt:${light.angle}deg;--i:${bulb.index};--seed:${bulb.seed}`;
       return el;
     };
     const layer = (cls: string, pieces: HTMLElement[]) => h('div', cls, ...pieces);
-    const all = bulbs.map((b) => b.index);
+    const all = bulbs.map((_, i) => i);
     const groups = ([0, 1, 2] as const).map((step) => {
       const group = layer(
         'garland__layer garland__group',
@@ -41,7 +44,7 @@ export class Garland {
           .map((i) => {
             const lamp = piece('garland__piece garland__lamp', i);
             // Cool and still (reduced motion): every 4th bulb rests dimmer, as on S2.
-            if (i % 4 === 1) lamp.dataset.dim = '';
+            if (((bulbs[i].index % 4) + 4) % 4 === 1) lamp.dataset.dim = '';
             return lamp;
           }),
       );
@@ -58,7 +61,9 @@ export class Garland {
       ...groups,
       layer('garland__layer', all.map((i) => piece('garland__piece garland__shell', i))),
     );
-    this.root.style.setProperty('--n', String(bulbs.length));
+    // A run (`wave`, `win`) is one box's bulbs long, wings or not, so 4:3 looks as it did and the wings carry it on.
+    this.root.style.setProperty('--n', String(box.bulbs));
+    this.root.style.setProperty('--garland-wing', `${wing}px`);
   }
 
   paint(look: GarlandLook): void {

@@ -106,3 +106,25 @@ test('each bulb gets its step, its seed, a party colour in order, and flames on 
   assert.equal(stage[0].flame, false);
   assert.ok(garlandBulbs(3, 1, () => 2).every((b) => b.flame && b.seed === 1), 'every bulb, seed clamped');
 });
+
+test('a string numbered from another bulb keeps every bulb\'s part: the projector\'s wings (D276)', () => {
+  const box = garlandBulbs(34, 2, () => 0.5);
+  const winged = garlandBulbs(68, 2, () => 0.5, -17);
+  assert.equal(winged[0].index, -17);
+  const inBox = winged.slice(17, 51);
+  assert.deepEqual(
+    inBox.map(({ index, step, party, flame }) => ({ index, step, party, flame })),
+    box.map(({ index, step, party, flame }) => ({ index, step, party, flame })),
+    'the box\'s 34 bulbs are unchanged',
+  );
+  // The order runs on unbroken across the box's edges: steps 0, 1, 2 and flames every other bulb.
+  assert.deepEqual(
+    winged.slice(14, 20).map((b) => b.step),
+    [0, 1, 2, 0, 1, 2],
+  );
+  assert.deepEqual(
+    winged.slice(14, 20).map((b) => b.flame),
+    [true, false, true, false, true, false],
+  );
+  assert.equal(winged[16].party, PARTY_COLORS[5], 'the bulb before the first takes the last party colour');
+});

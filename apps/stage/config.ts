@@ -23,9 +23,11 @@ export const STAGE = Object.freeze({
   /**
    * The Heat garland across the top (the S2 board on Projector-Joc: 1440 × 120, 4 swags, 34 bulbs, hung 26 px above
    * the box's top edge, so the hooks are off screen). Its lights play the patterns of packages/ui/motion/garland.ts,
-   * with a flame behind every `flameEvery`-th bulb when very hot (17).
+   * with a flame behind every `flameEvery`-th bulb when very hot (17). `wingSwags` more swags hang past each side
+   * of the box, shown on screens wider than 4:3 (16:10, 16:9: D276), so the garland reaches the screen's edges; a
+   * wing must hold a whole number of bulbs (2 swags: 17), and reaches 720 px out (up to a 2:1 screen).
    */
-  garland: Object.freeze({ width: 1440, height: 120, swags: 4, bulbs: 34, top: -14, sag: 62, flameEvery: 2 }),
+  garland: Object.freeze({ width: 1440, height: 120, swags: 4, bulbs: 34, top: -14, sag: 62, flameEvery: 2, wingSwags: 2 }),
   /** How often the garland repaints. Heat eases over ~20 s, so 4 Hz is plenty. */
   heatRepaintMs: 250,
   /** No optional DOM writes this close before a landing (ANIMATIONS.md budget). */

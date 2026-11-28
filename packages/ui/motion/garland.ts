@@ -125,7 +125,7 @@ export const PARTY_COLORS = Object.freeze(['red', 'orange', 'gold', 'green', 'cy
 export type PartyColor = (typeof PARTY_COLORS)[number];
 
 export interface GarlandBulb {
-  /** Its place on the string, 0-based: the `wave` and `win` runs. */
+  /** Its place on the string, 0-based (below 0 in the projector's left wing): the `wave` and `win` runs. */
   index: number;
   /** 0, 1 or 2: its heat tone, its `party` group and its `chase` step. */
   step: 0 | 1 | 2;
@@ -137,17 +137,25 @@ export interface GarlandBulb {
   flame: boolean;
 }
 
+/** `v` mod `n`, never negative (a bulb before the first keeps the string's order). */
+const wrap = (v: number, n: number) => ((v % n) + n) % n;
+
 /**
  * Each bulb's part in the patterns. Flames go behind every `flameEvery`-th bulb, starting with the second, so the
- * two ends stay clear (phones 3: 4 flames on 13 bulbs; the projector 2: 17 on 34).
+ * two ends stay clear (phones 3: 4 flames on 13 bulbs; the projector 2: 17 on 34). `first` numbers the string from
+ * another bulb: the projector's wings past a 4:3 box start below 0 (`first: -17`), so the box's own bulbs keep their
+ * index, step, colour and flame, and the order runs on unbroken into the wings.
  */
-export function garlandBulbs(count: number, flameEvery: number, random: () => number): GarlandBulb[] {
+export function garlandBulbs(count: number, flameEvery: number, random: () => number, first = 0): GarlandBulb[] {
   const every = Math.max(1, Math.round(flameEvery));
-  return Array.from({ length: Math.max(0, Math.round(count)) }, (_, index) => ({
-    index,
-    step: (index % 3) as 0 | 1 | 2,
-    seed: Math.round(Math.min(1, Math.max(0, random())) * 1000) / 1000,
-    party: PARTY_COLORS[index % PARTY_COLORS.length],
-    flame: index % every === 1 % every,
-  }));
+  return Array.from({ length: Math.max(0, Math.round(count)) }, (_, i) => {
+    const index = first + i;
+    return {
+      index,
+      step: wrap(index, 3) as 0 | 1 | 2,
+      seed: Math.round(Math.min(1, Math.max(0, random())) * 1000) / 1000,
+      party: PARTY_COLORS[wrap(index, PARTY_COLORS.length)],
+      flame: wrap(index, every) === 1 % every,
+    };
+  });
 }

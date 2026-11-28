@@ -11,6 +11,7 @@ import { STAGE } from '../config.ts';
 import type { GarlandLook } from '../model/garland.ts';
 import type { AnimDetail } from '../model/moments.ts';
 import { runPaperConfetti } from '../../../packages/ui/motion/paper-confetti.ts';
+import { paperCount } from '../model/layout.ts';
 import { STAGE_TEXT } from '../strings.ts';
 import type { WinKind } from '../../../packages/ui/flow.ts';
 import type { CelebrationView } from '../view.ts';
@@ -112,7 +113,7 @@ export class CelebrationScene implements SceneRenderer<CelebrationView> {
         const paper = STAGE.paper;
         this.stopPaper = runPaperConfetti(
           this.paper,
-          { count: rain.count, colors: paper.colors, origin: rain.origin, spread: rain.spread, fallShare: paper.fallShare, size: paper.size, random: this.env.random },
+          { count: paperCount(rain.count, this.paper.clientWidth, STAGE.box.width), colors: paper.colors, origin: rain.origin, spread: rain.spread, fallShare: paper.fallShare, size: paper.size, random: this.env.random },
           rain.durationMs,
           paper.outline,
         );

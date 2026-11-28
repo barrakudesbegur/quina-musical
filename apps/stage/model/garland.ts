@@ -5,7 +5,7 @@
 // packages/rules/heat.ts, which already delays and eases every change away from landings. Pure.
 import { STAGE } from '../config.ts';
 import { heatAt, type HeatSample } from '../../../packages/rules/heat.ts';
-import { garlandLights, type GarlandLights } from '../../../packages/ui/motion/garland.ts';
+import { garlandLights, type GarlandLights, type GarlandShape } from '../../../packages/ui/motion/garland.ts';
 
 export interface GarlandLook {
   /** 0..1: cool → gold (first half of the Heat). */
@@ -48,4 +48,32 @@ export function activeHeatSample(samples: readonly HeatSample[], nowMs: number):
   let best: HeatSample | null = null;
   for (const s of samples) if (s.fromMs <= nowMs && (!best || s.fromMs > best.fromMs)) best = s;
   return best;
+}
+
+/** The garland drawn with its wings: the whole string, where the box's part starts, and its first bulb's index. */
+export interface GarlandWings {
+  /** The whole string, wings included, for `garlandLayout`. */
+  shape: GarlandShape;
+  /** How far each wing reaches past the box's side (px). */
+  wing: number;
+  /** The index of the string's first bulb: the left wing's bulbs count up to 0, where the box's start. */
+  first: number;
+}
+
+/**
+ * `wingSwags` more swags past each side of the box's garland (D276: 16:10 and 16:9 screens), in the same swags and
+ * bulb spacing, so the box's part is drawn exactly as without wings. A wing that wouldn't hold a whole number of
+ * bulbs is left out (its spacing would drift).
+ */
+export function garlandWings(shape: GarlandShape, wingSwags: number): GarlandWings {
+  const swags = Math.max(1, Math.round(shape.swags));
+  const wings = Math.max(0, Math.round(wingSwags));
+  const wingBulbs = (shape.bulbs * wings) / swags;
+  if (wings === 0 || !Number.isInteger(wingBulbs)) return { shape, wing: 0, first: 0 };
+  const wing = (shape.width * wings) / swags;
+  return {
+    shape: { ...shape, width: shape.width + 2 * wing, swags: swags + 2 * wings, bulbs: shape.bulbs + 2 * wingBulbs },
+    wing,
+    first: -wingBulbs,
+  };
 }
