@@ -350,10 +350,12 @@
   transition: none;
 }
 
-/* `pause`: "Tornem de seguida" over everything. */
+/* `pause`: "Tornem de seguida" over everything: above every scene's own layers (the highest, the Check's head, is 4)
+   and across the whole screen (D276). */
 .stage__pause {
   position: absolute;
-  inset: 0;
+  z-index: 5;
+  inset: calc(-1 * var(--box-bleed-y)) calc(-1 * var(--box-bleed-x));
   display: grid;
   place-items: center;
   align-content: center;
@@ -371,7 +373,8 @@
   transition: none;
 }
 
-.stage__pause-nino {
+/* Outweighs `.sticker`'s `height: auto` (the same layer), which drew the nino at its natural 680 × 715 px. */
+.stage-root .stage__pause-nino {
   height: 22rem;
   width: auto;
 }
