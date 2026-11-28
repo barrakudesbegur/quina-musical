@@ -2,6 +2,179 @@
 
 The single place to resume Platform's work from. Sessions get cleared, so keep it current at each milestone.
 
+## What's left (28 Nov, after the realistic test)
+
+The user, after today's realistic test in production: "it went HORIBLY WRONG. yes, the songs played and the player app mostly works. but the console logic is very bad, the transitions need a lot of improvement, the setup and startup is confusing, the show page (projected screen) has absolutely nothing to do with the design from the mockups."
+
+What follows was checked against the code, docs/requirements/operations.md and docs/night-runbook.md on 28 Nov evening, not taken from earlier notes. Platform's area is the setup and startup, the cloud and the feed, and the rehearsal tooling. The console's logic, the transitions and the projector's design belong to Frontend and Sound engine, and are only mentioned here where my tests failed to catch them.
+
+### 1. The setup and startup, as a non-developer lives it
+
+**A non-developer did not start today's test: I did, as a developer.** Everything below comes from the runbook (docs/night-runbook.md), checked against the code, plus what happened today.
+
+**Once per laptop:**
+1. Clone the repo.
+2. Install Homebrew, node, uv, rubberband and Chrome.
+3. Get `apps/cloud/.env.link`.
+4. Run `npm run setup:laptop`.
+   - **Broken as written.** The runbook's command has no `--repertoire`, so setup.ts defaults to `default`. R2 holds only `manifests/2026.json` (checked with `/api/sync` today). So step 5, the media pull, fails on a new spare laptop. It needs `-- --repertoire 2026`, and the runbook doesn't say so.
+   - **Stale.** The "spare-laptop dry run READY" was on 24–25 Nov, before the 2026 repertoire and R2 by content (D248). No laptop has run setup end to end since.
+   - **Not done on this Mac.** setup:laptop creates the Chrome profiles in `~/Library/Application Support/Quina/`, and it hadn't been rerun here since that change (f63af09f). I made the folders by hand today.
+
+**On the day,** from a closed laptop to the doors (runbook steps 1–10):
+1. Phone A tethered by USB with its hotspot (and a password). Phone B on standby.
+2. Power, the PA by cable, the projector by HDMI as a separate display.
+3. Terminal 1: `caffeinate -dis`.
+4. Terminal 2: `cd apps/show && npm start -- --lan --repertoire 2026`. It builds the show, then prints the console's LAN address with its token.
+5. Terminal 3: `cd apps/cloud && npm run link`.
+6. The show page: a one-line `open -na "Google Chrome" --args …` command with eight flags, a profile path, `--kiosk`, and `&fresh=1` the first time only.
+   - **Then someone must click Start on the projector's own screen** (or press Enter or Space with it focused). That's the browser's audio unlock; until then the engine is `locked`.
+   - Today the kiosk didn't go full screen at first.
+7. The tablet: join the hotspot and type `http://<laptop IP>:5174/console/?t=<token>`, copied from terminal 2's output.
+   - The runbook says "or the console's QR". **That QR (LanQr.svelte) only appears on a console already opened on a LAN address.** The laptop's own console on `localhost` shows none, so the first pairing is always typed by hand.
+   - Today the Mac changed network three times (172.26.205.80, 192.168.10.153, 192.168.10.31), so the printed address went stale. Since f54eb5f8 the relay reprints it when it changes; the preflight was fixed in 2f69f56c.
+8. The Wii remote:
+   - Pair it once with MacWiiPair. That's untested (U220).
+   - Open the laptop's console with a second long Chrome command, then Comandament → Connectar.
+   - Do a walk test from the stage.
+   - **Not exercised in any test so far.**
+9. The preflight: `cd apps/cloud && npm run preflight`.
+   - **Wrong as written:** without `-- --repertoire 2026` it checks the default repertoire. It reports 77 songs, and «Relay: it serves repertoire "2026", not "default"» as a FAIL. setup.ts's closing hint has the same omission.
+   - The output is about 30 lines. Several WARNs are expected today, and a non-developer can't tell expected from alarming: provisional hooks, placeholder voices, laptop speakers, no projector.
+   - Today it also reported a FAIL that wasn't real («Media files … missing», against a stale local manifest while the cloud wasn't reachable); fixed in aed18cc8.
+   - And it PASSed «Browser: … in kiosk mode» for the wrong Chrome: a kiosk left running since the 27 Nov test (profile `/tmp/quina-show`). That kiosk had reconnected to the new relay as a second show page, and I had to quit it.
+10. The sound check, and the projector's delay calibration: a third Chrome command, `test.html`, filmed in slow motion.
+11. **Starting the night: console → «Menú» → «Començar la nit».** The user couldn't find it today. They looked for a Start on the main screen and found only «Llançament», the prize-throw music. The only hint is a small note in the «Abans de la nit» panel.
+
+**What else needed a developer today:**
+- **A Game replaced by a reload.** A reload of a `fresh=1` tab started a new Game mid-test, at 11:55 Begur time. `fresh` is now one-shot (11948775), but a relaunch from a command line carrying `&fresh=1` still starts a new Game.
+- **The Game ended without explanation.** When I restarted the show in test mode, the Game sat at «Final de la nit» (scene `after`), and I don't know who ended it or why.
+- **Asking which process is which.** The user had to ask "what are the 3 shells?".
+- **The kiosk.** A developer reopened it full screen on the same Game.
+- **Restarts.** Every restart (relay, show page, console) needed someone to know the commands, the profiles and the click on Start.
+
+**What D282 (the Mac app, on hold) would have to cover,** so that none of the above needs a terminal:
+- **One button to start, one to stop.** Start runs caffeinate, the relay with `--lan --repertoire <name>`, the link, and the show and console Chrome windows with their profiles and flags. Stop stops all of them cleanly.
+- **New Game or resume, as an explicit choice.** Never a URL flag that survives into a reload or relaunch.
+- **Finding and closing stale show pages** from earlier runs (`/tmp/quina-show`, other profiles) before starting.
+- **Status lights:**
+  - relay up;
+  - link online and in sync;
+  - cloud reachable;
+  - show page connected, and whether it's waiting for its Start click;
+  - audio clock running;
+  - consoles connected;
+  - Wii remote;
+  - projector as a separate display;
+  - power, and laptop speakers vs the PA.
+- **Pairing the tablet:** the current LAN address and token as a QR, updated when the network changes.
+- **The preflight** run with the right repertoire, its results in plain words, and the expected WARNs marked as expected.
+- **A test-mode switch for rehearsals (`--test`),** off for the night.
+- **The same app on the spare laptop,** including setup with the right repertoire.
+
+### 2. The cloud and the phones' feed
+
+**Built and live** (version `759b4691`, from `7f28fa9e`):
+- One GameRoom per edition, with journal sync by `seq`.
+- The public feed as a whitelist. Every privacy rule in operations.md is enforced in projection.ts and covered by tests and the e2e's forbidden keys.
+- Phones reconnect with backoff and jitter and resync from a snapshot.
+- Consoles through the cloud, with the test tools kept off them.
+- Admin's plan, logos and plan-B resume.
+- R2 by content (2026: 2,772 blobs, 8.04 GB; a dry run today shows 0 to push).
+- `/api/stats` and the preflight's «Daily usage».
+- The QR domain on the same Worker.
+- The installable player, and the strict sponsor-logo rule.
+
+**Untested at the night's scale:**
+- **The only load test is 24 Nov's:** 400 simulated phones, under `wrangler dev` on this Mac, a 3 × 30-song script, never against the deployed Worker. Its estimate ("a pessimistic night is about half the daily quota") predates:
+  - the 12-round plan with 96 prizes and 58 sponsors (a bigger snapshot);
+  - drum seeds and targetId;
+  - the beat (deltas about once a minute, capped at one per 4 s; outgoing messages are free);
+  - **the logos phones load.** Each `/media/*` request runs the Worker even when Cloudflare's edge cache answers it. So 400 phones loading 56 logos once each is about 22,000 Worker requests, not in the 24 Nov estimate of 20,000–50,000 out of 100,000. Browsers then cache them for a year.
+- **The usage counter only counts the GameRoom's own requests** (domain/usage.ts), not the Worker's. So «Daily usage» undercounts the Worker's 100,000 a day by every `/media` and static-route hit that never reaches the GameRoom.
+- **The real number of phones has never been seen.** Today's peak was 3 phones (330 billed GameRoom requests, 0.3%).
+
+**Real devices (U19):**
+- The phone app broke on iOS 18 today: Historial and the cards were blank, because the strip-fade mask relied on scroll timelines. Fixed in 20c8423e, e6d95db1 and 7f28fa9e, and Frontend's support lint (`packages/ui/baseline.ts`) now catches that class of bug.
+- **The fix was only verified on the iOS 27 Simulator with the feature forced off.** The user hasn't confirmed it on their iPhone (iOS 18.6.2).
+- The tablet, iPad or Android, has never been used on a real phone hotspot, so the runbook's client-isolation question is untested.
+- The cloud console with an organizer's Google login has never been used on the night's network.
+
+**Admin, the plan and the logos:**
+- **The plan on quina-dev is a placeholder:** the Orchestrator's example bundles (`temp/wip prizes/2026-example-bundles.json`), not the organizers' real prizes.
+- 56 of 58 sponsors have a logo. s-and-s and peixos-arnau have no file (U16).
+- The logos were cleaned by an agent and uploaded with the edition tool. **No organizer has uploaded a logo through Admin's Google login yet** (U16).
+- The edition file (D116) is built but not committed (U75).
+- U126 (were Admin edits lost to the 26 Nov plan-save bug?) is unanswered.
+- The cards on the QR domain are the 699 temporary ones; the real cards are 4–5 Dec.
+- Moving the cards into the repertoires (queue item 3, 1–3 Dec) isn't done.
+
+**Plan B paths:**
+- **Takeover by a spare laptop** is covered by link.e2e and unit tests, but has never been done between two real laptops.
+- **The laptop-only presenters' rehearsal** has never been rehearsed.
+- **Admin's manual resume** is covered by the cloud's tests, but has never been done by a person.
+- **The optional Access destinations for the QR domain** (deploy-plan step 7.4) aren't set.
+
+### 3. The rehearsal tooling, and why it passed while the test went wrong
+
+**What the e2e (`tools/e2e/show.spec.ts`, `npm run test:e2e`) is:**
+- One show in headless Chrome, with audio output disabled (`--disable-audio-output`, since 28 Nov).
+- The **default** repertoire (last year's 77 test songs) and a **2-round** test plan, not 2026's 135 songs and 12 rounds.
+- A fixed Queue (`?queue=`) so the claims really win.
+- Driven **through the protocol, as commands**, not by a person tapping the console. The console is only read through its `data-testid` hooks.
+- Its own relay, scratch link folder and Chrome, with the Worker under `wrangler dev`.
+- It covers rounds 1–2: before → intro → Shuffle → three landings → Parlem → Aguanta → Suspense → a claim reviewed and discarded → a Line → a two-card Bingo → the Interval → round 2's first landing. Along the way it checks every screen's `data-scene` and the phones' state, and that phones get nothing private.
+
+**What the e2e doesn't cover:**
+- Rounds 3–12, the Descans and Llançament, the special round, the finale and the end of the night, Pausa, Panic recovery, resume and takeover, and «Proves».
+- The 2026 repertoire and plan, and a real pace.
+- **How anything sounds:** the audio is off, so it can't judge transitions.
+- **What the projector looks like:** there are no screenshot comparisons against the boards, so it can't see that the stage doesn't match the mockups.
+- **Whether the console's logic makes sense to a presenter:** it sends the right commands itself, so it never meets the menus, the hidden «Començar la nit», or the order of actions.
+- **The startup procedure:** it never runs the runbook's commands, profiles, the Start click or the preflight.
+- Safari or iOS, real devices, the deployed Worker, and a network change.
+
+**`desgraciat-live.spec.ts`** is an opt-in run of one Desgraciat round against quina-dev, with one phone. Like the e2e, it checks state, not experience.
+
+**«Proves» (D292):**
+- Sound engine unit-tested its gates and `testJump` from 14 moments, and Frontend tested the card.
+- I only checked that the card appears on the laptop's console under `--test`.
+- **No test runs a reset or a jump end to end, and I don't know if the user used them today.**
+
+**Why everything was green while the test went wrong:**
+- Every deploy today was gated on the e2e, and it passed every time.
+- The e2e proves that the engine, the journal, the cloud's projection and the screens' state hooks agree, and that privacy holds. It has no assertion about the presenter's experience, the sound, the visual design, or a non-developer's setup.
+- So "green" meant "the plumbing agrees". I reported it as "tested" without saying how narrow that is.
+
+### 4. Reported as done, but not fully done (Platform's)
+
+- **"`npm run setup:laptop`: one command to set up a show laptop" / "spare-laptop dry run READY":**
+  - as written in the runbook, it fails on a new laptop (it tries repertoire `default`, which R2 no longer has);
+  - the dry run predates 2026 and D248;
+  - this Mac's Chrome profiles were missing.
+- **"The night runbook":**
+  - its preflight and setup commands lack `--repertoire 2026`;
+  - step 6's "or the console's QR" isn't true for the first pairing;
+  - it's 10+ manual steps with three terminals and three long Chrome commands. **It isn't usable by a non-developer**, and D282 is on hold.
+- **"A pessimistic night is about half the daily quota":** from a local load test on 24 Nov, before logos on phones and the real plan. It was never measured against the deployed Worker, and the usage counter doesn't count Worker requests.
+- **"The e2e covers the phones' production path":** true for the plumbing (wrangler dev, default repertoire, Chrome only, 2 rounds), not for the night's path.
+- **"Preflight: fix every FAIL, then READY":** today it gave:
+  - a wrong FAIL without `--repertoire` (still in the runbook);
+  - a false media FAIL (fixed);
+  - a PASS for a stale kiosk from another test (not fixed: it can't tell which Chrome is tonight's);
+  - a stale LAN address (fixed).
+- **"The player works on phones":** it didn't on iOS 18 until today's fixes. Those fixes haven't been confirmed on a real iOS 18 device.
+- **"The test tools are ready" (D292):** built and deployed, but with no end-to-end test, and the user's experience of them is unknown.
+- **"Each rehearsal: the preflight; watch the daily quota":** never done at the scale of a real rehearsal with phones. Today peaked at 3 phones.
+- **Leftover processes:** a manual test leaves Chrome kiosks and relays running (the 27 Nov kiosk ran for a day). Nothing in the tooling finds or stops them.
+- **Open, still waiting on the user:**
+  - U16: the logos through Admin;
+  - U19: real devices;
+  - U64: R2's payment method;
+  - U126: whether any Admin edits were lost;
+  - U220: the Wii remote with MacWiiPair;
+  - the Access destinations for the QR domain.
+
 ## Now (2026-11-28, after the user's prod test)
 
 - **The prod test is over** (the user: "you can stop everything"). Nothing runs on this Mac; the cloud's plan is back to 27 Dec 17:00/18:00 (the test plan saved in `data/link/backups/`). Live: `b57a3eb6` (from `e6d95db1`). The previous session's `wt-fix` and my `wt-guard`/`wt-e2e` worktrees stay (mine are unlinked); a hook refuses removing worktrees by hand.
