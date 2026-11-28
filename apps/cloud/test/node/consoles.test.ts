@@ -2,7 +2,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EVENT_TYPES } from '@quina/protocol';
-import { ALWAYS_FORWARDED, cloudConsoleIds, mergedClients, shouldForward, stampCloudCommand } from '../../src/domain/consoles.ts';
+import { ALWAYS_FORWARDED, cloudConsoleIds, isLaptopOnlyCommand, mergedClients, shouldForward, stampCloudCommand } from '../../src/domain/consoles.ts';
 import type { Command } from '@quina/protocol';
 
 test('the journal and engine health never go out as events; what phones need always does', () => {
@@ -66,4 +66,12 @@ test("the Wii Remote's status stays on the laptop: never forwarded, never a link
   assert.equal(checkLinkMessage({ v: 1, type: 'link.event', event: status, sentAtMs: 1 }).ok, false);
   // And the public projection makes nothing of it.
   assert.deepEqual(projectEvent(emptyPublicState('26'), status as never, { toCloudMs: (ms) => ms }), []);
+});
+
+test('the test tools stay on the laptop: relay.mode is never forwarded, testReset is laptop-only', () => {
+  assert.equal(shouldForward('relay.mode', 0), false);
+  assert.equal(shouldForward('relay.mode', 3), false, 'not even with consoles listening through the cloud');
+  assert.equal(isLaptopOnlyCommand({ v: 1, type: 'cmd', cmd: 'testReset', reqId: 'r-1' }), true);
+  for (const cmd of ['next', 'hold', 'getState', 'testreset', 'test']) assert.equal(isLaptopOnlyCommand({ v: 1, type: 'cmd', cmd, reqId: 'r-1' }), false, cmd);
+  for (const message of [null, undefined, 'testReset', 42, [], { cmd: 7 }]) assert.equal(isLaptopOnlyCommand(message), false, JSON.stringify(message));
 });

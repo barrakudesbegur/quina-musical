@@ -6,9 +6,23 @@ import { FORWARDED_EVENT_TYPES } from './projection.ts';
 /**
  * Never sent to the cloud as events: the journal travels as `link.journal`; engine health is local chatter; the
  * relay's plan push never rides along (the cloud has its own, and `link.plan` carries a laptop's newer one); the Wii
- * Remote's status (remote.status) is for the laptop's consoles only.
+ * Remote's status (remote.status) is for the laptop's consoles only; so is the relay's test mode (relay.mode, the
+ * console's «Proves»), which only the show laptop and a LAN tablet may see.
  */
-export const NEVER_FORWARDED = ['journal.entry', 'journal.entries', 'engine.health', 'relay.plan', 'remote.status'] as const;
+export const NEVER_FORWARDED = ['journal.entry', 'journal.entries', 'engine.health', 'relay.plan', 'remote.status', 'relay.mode'] as const;
+
+/**
+ * Commands the cloud never relays: the test tools (the console's «Proves») reset the show page, so only the laptop's
+ * consoles may send them, and the relay also drops them unless it runs with `--test`. Matched by name, as plain strings.
+ */
+export const LAPTOP_ONLY_COMMANDS = ['testReset'] as const;
+
+/** Is this parsed message a command only the laptop's consoles may send? */
+export function isLaptopOnlyCommand(message: unknown): boolean {
+  if (!message || typeof message !== 'object') return false;
+  const cmd = (message as Record<string, unknown>).cmd;
+  return typeof cmd === 'string' && (LAPTOP_ONLY_COMMANDS as readonly string[]).includes(cmd);
+}
 
 /** Always forwarded: what phones need, and who is on the relay (tiny and rare). */
 export const ALWAYS_FORWARDED: readonly string[] = [...FORWARDED_EVENT_TYPES, 'relay.clients'];

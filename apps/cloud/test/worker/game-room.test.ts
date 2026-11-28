@@ -418,6 +418,16 @@ describe('consoles through the cloud', () => {
     expect((await again.client.drain()).filter((m) => (m as CloudMessage).type === 'cloud.consoles').at(-1)).toMatchObject({ count: 0, ids: [] });
   });
 
+  it("the test tools stay on the laptop: a cloud console's testReset is refused and never reaches the show", async () => {
+    const { client: link } = await laptop(null);
+    const c = await consoleClient('Tauleta-8');
+    await Promise.all([link.drain(), c.drain()]);
+    c.send({ v, type: 'cmd', cmd: 'testReset', reqId: 'Tauleta-t-1' });
+    expect(await c.next()).toMatchObject({ type: 'command.rejected', reqId: 'Tauleta-t-1', cmd: 'testReset', reason: 'invalid', detail: "test tools work only on the laptop's consoles" });
+    expect((await link.drain()).filter((m) => (m as CloudMessage).type === 'cloud.command')).toEqual([]);
+    c.ws.close();
+  });
+
   it("a cloud console's own cloud: id from the relay is listed once, as the cloud sees it", async () => {
     const { client: link } = await laptop(null);
     const c = await consoleClient('Tauleta-7');

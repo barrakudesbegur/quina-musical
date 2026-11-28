@@ -36,7 +36,7 @@ import { CLOUD } from './config.ts';
 import { nextClockOffset, toCloudMs } from './domain/clock.ts';
 import { flaggedDecisions } from './domain/flags.ts';
 import { journalledVolumes, keepingVolumes, withVolumes } from './domain/volumes.ts';
-import { cloudConsoleIds, isConsoleRole, mergedClients, stampCloudCommand, type ConsoleRole } from './domain/consoles.ts';
+import { cloudConsoleIds, isConsoleRole, isLaptopOnlyCommand, mergedClients, stampCloudCommand, type ConsoleRole } from './domain/consoles.ts';
 import { UsageCounter, usageReport, type DailyUsage, type UsageReport } from './domain/usage.ts';
 import { ingest } from './domain/ingest.ts';
 import { projectEntry, projectEvent, type ProjectionContext } from './domain/projection.ts';
@@ -399,6 +399,10 @@ export class GameRoom extends DurableObject<RoomEnv> {
     }
     if (m.type !== 'cmd') return;
     if (attachment.clientId === null) return ws.close(CLOSE.badHello, 'say hello first');
+    // The test tools stay on the laptop: refused here, so they never reach the show laptop.
+    if (isLaptopOnlyCommand(parsed)) {
+      return this.rejectCommand(ws, typeof m.reqId === 'string' ? m.reqId : null, m.cmd as string, 'invalid', "test tools work only on the laptop's consoles");
+    }
     const check = checkCommand(parsed);
     if (!check.ok) return this.rejectCommand(ws, check.reqId, check.cmd, 'invalid', check.error);
     const show = this.sockets('show')[0];
