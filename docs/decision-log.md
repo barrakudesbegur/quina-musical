@@ -1244,7 +1244,7 @@ By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in:
 "the confeti falls too fast, should fall very slow": the phones' confetti is a slow, 6-second paper drift instead of 1.8 s (593fef2). The finale's "Salvats!" and the projector reuse the same particles.
 By: the user via canvas (26 Nov). Source: Frontend's report of 26 Nov. Lives in: packages/ui/ANIMATIONS.md.
 
-### D186 · The Desgraciat's Celebration reads "QUINA POTRA!" · 2026-11-26 · Active
+### D186 · The Desgraciat's Celebration reads "QUINA POTRA!" · 2026-11-26 · Superseded by D331
 On the canvas the user asked for a title after all: "it is better something related to being lucky or unlucky. in informal funny catalan". From the candidates on canvas v95 they picked "QUINA POTRA!", already drawn on the projector board. The console's presenters-only label "Últim cartró dempeus" stays. The winner's phone is left to U165. Answers U164 with (a).
 By: the user. Source: open-questions.md › Answered (U164). Amends: D62. Lives in: requirements/game-rules.md › The Quina del Desgraciat; requirements/screens.md › Projector; GLOSSARY.md › Last standing.
 
@@ -1948,11 +1948,11 @@ By: the user. Source: the user's message of 28 Nov. Amends: D276. Lives in: requ
 Answers U234 with (a): `Projector-Desgraciat-Final`, a costume pose per finalist, the bulb garland, the flat finale band, paper rain. Picked on the side-by-side page (https://claude.ai/code/artifact/91dfbce3-8e64-4d2a-b289-e87f4dc50506).
 By: the user. Source: the user's message of 28 Nov. Lives in: requirements/screens.md › Projector.
 
-### D302 · The Line's Celebration: the current board, «LÍNIA!» nearer the centre, the drum behind fixed · 2026-11-28 · Active
+### D302 · The Line's Celebration: the current board, «LÍNIA!» nearer the centre, the drum behind fixed · 2026-11-28 · Active; amended by D330
 Answers U233 with (a), `Projector-Linia`: "u233 a, but the drum in the bg looks bad, i assume it is a mistake in the bg, not the intended design. and linea text should be moved more to the center." So «LÍNIA!» sits nearer the screen's centre, and the drum's victory lap behind it must look right: the user takes the board's background drum for a mistake, not the design. Frontend draws the drum behind properly (as the agreed drum, D294) and shows the user before building.
 By: the user. Source: the user's message of 28 Nov. Lives in: requirements/screens.md › Projector.
 
-### D303 · The Check: the current boards, with the squashed nino and its new head drawing · 2026-11-28 · Active
+### D303 · The Check: the current boards, with the squashed nino and its new head drawing · 2026-11-28 · Active; drawn and approved (D332)
 Answers U232 with (a): `Projector-Comprovacio`, `-Fallida` and `-Revisio` (thick centred ✓s, D283; the running ring and ▷ on the playing song; reveals stopping at the ✗, D117). One change: "i want the nino from b but with the drawing iver the head the new version iof it has in the design system". The failed Check shows (b)'s squashed nino, not the falling one, with the drawing over its head that the design system's newer version of that nino has.
 By: the user. Source: the user's message of 28 Nov. Lives in: requirements/screens.md › Projector.
 
@@ -1972,7 +1972,7 @@ By: the user. Source: the user's message of 28 Nov. Amends: D295. Lives in: requ
 The user: "i dont think there's any issue in haveing their names, just the logos i will keep out from git". Businesses' names (sponsors, shops, venues) may appear anywhere in the public repo: docs, commit messages, the edition file. Sponsor logos stay out of git. The decision log's own rule still said "no businesses' names", from D112 ("Businesses' names and prizes change every year, so they don't belong in git"), which D116 had already amended for the edition's JSON. People's names, emails, money, secrets and seeds stay out (operations.md › Privacy).
 By: the user. Source: the user's message of 28 Nov. Amends: D112, D116. Lives in: requirements/operations.md › Privacy; this log's "Adding an entry".
 
-### D308 · The projector's Break: the current board, with a timeline of the night · 2026-11-28 · Active
+### D308 · The projector's Break: the current board, with a timeline of the night · 2026-11-28 · Active; amended by D333
 Answers U235 with (a), `Projector-Descans`, changed: "remove the "Tornem d'aqui...". instead of seguend button, i preffer you make a horizontal timeline like progrss bar that marks the progress and the progress is in between the dots (exept in the break that is the break dot), and the name of the quina is standalone without seguent nor count. use the inspiration form the schedule tab. inside the balls you can put the quina number. the card prixe should be also a big element like the countdown and next to it. ninos may need to be adjusted, i dont like the sardanes nino here. and sponsors should use the new stickers format we're making."
 - No «Tornem d'aquí…».
 - No «Següent» plate: a horizontal timeline of the night, like a progress bar, with a dot per round (its Quina number inside) and the Break as its own dot. The progress sits between the dots, except during a Break, when it's on the Break's dot. Inspired by the phone's Horari.
@@ -1987,7 +1987,7 @@ By: the user. Source: the user's message of 28 Nov. Lives in: requirements/scree
 "sponsors should use the new stickers format we're making. (all sponsors should always use the sticker format)". Wherever sponsors show to the public, on the projector and the phones (before the night, the Break, the end of the night's credits, the phones' Premis drawer, a Celebration), they're die-cut stickers from D287's module and the sticker logos being prepared now (the logos session). Amends D285 ("logos as stickers: not now") and D287 (stickers only in the Celebrations).
 By: the user. Source: the user's message of 28 Nov. Amends: D285, D287. Lives in: requirements/screens.md › Projector, Player app.
 
-### D310 · «QUINA POTRA!»: the current board, as the Line's · 2026-11-28 · Active
+### D310 · «QUINA POTRA!»: the current board, as the Line's · 2026-11-28 · Superseded by D331
 Answers U236 with (a), `Projector-Desgraciat-Potra`: "same logic as U233", read as D302's changes: the title nearer the centre, and the drum behind fixed. Its prize card goes (D311).
 By: the user. Source: the user's message of 28 Nov. Lives in: requirements/screens.md › Projector.
 
@@ -2027,7 +2027,7 @@ After the realistic test: "in the test i did, i noticed that during the card che
 - **For Frontend:** the projector's "playing" mark per reveal still lasts 2.5 s, while the song now plays on. **To listen for:** `LOOP.tailDropDb` (−12 dB under the hook) marks some soft endings as dead, so those songs hand over or auto-advance up to 20 s early (Viva La Vida).
 By: the user (to quina-musical-f5). Source: its report of 28 Nov. Lives in: requirements/show-and-music.md › The Check, The presenters' actions.
 
-### D315 · No Celebration screen on the phones; the Check's ribbon shows the result · 2026-11-28 · Active; amended by D316
+### D315 · No Celebration screen on the phones; the Check's ribbon shows the result · 2026-11-28 · Active; amended by D316, D334
 Answers U237, after the screenshots of what's built: "the text comprovant el cartro can simply be comprobant #332. okay so i think we should not have a celebration screen. and in the ribbon when check fails we should change the color and content to "Quina incorrecte!" quina/linea in red bg and the card number on the right, and the ribon goes away when the next spin starts. if the line is correct, we do like the fail but with green and correcte. and it it is a quina correcte, we do like the line correct, but it goes away when the screen changes to the interval or break or whatever."
 - **No Celebration screen on any phone**, for a Line or a Quina, whoever won.
 - **The Check's ribbon:** «Comprovant #332» while the card is checked (was «Comprovant el cartró #332»).
@@ -2101,3 +2101,32 @@ By: the user (to quina-musical-e0). Source: its report of 28 Nov. Amends: D287 (
 ### D329 · The 2026 sponsor logos are approved; tools/logos is part of every edition's preparation · 2026-11-28 · Active
 Answers U16. After the last hand fixes (Motos V. Roses, Ricard Cuadrado, Poch): "Okay when you fix those, i consider them approved, dont ask me confirmation. make sure we can also process future logos the same way, it has to be in the repo commited, it is part of the preparation before the event". 64 of 70 sponsors have their three versions (D320) in temp/logos-2026/; the approval confirms D321's recolouring (each box's colour darkened only until it reads on white at 4.5:1, hue kept). Still without a logo, shown as name plates until one arrives: 1701, Arran de Mar, Estanc Begur, LocadeAmor, Pet Love, S&S. Each edition prepares its logos with `npm run logos -- data/editions/<year>.logos.json`, following tools/logos/README.md (collect the files, the sponsors in the plan first, the manifest, run, check the two sheets, hand fixes in ArtCraft, deliver to the Drive and the plan; a logo that arrives later).
 By: the user (to quina-musical-e0). Source: its report of 28 Nov. Confirms: D321. Lives in: event.md › Before the night; tools/logos/README.md.
+
+### D330 · The Line's Celebration as drawn, its light's source moving with «LÍNIA!» · 2026-11-28 · Active
+On the side-by-side page (https://claude.ai/code/artifact/392d0bf3-eee6-42d7-b647-4b66b9840fe8), pair 1: "D302 okay, but you also have to move the light effect source aling with the linia text". The proposal is approved (the title and its plate in the middle, the agreed drum behind on its victory lap, dimmed), and the rays' origin moves down with «LÍNIA!».
+By: the user. Source: the user's message of 28 Nov. Amends: D302. Lives in: requirements/screens.md › Projector.
+
+### D331 · No «QUINA POTRA!» anywhere: the Desgraciat's end is a Quina's Celebration · 2026-11-28 · Active
+Pair 2 (the user labelled it "d301"; the content is pair 2's): "i dont like "quina potra", i would remove it from everywhere. here just pus QUINA!, like the normal quina celebration, but only the quina name label changes". The Desgraciat's end on the projector is the Quina's Celebration, «QUINA!», with its plate reading the round's name («QUINA DEL DESGRACIAT»); «QUINA POTRA!» goes from every screen, string and document. The phones' «Tenim desgraciat!» (D316) stays.
+By: the user. Source: the user's message of 28 Nov. Supersedes: D186, D310. Lives in: requirements/screens.md › Projector; game-rules.md › The Desgraciat.
+
+### D332 · The failed Check's squashed nino as drawn · 2026-11-28 · Active
+Pair 3: "d303 ok". The squashed nino with the dizzy drawing over its head, at 90 % of option (b)'s size, as on the page.
+By: the user. Source: the user's message of 28 Nov. Lives in: requirements/screens.md › Projector.
+
+### D333 · The Break's board needs another round · 2026-11-28 · Active; the next drawing for the user
+Pair 4: "no. it needs more iterations. remove the ninus, they clutter the page. i dont like how the card looks like, try to put the price like now, and under it Cartro, and no card svg. make thetimeline simpler, with h=less borders and details. instead of the cofee circle, simply make that space larger. and we can make each ball larged, and make a pill that wraps the past balls, the upcoming is white and the future are transparent. remove quina 4 title, it is not that important and the info is alsready in another way. the countdown also hass to many borders and arround the ring".
+- No ninos on the Break.
+- The price as today's (the gold price text), with «Cartró» under it; no card drawing.
+- A simpler timeline: fewer borders and details; bigger balls; a pill wrapping the played balls; the coming one white; those to come transparent; the long Descans a wider gap between its two balls, not a cup.
+- No «QUINA 4» title: the timeline already says it.
+- The countdown with fewer borders around its ring.
+By: the user. Source: the user's message of 28 Nov. Amends: D308. Lives in: requirements/screens.md › Projector.
+
+### D334 · The phone's Check ribbon: plain text, no badge or dots · 2026-11-28 · Active; the next drawing for the user
+Pair 5: "add more letter spacing and less weight. remove the quina correcte ninos. the badge should be a bit wider, and the tails are not counted so they overflow outside. Dont use the bage linia or quina, i just want normal text, also remove the dots when checking. now the component is simpler and more generic". The ribbon's text gets more letter spacing and a lighter weight; no small nino on the green states; the ribbon a bit wider, with its tails counted in its width so they stay inside the screen; no «Línia»/«Quina» badge, plain text; no stepping dots while checking.
+By: the user. Source: the user's message of 28 Nov. Amends: D315, D316. Lives in: requirements/screens.md › Player app.
+
+### D335 · Without cards in play the Phase stays early; the console's warning opens the sold cards · 2026-11-28 · Active
+Answers U244 with (a), and pair 6: "U244 ok and clicking should open the dialog and scroll and highlight the section, put also a fix button (or link button, whatever looks best) on the banner [...] despite having a button inside, the whole banner is the button, the button inside is internally decoration". Without cards in play the engine makes no guess: the Phase stays early and the Heat meter shows «Sense cartrons en joc», switched off. The console's red banner «Cap cartró en joc per a aquesta quina» is one button as a whole: a tap opens the menu, scrolls to «Cartrons venuts» and highlights it; a fix button drawn inside it is decoration. (The user noted the fonts didn't load on the proposal's image; the build must show the real fonts.)
+By: the user. Source: the user's message of 28 Nov. Lives in: requirements/screens.md › Console; show-and-music.md › Phase, Heat and the Final Lap.

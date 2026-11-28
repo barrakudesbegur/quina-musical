@@ -62,7 +62,7 @@ _From event.md › The special rounds; the decisions doc › Changes, the Desgra
 - It plays special cards by default, as in 2025 (D70); Admin picks the type like any round's.
 - It can be moved to any point in the night.
 - It's short, lively and full of interaction with the crowd (2025: 21 songs, about 8 minutes).
-- Its Celebration's title is "QUINA POTRA!", in informal Catalan: lucky to be the unluckiest (D186). The console keeps a label for the presenters only ("Últim cartró dempeus").
+- Its Celebration is a Quina's: «QUINA!», with the plate naming the round («Quina del Desgraciat»); no «QUINA POTRA!» anywhere (D331). The console keeps a label for the presenters only ("Últim cartró dempeus").
 
 ## Cards in play
 

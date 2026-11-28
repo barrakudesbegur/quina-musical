@@ -26,11 +26,6 @@ On a claim the presenters press Parlem first, then «Comprovar cartró» (game-r
 - (b) Opening the pad turns Parlem on by itself; it stays on after «Torna a la quina», and «Següent» ends it as usual (the orchestrator's recommendation: it is the rule, with no extra tap under pressure, and it fits the phone's small screen).
 - (c) Keep the agreed board and the rule «Parlem first».
 
-### U244 · The Phase when no cards in play are entered
-Found on 28 Nov (whats-left 2.12): the console's Heat meter stayed empty in the realistic test because no sold cards were entered (Menú → «Cartrons venuts»), which the runbook never says. Without cards in play the engine guesses the Phase from a count of 20 songs from the night's start that never restarts, so from about the 20th song every round is in its final Phase, and that's why «Auto» stopped at every song (2.8). The runbook gets the step, and the console a warning when a round has no cards in play (drawn for the user first).
-- (a) Without cards in play the Phase stays early and the Heat empty, with the console's warning (the orchestrator's recommendation: one way, no guess, and the warning makes the presenters enter the cards).
-- (b) Keep the guess, restarted at each round.
-
 ### U230 · Where the install button goes on the phone (replaces U193)
 U193's reading put the install button in the spot the empty list's big add-card button left once a phone had cards. D290 removed that spot: a phone with no cards shows a centred heading and two floating buttons, gone at the first card. And the user's condition, "only if +card button is not showing", now holds exactly when there are no cards. Only where the browser can install the app and it isn't installed; never on iPhones (Ajustos there).
 - (a) Once the phone has cards: a quiet row «Instal·lar l'app» at the end of the Cartrons list, under the last card. Frontend's recommendation: the empty state stays about cards, and it reaches people once they're settled in.
@@ -331,6 +326,7 @@ Only 3 Hold loops and 1 victory track exist, so they repeat a lot (`data/media/h
 
 ## Answered
 
+- **U244 · The Phase when no cards in play are entered** (2026-11-28) → D335: (a), no guess; the console's warning opens «Cartrons venuts».
 - **U16 · Check the sponsors' cleaned logos** (2026-11-28) → D329: approved; 6 sponsors still without a logo show as name plates.
 - **U205 · Parlem's switch to Hold music after 40 s** (2026-11-28) → D318: (a), the ducked song loops; no Hold music or Pausa by itself.
 - **U242, U243 · The winner's phone; the Desgraciat's end on phones** (2026-11-28) → D316: the same ribbon on every phone; «Tenim desgraciat!».
