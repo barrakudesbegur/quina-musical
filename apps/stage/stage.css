@@ -361,6 +361,7 @@
 
 .stage__pause-text {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-weight: var(--font-weight-strong);
   font-size: var(--stage-text-xl);
   line-height: 1.05;
@@ -465,6 +466,7 @@
 .interval__words,
 .check__type-name {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-weight: var(--font-weight-strong);
   line-height: 1;
   color: var(--color-text);
@@ -572,6 +574,7 @@
 .after__title,
 .interval__title {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-weight: var(--font-weight-strong);
   font-size: var(--stage-text-xl);
   line-height: 1;
@@ -682,6 +685,7 @@
 .night__word {
   margin-inline-end: 0.5rem;
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-weight: var(--font-weight-strong);
   font-size: 2.625rem;
   line-height: 1;
@@ -697,6 +701,7 @@
   background: var(--color-paper);
   box-shadow: 0 0.3125rem 0 color-mix(in srgb, var(--color-shadow) 55%, transparent);
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-weight: var(--font-weight-strong);
   font-size: calc(var(--stage-ball) * 0.62);
   line-height: 1;
@@ -714,6 +719,7 @@
   background: var(--color-paper);
   box-shadow: 0 0.375rem 0 color-mix(in srgb, var(--color-shadow) 55%, transparent);
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-weight: var(--font-weight-strong);
   font-size: 2.5rem;
   line-height: 1;
@@ -853,6 +859,7 @@
 
 .round-start__title {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-weight: var(--font-weight-strong);
   font-size: var(--stage-text-xl);
   line-height: 1;
@@ -1202,6 +1209,7 @@
   top: calc(var(--space-5) + var(--stage-light));
   left: var(--stage-pad);
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-weight: var(--font-weight-strong);
   font-size: var(--stage-text-sm);
   color: var(--color-accent);
@@ -1224,6 +1232,7 @@
 
 .play__title {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-weight: var(--font-weight-strong);
   font-size: var(--stage-text-lg);
   line-height: 1;
@@ -1297,6 +1306,7 @@
   display: grid;
   place-items: center;
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-weight: var(--font-weight-strong);
   font-size: var(--stage-text-xl);
   line-height: 1;
@@ -1522,6 +1532,7 @@
   background: var(--color-paper);
   box-shadow: 0 0.4375rem 0 var(--color-shadow);
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-weight: var(--font-weight-strong);
   font-size: var(--stage-finale-plate);
   line-height: 1.05;
@@ -1738,6 +1749,7 @@
     0 0.4375rem 0 var(--color-shadow);
   rotate: -3deg;
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-weight: var(--font-weight-strong);
   font-size: 3.75rem;
   line-height: 1;
@@ -1951,6 +1963,7 @@
 .check__heading,
 .check-result__title {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-weight: var(--font-weight-strong);
   color: var(--color-text);
   -webkit-text-stroke: var(--stage-text-stroke) var(--color-line);
@@ -2825,6 +2838,7 @@
   align-self: center;
   position: relative;
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-weight: var(--font-weight-strong);
   font-size: var(--stage-text-hero);
   line-height: 0.9;

@@ -77,6 +77,7 @@
   background: var(--key-fill, var(--palette-solid, var(--color-snow)));
   color: var(--key-ink, var(--color-ink));
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: var(--key-font);
   font-weight: var(--font-weight-strong);
   line-height: 1;
@@ -173,6 +174,7 @@
   box-shadow: var(--field-shadow);
   color: var(--color-ink);
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-weight: var(--font-weight-strong);
   line-height: 1.1;
   font-variant-numeric: tabular-nums;

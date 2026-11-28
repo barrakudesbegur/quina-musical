@@ -23,6 +23,7 @@
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: 1.375rem;
   font-weight: var(--font-weight-strong);
   line-height: 1;

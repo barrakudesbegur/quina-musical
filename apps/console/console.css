@@ -295,6 +295,7 @@
 
 .header__round {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: calc(var(--text-2xl) * 0.9);
   font-weight: var(--font-weight-strong);
   line-height: 1;
@@ -304,6 +305,7 @@
 
 .header__clock {
   font-family: var(--font-display);
+  text-transform: none; /* a clock: its am/pm keeps its case (D114) */
   font-size: var(--text-2xl);
   font-weight: var(--font-weight-strong);
   line-height: 1;
@@ -798,6 +800,7 @@
 
 .next-song__seconds {
   font-family: var(--font-display);
+  text-transform: none; /* seconds: their «s» keeps its case (D114) */
   font-size: var(--text-2xl);
   font-weight: var(--font-weight-strong);
   color: var(--color-title);
@@ -1002,6 +1005,7 @@
 
 .state-tab__unknown {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: var(--text-2xl);
   font-weight: var(--font-weight-strong);
   line-height: 1;
@@ -1076,6 +1080,7 @@
 
 .miss-bars__count {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: 1.125rem;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -1208,6 +1213,7 @@
 .song-row__offset,
 .candidate-list__at {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: 1.375rem;
   line-height: 1;
   color: var(--color-orange-edge);
@@ -1282,6 +1288,7 @@
 .search-box__hash,
 .search-box__number {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: var(--text-xl);
   line-height: 1;
 }
@@ -1664,6 +1671,7 @@
 .candidate-list__card {
   min-width: 2.75rem;
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: 1.375rem;
   line-height: 1.1;
 }
@@ -1756,6 +1764,7 @@
   border-radius: 50%;
   background: var(--color-chip);
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: 0.8125rem;
 }
 
@@ -1915,6 +1924,7 @@
   background: var(--palette-solid, var(--color-surface));
   color: var(--color-white);
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: calc(var(--text-2xl) * 0.9);
   font-weight: var(--font-weight-strong);
   line-height: 1.05;
@@ -1974,6 +1984,7 @@
 .big-button__note {
   display: block;
   font-family: var(--font-body);
+  text-transform: none; /* Nunito in a Londrina button keeps its case (D114) */
   font-size: var(--text-sm);
   font-weight: 800;
   line-height: 1.2;
@@ -2850,6 +2861,7 @@
 
 .claim-status__card {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: var(--text-xl);
   font-weight: var(--font-weight-strong);
   line-height: 1;
@@ -3089,6 +3101,7 @@
 
 .claim-chip__number {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: var(--text-xl);
   font-weight: var(--font-weight-strong);
   line-height: 1.1;
@@ -3190,6 +3203,7 @@
 /* ---- celebration, winners ------------------------------------------------------------------------------- */
 .celebration-panel__shout {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: var(--text-2xl);
   color: var(--color-title);
 }
@@ -3304,6 +3318,7 @@
 /* ---- interval, round start ------------------------------------------------------------------------------ */
 .interval-panel__next {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: var(--text-xl);
   font-weight: var(--font-weight-strong);
   color: var(--color-title);
@@ -3589,6 +3604,7 @@ kbd {
 
 .menu-end__clock {
   font-family: var(--font-display);
+  text-transform: none; /* a clock: its am/pm keeps its case (D114) */
   font-size: 1.5rem;
 }
 
@@ -3721,6 +3737,7 @@ kbd {
 .menu-group .stepper__value {
   min-width: 2ch;
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: 1.875rem;
 }
 
@@ -3966,6 +3983,7 @@ kbd {
 .standing__number {
   display: inline-grid;
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: 4.5rem;
   font-weight: var(--font-weight-strong);
   line-height: 1;
@@ -4057,6 +4075,7 @@ kbd {
   background: var(--color-green-subtle);
   color: var(--color-ink);
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: 1.25rem;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -4118,6 +4137,7 @@ kbd {
 
 .standing__last-number {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: 5.5rem;
   line-height: 1;
 }
@@ -4591,6 +4611,7 @@ kbd {
 
 .finale-pad__number {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: 2.25rem;
   font-weight: var(--font-weight-strong);
   line-height: 1.05;
@@ -4702,6 +4723,7 @@ kbd {
 
 .finale-stage__number {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: 2.25rem;
   font-weight: var(--font-weight-strong);
   line-height: 1;
@@ -4816,6 +4838,7 @@ kbd {
   background: var(--finale-plate);
   color: var(--color-ink);
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: 1.375rem;
   font-weight: var(--font-weight-strong);
   line-height: 1;

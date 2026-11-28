@@ -1745,6 +1745,7 @@
   grid-area: number;
   justify-self: end;
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: 1.625rem;
   font-weight: var(--font-weight-strong);
   line-height: 1;

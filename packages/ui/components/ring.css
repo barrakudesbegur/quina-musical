@@ -212,6 +212,7 @@
 
 .ring__value {
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: var(--ring-value-size);
   font-weight: var(--font-weight-strong);
   line-height: 1;
@@ -243,6 +244,7 @@
 
 .ring__unit {
   font-size: 0.6em;
+  text-transform: none; /* a unit keeps its case (D114) */
 }
 
 /* The corner badge (the mode), in its own palette */

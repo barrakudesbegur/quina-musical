@@ -6,7 +6,7 @@ import type { RoundView, PrizeView, SponsorView } from '../view.ts';
 import type { StageSong } from '../model/songs.ts';
 import { STAGE } from '../config.ts';
 import { roughCountdown, sameCountdown, type RoughCountdown } from '../model/timing.ts';
-import { formatClock } from '../../../packages/rules/time.ts';
+import { clockParts } from '../../../packages/rules/time.ts';
 import { imageSources } from '../../../packages/ui/data/media.ts';
 import { STAGE_TEXT, type CountdownContext } from '../strings.ts';
 import { prizeCardText } from '../../../packages/ui/recipes/prizes.ts';
@@ -268,10 +268,13 @@ export class CountdownChip {
     setHidden(this.root, next === null);
     if (!next) return;
     const ctx = this.context;
-    setText(
-      this.root,
-      next.kind === 'soon' ? STAGE_TEXT.countdown.soon(ctx) : next.kind === 'at' ? STAGE_TEXT.countdown.at(ctx, formatClock(next.atMs)) : STAGE_TEXT.countdown.minutes(ctx, next.minutes),
-    );
+    const clock = next.kind === 'at' ? clockParts(next.atMs) : null;
+    if (clock) {
+      // Londrina's capitals leave the clock's am/pm as it is (D114): its own `.unit`.
+      this.root.replaceChildren(`${STAGE_TEXT.countdown.at(ctx, clock.time)} `, h('span', 'unit', clock.period));
+      return;
+    }
+    setText(this.root, next.kind === 'soon' ? STAGE_TEXT.countdown.soon(ctx) : next.kind === 'at' ? STAGE_TEXT.countdown.at(ctx, '—') : STAGE_TEXT.countdown.minutes(ctx, next.minutes));
   }
 }
 

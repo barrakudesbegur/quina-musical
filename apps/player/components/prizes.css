@@ -301,6 +301,7 @@
   translate: -50% 0;
   color: var(--color-white);
   font-family: var(--font-display);
+  text-transform: uppercase;
   font-size: 2.75rem;
   font-weight: var(--font-weight-strong);
   line-height: 1;

@@ -98,6 +98,7 @@
   }
   .wii-remote__letter {
     font-family: var(--font-display, 'Londrina Solid', system-ui, sans-serif);
+    text-transform: uppercase;
     font-weight: 900;
   }
   }

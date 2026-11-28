@@ -166,6 +166,15 @@ button:where([data-color]) {
   color: var(--color-text-muted);
 }
 
+/* Londrina is always in capitals (D96): every rule that sets the display font sets `text-transform: uppercase` beside
+   it, in its own layer (CSS can't select by font, and a component picks its font per variant);
+   apps/show/tests/ui/ds/londrina-caps.test.ts checks every stylesheet. Inside one, a unit next to a number keeps its
+   case ("9 s", "10:14 pm", D114): wrap it in `.unit`. A block whose whole text is a number with its unit says
+   `text-transform: none` instead. */
+.unit {
+  text-transform: none;
+}
+
 /* Read by screen readers, not drawn; it shows again while it holds the focus or is pressed. (:focus-within here is a
    behaviour, not a focus ring: rings use :focus-visible only, R5.) */
 .visually-hidden:where(:not(:focus-within, :active)) {
